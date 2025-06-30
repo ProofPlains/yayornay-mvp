@@ -780,90 +780,116 @@
                 signCanvas.width = 1275;
                 signCanvas.height = 1650;
                 
-                // Background gradient
-                const gradient = ctx.createLinearGradient(0, 0, signCanvas.width, signCanvas.height);
-                gradient.addColorStop(0, '#667eea');
-                gradient.addColorStop(1, '#764ba2');
-                ctx.fillStyle = gradient;
+                // Background - light beige
+                ctx.fillStyle = '#f5f5f0';
                 ctx.fillRect(0, 0, signCanvas.width, signCanvas.height);
                 
-                // White card background
-                const cardMargin = 75;
+                // Main card with orange border (much thinner border)
+                const cardMargin = 60;
                 const cardX = cardMargin;
-                const cardY = 200;
+                const cardY = 80;
                 const cardWidth = signCanvas.width - (cardMargin * 2);
-                const cardHeight = signCanvas.height - 400;
+                const cardHeight = signCanvas.height - 160;
+                const borderRadius = 40;
+                
+                // Orange border
+                ctx.fillStyle = '#e67e22';
+                ctx.beginPath();
+                ctx.roundRect(cardX, cardY, cardWidth, cardHeight, borderRadius);
+                ctx.fill();
+                
+                // White inner card (thinner border)
+                const innerMargin = 12;
+                const innerX = cardX + innerMargin;
+                const innerY = cardY + innerMargin;
+                const innerWidth = cardWidth - (innerMargin * 2);
+                const innerHeight = cardHeight - (innerMargin * 2);
                 
                 ctx.fillStyle = 'white';
-                ctx.fillRect(cardX, cardY, cardWidth, cardHeight);
+                ctx.beginPath();
+                ctx.roundRect(innerX, innerY, innerWidth, innerHeight, borderRadius - 8);
+                ctx.fill();
                 
-                // Main headline
-                ctx.fillStyle = '#333';
-                ctx.font = 'bold 60px Arial';
+                // HappySnap logo area (much larger)
+                const logoY = innerY + 120;
+                
+                // Draw smiley face circle (outline only like in the image)
+                const smileyX = signCanvas.width / 2 - 280;
+                const smileyY = logoY;
+                const smileyRadius = 60;
+                
+                // Smiley face circle outline
+                ctx.strokeStyle = '#e67e22';
+                ctx.lineWidth = 12;
+                ctx.beginPath();
+                ctx.arc(smileyX, smileyY, smileyRadius, 0, 2 * Math.PI);
+                ctx.stroke();
+                
+                // Smiley eyes (filled orange dots)
+                ctx.fillStyle = '#e67e22';
+                ctx.beginPath();
+                ctx.arc(smileyX - 20, smileyY - 15, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(smileyX + 20, smileyY - 15, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Smiley mouth (orange curved line - bigger smile, positioned higher)
+                ctx.strokeStyle = '#e67e22';
+                ctx.lineWidth = 10;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.arc(smileyX, smileyY - 5, 40, 0.15 * Math.PI, 0.85 * Math.PI);
+                ctx.stroke();
+                
+                // "HappySnap" text (much larger)
+                ctx.fillStyle = '#e67e22';
+                ctx.font = 'bold 120px Arial';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('HappySnap', smileyX + 120, smileyY);
+                
+                // Main question (much larger)
+                ctx.fillStyle = '#2c3e50';
+                ctx.font = 'bold 110px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('How was your experience?', signCanvas.width / 2, cardY + 100);
                 
-                // Sub headline
-                ctx.fillStyle = '#667eea';
-                ctx.font = '30px Arial';
-                ctx.fillText('Your feedback matters to us!', signCanvas.width / 2, cardY + 150);
+                const questionY = logoY + 220;
+                ctx.fillText('HOW WAS YOUR', signCanvas.width / 2, questionY);
+                ctx.fillText('EXPERIENCE?', signCanvas.width / 2, questionY + 130);
                 
-                // Emoji preview (use Unicode emojis)
-                ctx.font = '40px Arial';
-                ctx.fillText('😍 😊 😐 😞 😭', signCanvas.width / 2, cardY + 210);
-                
-                // Call to action
-                ctx.fillStyle = '#333';
-                ctx.font = '25px Arial';
-                ctx.fillText('Scan the QR code below to share your thoughts', signCanvas.width / 2, cardY + 260);
-                
-                // Benefit text
-                ctx.fillStyle = '#666';
-                ctx.font = '20px Arial';
-                ctx.fillText('Takes less than 10 seconds • Completely anonymous', signCanvas.width / 2, cardY + 290);
-                
-                // QR code section background
-                const qrSectionX = signCanvas.width / 2 - 150;
-                const qrSectionY = cardY + 325;
-                const qrSectionWidth = 300;
-                const qrSectionHeight = 200;
-                
-                ctx.fillStyle = '#ff6b6b';
-                ctx.fillRect(qrSectionX, qrSectionY, qrSectionWidth, qrSectionHeight);
-                
-                // QR code white background
-                const qrBgSize = 120;
-                const qrBgX = signCanvas.width / 2 - qrBgSize / 2;
-                const qrBgY = qrSectionY + 20;
-                ctx.fillStyle = 'white';
-                ctx.fillRect(qrBgX, qrBgY, qrBgSize, qrBgSize);
+                // QR code area (larger)
+                const qrAreaY = questionY + 280;
+                const qrDisplaySize = 350;
+                const qrX = signCanvas.width / 2 - qrDisplaySize / 2;
+                const qrY = qrAreaY;
                 
                 // Draw QR code
-                const qrSize = 100;
-                const qrX = signCanvas.width / 2 - qrSize / 2;
-                const qrY = qrBgY + 10;
-                ctx.drawImage(canvas, qrX, qrY, qrSize, qrSize);
+                ctx.drawImage(canvas, qrX, qrY, qrDisplaySize, qrDisplaySize);
                 
-                // Scan text (use Unicode emoji)
+                // Location name below QR code (larger)
+                ctx.fillStyle = '#2c3e50';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(locationName, signCanvas.width / 2, qrY + qrDisplaySize + 60);
+                
+                // "SCAN TO RATE" button (larger)
+                const buttonY = qrY + qrDisplaySize + 140;
+                const buttonWidth = 500;
+                const buttonHeight = 100;
+                const buttonX = signCanvas.width / 2 - buttonWidth / 2;
+                
+                ctx.fillStyle = '#e67e22';
+                ctx.beginPath();
+                ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 50);
+                ctx.fill();
+                
                 ctx.fillStyle = 'white';
-                ctx.font = 'bold 18px Arial';
-                ctx.fillText('📱 SCAN HERE', signCanvas.width / 2, qrSectionY + 175);
-                
-                // Bottom call to action
-                ctx.fillStyle = '#333';
-                ctx.font = '25px Arial';
-                ctx.fillText('Help us serve you better!', signCanvas.width / 2, cardY + 575);
-                
-                // Location name
-                ctx.fillStyle = '#667eea';
-                ctx.font = 'bold 24px Arial';
-                ctx.fillText(locationName, signCanvas.width / 2, cardY + 625);
-                
-                // Footer
-                ctx.fillStyle = '#999';
-                ctx.font = '16px Arial';
-                ctx.fillText('Thank you for choosing us', signCanvas.width / 2, cardY + 660);
+                ctx.font = 'bold 52px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('SCAN TO RATE', signCanvas.width / 2, buttonY + buttonHeight / 2);
                 
                 // Convert to data URL and display in page
                 const dataURL = signCanvas.toDataURL('image/png');
@@ -875,7 +901,7 @@
                 img.style.border = '1px solid #ddd';
                 img.style.borderRadius = '10px';
                 img.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
-                img.alt = `Customer Feedback Sign for ${locationName}`;
+                img.alt = `HappySnap Customer Feedback Sign for ${locationName}`;
                 
                 // Show the generated sign section
                 const signContainer = document.getElementById('generatedSign');
@@ -888,7 +914,7 @@
                 // Scroll to the generated sign
                 signContainer.scrollIntoView({ behavior: 'smooth' });
                 
-                console.log('Sign generated successfully and displayed in page');
+                console.log('HappySnap sign generated successfully');
                 
             } catch (error) {
                 console.error('Error generating sign:', error);
