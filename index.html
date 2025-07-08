@@ -1403,7 +1403,15 @@
                     updateCustomerLocationDisplay(window.demoAccount.locations);
                     currentView = 'customer-demo';
                 } else {
-                    // For real accounts, show customer view for their business
+                    // For real accounts, sync the selected location from analytics dropdown
+                    var analyticsSelect = document.getElementById('analyticsLocationSelect');
+                    if (analyticsSelect && analyticsSelect.value !== 'all') {
+                        currentLocation = analyticsSelect.value;
+                    } else if (analyticsSelect && analyticsSelect.value === 'all') {
+                        // If "all" is selected, use the first available location
+                        currentLocation = Object.keys(currentUser.locations)[0];
+                    }
+                    
                     hideAllScreens();
                     document.getElementById('customerView').style.display = 'block';
                     updateCustomerLocationDisplay(currentUser.locations);
