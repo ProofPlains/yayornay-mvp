@@ -104,6 +104,45 @@
         .thank-you { display: none; padding: 40px; text-align: center; }
         .thank-you h2 { color: #4caf50; margin-bottom: 15px; }
 
+        .business-cta {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .business-cta h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .business-cta p {
+            margin-bottom: 20px;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .cta-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
         .logo { font-size: 48px; font-weight: bold; color: #667eea; margin-bottom: 10px; }
         .tagline { font-size: 20px; color: #666; margin-bottom: 30px; }
 
@@ -481,6 +520,12 @@
         <div class="thank-you" id="thankYou">
             <h2>Thank you for your feedback! 🎉</h2>
             <p>Your opinion helps us improve our service.</p>
+            
+            <div class="business-cta">
+                <h3>Are you a business owner?</h3>
+                <p>Get instant customer feedback for your business with QR codes!</p>
+                <button class="cta-button" onclick="goToSignup()">Sign up for a free account!</button>
+            </div>
         </div>
     </div>
 
@@ -720,6 +765,12 @@
             currentView = 'customer';
         }
 
+        function goToSignup() {
+            // Clear any URL parameters to go back to the main welcome experience
+            window.history.replaceState({}, document.title, window.location.pathname);
+            showWelcome();
+        }
+
         function getLocationDisplayName(locationId) {
             // In a real app, this would fetch the actual location name from a database
             // For now, we'll create a user-friendly name from the ID
@@ -899,7 +950,20 @@
 
             // Show thank you message
             document.querySelector('.feedback-section').style.display = 'none';
-            document.getElementById('thankYou').style.display = 'block';
+            var thankYouDiv = document.getElementById('thankYou');
+            thankYouDiv.style.display = 'block';
+            
+            // Show/hide business CTA based on mode
+            var businessCta = thankYouDiv.querySelector('.business-cta');
+            if (businessCta) {
+                if (currentView === 'customer-demo' || (currentUser && currentView === 'customer')) {
+                    // Hide CTA in demo mode and when logged-in admin is testing
+                    businessCta.style.display = 'none';
+                } else {
+                    // Show CTA for regular customers
+                    businessCta.style.display = 'block';
+                }
+            }
             
             // Auto-transition to admin view only in demo mode
             if (currentView === 'customer-demo') {
