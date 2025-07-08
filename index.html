@@ -653,6 +653,17 @@
             hideAllScreens();
             document.getElementById('customerView').style.display = 'block';
             
+            // Reset customer view state - hide thank you message and show feedback form
+            document.querySelector('.feedback-section').style.display = 'block';
+            document.getElementById('thankYou').style.display = 'none';
+            
+            // Reset any selected sentiment and submit button state
+            selectedSentiment = null;
+            document.querySelectorAll('.emoji-btn').forEach(function(btn) {
+                btn.classList.remove('selected');
+            });
+            document.querySelector('.submit-btn').classList.remove('enabled');
+            
             var demoLocations = {
                 'demo': { 
                     name: 'Demo Restaurant', 
