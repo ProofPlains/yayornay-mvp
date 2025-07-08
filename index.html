@@ -41,22 +41,11 @@
 
         .header h1 { font-size: 24px; margin-bottom: 10px; }
 
-        .location-switcher { margin-top: 15px; }
-        .location-switcher select {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 2px solid rgba(255,255,255,0.3);
-            padding: 8px 15px;
-            border-radius: 20px;
+        .location-display {
+            margin-top: 15px;
+            color: rgba(255,255,255,0.9);
             font-size: 16px;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='white' viewBox='0 0 16 16'%3e%3cpath d='m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 12px;
-            padding-right: 35px;
+            font-weight: 500;
         }
 
         .feedback-section { padding: 40px 30px; text-align: center; }
@@ -240,21 +229,24 @@
             background: #667eea;
             color: white;
             border: 2px solid #667eea;
-            padding: 12px;
-            border-radius: 50%;
+            padding: 8px 16px;
+            border-radius: 25px;
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
-        .admin-toggle::after { content: "🔄"; }
+        .admin-toggle:hover {
+            background: #5a6fd8;
+            border-color: #5a6fd8;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
 
-        .feedback-item {
+        .location-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -264,18 +256,74 @@
             margin-bottom: 10px;
         }
 
+        .location-info {
+            flex-grow: 1;
+        }
+
+        .location-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-small:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-small.btn-danger {
+            background: #e74c3c;
+        }
+
+        .btn-small.btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .edit-input {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 14px;
+            margin-right: 8px;
+            min-width: 200px;
+        }
+
+        .edit-input:focus {
+            outline: none;
+            border-color: #5a6fd8;
+        }
+
         .logout-btn {
             position: fixed;
             top: 20px;
             left: 20px;
-            background: rgba(255,255,255,0.2);
+            background: #e74c3c;
             color: white;
-            border: 2px solid white;
-            padding: 8px 15px;
-            border-radius: 20px;
+            border: 2px solid #c0392b;
+            padding: 10px 16px;
+            border-radius: 25px;
             cursor: pointer;
             font-size: 14px;
-            backdrop-filter: blur(10px);
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+            border-color: #a93226;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
         }
 
         .link-button {
@@ -403,11 +451,14 @@
 
     <!-- Customer Feedback View -->
     <div id="customerView" class="container" style="display: none;">
+        <!-- Admin toggle button for logged-in users -->
+        <button id="customerAdminToggle" class="admin-toggle" onclick="toggleView()" style="display: none;">View as Admin</button>
+        <button id="customerLogoutBtn" class="logout-btn" onclick="logout()" style="display: none;">Logout</button>
+
         <div class="header">
             <h1>How was your experience?</h1>
-            <div class="location-switcher">
-                <select id="customerLocationSelect" onchange="switchCustomerLocation()">
-                </select>
+            <div class="location-display">
+                <span id="customerLocationDisplay"></span>
             </div>
         </div>
         
@@ -436,7 +487,7 @@
     <!-- Admin View -->
     <div id="adminView" class="admin-container" style="display: none;">
         <button class="logout-btn" onclick="logout()">Logout</button>
-        <button class="admin-toggle" onclick="toggleView()"></button>
+        <button class="admin-toggle" onclick="toggleView()">View as Customer</button>
 
         <h1>Sentiment Analytics Dashboard</h1>
         <p style="color: #666; margin-bottom: 30px;">Welcome back, <span id="dashboardOwnerName"></span>!</p>
@@ -532,12 +583,14 @@
 
         function showWelcome() {
             hideAllScreens();
+            hideAdminControls();
             document.getElementById('welcomeScreen').style.display = 'block';
             currentView = 'welcome';
         }
 
         function showSignup() {
             hideAllScreens();
+            hideAdminControls();
             document.getElementById('signupScreen').style.display = 'block';
             currentView = 'signup';
             clearFormErrors();
@@ -545,6 +598,7 @@
 
         function showLogin() {
             hideAllScreens();
+            hideAdminControls();
             document.getElementById('loginScreen').style.display = 'block';
             currentView = 'login';
             clearFormErrors();
@@ -575,7 +629,9 @@
             };
             
             currentLocation = 'demo';
-            updateCustomerLocationSelect(demoLocations);
+            updateCustomerLocationDisplay(demoLocations);
+            // Show only admin toggle for demo mode (no logout button)
+            showDemoControls();
             currentView = 'customer-demo';
         }
 
@@ -584,6 +640,30 @@
             for (var i = 0; i < screens.length; i++) {
                 document.getElementById(screens[i]).style.display = 'none';
             }
+        }
+
+        function hideAdminControls() {
+            // Hide admin controls when not logged in
+            var customerToggle = document.getElementById('customerAdminToggle');
+            var customerLogout = document.getElementById('customerLogoutBtn');
+            if (customerToggle) customerToggle.style.display = 'none';
+            if (customerLogout) customerLogout.style.display = 'none';
+        }
+
+        function showAdminControls() {
+            // Show admin controls when logged in as admin
+            var customerToggle = document.getElementById('customerAdminToggle');
+            var customerLogout = document.getElementById('customerLogoutBtn');
+            if (customerToggle) customerToggle.style.display = 'flex';
+            if (customerLogout) customerLogout.style.display = 'block';
+        }
+
+        function showDemoControls() {
+            // Show only admin toggle for demo mode (no logout button)
+            var customerToggle = document.getElementById('customerAdminToggle');
+            var customerLogout = document.getElementById('customerLogoutBtn');
+            if (customerToggle) customerToggle.style.display = 'flex';
+            if (customerLogout) customerLogout.style.display = 'none';
         }
 
         function clearFormErrors() {
@@ -719,20 +799,12 @@
             showWelcome();
         }
 
-        function updateCustomerLocationSelect(locations) {
-            var select = document.getElementById('customerLocationSelect');
-            if (!select) return;
+        function updateCustomerLocationDisplay(locations) {
+            var display = document.getElementById('customerLocationDisplay');
+            if (!display) return;
 
-            select.innerHTML = '';
-            for (var id in locations) {
-                var option = document.createElement('option');
-                option.value = id;
-                option.textContent = locations[id].name;
-                if (id === currentLocation) {
-                    option.selected = true;
-                }
-                select.appendChild(option);
-            }
+            var locationName = locations[currentLocation] ? locations[currentLocation].name : 'Unknown Location';
+            display.textContent = locationName;
         }
 
         function selectSentiment(sentiment, button) {
@@ -778,6 +850,10 @@
             hideAllScreens();
             document.getElementById('adminView').style.display = 'block';
             document.getElementById('dashboardOwnerName').textContent = 'Demo User';
+            
+            // Hide logout button in demo mode
+            var logoutBtn = document.querySelector('#adminView .logout-btn');
+            if (logoutBtn) logoutBtn.style.display = 'none';
             
             currentView = 'admin-demo';
             
@@ -944,8 +1020,8 @@
                 for (var i = 0; i < demoLocationsData.length; i++) {
                     var location = demoLocationsData[i];
                     var div = document.createElement('div');
-                    div.className = 'feedback-item';
-                    div.innerHTML = '<span>' + location.name + '</span><span>' + location.feedback + ' feedback entries</span>';
+                    div.className = 'location-item';
+                    div.innerHTML = '<div class="location-info"><span>' + location.name + '</span><br><span style="color: #666; font-size: 14px;">' + location.feedback + ' feedback entries</span></div>';
                     container.appendChild(div);
                 }
                 
@@ -957,11 +1033,144 @@
                 for (var id in currentUser.locations) {
                     var location = currentUser.locations[id];
                     var div = document.createElement('div');
-                    div.className = 'feedback-item';
-                    div.innerHTML = '<span>' + location.name + '</span><span>' + (location.feedback ? location.feedback.length : 0) + ' feedback entries</span>';
+                    div.className = 'location-item';
+                    div.innerHTML = 
+                        '<div class="location-info">' +
+                            '<span id="location-name-' + id + '">' + location.name + '</span>' +
+                            '<br><span style="color: #666; font-size: 14px;">' + (location.feedback ? location.feedback.length : 0) + ' feedback entries</span>' +
+                        '</div>' +
+                        '<div class="location-actions">' +
+                            '<button class="btn-small" onclick="editLocation(\'' + id + '\')">Edit</button>' +
+                            '<button class="btn-small btn-danger" onclick="removeLocation(\'' + id + '\')">Remove</button>' +
+                        '</div>';
                     container.appendChild(div);
                 }
             }
+        }
+
+        function editLocation(locationId) {
+            if (!currentUser || !currentUser.locations[locationId]) return;
+            
+            var nameSpan = document.getElementById('location-name-' + locationId);
+            var currentName = currentUser.locations[locationId].name;
+            
+            // Create input field
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.className = 'edit-input';
+            input.id = 'edit-input-' + locationId;
+            
+            // Create save button
+            var saveBtn = document.createElement('button');
+            saveBtn.textContent = 'Save';
+            saveBtn.className = 'btn-small';
+            saveBtn.style.marginLeft = '8px';
+            saveBtn.onclick = function() { saveLocationEdit(locationId); };
+            
+            // Create cancel button
+            var cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.className = 'btn-small btn-danger';
+            cancelBtn.style.marginLeft = '4px';
+            cancelBtn.onclick = function() { cancelLocationEdit(locationId); };
+            
+            // Replace name with input and buttons
+            nameSpan.innerHTML = '';
+            nameSpan.appendChild(input);
+            nameSpan.appendChild(saveBtn);
+            nameSpan.appendChild(cancelBtn);
+            
+            // Focus input and select text
+            input.focus();
+            input.select();
+            
+            // Handle Enter key
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    saveLocationEdit(locationId);
+                }
+            });
+            
+            // Handle Escape key
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    cancelLocationEdit(locationId);
+                }
+            });
+        }
+
+        function saveLocationEdit(locationId) {
+            if (!currentUser || !currentUser.locations[locationId]) return;
+            
+            var input = document.getElementById('edit-input-' + locationId);
+            var newName = input.value.trim();
+            
+            if (!newName) {
+                alert('Location name cannot be empty');
+                input.focus();
+                return;
+            }
+            
+            // Check if name already exists (excluding current location)
+            for (var id in currentUser.locations) {
+                if (id !== locationId && currentUser.locations[id].name === newName) {
+                    alert('A location with this name already exists');
+                    input.focus();
+                    return;
+                }
+            }
+            
+            // Update location name
+            currentUser.locations[locationId].name = newName;
+            
+            // Refresh the locations list and other selects
+            updateLocationsList();
+            updateLocationSelects();
+        }
+
+        function cancelLocationEdit(locationId) {
+            if (!currentUser || !currentUser.locations[locationId]) return;
+            
+            // Simply refresh the locations list to restore original display
+            updateLocationsList();
+        }
+
+        function removeLocation(locationId) {
+            if (!currentUser || !currentUser.locations[locationId]) return;
+            
+            var locationName = currentUser.locations[locationId].name;
+            var feedbackCount = currentUser.locations[locationId].feedback ? currentUser.locations[locationId].feedback.length : 0;
+            
+            // Prevent removing the last location
+            var locationCount = Object.keys(currentUser.locations).length;
+            if (locationCount <= 1) {
+                alert('You must have at least one location. Add another location before removing this one.');
+                return;
+            }
+            
+            // Confirm deletion
+            var confirmMessage = 'Are you sure you want to remove "' + locationName + '"?';
+            if (feedbackCount > 0) {
+                confirmMessage += '\n\nThis location has ' + feedbackCount + ' feedback entries that will be permanently deleted.';
+            }
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            // Remove the location
+            delete currentUser.locations[locationId];
+            
+            // If we were currently viewing this location, switch to the first available location
+            if (currentLocation === locationId) {
+                currentLocation = Object.keys(currentUser.locations)[0];
+            }
+            
+            // Refresh everything
+            updateLocationsList();
+            updateLocationSelects();
+            updateAnalytics();
         }
 
         function generateQR() {
@@ -1190,12 +1399,15 @@
                 if (currentView === 'admin-demo') {
                     hideAllScreens();
                     document.getElementById('customerView').style.display = 'block';
+                    showDemoControls(); // Show only toggle button for demo
+                    updateCustomerLocationDisplay(window.demoAccount.locations);
                     currentView = 'customer-demo';
                 } else {
                     // For real accounts, show customer view for their business
                     hideAllScreens();
                     document.getElementById('customerView').style.display = 'block';
-                    updateCustomerLocationSelect(currentUser.locations);
+                    updateCustomerLocationDisplay(currentUser.locations);
+                    showAdminControls(); // Show admin controls on customer view for logged-in users
                     currentView = 'customer';
                 }
             } else {
@@ -1208,18 +1420,8 @@
         }
 
         function switchCustomerLocation() {
-            var select = document.getElementById('customerLocationSelect');
-            if (select) {
-                currentLocation = select.value;
-                selectedSentiment = null;
-                document.querySelectorAll('.emoji-btn').forEach(function(btn) {
-                    btn.classList.remove('selected');
-                });
-                document.querySelector('.submit-btn').classList.remove('enabled');
-                
-                document.querySelector('.feedback-section').style.display = 'block';
-                document.getElementById('thankYou').style.display = 'none';
-            }
+            // This function is no longer needed since customers can't switch locations
+            // Location is determined by the QR code they scan
         }
     </script>
 </body>
