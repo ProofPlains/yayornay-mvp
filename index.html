@@ -687,8 +687,52 @@
 
         // Initialize app when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            showWelcome();
+            // Check if there's a location parameter in the URL (from QR code scan)
+            var urlParams = new URLSearchParams(window.location.search);
+            var locationId = urlParams.get('location');
+            
+            if (locationId) {
+                // Customer scanned a QR code - show customer view for that location
+                showCustomerViewForLocation(locationId);
+            } else {
+                // No location parameter - show welcome screen
+                showWelcome();
+            }
         });
+
+        function showCustomerViewForLocation(locationId) {
+            hideAllScreens();
+            hideAdminControls(); // Regular customers shouldn't see admin controls
+            document.getElementById('customerView').style.display = 'block';
+            
+            // Set the current location
+            currentLocation = locationId;
+            
+            // Create a minimal location object for display
+            // In a real app, this would fetch from a database
+            var locations = {};
+            locations[locationId] = { 
+                name: getLocationDisplayName(locationId),
+                feedback: [] 
+            };
+            
+            updateCustomerLocationDisplay(locations);
+            currentView = 'customer';
+        }
+
+        function getLocationDisplayName(locationId) {
+            // In a real app, this would fetch the actual location name from a database
+            // For now, we'll create a user-friendly name from the ID
+            if (locationId === 'demo') {
+                return 'Demo Restaurant';
+            }
+            
+            // Convert kebab-case to title case (e.g., "main-street-cafe" → "Main Street Cafe")
+            return locationId
+                .split('-')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
 
         function handleSignup(event) {
             if (event) {
@@ -829,16 +873,35 @@
                 location: currentLocation
             };
 
+            // Handle different modes
             if (currentView === 'customer-demo' && window.demoAccount) {
+                // Demo mode - save to demo account
                 if (!window.demoAccount.locations[currentLocation].feedback) {
                     window.demoAccount.locations[currentLocation].feedback = [];
                 }
                 window.demoAccount.locations[currentLocation].feedback.push(feedback);
+            } else if (currentUser && currentUser.locations[currentLocation]) {
+                // Logged-in admin testing their own customer view
+                if (!currentUser.locations[currentLocation].feedback) {
+                    currentUser.locations[currentLocation].feedback = [];
+                }
+                currentUser.locations[currentLocation].feedback.push(feedback);
+            } else {
+                // Regular customer feedback - in a real app, this would save to a database
+                // For now, we'll store in localStorage with a key for this location
+                var storageKey = 'feedback_' + currentLocation;
+                var existingFeedback = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                existingFeedback.push(feedback);
+                localStorage.setItem(storageKey, JSON.stringify(existingFeedback));
+                
+                console.log('Customer feedback saved for location:', currentLocation, feedback);
             }
 
+            // Show thank you message
             document.querySelector('.feedback-section').style.display = 'none';
             document.getElementById('thankYou').style.display = 'block';
             
+            // Auto-transition to admin view only in demo mode
             if (currentView === 'customer-demo') {
                 setTimeout(function() {
                     showDemoAdmin();
