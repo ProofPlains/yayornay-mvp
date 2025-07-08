@@ -75,6 +75,10 @@
             resize: vertical;
             transition: border-color 0.3s ease;
             background: #fafafa;
+            /* Mobile fixes */
+            -webkit-appearance: none;
+            appearance: none;
+            white-space: pre-wrap;
         }
 
         .optional-feedback textarea:focus {
@@ -86,6 +90,14 @@
         .optional-feedback textarea::placeholder {
             color: #aaa;
             font-style: italic;
+        }
+
+        /* Mobile-specific adjustments */
+        @media (max-width: 768px) {
+            .optional-feedback textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+                min-height: 70px;
+            }
         }
 
         .emoji-buttons {
@@ -613,7 +625,11 @@
                 <textarea 
                     id="additionalComments" 
                     placeholder="Tell us more about your experience..."
-                    maxlength="500">
+                    maxlength="500"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="sentences"
+                    spellcheck="true">
                 </textarea>
             </div>
             
@@ -1049,7 +1065,9 @@
         function submitFeedback() {
             if (!selectedSentiment) return;
             
-            var additionalComments = document.getElementById('additionalComments').value.trim();
+            var additionalComments = document.getElementById('additionalComments').value;
+            // Trim whitespace and check if there's actual content
+            additionalComments = additionalComments ? additionalComments.trim() : '';
             
             var feedback = {
                 sentiment: selectedSentiment,
