@@ -1752,6 +1752,21 @@
                     
                     hideAllScreens();
                     document.getElementById('customerView').style.display = 'block';
+                    
+                    // Reset customer view state for admin users
+                    document.querySelector('.feedback-section').style.display = 'block';
+                    document.getElementById('thankYou').style.display = 'none';
+                    
+                    // Reset any selected sentiment and submit button state
+                    selectedSentiment = null;
+                    document.querySelectorAll('.emoji-btn').forEach(function(btn) {
+                        btn.classList.remove('selected');
+                    });
+                    document.querySelector('.submit-btn').classList.remove('enabled');
+                    
+                    // Clear the additional comments textarea
+                    document.getElementById('additionalComments').value = '';
+                    
                     updateCustomerLocationDisplay(currentUser.locations);
                     showAdminControls(); // Show admin controls on customer view for logged-in users
                     currentView = 'customer';
