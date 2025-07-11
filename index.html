@@ -2154,19 +2154,30 @@
         function toggleView() {
             if (currentView === 'admin' || currentView === 'admin-demo') {
                 if (currentView === 'admin-demo') {
+                    // Demo mode: switch to demo customer view
                     hideAllScreens();
                     document.getElementById('customerView').style.display = 'block';
-                    document.getElementById('customerDemoNotice').style.display = 'block'; // Show demo notice
-                    showDemoControls(); // Show only toggle button for demo
+                    document.getElementById('customerDemoNotice').style.display = 'block';
+                    showDemoControls();
                     updateCustomerLocationDisplay(window.demoAccount.locations);
+                    
+                    // Reset customer view state
+                    document.querySelector('.feedback-section').style.display = 'block';
+                    document.getElementById('thankYou').style.display = 'none';
+                    selectedSentiment = null;
+                    document.querySelectorAll('.emoji-btn').forEach(function(btn) {
+                        btn.classList.remove('selected');
+                    });
+                    document.querySelector('.submit-btn').classList.remove('enabled');
+                    document.getElementById('additionalComments').value = '';
+                    
                     currentView = 'customer-demo';
                 } else {
-                    // For real accounts, sync the selected location from analytics dropdown
+                    // Real admin: switch to customer view for their business
                     var analyticsSelect = document.getElementById('analyticsLocationSelect');
                     if (analyticsSelect && analyticsSelect.value !== 'all') {
                         currentLocation = analyticsSelect.value;
                     } else if (analyticsSelect && analyticsSelect.value === 'all') {
-                        // If "all" is selected, use the first available location
                         currentLocation = Object.keys(currentUser.locations)[0];
                     }
                     
@@ -2176,22 +2187,19 @@
                     // Reset customer view state for admin users
                     document.querySelector('.feedback-section').style.display = 'block';
                     document.getElementById('thankYou').style.display = 'none';
-                    
-                    // Reset any selected sentiment and submit button state
                     selectedSentiment = null;
                     document.querySelectorAll('.emoji-btn').forEach(function(btn) {
                         btn.classList.remove('selected');
                     });
                     document.querySelector('.submit-btn').classList.remove('enabled');
-                    
-                    // Clear the additional comments textarea
                     document.getElementById('additionalComments').value = '';
                     
                     updateCustomerLocationDisplay(currentUser.locations);
-                    showAdminControls(); // Show admin controls on customer view for logged-in users
+                    showAdminControls();
                     currentView = 'customer';
                 }
             } else {
+                // Customer view: switch back to admin
                 if (currentView === 'customer-demo') {
                     showDemoAdmin();
                 } else if (currentUser) {
