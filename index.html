@@ -506,152 +506,34 @@
             border-color: #3182ce;
             box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
         }
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s ease;
-        }
 
-        .btn-small:hover {
-            background: #5a6fd8;
-        }
-
-        .btn-small.btn-danger {
-            background: #e74c3c;
-        }
-
-        .btn-small.btn-danger:hover {
-            background: #c0392b;
-        }
-
-        .edit-input {
-            background: white;
-            border: 2px solid #667eea;
-            border-radius: 6px;
-            padding: 8px;
-            font-size: 14px;
-            margin-right: 8px;
-            min-width: 200px;
-        }
-
-        .edit-input:focus {
-            outline: none;
-            border-color: #5a6fd8;
-        }
-
-        .hamburger-menu {
+        .logout-btn {
             position: fixed;
             top: 20px;
             left: 20px;
-            background: white;
-            border: 2px solid #e2e8f0;
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(45, 55, 72, 0.1);
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .hamburger-menu:hover {
-            border-color: #4299e1;
-            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
-        }
-
-        .hamburger-icon {
-            width: 24px;
-            height: 18px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .hamburger-line {
-            width: 100%;
-            height: 3px;
-            background: #2d3748;
-            border-radius: 2px;
-            transition: all 0.3s ease;
-        }
-
-        .menu-dropdown {
-            position: fixed;
-            top: 60px;
-            left: 20px;
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            box-shadow: 0 8px 32px rgba(45, 55, 72, 0.15);
-            min-width: 200px;
-            z-index: 999;
-            display: none;
-        }
-
-        .menu-dropdown.show {
-            display: block;
-            animation: menuSlideIn 0.2s ease-out;
-        }
-
-        @keyframes menuSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .menu-section {
-            padding: 12px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .menu-section:last-child {
-            border-bottom: none;
-        }
-
-        .menu-title {
-            padding: 8px 16px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #718096;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .menu-item {
+            background: #e53e3e;
+            color: white;
+            border: 2px solid #c53030;
             padding: 10px 16px;
+            border-radius: 25px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            color: #2d3748;
             font-size: 14px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+            transition: all 0.3s ease;
         }
 
-        .menu-item:hover {
-            background: #f7f9fc;
-            color: #4299e1;
-        }
-
-        .menu-item.danger {
-            color: #e53e3e;
-        }
-
-        .menu-item.danger:hover {
-            background: #fed7d7;
-            color: #c53030;
+        .logout-btn:hover {
+            background: #c53030;
+            border-color: #a02622;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(229, 62, 62, 0.4);
         }
 
         .link-button {
             background: none;
             border: none;
-            color: #667eea;
+            color: #4299e1;
             text-decoration: underline;
             cursor: pointer;
             font-size: 14px;
@@ -659,7 +541,7 @@
         }
 
         .link-button:hover {
-            color: #5a6fd8;
+            color: #3182ce;
         }
 
         @media (max-width: 480px) {
@@ -825,7 +707,7 @@
             
             <div class="business-cta">
                 <h3>Business owner?</h3>
-                <p>Get customer feedback like this for your business for free!</p>
+                <p>Get customer feedback like this for your business</p>
                 <button class="cta-button" onclick="goToSignup()">Learn more</button>
             </div>
         </div>
@@ -833,28 +715,7 @@
 
     <!-- Admin View -->
     <div id="adminView" class="admin-container" style="display: none;">
-        <div class="hamburger-menu" onclick="toggleMenu()">
-            <div class="hamburger-icon">
-                <div class="hamburger-line"></div>
-                <div class="hamburger-line"></div>
-                <div class="hamburger-line"></div>
-            </div>
-        </div>
-
-        <div class="menu-dropdown" id="menuDropdown">
-            <div class="menu-section">
-                <div class="menu-title">Account</div>
-                <div class="menu-item" onclick="showAccountSettings()">
-                    <span>⚙️</span>
-                    <span>Account Settings</span>
-                </div>
-                <div class="menu-item danger" onclick="logout()">
-                    <span>🚪</span>
-                    <span>Logout</span>
-                </div>
-            </div>
-        </div>
-
+        <button class="logout-btn" onclick="logout()">Logout</button>
         <button class="admin-toggle" onclick="toggleView()">View as Customer</button>
 
         <h1>Sentiment Analytics Dashboard</h1>
@@ -864,7 +725,6 @@
             <button class="nav-tab active" onclick="switchTab('analytics')">Analytics</button>
             <button class="nav-tab" onclick="switchTab('locations')">Locations</button>
             <button class="nav-tab" onclick="switchTab('qr')">QR Codes</button>
-            <button class="nav-tab" onclick="switchTab('account')" id="accountTab" style="display: none;">Account</button>
         </div>
 
         <!-- Analytics Tab -->
@@ -948,60 +808,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Account Tab -->
-        <div id="account" class="tab-content">
-            <div style="max-width: 600px;">
-                <h3 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">Account Settings</h3>
-                
-                <div id="accountError" class="error-message" style="display: none;"></div>
-                <div id="accountSuccess" style="background: #c6f6d5; border: 1px solid #48bb78; border-radius: 8px; padding: 15px; text-align: center; margin-bottom: 20px; color: #22543d; display: none;"></div>
-
-                <!-- Profile Information Section -->
-                <div style="background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(45, 55, 72, 0.06); border: 1px solid rgba(45, 55, 72, 0.04);">
-                    <h4 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">Profile Information</h4>
-                    
-                    <div class="form-group">
-                        <label for="accountOwnerName">Your Name</label>
-                        <input type="text" id="accountOwnerName" style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px; width: 100%; font-size: 14px;">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="accountBusinessName">Business Name</label>
-                        <input type="text" id="accountBusinessName" style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px; width: 100%; font-size: 14px;">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="accountEmail">Email Address</label>
-                        <input type="email" id="accountEmail" style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px; width: 100%; font-size: 14px;">
-                    </div>
-                    
-                    <button class="btn" onclick="updateProfile()" style="background: #48bb78; padding: 10px 20px;">Update Profile</button>
-                </div>
-
-                <!-- Change Password Section -->
-                <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(45, 55, 72, 0.06); border: 1px solid rgba(45, 55, 72, 0.04);">
-                    <h4 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">Change Password</h4>
-                    
-                    <div class="form-group">
-                        <label for="currentPassword">Current Password</label>
-                        <input type="password" id="currentPassword" style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px; width: 100%; font-size: 14px;">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="newPassword">New Password</label>
-                        <input type="password" id="newPassword" minlength="6" style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px; width: 100%; font-size: 14px;">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="confirmNewPassword">Confirm New Password</label>
-                        <input type="password" id="confirmNewPassword" minlength="6" style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px; width: 100%; font-size: 14px;">
-                    </div>
-                    
-                    <button class="btn" onclick="updatePassword()" style="background: #4299e1; padding: 10px 20px;">Change Password</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -1059,7 +865,7 @@
             
             var demoLocations = {
                 'demo': { 
-                    name: 'Demo Business', 
+                    name: 'Demo Restaurant', 
                     feedback: [
                         { sentiment: 'very-happy', timestamp: new Date(Date.now() - 3600000).toISOString(), location: 'demo', comments: 'Great service and amazing food! Will definitely come back.' },
                         { sentiment: 'happy', timestamp: new Date(Date.now() - 7200000).toISOString(), location: 'demo', comments: null },
@@ -1181,7 +987,7 @@
             // In a real app, this would fetch the actual location name from a database
             // For now, we'll create a user-friendly name from the ID
             if (locationId === 'demo') {
-                return 'Demo Business';
+                return 'Demo Restaurant';
             }
             
             // Convert kebab-case to title case (e.g., "main-street-cafe" → "Main Street Cafe")
@@ -1287,12 +1093,17 @@
             hideAllScreens();
             document.getElementById('adminView').style.display = 'block';
             document.getElementById('dashboardOwnerName').textContent = currentUser.ownerName;
-            
-            // Show hamburger menu for real admin users
-            var hamburgerMenu = document.querySelector('.hamburger-menu');
-            if (hamburgerMenu) hamburgerMenu.style.display = 'block';
-            
             currentView = 'admin';
+            
+            // Remove demo notice if it exists (cleanup from demo mode)
+            var demoNotice = document.getElementById('demoNotice');
+            if (demoNotice) {
+                demoNotice.remove();
+            }
+            
+            // Ensure logout button is visible for real users
+            var logoutBtn = document.querySelector('#adminView .logout-btn');
+            if (logoutBtn) logoutBtn.style.display = 'block';
             
             updateLocationSelects();
             updateAnalytics();
@@ -1389,31 +1200,14 @@
             }
         }
 
-        function toggleMenu() {
-            var dropdown = document.getElementById('menuDropdown');
-            if (dropdown) {
-                dropdown.classList.toggle('show');
-            }
-        }
-
-        // Close menu when clicking outside
-        document.addEventListener('click', function(event) {
-            var menu = document.querySelector('.hamburger-menu');
-            var dropdown = document.getElementById('menuDropdown');
-            
-            if (dropdown && menu && !menu.contains(event.target) && !dropdown.contains(event.target)) {
-                dropdown.classList.remove('show');
-            }
-        });
-
         function showDemoAdmin() {
             hideAllScreens();
             document.getElementById('adminView').style.display = 'block';
             document.getElementById('dashboardOwnerName').textContent = 'Demo User';
             
-            // Hide hamburger menu in demo mode
-            var hamburgerMenu = document.querySelector('.hamburger-menu');
-            if (hamburgerMenu) hamburgerMenu.style.display = 'none';
+            // Hide logout button in demo mode
+            var logoutBtn = document.querySelector('#adminView .logout-btn');
+            if (logoutBtn) logoutBtn.style.display = 'none';
             
             currentView = 'admin-demo';
             
@@ -1630,7 +1424,7 @@
             
             if (currentView === 'admin-demo' && window.demoAccount) {
                 var demoLocationsData = [
-                    { name: 'Demo Business', feedback: window.demoAccount.locations.demo.feedback.length },
+                    { name: 'Demo Restaurant', feedback: window.demoAccount.locations.demo.feedback.length },
                     { name: 'Main Street Cafe', feedback: 12 },
                     { name: 'Downtown Store', feedback: 8 }
                 ];
@@ -2000,16 +1794,8 @@
                 contents[i].classList.remove('active');
             }
             
-            // Find and activate the correct tab
-            var targetTab = document.querySelector('[onclick="switchTab(\'' + tabName + '\')"]');
-            if (targetTab) {
-                targetTab.classList.add('active');
-            }
-            
-            var targetContent = document.getElementById(tabName);
-            if (targetContent) {
-                targetContent.classList.add('active');
-            }
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
             
             if (tabName === 'analytics') {
                 updateAnalytics();
@@ -2017,175 +1803,6 @@
                 updateLocationsList();
             } else if (tabName === 'qr') {
                 generateQR();
-            } else if (tabName === 'account') {
-                // Account tab specific logic handled in showAccountSettings
-            }
-        }
-
-        function switchTab(tabName) {
-            var tabs = document.querySelectorAll('.nav-tab');
-            var contents = document.querySelectorAll('.tab-content');
-            
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove('active');
-            }
-            for (var i = 0; i < contents.length; i++) {
-                contents[i].classList.remove('active');
-            }
-            
-            // Find and activate the correct tab
-            var targetTab = document.querySelector('[onclick="switchTab(\'' + tabName + '\')"]');
-            if (targetTab) {
-                targetTab.classList.add('active');
-            }
-            
-            var targetContent = document.getElementById(tabName);
-            if (targetContent) {
-                targetContent.classList.add('active');
-            }
-            
-            if (tabName === 'analytics') {
-                updateAnalytics();
-            } else if (tabName === 'locations') {
-                updateLocationsList();
-            } else if (tabName === 'qr') {
-                generateQR();
-            } else if (tabName === 'account') {
-                // Account tab specific logic handled in showAccountSettings
-            }
-        }
-
-        function showAccountSettings() {
-            // Close the menu
-            var dropdown = document.getElementById('menuDropdown');
-            if (dropdown) {
-                dropdown.classList.remove('show');
-            }
-            
-            // Switch to account tab
-            switchTab('account');
-            
-            // Populate current user data
-            if (currentUser) {
-                document.getElementById('accountOwnerName').value = currentUser.ownerName || '';
-                document.getElementById('accountBusinessName').value = currentUser.businessName || '';
-                document.getElementById('accountEmail').value = currentUser.email || '';
-            }
-            
-            // Clear password fields
-            document.getElementById('currentPassword').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmNewPassword').value = '';
-        }
-
-        function updateProfile() {
-            if (!currentUser) return;
-            
-            var newOwnerName = document.getElementById('accountOwnerName').value.trim();
-            var newBusinessName = document.getElementById('accountBusinessName').value.trim();
-            var newEmail = document.getElementById('accountEmail').value.trim().toLowerCase();
-            
-            // Clear previous messages
-            document.getElementById('accountError').style.display = 'none';
-            document.getElementById('accountSuccess').style.display = 'none';
-            
-            // Validation
-            if (!newOwnerName || !newBusinessName || !newEmail) {
-                showAccountError('Please fill in all profile fields');
-                return;
-            }
-            
-            var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(newEmail)) {
-                showAccountError('Please enter a valid email address');
-                return;
-            }
-            
-            // Check if email is already taken by another user
-            if (newEmail !== currentUser.email && userDatabase[newEmail]) {
-                showAccountError('This email address is already in use');
-                return;
-            }
-            
-            // Update user data
-            var oldEmail = currentUser.email;
-            currentUser.ownerName = newOwnerName;
-            currentUser.businessName = newBusinessName;
-            currentUser.email = newEmail;
-            
-            // If email changed, update the database key
-            if (oldEmail !== newEmail) {
-                delete userDatabase[oldEmail];
-                userDatabase[newEmail] = currentUser;
-            }
-            
-            // Update dashboard display
-            document.getElementById('dashboardOwnerName').textContent = newOwnerName;
-            
-            showAccountSuccess('Profile updated successfully!');
-        }
-
-        function updatePassword() {
-            if (!currentUser) return;
-            
-            var currentPassword = document.getElementById('currentPassword').value;
-            var newPassword = document.getElementById('newPassword').value;
-            var confirmNewPassword = document.getElementById('confirmNewPassword').value;
-            
-            // Clear previous messages
-            document.getElementById('accountError').style.display = 'none';
-            document.getElementById('accountSuccess').style.display = 'none';
-            
-            // Validation
-            if (!currentPassword || !newPassword || !confirmNewPassword) {
-                showAccountError('Please fill in all password fields');
-                return;
-            }
-            
-            if (currentPassword !== currentUser.password) {
-                showAccountError('Current password is incorrect');
-                return;
-            }
-            
-            if (newPassword.length < 6) {
-                showAccountError('New password must be at least 6 characters long');
-                return;
-            }
-            
-            if (newPassword !== confirmNewPassword) {
-                showAccountError('New passwords do not match');
-                return;
-            }
-            
-            if (newPassword === currentPassword) {
-                showAccountError('New password must be different from current password');
-                return;
-            }
-            
-            // Update password
-            currentUser.password = newPassword;
-            
-            // Clear password fields
-            document.getElementById('currentPassword').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmNewPassword').value = '';
-            
-            showAccountSuccess('Password changed successfully!');
-        }
-
-        function showAccountError(message) {
-            var errorElement = document.getElementById('accountError');
-            if (errorElement) {
-                errorElement.textContent = message;
-                errorElement.style.display = 'block';
-            }
-        }
-
-        function showAccountSuccess(message) {
-            var successElement = document.getElementById('accountSuccess');
-            if (successElement) {
-                successElement.textContent = message;
-                successElement.style.display = 'block';
             }
         }
 
