@@ -19,7 +19,7 @@
             padding: 20px;
         }
 
-        .container, .welcome-container, .signup-container, .login-container, .admin-container {
+        .container, .welcome-container, .signup-container, .login-container {
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -714,12 +714,13 @@
     </div>
 
     <!-- Admin View -->
-    <div id="adminView" class="admin-container" style="display: none;">
+    <div id="adminView" style="display: none;">
         <button class="logout-btn" onclick="logout()">Logout</button>
         <button class="admin-toggle" onclick="toggleView()">View as Customer</button>
 
         <!-- Sidebar Navigation -->
-        <div class="admin-sidebar">
+        <aside class="admin-sidebar">
+            <button class="sidebar-toggle" onclick="toggleSidebar(); console.log('Button clicked directly!');">☰</button>
             <div class="sidebar-header">
                 <div class="sidebar-logo">HappySnap</div>
                 <div class="sidebar-subtitle">Analytics Dashboard</div>
@@ -728,36 +729,35 @@
             <nav>
                 <ul class="sidebar-menu">
                     <li class="menu-item">
-                        <button class="menu-link active" onclick="showSection('analytics')" data-section="analytics">
+                        <button class="menu-link active" onclick="showSection('analytics')" data-section="analytics" data-tooltip="Analytics">
                             <span class="menu-icon">📊</span>
-                            Analytics
+                            <span class="menu-text">Analytics</span>
                         </button>
                     </li>
                     <li class="menu-item">
-                        <button class="menu-link" onclick="showSection('locations')" data-section="locations">
+                        <button class="menu-link" onclick="showSection('locations')" data-section="locations" data-tooltip="Locations">
                             <span class="menu-icon">🏪</span>
-                            Locations
+                            <span class="menu-text">Locations</span>
                         </button>
                     </li>
                     <li class="menu-item">
-                        <button class="menu-link" onclick="showSection('qr')" data-section="qr">
-                            <span class="menu-icon">🗂️</span>
-                            QR Codes
+                        <button class="menu-link" onclick="showSection('qr')" data-section="qr" data-tooltip="QR Codes">
+                            <span class="menu-icon">⬛</span>
+                            <span class="menu-text">QR Codes</span>
                         </button>
                     </li>
                 </ul>
             </nav>
-        </div>
+        </aside>
 
         <!-- Main Content Area -->
-        <div class="admin-content">
-            <div class="admin-header">
+        <main class="admin-content">
+            <header class="admin-header">
                 <h1>Dashboard</h1>
-                <p>Welcome back, <span id="dashboardOwnerName"></span>!</p>
-            </div>
+            </header>
 
             <!-- Analytics Section -->
-            <div id="analytics" class="content-section active">
+            <section id="analytics" class="content-section active">
                 <div style="margin-bottom: 20px;">
                     <label>Select Location: </label>
                     <select id="analyticsLocationSelect" onchange="updateAnalytics()">
@@ -805,20 +805,20 @@
                     <h3>Recent Feedback</h3>
                     <div id="recentFeedbackList"></div>
                 </div>
-            </div>
+            </section>
 
             <!-- Locations Section -->
-            <div id="locations" class="content-section">
+            <section id="locations" class="content-section">
                 <div style="margin-bottom: 30px;">
                     <input type="text" id="newLocationInput" placeholder="Enter location name" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; margin-right: 10px; width: 200px;">
                     <button class="btn" onclick="addLocation()">Add Location</button>
                 </div>
                 
                 <div id="locationsList"></div>
-            </div>
+            </section>
 
             <!-- QR Codes Section -->
-            <div id="qr" class="content-section">
+            <section id="qr" class="content-section">
                 <div style="margin-bottom: 20px;">
                     <label>Generate QR Code for: </label>
                     <select id="qrLocationSelect" onchange="generateQR()">
@@ -836,8 +836,8 @@
                         <div id="signImageContainer"></div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
     </div>
 
     <script>
@@ -985,6 +985,9 @@
                 // No location parameter - show welcome screen
                 showWelcome();
             }
+            
+            // Test that toggle function works
+            console.log('DOM loaded, testing toggle function exists:', typeof toggleSidebar);
         });
 
         function showCustomerViewForLocation(locationId) {
@@ -1121,7 +1124,23 @@
 
         function showAdminDashboard() {
             hideAllScreens();
-            document.getElementById('adminView').style.display = 'block';
+            var adminView = document.getElementById('adminView');
+            adminView.style.display = 'flex';
+            adminView.style.maxWidth = '1400px';
+            adminView.style.margin = '0 auto';
+            adminView.style.background = 'white';
+            adminView.style.borderRadius = '20px';
+            adminView.style.boxShadow = '0 8px 32px rgba(45, 55, 72, 0.12)';
+            adminView.style.overflow = 'hidden';
+            adminView.style.border = '1px solid rgba(45, 55, 72, 0.06)';
+            adminView.style.minHeight = '80vh';
+            
+            // Ensure sidebar starts collapsed
+            var sidebar = document.querySelector('#adminView .admin-sidebar');
+            if (sidebar) {
+                sidebar.classList.remove('expanded');
+            }
+            
             document.getElementById('dashboardOwnerName').textContent = currentUser.ownerName;
             currentView = 'admin';
             
@@ -1136,8 +1155,9 @@
             if (logoutBtn) logoutBtn.style.display = 'block';
             
             updateLocationSelects();
-            updateAnalytics();
-            generateQR();
+            
+            // Initialize with analytics section active
+            showSection('analytics');
         }
 
         function logout() {
@@ -1232,27 +1252,149 @@
 
         function showDemoAdmin() {
             hideAllScreens();
-            document.getElementById('adminView').style.display = 'block';
-            document.getElementById('dashboardOwnerName').textContent = 'Demo User';
+            var adminView = document.getElementById('adminView');
+            adminView.style.display = 'flex';
+            adminView.style.maxWidth = '1400px';
+            adminView.style.margin = '0 auto';
+            adminView.style.background = 'white';
+            adminView.style.borderRadius = '20px';
+            adminView.style.boxShadow = '0 8px 32px rgba(45, 55, 72, 0.12)';
+            adminView.style.overflow = 'hidden';
+            adminView.style.border = '1px solid rgba(45, 55, 72, 0.06)';
+            adminView.style.minHeight = '80vh';
             
-            // Hide logout button in demo mode
+            // IMPORTANT: Set current user to null to ensure demo mode
+            currentUser = null;
+            currentView = 'admin-demo';
+            
+            // Force sidebar styling via JavaScript
+            var sidebar = document.querySelector('#adminView .admin-sidebar');
+            if (sidebar) {
+                sidebar.classList.remove('expanded');
+                sidebar.style.background = 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)';
+                sidebar.style.color = 'white';
+                sidebar.style.padding = '20px 0';
+                sidebar.style.boxShadow = '2px 0 10px rgba(0,0,0,0.1)';
+                sidebar.style.flexShrink = '0';
+                sidebar.style.transition = 'width 0.3s ease';
+                sidebar.style.overflow = 'hidden';
+                sidebar.style.width = '60px';
+                sidebar.style.position = 'relative';
+            }
+            
+            // Style the hamburger toggle button
+            var toggleBtn = document.querySelector('#adminView .sidebar-toggle');
+            if (toggleBtn) {
+                toggleBtn.style.position = 'absolute';
+                toggleBtn.style.top = '15px';
+                toggleBtn.style.left = '15px';
+                toggleBtn.style.background = 'rgba(255,255,255,0.2)';
+                toggleBtn.style.border = '2px solid rgba(255,255,255,0.3)';
+                toggleBtn.style.color = 'white';
+                toggleBtn.style.width = '40px';
+                toggleBtn.style.height = '40px';
+                toggleBtn.style.borderRadius = '8px';
+                toggleBtn.style.cursor = 'pointer';
+                toggleBtn.style.display = 'flex';
+                toggleBtn.style.alignItems = 'center';
+                toggleBtn.style.justifyContent = 'center';
+                toggleBtn.style.fontSize = '18px';
+                toggleBtn.style.fontWeight = 'bold';
+                toggleBtn.style.zIndex = '10';
+                toggleBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+                toggleBtn.style.transition = 'all 0.3s ease';
+            }
+            
+            // Style the header (initially hidden)
+            var header = sidebar ? sidebar.querySelector('.sidebar-header') : null;
+            if (header) {
+                header.style.padding = '60px 20px 20px 20px';
+                header.style.borderBottom = '1px solid rgba(255,255,255,0.2)';
+                header.style.marginBottom = '20px';
+                header.style.opacity = '0';
+                header.style.transition = 'opacity 0.3s ease';
+                header.style.color = 'white';
+                
+                var logo = header.querySelector('.sidebar-logo');
+                if (logo) {
+                    logo.style.fontSize = '20px';
+                    logo.style.fontWeight = 'bold';
+                    logo.style.marginBottom = '5px';
+                    logo.style.color = 'white';
+                }
+                
+                var subtitle = header.querySelector('.sidebar-subtitle');
+                if (subtitle) {
+                    subtitle.style.fontSize = '12px';
+                    subtitle.style.opacity = '0.8';
+                    subtitle.style.color = 'rgba(255,255,255,0.8)';
+                }
+            }
+            
+            // Style menu items
+            var menuLinks = document.querySelectorAll('#adminView .menu-link');
+            for (var i = 0; i < menuLinks.length; i++) {
+                var link = menuLinks[i];
+                link.style.background = 'none';
+                link.style.border = 'none';
+                link.style.color = 'rgba(255,255,255,0.8)';
+                link.style.display = 'flex';
+                link.style.alignItems = 'center';
+                link.style.padding = '15px 20px';
+                link.style.width = '100%';
+                link.style.textAlign = 'left';
+                link.style.cursor = 'pointer';
+                link.style.transition = 'all 0.3s ease';
+                link.style.fontSize = '14px';
+                link.style.fontWeight = '500';
+                
+                var menuText = link.querySelector('.menu-text');
+                if (menuText) {
+                    menuText.style.opacity = '0';
+                    menuText.style.transition = 'opacity 0.3s ease';
+                }
+                
+                var menuIcon = link.querySelector('.menu-icon');
+                if (menuIcon) {
+                    menuIcon.style.fontSize = '16px';
+                    menuIcon.style.marginRight = '15px';
+                    menuIcon.style.width = '20px';
+                    menuIcon.style.textAlign = 'center';
+                }
+            }
+            
+            // Style active menu item (Analytics by default)
+            var activeLink = document.querySelector('#adminView .menu-link.active');
+            if (activeLink) {
+                activeLink.style.background = 'rgba(255,255,255,0.15)';
+                activeLink.style.borderRight = '3px solid white';
+                activeLink.style.color = 'white';
+                activeLink.style.fontWeight = '600';
+            }
+            
+            // DEMO MODE: Hide logout button
             var logoutBtn = document.querySelector('#adminView .logout-btn');
             if (logoutBtn) logoutBtn.style.display = 'none';
             
-            currentView = 'admin-demo';
-            
-            var dashboard = document.getElementById('adminView');
-            if (!document.getElementById('demoNotice')) {
+            // DEMO MODE: Add demo notice to the content area
+            var contentArea = document.querySelector('#adminView .admin-content');
+            if (contentArea) {
+                // Remove any existing demo notice first
+                var existingNotice = document.getElementById('demoNotice');
+                if (existingNotice) {
+                    existingNotice.remove();
+                }
+                
+                // Add new demo notice
                 var notice = document.createElement('div');
                 notice.id = 'demoNotice';
                 notice.style.cssText = 'background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;';
                 notice.innerHTML = '<p style="color: #2e7d32; margin: 0 0 10px 0;"><strong>Demo Mode</strong> - This is what business owners see!</p><button onclick="showWelcome()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button>';
-                dashboard.insertBefore(notice, dashboard.firstChild);
+                contentArea.insertBefore(notice, contentArea.firstChild);
             }
             
             updateLocationSelects();
-            updateAnalytics();
-            generateQR();
+            showSection('analytics');
         }
 
         function updateLocationSelects() {
@@ -1813,29 +1955,173 @@
             }
         }
 
+        function toggleSidebar() {
+            console.log('toggleSidebar called');
+            var sidebar = document.querySelector('#adminView .admin-sidebar');
+            console.log('Sidebar found:', !!sidebar);
+            if (sidebar) {
+                var isExpanded = sidebar.classList.contains('expanded');
+                console.log('Currently expanded:', isExpanded);
+                
+                // Ensure sidebar styling is always applied
+                sidebar.style.background = 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)';
+                sidebar.style.color = 'white';
+                sidebar.style.padding = '20px 0';
+                sidebar.style.boxShadow = '2px 0 10px rgba(0,0,0,0.1)';
+                sidebar.style.flexShrink = '0';
+                sidebar.style.transition = 'width 0.3s ease';
+                sidebar.style.overflow = 'hidden';
+                sidebar.style.position = 'relative';
+                
+                // Always ensure hamburger button is styled
+                var toggleBtn = sidebar.querySelector('.sidebar-toggle');
+                if (toggleBtn) {
+                    toggleBtn.style.position = 'absolute';
+                    toggleBtn.style.top = '15px';
+                    toggleBtn.style.left = '15px';
+                    toggleBtn.style.background = 'rgba(255,255,255,0.2)';
+                    toggleBtn.style.border = '2px solid rgba(255,255,255,0.3)';
+                    toggleBtn.style.color = 'white';
+                    toggleBtn.style.width = '40px';
+                    toggleBtn.style.height = '40px';
+                    toggleBtn.style.borderRadius = '8px';
+                    toggleBtn.style.cursor = 'pointer';
+                    toggleBtn.style.display = 'flex';
+                    toggleBtn.style.alignItems = 'center';
+                    toggleBtn.style.justifyContent = 'center';
+                    toggleBtn.style.fontSize = '18px';
+                    toggleBtn.style.fontWeight = 'bold';
+                    toggleBtn.style.zIndex = '10';
+                    toggleBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+                    toggleBtn.style.transition = 'all 0.3s ease';
+                }
+                
+                if (isExpanded) {
+                    sidebar.classList.remove('expanded');
+                    sidebar.style.width = '60px';
+                    
+                    var header = sidebar.querySelector('.sidebar-header');
+                    if (header) {
+                        header.style.opacity = '0';
+                        header.style.padding = '60px 20px 20px 20px'; // Keep space for button
+                    }
+                    
+                    var menuTexts = sidebar.querySelectorAll('.menu-text');
+                    for (var i = 0; i < menuTexts.length; i++) {
+                        menuTexts[i].style.opacity = '0';
+                    }
+                    console.log('Collapsed sidebar');
+                } else {
+                    sidebar.classList.add('expanded');
+                    sidebar.style.width = '280px';
+                    
+                    var header = sidebar.querySelector('.sidebar-header');
+                    if (header) {
+                        header.style.opacity = '1';
+                        header.style.padding = '60px 20px 20px 20px'; // Space for hamburger button
+                        header.style.borderBottom = '1px solid rgba(255,255,255,0.2)';
+                        header.style.marginBottom = '20px';
+                        header.style.color = 'white';
+                        header.style.transition = 'opacity 0.3s ease';
+                        
+                        // Style the logo and subtitle
+                        var logo = header.querySelector('.sidebar-logo');
+                        if (logo) {
+                            logo.style.fontSize = '20px';
+                            logo.style.fontWeight = 'bold';
+                            logo.style.marginBottom = '5px';
+                            logo.style.color = 'white';
+                        }
+                        
+                        var subtitle = header.querySelector('.sidebar-subtitle');
+                        if (subtitle) {
+                            subtitle.style.fontSize = '12px';
+                            subtitle.style.opacity = '0.8';
+                            subtitle.style.color = 'rgba(255,255,255,0.8)';
+                        }
+                    }
+                    
+                    var menuTexts = sidebar.querySelectorAll('.menu-text');
+                    for (var i = 0; i < menuTexts.length; i++) {
+                        menuTexts[i].style.opacity = '1';
+                        menuTexts[i].style.transition = 'opacity 0.3s ease';
+                    }
+                    console.log('Expanded sidebar');
+                }
+                
+                // Re-apply menu styling after toggle, but preserve active states
+                var menuLinks = document.querySelectorAll('#adminView .menu-link');
+                for (var i = 0; i < menuLinks.length; i++) {
+                    var link = menuLinks[i];
+                    var isActive = link.classList.contains('active');
+                    
+                    if (!isActive) {
+                        // Only style non-active links
+                        link.style.background = 'none';
+                        link.style.border = 'none';
+                        link.style.borderRight = 'none';
+                        link.style.color = 'rgba(255,255,255,0.8)';
+                        link.style.fontSize = '14px';
+                        link.style.fontWeight = '500';
+                    } else {
+                        // Maintain active link styling
+                        link.style.background = 'rgba(255,255,255,0.15)';
+                        link.style.borderRight = '3px solid white';
+                        link.style.color = 'white';
+                        link.style.fontWeight = '600';
+                    }
+                    
+                    // Common properties for all links
+                    link.style.display = 'flex';
+                    link.style.alignItems = 'center';
+                    link.style.padding = '15px 20px';
+                    link.style.width = '100%';
+                    link.style.textAlign = 'left';
+                    link.style.cursor = 'pointer';
+                    link.style.transition = 'all 0.3s ease';
+                    link.style.fontSize = '14px';
+                }
+            }
+        }
+
         function showSection(sectionName) {
+            console.log('Switching to section:', sectionName);
+            
             // Hide all content sections
             var sections = document.querySelectorAll('.content-section');
             for (var i = 0; i < sections.length; i++) {
                 sections[i].classList.remove('active');
+                sections[i].style.display = 'none';
             }
             
             // Remove active state from all menu links
             var menuLinks = document.querySelectorAll('.menu-link');
             for (var i = 0; i < menuLinks.length; i++) {
                 menuLinks[i].classList.remove('active');
+                // Reset styling for all menu items
+                menuLinks[i].style.background = 'none';
+                menuLinks[i].style.border = 'none';
+                menuLinks[i].style.borderRight = 'none';
+                menuLinks[i].style.color = 'rgba(255,255,255,0.8)';
+                menuLinks[i].style.fontWeight = '500';
             }
             
             // Show selected section
             var targetSection = document.getElementById(sectionName);
             if (targetSection) {
                 targetSection.classList.add('active');
+                targetSection.style.display = 'block';
             }
             
             // Add active state to clicked menu link
             var activeLink = document.querySelector('[data-section="' + sectionName + '"]');
             if (activeLink) {
                 activeLink.classList.add('active');
+                // Apply active styling
+                activeLink.style.background = 'rgba(255,255,255,0.15)';
+                activeLink.style.borderRight = '3px solid white';
+                activeLink.style.color = 'white';
+                activeLink.style.fontWeight = '600';
             }
             
             // Update header based on section
