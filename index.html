@@ -718,93 +718,123 @@
         <button class="logout-btn" onclick="logout()">Logout</button>
         <button class="admin-toggle" onclick="toggleView()">View as Customer</button>
 
-        <h1>Sentiment Analytics Dashboard</h1>
-        <p style="color: #666; margin-bottom: 30px;">Welcome back, <span id="dashboardOwnerName"></span>!</p>
-        
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('analytics')">Analytics</button>
-            <button class="nav-tab" onclick="switchTab('locations')">Locations</button>
-            <button class="nav-tab" onclick="switchTab('qr')">QR Codes</button>
-        </div>
-
-        <!-- Analytics Tab -->
-        <div id="analytics" class="tab-content active">
-            <div style="margin-bottom: 20px;">
-                <label>Select Location: </label>
-                <select id="analyticsLocationSelect" onchange="updateAnalytics()">
-                    <option value="all">All Locations</option>
-                </select>
+        <!-- Sidebar Navigation -->
+        <div class="admin-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">HappySnap</div>
+                <div class="sidebar-subtitle">Analytics Dashboard</div>
             </div>
             
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalFeedback">0</div>
-                    <div class="stat-label">Total Feedback</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="commentsPercent">0%</div>
-                    <div class="stat-label">Left Comments</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="veryHappyPercent">0%</div>
-                    <div class="stat-label">Very Happy</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="happyPercent">0%</div>
-                    <div class="stat-label">Happy</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="neutralPercent">0%</div>
-                    <div class="stat-label">Neutral</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="sadPercent">0%</div>
-                    <div class="stat-label">Sad</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="verySadPercent">0%</div>
-                    <div class="stat-label">Very Sad</div>
-                </div>
-            </div>
-
-            <div style="margin-top: 30px;">
-                <h3>Recent Comments</h3>
-                <div id="recentCommentsList"></div>
-            </div>
-
-            <div style="margin-top: 30px;">
-                <h3>Recent Feedback</h3>
-                <div id="recentFeedbackList"></div>
-            </div>
+            <nav>
+                <ul class="sidebar-menu">
+                    <li class="menu-item">
+                        <button class="menu-link active" onclick="showSection('analytics')" data-section="analytics">
+                            <span class="menu-icon">📊</span>
+                            Analytics
+                        </button>
+                    </li>
+                    <li class="menu-item">
+                        <button class="menu-link" onclick="showSection('locations')" data-section="locations">
+                            <span class="menu-icon">🏪</span>
+                            Locations
+                        </button>
+                    </li>
+                    <li class="menu-item">
+                        <button class="menu-link" onclick="showSection('qr')" data-section="qr">
+                            <span class="menu-icon">🗂️</span>
+                            QR Codes
+                        </button>
+                    </li>
+                </ul>
+            </nav>
         </div>
 
-        <!-- Locations Tab -->
-        <div id="locations" class="tab-content">
-            <div style="margin-bottom: 30px;">
-                <input type="text" id="newLocationInput" placeholder="Enter location name" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; margin-right: 10px; width: 200px;">
-                <button class="btn" onclick="addLocation()">Add Location</button>
+        <!-- Main Content Area -->
+        <div class="admin-content">
+            <div class="admin-header">
+                <h1>Dashboard</h1>
+                <p>Welcome back, <span id="dashboardOwnerName"></span>!</p>
             </div>
-            
-            <div id="locationsList"></div>
-        </div>
 
-        <!-- QR Codes Tab -->
-        <div id="qr" class="tab-content">
-            <div style="margin-bottom: 20px;">
-                <label>Generate QR Code for: </label>
-                <select id="qrLocationSelect" onchange="generateQR()">
-                </select>
+            <!-- Analytics Section -->
+            <div id="analytics" class="content-section active">
+                <div style="margin-bottom: 20px;">
+                    <label>Select Location: </label>
+                    <select id="analyticsLocationSelect" onchange="updateAnalytics()">
+                        <option value="all">All Locations</option>
+                    </select>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalFeedback">0</div>
+                        <div class="stat-label">Total Feedback</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="commentsPercent">0%</div>
+                        <div class="stat-label">Left Comments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="veryHappyPercent">0%</div>
+                        <div class="stat-label">Very Happy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="happyPercent">0%</div>
+                        <div class="stat-label">Happy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="neutralPercent">0%</div>
+                        <div class="stat-label">Neutral</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="sadPercent">0%</div>
+                        <div class="stat-label">Sad</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="verySadPercent">0%</div>
+                        <div class="stat-label">Very Sad</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>Recent Comments</h3>
+                    <div id="recentCommentsList"></div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>Recent Feedback</h3>
+                    <div id="recentFeedbackList"></div>
+                </div>
             </div>
-            
-            <div class="qr-section">
-                <h3>QR Code Sign Generator</h3>
-                <div id="qrContainer"></div>
-                <p>Generate a complete sign with call-to-action text</p>
-                <button class="btn" onclick="generateSign()">Generate Customer Sign</button>
-                <div id="generatedSign" style="display: none; margin-top: 20px; text-align: center;">
-                    <h4>Your Customer Sign is Ready!</h4>
-                    <p style="color: #666; margin-bottom: 15px;">Right-click on the image below and select "Save image as..." to download</p>
-                    <div id="signImageContainer"></div>
+
+            <!-- Locations Section -->
+            <div id="locations" class="content-section">
+                <div style="margin-bottom: 30px;">
+                    <input type="text" id="newLocationInput" placeholder="Enter location name" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; margin-right: 10px; width: 200px;">
+                    <button class="btn" onclick="addLocation()">Add Location</button>
+                </div>
+                
+                <div id="locationsList"></div>
+            </div>
+
+            <!-- QR Codes Section -->
+            <div id="qr" class="content-section">
+                <div style="margin-bottom: 20px;">
+                    <label>Generate QR Code for: </label>
+                    <select id="qrLocationSelect" onchange="generateQR()">
+                    </select>
+                </div>
+                
+                <div class="qr-section">
+                    <h3>QR Code Sign Generator</h3>
+                    <div id="qrContainer"></div>
+                    <p>Generate a complete sign with call-to-action text</p>
+                    <button class="btn" onclick="generateSign()">Generate Customer Sign</button>
+                    <div id="generatedSign" style="display: none; margin-top: 20px; text-align: center;">
+                        <h4>Your Customer Sign is Ready!</h4>
+                        <p style="color: #666; margin-bottom: 15px;">Right-click on the image below and select "Save image as..." to download</p>
+                        <div id="signImageContainer"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1783,27 +1813,56 @@
             }
         }
 
+        function showSection(sectionName) {
+            // Hide all content sections
+            var sections = document.querySelectorAll('.content-section');
+            for (var i = 0; i < sections.length; i++) {
+                sections[i].classList.remove('active');
+            }
+            
+            // Remove active state from all menu links
+            var menuLinks = document.querySelectorAll('.menu-link');
+            for (var i = 0; i < menuLinks.length; i++) {
+                menuLinks[i].classList.remove('active');
+            }
+            
+            // Show selected section
+            var targetSection = document.getElementById(sectionName);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Add active state to clicked menu link
+            var activeLink = document.querySelector('[data-section="' + sectionName + '"]');
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            // Update header based on section
+            var headerTitle = document.querySelector('.admin-header h1');
+            if (headerTitle) {
+                switch(sectionName) {
+                    case 'analytics':
+                        headerTitle.textContent = 'Analytics Dashboard';
+                        updateAnalytics();
+                        break;
+                    case 'locations':
+                        headerTitle.textContent = 'Location Management';
+                        updateLocationsList();
+                        break;
+                    case 'qr':
+                        headerTitle.textContent = 'QR Code Generator';
+                        generateQR();
+                        break;
+                    default:
+                        headerTitle.textContent = 'Dashboard';
+                }
+            }
+        }
+
         function switchTab(tabName) {
-            var tabs = document.querySelectorAll('.nav-tab');
-            var contents = document.querySelectorAll('.tab-content');
-            
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove('active');
-            }
-            for (var i = 0; i < contents.length; i++) {
-                contents[i].classList.remove('active');
-            }
-            
-            event.target.classList.add('active');
-            document.getElementById(tabName).classList.add('active');
-            
-            if (tabName === 'analytics') {
-                updateAnalytics();
-            } else if (tabName === 'locations') {
-                updateLocationsList();
-            } else if (tabName === 'qr') {
-                generateQR();
-            }
+            // Legacy function - redirect to new showSection function
+            showSection(tabName);
         }
 
         function toggleView() {
