@@ -124,11 +124,11 @@
             box-shadow: 0 4px 16px rgba(72, 187, 120, 0.3);
         }
 
-        .emoji-btn[data-sentiment="very-happy"]::after { content: "😍"; }
-        .emoji-btn[data-sentiment="happy"]::after { content: "😊"; }
-        .emoji-btn[data-sentiment="neutral"]::after { content: "😐"; }
-        .emoji-btn[data-sentiment="sad"]::after { content: "😞"; }
-        .emoji-btn[data-sentiment="very-sad"]::after { content: "😭"; }
+        .emoji-btn[data-sentiment="very-happy"]::after { content: "??"; }
+        .emoji-btn[data-sentiment="happy"]::after { content: "??"; }
+        .emoji-btn[data-sentiment="neutral"]::after { content: "??"; }
+        .emoji-btn[data-sentiment="sad"]::after { content: "??"; }
+        .emoji-btn[data-sentiment="very-sad"]::after { content: "??"; }
 
         .submit-btn {
             background: linear-gradient(135deg, #667eea, #764ba2);
@@ -522,17 +522,17 @@
         
         <div class="features">
             <div class="feature">
-                <div class="feature-icon">📱</div>
+                <div class="feature-icon">??</div>
                 <h3>QR Code Magic</h3>
                 <p>Customers scan, rate instantly</p>
             </div>
             <div class="feature">
-                <div class="feature-icon">📊</div>
+                <div class="feature-icon">??</div>
                 <h3>Live Analytics</h3>
                 <p>Real-time sentiment tracking</p>
             </div>
             <div class="feature">
-                <div class="feature-icon">🏪</div>
+                <div class="feature-icon">??</div>
                 <h3>Multi-Location</h3>
                 <p>Manage all your venues</p>
             </div>
@@ -582,7 +582,7 @@
         </form>
 
         <div style="text-align: center; margin-top: 20px;">
-            <button class="link-button" onclick="showWelcome()">← Back to welcome</button>
+            <button class="link-button" onclick="showWelcome()">? Back to welcome</button>
             <span style="color: #ccc; margin: 0 10px;">|</span>
             <button class="link-button" onclick="showLogin()">Already have an account?</button>
         </div>
@@ -610,7 +610,7 @@
         </form>
 
         <div style="text-align: center; margin-top: 20px;">
-            <button class="link-button" onclick="showWelcome()">← Back to welcome</button>
+            <button class="link-button" onclick="showWelcome()">? Back to welcome</button>
             <span style="color: #ccc; margin: 0 10px;">|</span>
             <button class="link-button" onclick="showSignup()">Need an account? Sign up</button>
         </div>
@@ -621,7 +621,7 @@
         <div id="customerDemoNotice" style="display: none; background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px; text-align: center;">
             <p style="color: #2e7d32; margin: 0 0 15px 0;"><strong>Demo Mode</strong> - This is what customers see!</p>
             <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="showWelcome()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button>
+                <button onclick="showWelcome()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">? Back to Welcome</button>
                 <button onclick="toggleView()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">View as Admin</button>
             </div>
         </div>
@@ -661,7 +661,7 @@
         </div>
         
         <div class="thank-you" id="thankYou">
-            <h2>Thank you for your feedback! 🎉</h2>
+            <h2>Thank you for your feedback! ??</h2>
             <p>Your opinion helps us improve our service.</p>
             
             <div class="business-cta">
@@ -679,7 +679,7 @@
 
         <!-- Navigation Drawer -->
         <nav class="nav-drawer" id="navDrawer">
-            <button class="drawer-close-btn" onclick="closeNavDrawer()">✕</button>
+            <button class="drawer-close-btn" onclick="closeNavDrawer()">?</button>
             <div class="drawer-header">
                 <div class="drawer-logo">HappySnap</div>
             </div>
@@ -687,19 +687,19 @@
             <ul class="drawer-menu">
                 <li class="drawer-menu-item">
                     <button class="drawer-menu-link active" onclick="showSection('analytics')" data-section="analytics">
-                        <span class="drawer-menu-icon">📊</span>
+                        <span class="drawer-menu-icon">??</span>
                         <span>Analytics</span>
                     </button>
                 </li>
                 <li class="drawer-menu-item">
                     <button class="drawer-menu-link" onclick="showSection('locations')" data-section="locations">
-                        <span class="drawer-menu-icon">🏪</span>
+                        <span class="drawer-menu-icon">??</span>
                         <span>Locations</span>
                     </button>
                 </li>
                 <li class="drawer-menu-item">
                     <button class="drawer-menu-link" onclick="showSection('qr')" data-section="qr">
-                        <span class="drawer-menu-icon">⬛</span>
+                        <span class="drawer-menu-icon">?</span>
                         <span>QR Codes</span>
                     </button>
                 </li>
@@ -708,7 +708,7 @@
             <!-- Bottom Navigation Item -->
             <div style="margin-top: auto; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.2);">
                 <button class="drawer-menu-link" onclick="logout()" style="margin: 0; color: rgba(255,255,255,0.9);">
-                    <span class="drawer-menu-icon">🚪</span>
+                    <span class="drawer-menu-icon">??</span>
                     <span>Logout</span>
                 </button>
             </div>
@@ -716,7 +716,7 @@
 
         <!-- Top App Bar -->
         <header class="admin-topbar">
-            <button class="topbar-hamburger" onclick="openNavDrawer()">☰</button>
+            <button class="topbar-hamburger" onclick="openNavDrawer()">?</button>
             <h1 class="topbar-title">HappySnap</h1>
         </header>
 
@@ -1135,7 +1135,7 @@
                 var notice = document.createElement('div');
                 notice.id = 'demoNotice';
                 notice.style.cssText = 'background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;';
-                notice.innerHTML = '<p style="color: #2e7d32; margin: 0 0 15px 0;"><strong>Demo Mode</strong> - This is what business owners see!</p><div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;"><button onclick="showWelcome()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button><button onclick="toggleView()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">View as Customer</button></div>';
+                notice.innerHTML = '<p style="color: #2e7d32; margin: 0 0 15px 0;"><strong>Demo Mode</strong> - This is what business owners see!</p><div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;"><button onclick="showWelcome()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">? Back to Welcome</button><button onclick="toggleView()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">View as Customer</button></div>';
                 contentArea.insertBefore(notice, contentArea.firstChild);
             }
             
@@ -1245,11 +1245,11 @@
                 div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;';
                 
                 var emojis = {
-                    'very-happy': '😍',
-                    'happy': '😊',
-                    'neutral': '😐',
-                    'sad': '😞',
-                    'very-sad': '😭'
+                    'very-happy': '??',
+                    'happy': '??',
+                    'neutral': '??',
+                    'sad': '??',
+                    'very-sad': '??'
                 };
                 
                 var locationName = locations[item.location]?.name || 'Unknown';
