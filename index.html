@@ -259,6 +259,8 @@
             z-index: 1002;
             box-shadow: 2px 0 20px rgba(0,0,0,0.3);
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .nav-drawer.open {
@@ -672,8 +674,6 @@
 
     <!-- Admin View -->
     <div id="adminView">
-        <button class="logout-btn" onclick="logout()">Logout</button>
-
         <!-- Navigation Drawer Overlay -->
         <div class="nav-drawer-overlay" id="navDrawerOverlay" onclick="closeNavDrawer()"></div>
 
@@ -704,6 +704,14 @@
                     </button>
                 </li>
             </ul>
+            
+            <!-- Bottom Navigation Item -->
+            <div style="margin-top: auto; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.2);">
+                <button class="drawer-menu-link" onclick="logout()" style="margin: 0; color: rgba(255,255,255,0.9);">
+                    <span class="drawer-menu-icon">🚪</span>
+                    <span>Logout</span>
+                </button>
+            </div>
         </nav>
 
         <!-- Top App Bar -->
