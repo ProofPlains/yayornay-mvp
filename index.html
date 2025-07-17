@@ -6,6 +6,8 @@
     <title>HappySnap - Instant Customer Feedback with QR Codes</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
@@ -205,24 +207,21 @@
             border: 2px solid #4299e1;
         }
 
-        .admin-sidebar {
+        .admin-topbar {
             background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
             color: white;
-            padding: 20px 0;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            flex-shrink: 0;
-            transition: width 0.3s ease;
-            overflow: hidden;
-            width: 60px;
+            padding: 0 20px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             position: relative;
+            z-index: 1001;
         }
 
-        .sidebar-toggle {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(255,255,255,0.2);
-            border: 2px solid rgba(255,255,255,0.3);
+        .topbar-hamburger {
+            background: none;
+            border: none;
             color: white;
             width: 40px;
             height: 40px;
@@ -231,45 +230,89 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
-            z-index: 10;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            margin-right: 20px;
             transition: all 0.3s ease;
         }
 
-        .sidebar-header {
-            padding: 60px 20px 20px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            margin-bottom: 20px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .topbar-hamburger:hover {
+            background: rgba(255,255,255,0.1);
         }
 
-        .sidebar-logo {
-            font-size: 20px;
+        .topbar-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            font-family: 'Gilroy', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .nav-drawer {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100vh;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            transition: left 0.3s ease;
+            z-index: 1002;
+            box-shadow: 2px 0 20px rgba(0,0,0,0.3);
+            overflow-y: auto;
+        }
+
+        .nav-drawer.open {
+            left: 0;
+        }
+
+        .nav-drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .nav-drawer-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer-header {
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+        }
+
+        .drawer-logo {
+            font-size: 24px;
             font-weight: bold;
             margin-bottom: 5px;
             color: white;
         }
 
-        .sidebar-subtitle {
-            font-size: 12px;
+        .drawer-subtitle {
+            font-size: 14px;
             opacity: 0.8;
             color: rgba(255,255,255,0.8);
         }
 
-        .sidebar-menu {
+        .drawer-menu {
             list-style: none;
             padding: 0;
             margin: 0;
         }
 
-        .menu-item {
+        .drawer-menu-item {
             margin-bottom: 5px;
         }
 
-        .menu-link {
+        .drawer-menu-link {
             background: none;
             border: none;
             color: rgba(255,255,255,0.8);
@@ -280,45 +323,56 @@
             text-align: left;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 500;
         }
 
-        .menu-link.active {
+        .drawer-menu-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .drawer-menu-link.active {
             background: rgba(255,255,255,0.15);
-            border-right: 3px solid white;
+            border-right: 4px solid white;
             color: white;
             font-weight: 600;
         }
 
-        .menu-icon {
-            font-size: 16px;
+        .drawer-menu-icon {
+            font-size: 18px;
             margin-right: 15px;
-            width: 20px;
+            width: 24px;
             text-align: center;
         }
 
-        .menu-text {
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .drawer-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
         }
 
-        .admin-sidebar.expanded {
-            width: 280px;
-        }
-
-        .admin-sidebar.expanded .sidebar-header {
-            opacity: 1;
-        }
-
-        .admin-sidebar.expanded .menu-text {
-            opacity: 1;
+        .drawer-close-btn:hover {
+            background: rgba(255,255,255,0.1);
         }
 
         .admin-content {
             flex: 1;
             padding: 30px;
             overflow-y: auto;
+            margin-top: 0;
         }
 
         .admin-header h1 {
@@ -369,7 +423,7 @@
 
         #adminView {
             display: none;
-            flex-direction: row;
+            flex-direction: column;
             max-width: 1400px;
             margin: 0 auto;
             background: white;
@@ -380,9 +434,10 @@
             min-height: 80vh;
         }
 
-        .admin-toggle, .logout-btn {
+        .logout-btn {
             position: fixed;
             top: 20px;
+            left: 20px;
             color: white;
             border: none;
             padding: 10px 16px;
@@ -392,16 +447,6 @@
             font-weight: 600;
             transition: all 0.3s ease;
             z-index: 1000;
-        }
-
-        .admin-toggle {
-            right: 20px;
-            background: #4299e1;
-            border: 2px solid #4299e1;
-        }
-
-        .logout-btn {
-            left: 20px;
             background: #e53e3e;
             border: 2px solid #c53030;
         }
@@ -572,11 +617,13 @@
     <!-- Customer Feedback View -->
     <div id="customerView" class="container" style="display: none;">
         <div id="customerDemoNotice" style="display: none; background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px; text-align: center;">
-            <p style="color: #2e7d32; margin: 0 0 10px 0;"><strong>Demo Mode</strong> - This is what customers see!</p>
-            <button onclick="showWelcome()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button>
+            <p style="color: #2e7d32; margin: 0 0 15px 0;"><strong>Demo Mode</strong> - This is what customers see!</p>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="showWelcome()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button>
+                <button onclick="toggleView()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">View as Admin</button>
+            </div>
         </div>
         
-        <button id="customerAdminToggle" class="admin-toggle" onclick="toggleView()" style="display: none;">View as Admin</button>
         <button id="customerLogoutBtn" class="logout-btn" onclick="logout()" style="display: none;">Logout</button>
 
         <div class="header">
@@ -626,45 +673,49 @@
     <!-- Admin View -->
     <div id="adminView">
         <button class="logout-btn" onclick="logout()">Logout</button>
-        <button class="admin-toggle" onclick="toggleView()">View as Customer</button>
 
-        <aside class="admin-sidebar">
-            <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
-            <div class="sidebar-header">
-                <div class="sidebar-logo">HappySnap</div>
-                <div class="sidebar-subtitle">Analytics Dashboard</div>
+        <!-- Navigation Drawer Overlay -->
+        <div class="nav-drawer-overlay" id="navDrawerOverlay" onclick="closeNavDrawer()"></div>
+
+        <!-- Navigation Drawer -->
+        <nav class="nav-drawer" id="navDrawer">
+            <button class="drawer-close-btn" onclick="closeNavDrawer()">✕</button>
+            <div class="drawer-header">
+                <div class="drawer-logo">HappySnap</div>
             </div>
             
-            <nav>
-                <ul class="sidebar-menu">
-                    <li class="menu-item">
-                        <button class="menu-link active" onclick="showSection('analytics')" data-section="analytics">
-                            <span class="menu-icon">📊</span>
-                            <span class="menu-text">Analytics</span>
-                        </button>
-                    </li>
-                    <li class="menu-item">
-                        <button class="menu-link" onclick="showSection('locations')" data-section="locations">
-                            <span class="menu-icon">🏪</span>
-                            <span class="menu-text">Locations</span>
-                        </button>
-                    </li>
-                    <li class="menu-item">
-                        <button class="menu-link" onclick="showSection('qr')" data-section="qr">
-                            <span class="menu-icon">⬛</span>
-                            <span class="menu-text">QR Codes</span>
-                        </button>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
+            <ul class="drawer-menu">
+                <li class="drawer-menu-item">
+                    <button class="drawer-menu-link active" onclick="showSection('analytics')" data-section="analytics">
+                        <span class="drawer-menu-icon">📊</span>
+                        <span>Analytics</span>
+                    </button>
+                </li>
+                <li class="drawer-menu-item">
+                    <button class="drawer-menu-link" onclick="showSection('locations')" data-section="locations">
+                        <span class="drawer-menu-icon">🏪</span>
+                        <span>Locations</span>
+                    </button>
+                </li>
+                <li class="drawer-menu-item">
+                    <button class="drawer-menu-link" onclick="showSection('qr')" data-section="qr">
+                        <span class="drawer-menu-icon">⬛</span>
+                        <span>QR Codes</span>
+                    </button>
+                </li>
+            </ul>
+        </nav>
 
+        <!-- Top App Bar -->
+        <header class="admin-topbar">
+            <button class="topbar-hamburger" onclick="openNavDrawer()">☰</button>
+            <h1 class="topbar-title">HappySnap</h1>
+        </header>
+
+        <!-- Main Content Area -->
         <main class="admin-content">
-            <header class="admin-header">
-                <h1>Analytics Dashboard</h1>
-            </header>
-
             <section id="analytics" class="content-section active">
+                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">Analytics Dashboard</h2>
                 <div style="margin-bottom: 20px;">
                     <label>Select Location: </label>
                     <select id="analyticsLocationSelect" onchange="updateAnalytics()">
@@ -710,6 +761,7 @@
             </section>
 
             <section id="locations" class="content-section">
+                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">Location Management</h2>
                 <div style="margin-bottom: 30px;">
                     <input type="text" id="newLocationInput" placeholder="Enter location name" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; margin-right: 10px; width: 200px;">
                     <button class="btn" onclick="addLocation()">Add Location</button>
@@ -719,6 +771,7 @@
             </section>
 
             <section id="qr" class="content-section">
+                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">QR Code Generator</h2>
                 <div style="margin-bottom: 20px;">
                     <label>Generate QR Code for: </label>
                     <select id="qrLocationSelect" onchange="generateQR()">
@@ -977,9 +1030,6 @@
             var adminView = document.getElementById('adminView');
             adminView.style.display = 'flex';
             
-            var sidebar = adminView.querySelector('.admin-sidebar');
-            if (sidebar) sidebar.classList.remove('expanded');
-            
             currentView = 'admin';
             
             var demoNotice = document.getElementById('demoNotice');
@@ -1077,7 +1127,7 @@
                 var notice = document.createElement('div');
                 notice.id = 'demoNotice';
                 notice.style.cssText = 'background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;';
-                notice.innerHTML = '<p style="color: #2e7d32; margin: 0 0 10px 0;"><strong>Demo Mode</strong> - This is what business owners see!</p><button onclick="showWelcome()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button>';
+                notice.innerHTML = '<p style="color: #2e7d32; margin: 0 0 15px 0;"><strong>Demo Mode</strong> - This is what business owners see!</p><div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;"><button onclick="showWelcome()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button><button onclick="toggleView()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">View as Customer</button></div>';
                 contentArea.insertBefore(notice, contentArea.firstChild);
             }
             
@@ -1085,34 +1135,26 @@
             showSection('analytics');
         }
 
-        function applySidebarStyling() {
-            var sidebar = document.querySelector('#adminView .admin-sidebar');
-            if (!sidebar) return;
+        function openNavDrawer() {
+            var drawer = document.getElementById('navDrawer');
+            var overlay = document.getElementById('navDrawerOverlay');
             
-            sidebar.style.background = 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)';
-            sidebar.style.color = 'white';
-            sidebar.style.width = '60px';
-            
-            var toggleBtn = sidebar.querySelector('.sidebar-toggle');
-            if (toggleBtn) {
-                toggleBtn.style.position = 'absolute';
-                toggleBtn.style.top = '15px';
-                toggleBtn.style.left = '15px';
-                toggleBtn.style.background = 'rgba(255,255,255,0.2)';
-                toggleBtn.style.color = 'white';
-                toggleBtn.style.width = '40px';
-                toggleBtn.style.height = '40px';
-                toggleBtn.style.borderRadius = '8px';
-                toggleBtn.style.border = '2px solid rgba(255,255,255,0.3)';
-                toggleBtn.style.cursor = 'pointer';
+            if (drawer && overlay) {
+                drawer.classList.add('open');
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
             }
+        }
+
+        function closeNavDrawer() {
+            var drawer = document.getElementById('navDrawer');
+            var overlay = document.getElementById('navDrawerOverlay');
             
-            var header = sidebar.querySelector('.sidebar-header');
-            if (header) header.style.opacity = '0';
-            
-            sidebar.querySelectorAll('.menu-text').forEach(function(text) {
-                text.style.opacity = '0';
-            });
+            if (drawer && overlay) {
+                drawer.classList.remove('open');
+                overlay.classList.remove('open');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
         }
 
         function updateLocationSelects() {
@@ -1414,26 +1456,8 @@
         }
 
         function toggleSidebar() {
-            var sidebar = document.querySelector('#adminView .admin-sidebar');
-            if (!sidebar) return;
-            
-            var isExpanded = sidebar.classList.contains('expanded');
-            
-            if (isExpanded) {
-                sidebar.classList.remove('expanded');
-                sidebar.style.width = '60px';
-                sidebar.querySelector('.sidebar-header').style.opacity = '0';
-                sidebar.querySelectorAll('.menu-text').forEach(function(text) {
-                    text.style.opacity = '0';
-                });
-            } else {
-                sidebar.classList.add('expanded');
-                sidebar.style.width = '280px';
-                sidebar.querySelector('.sidebar-header').style.opacity = '1';
-                sidebar.querySelectorAll('.menu-text').forEach(function(text) {
-                    text.style.opacity = '1';
-                });
-            }
+            // Legacy function - now just opens the nav drawer
+            openNavDrawer();
         }
 
         function showSection(sectionName) {
@@ -1443,7 +1467,7 @@
             });
             
             // Remove active from all menu links
-            document.querySelectorAll('.menu-link').forEach(function(link) {
+            document.querySelectorAll('.drawer-menu-link').forEach(function(link) {
                 link.classList.remove('active');
             });
             
@@ -1459,24 +1483,21 @@
                 activeLink.classList.add('active');
             }
             
-            // Update header and run section-specific code
-            var headerTitle = document.querySelector('.admin-header h1');
-            if (headerTitle) {
-                switch(sectionName) {
-                    case 'analytics':
-                        headerTitle.textContent = 'Analytics Dashboard';
-                        updateAnalytics();
-                        break;
-                    case 'locations':
-                        headerTitle.textContent = 'Location Management';
-                        updateLocationsList();
-                        break;
-                    case 'qr':
-                        headerTitle.textContent = 'QR Code Generator';
-                        generateQR();
-                        break;
-                }
+            // Update section content (no longer updating top bar title)
+            switch(sectionName) {
+                case 'analytics':
+                    updateAnalytics();
+                    break;
+                case 'locations':
+                    updateLocationsList();
+                    break;
+                case 'qr':
+                    generateQR();
+                    break;
             }
+            
+            // Close the navigation drawer after selection (mobile UX)
+            closeNavDrawer();
         }
 
         function toggleView() {
