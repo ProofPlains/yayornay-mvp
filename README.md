@@ -1,2 +1,2 @@
-# yayornay-mvp
-Customer sentiment feedback app for restaurants
+# HappySnap-mvp
+Customer sentiment feedback app for businesses
