@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HappySnap - Instant Customer Feedback with QR Codes</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <link rel="icon" href="data:,">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
@@ -1620,6 +1621,30 @@
                 }
             }
         }
-    </script>
+		// Make functions callable from inline HTML attributes (onclick/onsubmit) in module mode
+		Object.assign(window, {
+		  showWelcome,
+		  showSignup,
+		  showLogin,
+		  showDemo,
+		  showCustomerViewForLocation,
+		  goToSignup,
+		  handleSignup,
+		  handleLogin,
+		  selectSentiment,
+		  submitFeedback,
+		  toggleView,
+		  openNavDrawer,
+		  closeNavDrawer,
+		  showSection,
+		  generateQR,
+		  generateSign,
+		  addLocation,
+		  updateLocationsList,
+		  updateAnalytics,
+		  logout
+		});
+	
+	</script>
 </body>
 </html>
