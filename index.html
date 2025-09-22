@@ -801,8 +801,36 @@
         </main>
     </div>
 
-    <script>
-        var currentView = 'welcome';
+    <script type="module">
+        // --- Supabase client setup ---
+		import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+			const SUPABASE_URL = 'https://evediwsocfbalzbzdden.supabase.co';
+			const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2ZWRpd3NvY2ZiYWx6YnpkZGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzQ1NzcsImV4cCI6MjA3MzYxMDU3N30.Y6TGgEuk97iFuuZmfWvOkwXx88y7397rzUhwbDG0p9Q';
+
+			// This object lets your frontend talk to Supabase Auth + DB
+			const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+		
+		// --- Shape DB rows into the structure your UI already uses ---
+		function buildLocationsShape(locationsRows, feedbackRows) {
+			const map = {};
+			for (const loc of locationsRows || []) {
+				map[loc.id] = { name: loc.name, feedback: [] };
+			}
+			for (const fb of feedbackRows || []) {
+				if (!map[fb.location_id]) continue; // ignore stray rows
+				map[fb.location_id].feedback.push({
+					sentiment: fb.sentiment,            // 'very-happy' | 'happy' | ...
+					timestamp: fb.submitted_at,         // ISO string from DB
+					location: fb.location_id,           // keep same field name your UI uses
+					comments: fb.comments ?? null
+				});
+			}
+			return map;
+		}
+
+		
+		var currentView = 'welcome';
         var selectedSentiment = null;
         var currentLocation = 'main';
         var currentUser = null;
@@ -954,84 +982,132 @@
             showWelcome();
         }
 
-        function handleSignup(event) {
-            event.preventDefault();
-            
-            var businessName = document.getElementById('businessName').value.trim();
-            var ownerName = document.getElementById('ownerName').value.trim();
-            var email = document.getElementById('email').value.trim().toLowerCase();
-            var password = document.getElementById('password').value;
-            var confirmPassword = document.getElementById('confirmPassword').value;
+        async function handleSignup(event) {
+		  event.preventDefault();
+		  clearFormErrors?.(); // keep if you already have this helper
 
-            clearFormErrors();
+		  const businessName = document.getElementById('businessName').value.trim();
+		  const ownerName    = document.getElementById('ownerName').value.trim();
+		  const email        = document.getElementById('email').value.trim().toLowerCase();
+		  const password     = document.getElementById('password').value;
+		  const confirmPwd   = document.getElementById('confirmPassword').value;
 
-            // validation
-            if (!businessName || !ownerName || !email || !password || !confirmPassword) {
-                showError('signupError', 'Please fill in all fields');
-                return;
-            }
+		  // Basic client-side checks
+		  if (!businessName || !ownerName || !email || !password || !confirmPwd) {
+			showError('signupError', 'Please fill in all fields'); return;
+		  }
+		  if (password !== confirmPwd) {
+			showError('signupError', 'Passwords do not match'); return;
+		  }
+		  if (password.length < 6) {
+			showError('signupError', 'Password must be at least 6 characters long'); return;
+		  }
+		  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			showError('signupError', 'Please enter a valid email address'); return;
+		  }
 
-            if (password !== confirmPassword) {
-                showError('signupError', 'Passwords do not match');
-                return;
-            }
+		  // 1) Create auth user in Supabase
+		  const { data: signup, error: authErr } = await supabase.auth.signUp({ email, password });
+		  if (authErr) { showError('signupError', authErr.message); return; }
+		  const user = signup.user;
+		  if (!user) { showError('signupError', 'Please check your email to confirm your account.'); return; }
 
-            if (password.length < 6) {
-                showError('signupError', 'Password must be at least 6 characters long');
-                return;
-            }
+		  try {
+			// 2) Create business owned by this user
+			const { data: biz, error: bizErr } = await supabase
+			  .from('businesses')
+			  .insert({ name: businessName, owner_id: user.id })
+			  .select()
+			  .single();
+			if (bizErr) throw bizErr;
 
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showError('signupError', 'Please enter a valid email address');
-                return;
-            }
+			// 3) Add membership (owner)
+			const { error: buErr } = await supabase
+			  .from('business_users')
+			  .insert({ business_id: biz.id, user_id: user.id, role: 'owner' });
+			if (buErr) throw buErr;
 
-            if (userDatabase[email]) {
-                showError('signupError', 'An account with this email already exists');
-                return;
-            }
+			// 4) Create default location
+			const { data: loc, error: locErr } = await supabase
+			  .from('locations')
+			  .insert({ business_id: biz.id, name: `${businessName} - Main Location` })
+			  .select()
+			  .single();
+			if (locErr) throw locErr;
 
-            var newUser = {
-                userId: 'user_' + Date.now(),
-                businessName: businessName,
-                ownerName: ownerName,
-                email: email,
-                password: password,
-                locations: {
-                    'main': { name: businessName + ' - Main Location', feedback: [] }
-                },
-                createdAt: new Date().toISOString()
-            };
+			// 5) Build the in-memory shape your UI expects
+			window.currentUser = {
+			  userId: user.id,
+			  businessId: biz.id,
+			  businessName,
+			  ownerName,
+			  email,
+			  locations: buildLocationsShape([loc], [])
+			};
+			window.currentLocation = loc.id;
 
-            userDatabase[email] = newUser;
-            currentUser = newUser;
-            currentLocation = 'main';
-            showAdminDashboard();
-        }
+			// 6) Open your existing admin UI
+			showAdminDashboard();
+		  } catch (e) {
+			console.error(e);
+			showError('signupError', e.message || 'Error creating your account.');
+		  }
+		}
 
-        function handleLogin(event) {
-            event.preventDefault();
-            
-            var email = document.getElementById('loginEmail').value.trim().toLowerCase();
-            var password = document.getElementById('loginPassword').value;
 
-            clearFormErrors();
+        async function handleLogin(event) {
+		  event.preventDefault();
+		  clearFormErrors?.();
 
-            if (!email || !password) {
-                showError('loginError', 'Please enter both email and password');
-                return;
-            }
+		  const email    = document.getElementById('loginEmail').value.trim().toLowerCase();
+		  const password = document.getElementById('loginPassword').value;
 
-            var user = userDatabase[email];
-            if (!user || user.password !== password) {
-                showError('loginError', 'Invalid email or password');
-                return;
-            }
+		  if (!email || !password) { showError('loginError', 'Please enter both email and password'); return; }
 
-            currentUser = user;
-            currentLocation = Object.keys(user.locations)[0] || 'main';
-            showAdminDashboard();
-        }
+		  // 1) Auth login
+		  const { data: login, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+		  if (loginErr) { showError('loginError', loginErr.message); return; }
+		  const user = login.user;
+
+		  try {
+			// 2) Load the user’s business (MVP assumption: one business per owner)
+			const { data: bizRows, error: bizErr } = await supabase
+			  .from('businesses')
+			  .select('*')
+			  .eq('owner_id', user.id)
+			  .order('created_at', { ascending: true })
+			  .limit(1);
+			if (bizErr) throw bizErr;
+			const biz = bizRows?.[0];
+			if (!biz) { showError('loginError', 'No business found for this user.'); return; }
+
+			// 3) Load locations + feedback
+			const [{ data: locRows, error: locErr }, { data: fbRows, error: fbErr }] = await Promise.all([
+			  supabase.from('locations').select('*').eq('business_id', biz.id),
+			  supabase.from('feedback').select('*').eq('business_id', biz.id).order('submitted_at', { ascending: true })
+			]);
+			if (locErr) throw locErr;
+			if (fbErr) throw fbErr;
+
+			// 4) Hydrate in-memory state for your UI
+			window.currentUser = {
+			  userId: user.id,
+			  businessId: biz.id,
+			  businessName: biz.name,
+			  ownerName: '', // optional
+			  email,
+			  locations: buildLocationsShape(locRows, fbRows)
+			};
+			window.currentLocation = locRows?.[0]?.id || null;
+
+			// 5) Open admin dashboard
+			showAdminDashboard();
+		  } catch (e) {
+			console.error(e);
+			showError('loginError', e.message || 'Problem loading your account.');
+		  }
+		}
+
 
         function showAdminDashboard() {
             hideAllScreens();
