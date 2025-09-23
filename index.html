@@ -1151,7 +1151,19 @@
 		      locations: buildLocationsShape(locRows, fbRows)
 		    };
 		    window.currentLocation = locRows?.[0]?.id || null;
-		
+			
+			// After setting currentUser and currentLocation
+			if (typeof updateLocationsList === 'function') {
+			  updateLocationsList(currentUser.locations);
+			}
+			if (typeof updateLocationsDisplay === 'function') {
+			  updateLocationsDisplay(currentUser.locations);
+			}
+			if (typeof updateAnalytics === 'function') {
+			  updateAnalytics(); // recompute charts/percentages from currentUser.locations
+			}
+  
+			  
 		    // 6) Open the admin dashboard (existing function)
 		    showAdminDashboard();
 		  } catch (e) {
