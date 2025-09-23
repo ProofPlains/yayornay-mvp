@@ -811,7 +811,8 @@
 
 			// This object lets your frontend talk to Supabase Auth + DB
 			const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-		
+			window.supabase = supabase; // expose the client for console/debug use
+
 		// --- Shape DB rows into the structure your UI already uses ---
 		function buildLocationsShape(locationsRows, feedbackRows) {
 			const map = {};
