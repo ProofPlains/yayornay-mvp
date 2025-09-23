@@ -1057,10 +1057,9 @@
 		}
 
 
-		// Supabase-backed login with self-heal for missing business/location
+		// Supabase-backed login with self-heal and correct ordering
 		async function handleLogin(event) {
 		  try {
-		    // If called from a form, prevent page reload
 		    if (event && event.preventDefault) event.preventDefault();
 		    if (typeof clearFormErrors === 'function') clearFormErrors();
 		
@@ -1068,19 +1067,19 @@
 		    const password = document.getElementById('loginPassword').value;
 		
 		    if (!email || !password) {
-		      showError('loginError', 'Please enter both email and password');
+		      if (typeof showError === 'function') showError('loginError', 'Please enter both email and password');
 		      return;
 		    }
 		
-		    // 1) Authenticate the user
+		    // 1) Authenticate
 		    const { data: login, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
 		    if (loginErr) {
-		      showError('loginError', loginErr.message || 'Login failed');
+		      if (typeof showError === 'function') showError('loginError', loginErr.message || 'Login failed');
 		      return;
 		    }
 		    const user = login.user;
 		
-		    // 2) Load (or create) the user’s business
+		    // 2) Load or create business
 		    let { data: bizRows, error: bizErr } = await supabase
 		      .from('businesses')
 		      .select('*')
@@ -1089,9 +1088,7 @@
 		      .limit(1);
 		    if (bizErr) throw bizErr;
 		
-		    let business = bizRows?.[0];
-		
-		    // If no business (e.g., earlier signup failed mid-way), create one + membership + default location
+		    let business = bizRows && bizRows[0];
 		    if (!business) {
 		      const { data: newBiz, error: nbErr } = await supabase
 		        .from('businesses')
@@ -1105,7 +1102,7 @@
 		        .insert({ business_id: newBiz.id, user_id: user.id, role: 'owner' });
 		      if (buErr) throw buErr;
 		
-		      const { data: bootLoc, error: blErr } = await supabase
+		      const { error: blErr } = await supabase
 		        .from('locations')
 		        .insert({ business_id: newBiz.id, name: `${newBiz.name} - Main Location` })
 		        .select()
@@ -1115,7 +1112,7 @@
 		      business = newBiz;
 		    }
 		
-		    // 3) Load locations (and create one if none exist)
+		    // 3) Load locations (create one if none)
 		    let { data: locRows, error: locErr } = await supabase
 		      .from('locations')
 		      .select('*')
@@ -1133,7 +1130,7 @@
 		      locRows = [newLoc];
 		    }
 		
-		    // 4) Load feedback for analytics
+		    // 4) Load feedback
 		    const { data: fbRows, error: fbErr } = await supabase
 		      .from('feedback')
 		      .select('*')
@@ -1141,31 +1138,35 @@
 		      .order('submitted_at', { ascending: true });
 		    if (fbErr) throw fbErr;
 		
-		    // 5) Hydrate your in-memory state
-			window.currentUser = {
-			  userId: user.id,
-			  businessId: business.id,
-			  businessName: business.name,
-			  ownerName: '',
-			  email,
-			  locations: buildLocationsShape(locRows, fbRows)
-			};
-			window.currentLocation = locRows?.[0]?.id || null;
-			
-			// 6) Render the admin view first (so DOM nodes exist)
-			showAdminDashboard();
-			
-			// 7) Now refresh the UI from currentUser (guards prevent errors)
-			if (typeof updateLocationsList === 'function' && currentUser && currentUser.locations) {
-			  updateLocationsList(currentUser.locations);
-			}
-			if (typeof updateLocationsDisplay === 'function' && currentUser && currentUser.locations) {
-			  updateLocationsDisplay(currentUser.locations);
-			}
-			if (typeof updateAnalytics === 'function') {
-			  updateAnalytics();
-			}
-
+		    // 5) Set state
+		    window.currentUser = {
+		      userId: user.id,
+		      businessId: business.id,
+		      businessName: business.name,
+		      ownerName: '',
+		      email,
+		      locations: buildLocationsShape(locRows, fbRows)
+		    };
+		    window.currentLocation = locRows?.[0]?.id || null;
+		
+		    // 6) Render dashboard first, then update UI
+		    showAdminDashboard();
+		
+		    if (typeof updateLocationsList === 'function' && currentUser && currentUser.locations) {
+		      updateLocationsList(currentUser.locations);
+		    }
+		    if (typeof updateLocationsDisplay === 'function' && currentUser && currentUser.locations) {
+		      updateLocationsDisplay(currentUser.locations);
+		    }
+		    if (typeof updateAnalytics === 'function') {
+		      updateAnalytics();
+		    }
+		  } catch (e) {
+		    console.error(e);
+		    if (typeof showError === 'function') {
+		      showError('loginError', e.message || 'There was a problem loading your account.');
+		    }
+		  }
 		}
 
 
