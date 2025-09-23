@@ -1141,35 +1141,31 @@
 		      .order('submitted_at', { ascending: true });
 		    if (fbErr) throw fbErr;
 		
-		    // 5) Hydrate your existing in-memory shape (so the current UI keeps working)
-		    window.currentUser = {
-		      userId: user.id,
-		      businessId: business.id,
-		      businessName: business.name,
-		      ownerName: '',   // optional; you can store/display later
-		      email,
-		      locations: buildLocationsShape(locRows, fbRows)
-		    };
-		    window.currentLocation = locRows?.[0]?.id || null;
+		    // 5) Hydrate your in-memory state
+			window.currentUser = {
+			  userId: user.id,
+			  businessId: business.id,
+			  businessName: business.name,
+			  ownerName: '',
+			  email,
+			  locations: buildLocationsShape(locRows, fbRows)
+			};
+			window.currentLocation = locRows?.[0]?.id || null;
 			
-			// After setting currentUser and currentLocation
-			if (typeof updateLocationsList === 'function') {
+			// 6) Render the admin view first (so DOM nodes exist)
+			showAdminDashboard();
+			
+			// 7) Now refresh the UI from currentUser (guards prevent errors)
+			if (typeof updateLocationsList === 'function' && currentUser && currentUser.locations) {
 			  updateLocationsList(currentUser.locations);
 			}
-			if (typeof updateLocationsDisplay === 'function') {
+			if (typeof updateLocationsDisplay === 'function' && currentUser && currentUser.locations) {
 			  updateLocationsDisplay(currentUser.locations);
 			}
 			if (typeof updateAnalytics === 'function') {
-			  updateAnalytics(); // recompute charts/percentages from currentUser.locations
+			  updateAnalytics();
 			}
-  
-			  
-		    // 6) Open the admin dashboard (existing function)
-		    showAdminDashboard();
-		  } catch (e) {
-		    console.error(e);
-		    showError('loginError', e.message || 'There was a problem loading your account.');
-		  }
+
 		}
 
 
