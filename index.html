@@ -1057,58 +1057,109 @@
 		}
 
 
-        async function handleLogin(event) {
-		  event.preventDefault();
-		  clearFormErrors?.();
-
-		  const email    = document.getElementById('loginEmail').value.trim().toLowerCase();
-		  const password = document.getElementById('loginPassword').value;
-
-		  if (!email || !password) { showError('loginError', 'Please enter both email and password'); return; }
-
-		  // 1) Auth login
-		  const { data: login, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
-		  if (loginErr) { showError('loginError', loginErr.message); return; }
-		  const user = login.user;
-
+		// Supabase-backed login with self-heal for missing business/location
+		async function handleLogin(event) {
 		  try {
-			// 2) Load the user’s business (MVP assumption: one business per owner)
-			const { data: bizRows, error: bizErr } = await supabase
-			  .from('businesses')
-			  .select('*')
-			  .eq('owner_id', user.id)
-			  .order('created_at', { ascending: true })
-			  .limit(1);
-			if (bizErr) throw bizErr;
-			const biz = bizRows?.[0];
-			if (!biz) { showError('loginError', 'No business found for this user.'); return; }
-
-			// 3) Load locations + feedback
-			const [{ data: locRows, error: locErr }, { data: fbRows, error: fbErr }] = await Promise.all([
-			  supabase.from('locations').select('*').eq('business_id', biz.id),
-			  supabase.from('feedback').select('*').eq('business_id', biz.id).order('submitted_at', { ascending: true })
-			]);
-			if (locErr) throw locErr;
-			if (fbErr) throw fbErr;
-
-			// 4) Hydrate in-memory state for your UI
-			window.currentUser = {
-			  userId: user.id,
-			  businessId: biz.id,
-			  businessName: biz.name,
-			  ownerName: '', // optional
-			  email,
-			  locations: buildLocationsShape(locRows, fbRows)
-			};
-			window.currentLocation = locRows?.[0]?.id || null;
-
-			// 5) Open admin dashboard
-			showAdminDashboard();
+		    // If called from a form, prevent page reload
+		    if (event && event.preventDefault) event.preventDefault();
+		    if (typeof clearFormErrors === 'function') clearFormErrors();
+		
+		    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+		    const password = document.getElementById('loginPassword').value;
+		
+		    if (!email || !password) {
+		      showError('loginError', 'Please enter both email and password');
+		      return;
+		    }
+		
+		    // 1) Authenticate the user
+		    const { data: login, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+		    if (loginErr) {
+		      showError('loginError', loginErr.message || 'Login failed');
+		      return;
+		    }
+		    const user = login.user;
+		
+		    // 2) Load (or create) the user’s business
+		    let { data: bizRows, error: bizErr } = await supabase
+		      .from('businesses')
+		      .select('*')
+		      .eq('owner_id', user.id)
+		      .order('created_at', { ascending: true })
+		      .limit(1);
+		    if (bizErr) throw bizErr;
+		
+		    let business = bizRows?.[0];
+		
+		    // If no business (e.g., earlier signup failed mid-way), create one + membership + default location
+		    if (!business) {
+		      const { data: newBiz, error: nbErr } = await supabase
+		        .from('businesses')
+		        .insert({ name: 'My Business', owner_id: user.id })
+		        .select()
+		        .single();
+		      if (nbErr) throw nbErr;
+		
+		      const { error: buErr } = await supabase
+		        .from('business_users')
+		        .insert({ business_id: newBiz.id, user_id: user.id, role: 'owner' });
+		      if (buErr) throw buErr;
+		
+		      const { data: bootLoc, error: blErr } = await supabase
+		        .from('locations')
+		        .insert({ business_id: newBiz.id, name: `${newBiz.name} - Main Location` })
+		        .select()
+		        .single();
+		      if (blErr) throw blErr;
+		
+		      business = newBiz;
+		    }
+		
+		    // 3) Load locations (and create one if none exist)
+		    let { data: locRows, error: locErr } = await supabase
+		      .from('locations')
+		      .select('*')
+		      .eq('business_id', business.id)
+		      .order('created_at', { ascending: true });
+		    if (locErr) throw locErr;
+		
+		    if (!locRows || locRows.length === 0) {
+		      const { data: newLoc, error: newLocErr } = await supabase
+		        .from('locations')
+		        .insert({ business_id: business.id, name: `${business.name} - Main Location` })
+		        .select()
+		        .single();
+		      if (newLocErr) throw newLocErr;
+		      locRows = [newLoc];
+		    }
+		
+		    // 4) Load feedback for analytics
+		    const { data: fbRows, error: fbErr } = await supabase
+		      .from('feedback')
+		      .select('*')
+		      .eq('business_id', business.id)
+		      .order('submitted_at', { ascending: true });
+		    if (fbErr) throw fbErr;
+		
+		    // 5) Hydrate your existing in-memory shape (so the current UI keeps working)
+		    window.currentUser = {
+		      userId: user.id,
+		      businessId: business.id,
+		      businessName: business.name,
+		      ownerName: '',   // optional; you can store/display later
+		      email,
+		      locations: buildLocationsShape(locRows, fbRows)
+		    };
+		    window.currentLocation = locRows?.[0]?.id || null;
+		
+		    // 6) Open the admin dashboard (existing function)
+		    showAdminDashboard();
 		  } catch (e) {
-			console.error(e);
-			showError('loginError', e.message || 'Problem loading your account.');
+		    console.error(e);
+		    showError('loginError', e.message || 'There was a problem loading your account.');
 		  }
 		}
+
 
 
         function showAdminDashboard() {
