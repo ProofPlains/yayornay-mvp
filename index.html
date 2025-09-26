@@ -1165,6 +1165,9 @@
 			  updateLocationsList();
 			  updateAnalytics();
 			}
+			
+			// Optional: ensure analytics uses fresh server data
+			  refreshFeedbackFromServer();
 
 			  
 		    
@@ -1219,41 +1222,84 @@
             document.querySelector('.submit-btn').classList.add('enabled');
         }
 
-        function submitFeedback() {
-            if (!selectedSentiment) return;
-            
-            var additionalComments = document.getElementById('additionalComments').value.trim();
-            var feedback = {
-                sentiment: selectedSentiment,
-                timestamp: new Date().toISOString(),
-                location: currentLocation,
-                comments: additionalComments || null
-            };
-
-            if (currentView === 'customer-demo' && window.demoAccount) {
-                window.demoAccount.locations[currentLocation].feedback.push(feedback);
-            } else if (currentUser && currentUser.locations[currentLocation]) {
-                currentUser.locations[currentLocation].feedback.push(feedback);
-            } else {
-                var storageKey = 'feedback_' + currentLocation;
-                var existingFeedback = JSON.parse(localStorage.getItem(storageKey) || '[]');
-                existingFeedback.push(feedback);
-                localStorage.setItem(storageKey, JSON.stringify(existingFeedback));
-            }
-
-            document.querySelector('.feedback-section').style.display = 'none';
-            var thankYouDiv = document.getElementById('thankYou');
-            thankYouDiv.style.display = 'block';
-            
-            var businessCta = thankYouDiv.querySelector('.business-cta');
-            if (businessCta) {
-                businessCta.style.display = (currentView === 'customer-demo' || (currentUser && currentView === 'customer')) ? 'none' : 'block';
-            }
-            
-            if (currentView === 'customer-demo') {
-                setTimeout(showDemoAdmin, 2000);
-            }
-        }
+        async function submitFeedback() {
+		  if (!selectedSentiment) return;
+		
+		  const commentsEl = document.getElementById('additionalComments');
+		  const comments = (commentsEl?.value || '').trim() || null;
+		
+		  // Optimistic local object (used if DB returns no timestamp)
+		  const localItem = {
+		    sentiment: selectedSentiment,
+		    timestamp: new Date().toISOString(),
+		    location: currentLocation,
+		    comments
+		  };
+		
+		  try {
+		    // If logged in and we have business + location, persist to DB
+		    if (currentUser?.businessId && currentLocation) {
+		      const { data: inserted, error } = await supabase
+		        .from('feedback')
+		        .insert({
+		          business_id: currentUser.businessId,
+		          location_id: currentLocation,
+		          sentiment: selectedSentiment,
+		          comments
+		        })
+		        .select()
+		        .single();
+		
+		      if (error) throw error;
+		
+		      const ts = inserted?.submitted_at || localItem.timestamp;
+		
+		      // Mirror into in-memory state for instant analytics refresh
+		      if (currentUser.locations?.[currentLocation]) {
+		        currentUser.locations[currentLocation].feedback =
+		          currentUser.locations[currentLocation].feedback || [];
+		        currentUser.locations[currentLocation].feedback.push({
+		          sentiment: inserted?.sentiment ?? localItem.sentiment,
+		          timestamp: ts,
+		          location: currentLocation,
+		          comments: inserted?.comments ?? localItem.comments
+		        });
+		      }
+		      updateAnalytics();
+		    } else {
+		      // Not logged in (e.g., public QR flow)
+		      // Store locally for now; we’ll move this to a public insert flow later.
+		      const storageKey = 'feedback_' + currentLocation;
+		      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+		      existing.push(localItem);
+		      localStorage.setItem(storageKey, JSON.stringify(existing));
+		      updateAnalytics();
+		    }
+		  } catch (e) {
+		    console.error(e);
+		    alert(e.message || 'Could not submit feedback.');
+		  }
+		
+		  // Thank-you UI
+		  const section = document.querySelector('.feedback-section');
+		  if (section) section.style.display = 'none';
+		  const thankYouDiv = document.getElementById('thankYou');
+		  if (thankYouDiv) thankYouDiv.style.display = 'block';
+		
+		  const businessCta = thankYouDiv?.querySelector?.('.business-cta');
+		  if (businessCta) {
+		    businessCta.style.display =
+		      (currentView === 'customer-demo') ||
+		      (currentUser && currentView === 'customer')
+		        ? 'none'
+		        : 'block';
+		  }
+		
+		  // Demo auto-return
+		  if (currentView === 'customer-demo') {
+		    setTimeout(showDemoAdmin, 2000);
+		  }
+		}
 
         function showDemoAdmin() {
             hideAllScreens();
@@ -1726,7 +1772,42 @@
 		  updateAnalytics,
 		  logout
 		});
-	
+
+		// ---- Optional: Refresh feedback from server after login ----
+		async function refreshFeedbackFromServer() {
+		  if (!currentUser?.businessId) return;
+		
+		  const { data: rows, error } = await supabase
+		    .from('feedback')
+		    .select('location_id, sentiment, comments, submitted_at')
+		    .eq('business_id', currentUser.businessId)
+		    .order('submitted_at', { ascending: true });
+		
+		  if (error) {
+		    console.error(error);
+		    return;
+		  }
+		
+		  // Reset feedback arrays
+		  for (const locId of Object.keys(currentUser.locations || {})) {
+		    currentUser.locations[locId].feedback = [];
+		  }
+		
+		  // Re-populate with server rows
+		  for (const r of rows) {
+		    if (currentUser.locations?.[r.location_id]) {
+		      currentUser.locations[r.location_id].feedback.push({
+		        sentiment: r.sentiment,
+		        timestamp: r.submitted_at,
+		        location: r.location_id,
+		        comments: r.comments
+		      });
+		    }
+		  }
+		  updateAnalytics();
+		}
+
+		
 	</script>
 </body>
 </html>
