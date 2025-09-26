@@ -1038,7 +1038,7 @@
 			if (locErr) throw locErr;
 
 			// 5) Build the in-memory shape your UI expects
-			window.currentUser = {
+			currentUser = {
 			  userId: user.id,
 			  businessId: biz.id,
 			  businessName,
@@ -1046,10 +1046,14 @@
 			  email,
 			  locations: buildLocationsShape([loc], [])
 			};
-			window.currentLocation = loc.id;
-
+			currentLocation = loc.id;
+			// also expose for console/debug
+			window.currentUser = currentUser;
+			window.currentLocation = currentLocation;
+			
 			// 6) Open your existing admin UI
 			showAdminDashboard();
+
 		  } catch (e) {
 			console.error(e);
 			showError('signupError', e.message || 'Error creating your account.');
@@ -1139,25 +1143,29 @@
 		    if (fbErr) throw fbErr;
 		
 		    // 5) Set state
-		    window.currentUser = {
-		      userId: user.id,
-		      businessId: business.id,
-		      businessName: business.name,
-		      ownerName: '',
-		      email,
-		      locations: buildLocationsShape(locRows, fbRows)
-		    };
-		    window.currentLocation = locRows?.[0]?.id || null;
-		
-		    // 6) Render dashboard first, then update UI
-		    showAdminDashboard();
-
+			currentUser = {
+			  userId: user.id,
+			  businessId: business.id,
+			  businessName: business.name,
+			  ownerName: '',
+			  email,
+			  locations: buildLocationsShape(locRows, fbRows)
+			};
+			currentLocation = locRows?.[0]?.id || null;
+			// expose for console/debug
+			window.currentUser = currentUser;
+			window.currentLocation = currentLocation;
+			
+			// 6) Render dashboard first, then update UI
+			showAdminDashboard();
+			
 			// Populate UI with Supabase data
 			if (currentUser && currentUser.locations) {
 			  updateLocationSelects();
 			  updateLocationsList();
 			  updateAnalytics();
 			}
+
 			  
 		    
 		  } catch (e) {
