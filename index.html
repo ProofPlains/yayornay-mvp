@@ -1405,24 +1405,38 @@
             });
         }
 
-        function addLocation() {
-            if (!currentUser) return;
-            
-            var input = document.getElementById('newLocationInput');
-            var name = input.value.trim();
-            if (!name) return;
-            
-            var id = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-            if (currentUser.locations[id]) {
-                alert('A location with this name already exists');
-                return;
-            }
-            
-            currentUser.locations[id] = { name: name, feedback: [] };
-            input.value = '';
-            updateLocationSelects();
-            updateLocationsList();
-        }
+        async function addLocation() {
+		  if (!currentUser) return;
+		
+		  const input = document.getElementById('newLocationInput');
+		  const name = (input?.value || '').trim();
+		  if (!name) return;
+		
+		  try {
+		    // Create the location in Supabase and return the full row
+		    const { data: newLoc, error } = await supabase
+		      .from('locations')
+		      .insert({ business_id: currentUser.businessId, name })
+		      .select()
+		      .single();
+		
+		    if (error) throw error;
+		
+		    // Keep in-memory state in sync, keyed by UUID
+		    if (!currentUser.locations) currentUser.locations = {};
+		    currentUser.locations[newLoc.id] = { name: newLoc.name, feedback: [] };
+		
+		    // Clear input and refresh all dependent UI
+		    input.value = '';
+		    updateLocationSelects();
+		    updateLocationsList();
+		    generateQR(); // keeps QR tab in sync if it’s open
+		  } catch (e) {
+		    console.error(e);
+		    alert(e?.message || 'Failed to add location.');
+		  }
+		}
+
 
         function updateLocationsList() {
             var container = document.getElementById('locationsList');
