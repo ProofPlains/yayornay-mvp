@@ -958,21 +958,28 @@
             }
         }
 
-        function showCustomerViewForLocation(locationId) {
-            hideAllScreens();
-            hideAdminControls();
-            document.getElementById('customerView').style.display = 'block';
-            
-            currentLocation = locationId;
-            var locations = {};
-            locations[locationId] = { 
-                name: getLocationDisplayName(locationId),
-                feedback: [] 
-            };
-            
-            updateCustomerLocationDisplay(locations);
-            currentView = 'customer';
-        }
+        async function showCustomerViewForLocation(locationId) {
+		  hideAllScreens();
+		  hideAdminControls();
+		  document.getElementById('customerView').style.display = 'block';
+		
+		  currentLocation = locationId;
+		
+		  // Look up the real location row from Supabase
+		  const locRow = await getLocationById(locationId);
+		
+		  // Paint the header with the true name (fallback if not found)
+		  const humanName = locRow?.name || 'Unknown Location';
+		  setLocationName(humanName);
+		
+		  // Keep your existing display function happy (it expects a map keyed by currentLocation)
+		  const locations = {};
+		  locations[locationId] = { name: humanName, feedback: [] };
+		  updateCustomerLocationDisplay(locations);
+		
+		  currentView = 'customer';
+		}
+
 
         function getLocationDisplayName(locationId) {
             if (locationId === 'demo') return 'Demo Restaurant';
@@ -1228,7 +1235,7 @@
 		  const commentsEl = document.getElementById('additionalComments');
 		  const comments = (commentsEl?.value || '').trim() || null;
 		
-		  // Optimistic local object (used if DB returns no timestamp)
+		  // Optimistic local object for UI/fallbacks
 		  const localItem = {
 		    sentiment: selectedSentiment,
 		    timestamp: new Date().toISOString(),
@@ -1237,12 +1244,22 @@
 		  };
 		
 		  try {
-		    // If logged in and we have business + location, persist to DB
-		    if (currentUser?.businessId && currentLocation) {
+		    // 1) Find a business_id to insert against
+		    let businessId = currentUser?.businessId || null;
+		
+		    // If we’re on a public QR page (no currentUser), look up the location row to derive business_id
+		    if (!businessId && currentLocation) {
+		      const locRow = await getLocationById(currentLocation);
+		      if (locRow?.name) setLocationName(locRow.name); // ensure UI shows human name
+		      businessId = locRow?.business_id || null;
+		    }
+		
+		    // 2) If we have both business_id and currentLocation, try to insert into Supabase
+		    if (businessId && currentLocation) {
 		      const { data: inserted, error } = await supabase
 		        .from('feedback')
 		        .insert({
-		          business_id: currentUser.businessId,
+		          business_id: businessId,
 		          location_id: currentLocation,
 		          sentiment: selectedSentiment,
 		          comments
@@ -1254,21 +1271,20 @@
 		
 		      const ts = inserted?.submitted_at || localItem.timestamp;
 		
-		      // Mirror into in-memory state for instant analytics refresh
-		      if (currentUser.locations?.[currentLocation]) {
-		        currentUser.locations[currentLocation].feedback =
-		          currentUser.locations[currentLocation].feedback || [];
-		        currentUser.locations[currentLocation].feedback.push({
+		      // If logged in and we have in-memory state, mirror the new row for instant analytics
+		      if (currentUser?.locations?.[currentLocation]) {
+		        const arr = currentUser.locations[currentLocation].feedback || [];
+		        arr.push({
 		          sentiment: inserted?.sentiment ?? localItem.sentiment,
 		          timestamp: ts,
 		          location: currentLocation,
 		          comments: inserted?.comments ?? localItem.comments
 		        });
+		        currentUser.locations[currentLocation].feedback = arr;
+		        updateAnalytics();
 		      }
-		      updateAnalytics();
 		    } else {
-		      // Not logged in (e.g., public QR flow)
-		      // Store locally for now; we’ll move this to a public insert flow later.
+		      // 3) No business_id available (likely anon + strict RLS) → local fallback
 		      const storageKey = 'feedback_' + currentLocation;
 		      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
 		      existing.push(localItem);
@@ -1280,7 +1296,7 @@
 		    alert(e.message || 'Could not submit feedback.');
 		  }
 		
-		  // Thank-you UI
+		  // 4) Thank-you UI
 		  const section = document.querySelector('.feedback-section');
 		  if (section) section.style.display = 'none';
 		  const thankYouDiv = document.getElementById('thankYou');
@@ -1295,11 +1311,11 @@
 		        : 'block';
 		  }
 		
-		  // Demo auto-return
 		  if (currentView === 'customer-demo') {
 		    setTimeout(showDemoAdmin, 2000);
 		  }
 		}
+
 
         function showDemoAdmin() {
             hideAllScreens();
@@ -1805,6 +1821,28 @@
 		    }
 		  }
 		  updateAnalytics();
+		}
+		
+		// Update customer form with a human-readable location name
+		function setLocationName(name) {
+		  const el = document.getElementById('customerLocationDisplay');
+		  if (el) el.textContent = name;
+		}
+
+		
+		// Fetch a location row (id, name, business_id) by UUID
+		async function getLocationById(id) {
+		  if (!id) return null;
+		  const { data, error } = await supabase
+		    .from('locations')
+		    .select('id, name, business_id')
+		    .eq('id', id)
+		    .single();
+		  if (error) {
+		    console.error('getLocationById error:', error);
+		    return null;
+		  }
+		  return data;
 		}
 
 		
