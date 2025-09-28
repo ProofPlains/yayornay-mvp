@@ -651,11 +651,10 @@
             
             <div class="optional-feedback">
                 <label for="additionalComments">Any additional feedback? (optional)</label>
-                <textarea 
-                    id="additionalComments" 
-                    placeholder="Tell us more about your experience..."
-                    maxlength="500">
-                </textarea>
+                <textarea id="additionalComments" placeholder="Optional comments..." rows="4" maxlength="500" aria-describedby="commentCounter"></textarea>
+					<div id="commentCounter" style="margin-top:6px;font-size:12px;color:#6b7280;">
+					  0 / 500
+					</div>
             </div>
             
             <button class="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
@@ -842,12 +841,17 @@
         document.addEventListener('DOMContentLoaded', function() {
             var urlParams = new URLSearchParams(window.location.search);
             var locationId = urlParams.get('location');
-            
+			const ac = document.getElementById('additionalComments');
+			if (ac) {
+			  ac.addEventListener('input', updateCommentCounter);
+			  updateCommentCounter();
+			}
             if (locationId) {
                 showCustomerViewForLocation(locationId);
             } else {
                 showWelcome();
             }
+			
         });
 
         function showWelcome() {
@@ -938,6 +942,7 @@
             });
             document.querySelector('.submit-btn').classList.remove('enabled');
             document.getElementById('additionalComments').value = '';
+			updateCommentCounter();
         }
 
         function clearFormErrors() {
@@ -1255,17 +1260,20 @@
 		    }
 		
 		    // 2) If we have both business_id and currentLocation, try to insert into Supabase
+			  	//Update: The DB trigger now derives business_id from locations, so we don’t send it.
 		    if (businessId && currentLocation) {
-		      const { data: inserted, error } = await supabase
-		        .from('feedback')
-		        .insert({
-		          business_id: businessId,
-		          location_id: currentLocation,
-		          sentiment: selectedSentiment,
-		          comments
-		        })
-		        .select()
-		        .single();
+		    const safeComments = comments ? comments.slice(0, 500) : null;
+
+			const { data: inserted, error } = await supabase
+			  .from('feedback')
+			  .insert({
+			    location_id: currentLocation,
+			    sentiment: selectedSentiment,
+			    comments: safeComments
+			  })
+			  .select()
+			  .single();
+
 		
 		      if (error) throw error;
 		
@@ -1843,6 +1851,19 @@
 		    return null;
 		  }
 		  return data;
+		}
+
+		// --- Comment counter (500 max) ---
+		const COMMENT_MAX = 500;
+		
+		function updateCommentCounter() {
+		  const el = document.getElementById('additionalComments');
+		  const counter = document.getElementById('commentCounter');
+		  if (!el || !counter) return;
+		  const len = (el.value || '').length;
+		  counter.textContent = `${len} / ${COMMENT_MAX}`;
+		  // Subtle color shift when close to the limit
+		  counter.style.color = len >= COMMENT_MAX ? '#b91c1c' : (len >= COMMENT_MAX - 50 ? '#b45309' : '#6b7280');
 		}
 
 		
