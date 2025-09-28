@@ -513,6 +513,10 @@
             .cta-buttons { flex-direction: column; align-items: center; }
             .features { grid-template-columns: 1fr; }
         }
+		
+		/* Prevent welcome flash before JS decides what to show */
+ 		 #welcomeScreen { display: none; }
+		
     </style>
 </head>
 <body>
@@ -884,11 +888,16 @@
 
 
         function showWelcome() {
-            hideAllScreens();
-            hideAdminControls();
-            document.getElementById('welcomeScreen').style.display = 'block';
-            currentView = 'welcome';
-        }
+		  // Ensure drawer is closed and page can scroll
+		  try { closeNavDrawer(); } catch {}
+		  document.body.style.overflow = '';
+		
+		  hideAllScreens();
+		  hideAdminControls();
+		  document.getElementById('welcomeScreen').style.display = 'block';
+		  currentView = 'welcome';
+		}
+
 
         function showSignup() {
             hideAllScreens();
@@ -1244,10 +1253,18 @@
 			}
 
         function logout() {
-            currentUser = null;
-            currentLocation = 'main';
-            showWelcome();
-        }
+		  // Close any open drawer and clear overflow locks
+		  try { closeNavDrawer(); } catch {}
+		  document.body.style.overflow = ''; // reset any 'hidden' from the drawer
+		
+		  currentUser = null;
+		  currentLocation = 'main';
+		
+		  // Land cleanly on the welcome screen
+		  showWelcome();
+		  scrollToTop?.();
+		}
+
 
         function updateCustomerLocationDisplay(locations) {
             var display = document.getElementById('customerLocationDisplay');
