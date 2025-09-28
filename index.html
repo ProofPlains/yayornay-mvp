@@ -1228,7 +1228,10 @@
             
             updateLocationSelects();
             showSection('analytics');
-        }
+
+			// 👇 ensure we land at the very top on mobile/desktop
+			scrollToTop();
+			}
 
         function logout() {
             currentUser = null;
@@ -1974,6 +1977,22 @@
 		    if (e.key === 'Escape' && modal?.style.display === 'block') closeCommentModal();
 		  });
 		});
+
+		// --- Ensure viewport is at the very top (mobile-safe) ---
+		function scrollToTop() {
+		  // Defocus any element that might cause auto-scroll
+		  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+		    document.activeElement.blur();
+		  }
+		  // Do both for cross-browser reliability
+		  document.body.scrollTop = 0;            // Safari
+		  document.documentElement.scrollTop = 0; // Chrome/Firefox/Edge
+		
+		  // One more nudge after layout settles (mobile)
+		  requestAnimationFrame(() => {
+		    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+		  });
+		}
 
 		
 	</script>
