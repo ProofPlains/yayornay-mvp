@@ -801,6 +801,22 @@
         </main>
     </div>
 
+	<!-- Comment Modal -->
+	<div id="commentModal" role="dialog" aria-modal="true" aria-labelledby="commentModalTitle"
+	     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999; padding:16px;">
+	  <div style="max-width:560px; margin:40px auto; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.2); overflow:hidden;">
+	    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #eee;">
+	      <h3 id="commentModalTitle" style="margin:0; font-size:16px; color:#111;">Customer comment</h3>
+	      <button id="commentModalClose" aria-label="Close"
+	              style="background:transparent; border:none; font-size:20px; line-height:1; cursor:pointer; padding:4px 8px;">×</button>
+	    </div>
+	    <div style="padding:16px;">
+	      <p id="commentModalBody" style="margin:0; white-space:pre-wrap; color:#111;"></p>
+	    </div>
+	  </div>
+	</div>
+
+	
     <script type="module">
         // --- Supabase client setup ---
 		import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -1447,33 +1463,70 @@
         }
 
         function updateRecentFeedback(feedback) {
-            var container = document.getElementById('recentFeedbackList');
-            if (!container) return;
-            
-            container.innerHTML = '';
-            
-            var recent = feedback.slice(-10).reverse();
-            var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
-            
-            recent.forEach(function(item) {
-                var div = document.createElement('div');
-                div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;';
-                
-                var emojis = {
-                    'very-happy': '😍',
-                    'happy': '😊',
-                    'neutral': '😐',
-                    'sad': '😞',
-                    'very-sad': '😭'
-                };
-                
-                var locationName = locations[item.location]?.name || 'Unknown';
-                var time = new Date(item.timestamp).toLocaleString();
-                
-                div.innerHTML = '<span style="font-size: 24px;">' + emojis[item.sentiment] + '</span><span>' + locationName + '</span><span style="color: #666; font-size: 14px;">' + time + '</span>';
-                container.appendChild(div);
-            });
-        }
+		  const container = document.getElementById('recentFeedbackList');
+		  if (!container) return;
+		
+		  container.innerHTML = '';
+		
+		  const recent = (feedback || []).slice(-10).reverse();
+		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+		
+		  const emojiMap = {
+		    'very-happy': '😍',
+		    'happy': '😊',
+		    'neutral': '😐',
+		    'sad': '😞',
+		    'very-sad': '😭'
+		  };
+		
+		  recent.forEach((item) => {
+		    const wrapper = document.createElement('div');
+		    // mobile-friendly row with wrap
+		    wrapper.style.cssText = 'display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:15px; background:#f8f9fa; border-radius:8px; margin-bottom:10px;';
+		
+		    // Left: emoji
+		    const left = document.createElement('span');
+		    left.style.fontSize = '24px';
+		    setText(left, emojiMap[item.sentiment] || '•');
+		
+		    // Middle: location + action (No comment / View Comment)
+		    const middle = document.createElement('div');
+		    middle.style.cssText = 'display:flex; align-items:center; gap:12px; flex:1 1 auto; min-width:200px;';
+		    const locSpan = document.createElement('span');
+		    setText(locSpan, locations[item.location]?.name || 'Unknown');
+		
+		    const hasComment = !!(item.comments && item.comments.trim());
+		    let actionEl;
+		    if (hasComment) {
+		      const btn = document.createElement('button');
+		      btn.type = 'button';
+		      btn.className = 'view-comment';
+		      btn.style.cssText = 'background:#ffffff; border:1px solid #ddd; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:13px;';
+		      btn.textContent = 'View comment';
+		      btn.addEventListener('click', () => showCommentModal(item.comments));
+		      actionEl = btn;
+		    } else {
+		      const txt = document.createElement('span');
+		      txt.style.cssText = 'font-size:13px; color:#6b7280;';
+		      txt.textContent = 'No comment';
+		      actionEl = txt;
+		    }
+		    middle.appendChild(locSpan);
+		    middle.appendChild(actionEl);
+		
+		    // Right: timestamp
+		    const right = document.createElement('span');
+		    right.style.cssText = 'color:#666; font-size:14px;';
+		    setText(right, new Date(item.timestamp).toLocaleString());
+		
+		    // Compose row
+		    wrapper.appendChild(left);
+		    wrapper.appendChild(middle);
+		    wrapper.appendChild(right);
+		    container.appendChild(wrapper);
+		  });
+		}
+
 
         async function addLocation() {
 		  if (!currentUser) return;
@@ -1865,6 +1918,40 @@
 		  // Subtle color shift when close to the limit
 		  counter.style.color = len >= COMMENT_MAX ? '#b91c1c' : (len >= COMMENT_MAX - 50 ? '#b45309' : '#6b7280');
 		}
+
+		// --- Safe text setter (prevents HTML injection) ---
+		function setText(el, text) {
+		  if (!el) return;
+		  el.textContent = text ?? '';
+		}
+		
+		// --- Modal controls ---
+		function showCommentModal(text) {
+		  const modal = document.getElementById('commentModal');
+		  const body  = document.getElementById('commentModalBody');
+		  setText(body, text && text.trim() ? text : 'No comment');
+		  modal.style.display = 'block';
+		  // focus close for accessibility
+		  document.getElementById('commentModalClose')?.focus();
+		}
+		
+		function closeCommentModal() {
+		  const modal = document.getElementById('commentModal');
+		  modal.style.display = 'none';
+		}
+		
+		// Wire modal close (once DOM is ready)
+		document.addEventListener('DOMContentLoaded', () => {
+		  const modal = document.getElementById('commentModal');
+		  const closeBtn = document.getElementById('commentModalClose');
+		  closeBtn?.addEventListener('click', closeCommentModal);
+		  modal?.addEventListener('click', (e) => {
+		    if (e.target === modal) closeCommentModal(); // click outside card
+		  });
+		  document.addEventListener('keydown', (e) => {
+		    if (e.key === 'Escape' && modal?.style.display === 'block') closeCommentModal();
+		  });
+		});
 
 		
 	</script>
