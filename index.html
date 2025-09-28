@@ -1220,7 +1220,11 @@
             if (demoNotice) demoNotice.remove();
             
             var logoutBtn = adminView.querySelector('.logout-btn');
-            if (logoutBtn) logoutBtn.style.display = 'block';
+			if (logoutBtn) {
+			  logoutBtn.style.display = 'block';
+			  logoutBtn.textContent = 'Log out'; // rename from “Logout”
+			}
+
             
             updateLocationSelects();
             showSection('analytics');
@@ -1375,15 +1379,33 @@
         }
 
         function openNavDrawer() {
-            var drawer = document.getElementById('navDrawer');
-            var overlay = document.getElementById('navDrawerOverlay');
-            
-            if (drawer && overlay) {
-                drawer.classList.add('open');
-                overlay.classList.add('open');
-                document.body.style.overflow = 'hidden'; // Prevent background scrolling
-            }
-        }
+		  var drawer = document.getElementById('navDrawer');
+		  var overlay = document.getElementById('navDrawerOverlay');
+		  
+		  if (drawer && overlay) {
+		    drawer.classList.add('open');
+		    overlay.classList.add('open');
+		
+		    // Enable scrolling inside the drawer on mobile
+		    drawer.style.overflowY = 'auto';
+		    drawer.style.maxHeight = '100vh';
+		    drawer.style.webkitOverflowScrolling = 'touch'; // iOS momentum scroll
+		    drawer.style.overscrollBehavior = 'contain';
+		
+		    // Make sure there is a bit of padding at the bottom so last items are tappable
+		    // (Non-destructive: only adds once.)
+		    if (!document.getElementById('navDrawerBottomSpacer')) {
+		      var spacer = document.createElement('div');
+		      spacer.id = 'navDrawerBottomSpacer';
+		      spacer.style.height = '96px';  // space above the device bottom edge / gesture bar
+		      spacer.style.flexShrink = '0';
+		      drawer.appendChild(spacer);
+		    }
+		
+		    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+		  }
+		}
+
 
         function closeNavDrawer() {
             var drawer = document.getElementById('navDrawer');
