@@ -1252,18 +1252,49 @@
 			scrollToTop();
 			}
 
-        function logout() {
-		  // Close any open drawer and clear overflow locks
+        async function logout() {
+		  // Close drawer + restore scrolling (mobile safety)
 		  try { closeNavDrawer(); } catch {}
-		  document.body.style.overflow = ''; // reset any 'hidden' from the drawer
+		  document.body.style.overflow = '';
 		
+		  // Optional: brief UI disable to avoid double-taps
+		  const logoutBtns = document.querySelectorAll('.logout-btn');
+		  logoutBtns.forEach(btn => btn.disabled = true);
+		
+		  try {
+		    // 1) Tell Supabase to end the session (clears its storage keys)
+		    const { error } = await supabase.auth.signOut();
+		    if (error) throw error;
+		  } catch (e) {
+		    console.warn('Supabase signOut error:', e?.message || e);
+		    // 2) Belt & braces: nuke any stray auth keys if signOut fails or is offline
+		    try {
+		      const toDelete = [];
+		      for (let i = 0; i < localStorage.length; i++) {
+		        const k = localStorage.key(i);
+		        // Supabase v2 uses "sb-" prefix; older libs may use "supabase." keys
+		        if (k && (k.startsWith('sb-') || k.startsWith('supabase.'))) {
+		          toDelete.push(k);
+		        }
+		      }
+		      toDelete.forEach(k => localStorage.removeItem(k));
+		    } catch {}
+		  }
+		
+		  // 3) Clear in-memory app state
 		  currentUser = null;
+		  window.currentUser = null;
 		  currentLocation = 'main';
+		  window.currentLocation = 'main';
 		
-		  // Land cleanly on the welcome screen
+		  // 4) Land cleanly on Welcome (and ensure top-of-page)
 		  showWelcome();
 		  scrollToTop?.();
+		
+		  // 5) Re-enable buttons
+		  logoutBtns.forEach(btn => btn.disabled = false);
 		}
+
 
 
         function updateCustomerLocationDisplay(locations) {
