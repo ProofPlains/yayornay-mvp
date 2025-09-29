@@ -2092,13 +2092,39 @@
 		    const row = document.createElement('div');
 		    row.style.cssText = 'display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:15px; background:#f8f9fa; border-radius:8px; margin-bottom:10px;';
 		
+		    // Left: emoji
 		    const left = document.createElement('span');
 		    left.style.fontSize = '24px';
 		    left.textContent = emojiMap[item.sentiment] || '•';
 		
-		    const middle = document.createElement('span');
-		    middle.textContent = locations[item.location]?.name || 'Unknown';
+		    // Middle: location + action (View comment / No comment)
+		    const middle = document.createElement('div');
+		    middle.style.cssText = 'display:flex; align-items:center; gap:12px; flex:1 1 auto; min-width:200px;';
 		
+		    const locSpan = document.createElement('span');
+		    locSpan.textContent = locations[item.location]?.name || 'Unknown';
+		
+		    const hasComment = !!(item.comments && item.comments.trim());
+		    let actionEl;
+		    if (hasComment) {
+		      const btn = document.createElement('button');
+		      btn.type = 'button';
+		      btn.className = 'view-comment';
+		      btn.style.cssText = 'background:#ffffff; border:1px solid #ddd; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:13px;';
+		      btn.textContent = 'View comment';
+		      btn.addEventListener('click', () => showCommentModal(item.comments));
+		      actionEl = btn;
+		    } else {
+		      const txt = document.createElement('span');
+		      txt.style.cssText = 'font-size:13px; color:#6b7280;';
+		      txt.textContent = 'No comment';
+		      actionEl = txt;
+		    }
+		
+		    middle.appendChild(locSpan);
+		    middle.appendChild(actionEl);
+		
+		    // Right: timestamp
 		    const right = document.createElement('span');
 		    right.style.cssText = 'color:#666; font-size:14px;';
 		    right.textContent = new Date(item.timestamp).toLocaleString();
@@ -2124,6 +2150,7 @@
 		    next.style.opacity = next.disabled ? '0.5' : '1';
 		  }
 		}
+
 		
 		function nextRecentPage() { recentPage += 1; renderRecentPage(); }
 		function prevRecentPage() { recentPage -= 1; renderRecentPage(); }
