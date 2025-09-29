@@ -811,6 +811,11 @@
                 <div style="margin-top: 30px;">
                     <h3>Recent Feedback</h3>
                     <div id="recentFeedbackList"></div>
+					<div id="recentPagination" style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px;">
+					  <button id="recentPrev" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">‹ Prev</button>
+					  <span id="recentPageInfo" style="font-size:12px; color:#6b7280;">Page 1 of 1</span>
+					  <button id="recentNext" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">Next ›</button>
+					</div>
                 </div>
             </section>
 
@@ -1605,73 +1610,18 @@
                 var element = document.getElementById(key);
                 if (element) element.textContent = percentages[key];
             });
-            
+            recentPage = 0; // reset to first page whenever filters/data change
             updateRecentFeedback(allFeedback);
         }
 
-        function updateRecentFeedback(feedback) {
-		  const container = document.getElementById('recentFeedbackList');
-		  if (!container) return;
-		
-		  container.innerHTML = '';
-		
-		  const recent = (feedback || []).slice(-10).reverse();
-		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
-		
-		  const emojiMap = {
-		    'very-happy': '😍',
-		    'happy': '😊',
-		    'neutral': '😐',
-		    'sad': '😞',
-		    'very-sad': '😭'
-		  };
-		
-		  recent.forEach((item) => {
-		    const wrapper = document.createElement('div');
-		    // mobile-friendly row with wrap
-		    wrapper.style.cssText = 'display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:15px; background:#f8f9fa; border-radius:8px; margin-bottom:10px;';
-		
-		    // Left: emoji
-		    const left = document.createElement('span');
-		    left.style.fontSize = '24px';
-		    setText(left, emojiMap[item.sentiment] || '•');
-		
-		    // Middle: location + action (No comment / View Comment)
-		    const middle = document.createElement('div');
-		    middle.style.cssText = 'display:flex; align-items:center; gap:12px; flex:1 1 auto; min-width:200px;';
-		    const locSpan = document.createElement('span');
-		    setText(locSpan, locations[item.location]?.name || 'Unknown');
-		
-		    const hasComment = !!(item.comments && item.comments.trim());
-		    let actionEl;
-		    if (hasComment) {
-		      const btn = document.createElement('button');
-		      btn.type = 'button';
-		      btn.className = 'view-comment';
-		      btn.style.cssText = 'background:#ffffff; border:1px solid #ddd; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:13px;';
-		      btn.textContent = 'View comment';
-		      btn.addEventListener('click', () => showCommentModal(item.comments));
-		      actionEl = btn;
-		    } else {
-		      const txt = document.createElement('span');
-		      txt.style.cssText = 'font-size:13px; color:#6b7280;';
-		      txt.textContent = 'No comment';
-		      actionEl = txt;
-		    }
-		    middle.appendChild(locSpan);
-		    middle.appendChild(actionEl);
-		
-		    // Right: timestamp
-		    const right = document.createElement('span');
-		    right.style.cssText = 'color:#666; font-size:14px;';
-		    setText(right, new Date(item.timestamp).toLocaleString());
-		
-		    // Compose row
-		    wrapper.appendChild(left);
-		    wrapper.appendChild(middle);
-		    wrapper.appendChild(right);
-		    container.appendChild(wrapper);
+       function updateRecentFeedback(feedback) {
+		  // always sort newest first
+		  recentSorted = [...(feedback || [])].sort((a, b) => {
+		    const ta = new Date(a.timestamp).getTime();
+		    const tb = new Date(b.timestamp).getTime();
+		    return tb - ta; // DESC
 		  });
+		  renderRecentPage();
 		}
 
 
@@ -2116,7 +2066,74 @@
 		  });
 		}
 
+		// --- Recent Feedback pagination state ---
+		let RECENT_PAGE_SIZE = 10;
+		let recentPage = 0;
+		let recentSorted = []; // always newest -> oldest
 		
+		function renderRecentPage() {
+		  const container = document.getElementById('recentFeedbackList');
+		  if (!container) return;
+		  container.innerHTML = '';
+		
+		  const total = recentSorted.length;
+		  const totalPages = Math.max(1, Math.ceil(total / RECENT_PAGE_SIZE));
+		  // clamp page
+		  if (recentPage < 0) recentPage = 0;
+		  if (recentPage > totalPages - 1) recentPage = totalPages - 1;
+		
+		  const start = recentPage * RECENT_PAGE_SIZE;
+		  const pageItems = recentSorted.slice(start, start + RECENT_PAGE_SIZE);
+		
+		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+		  const emojiMap = { 'very-happy':'😍','happy':'😊','neutral':'😐','sad':'😞','very-sad':'😭' };
+		
+		  pageItems.forEach((item) => {
+		    const row = document.createElement('div');
+		    row.style.cssText = 'display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:15px; background:#f8f9fa; border-radius:8px; margin-bottom:10px;';
+		
+		    const left = document.createElement('span');
+		    left.style.fontSize = '24px';
+		    left.textContent = emojiMap[item.sentiment] || '•';
+		
+		    const middle = document.createElement('span');
+		    middle.textContent = locations[item.location]?.name || 'Unknown';
+		
+		    const right = document.createElement('span');
+		    right.style.cssText = 'color:#666; font-size:14px;';
+		    right.textContent = new Date(item.timestamp).toLocaleString();
+		
+		    row.appendChild(left);
+		    row.appendChild(middle);
+		    row.appendChild(right);
+		    container.appendChild(row);
+		  });
+		
+		  // pagination controls
+		  const info = document.getElementById('recentPageInfo');
+		  const prev = document.getElementById('recentPrev');
+		  const next = document.getElementById('recentNext');
+		
+		  if (info) info.textContent = `Page ${Math.min(recentPage + 1, totalPages)} of ${totalPages}`;
+		  if (prev) {
+		    prev.disabled = recentPage === 0;
+		    prev.style.opacity = prev.disabled ? '0.5' : '1';
+		  }
+		  if (next) {
+		    next.disabled = recentPage >= totalPages - 1;
+		    next.style.opacity = next.disabled ? '0.5' : '1';
+		  }
+		}
+		
+		function nextRecentPage() { recentPage += 1; renderRecentPage(); }
+		function prevRecentPage() { recentPage -= 1; renderRecentPage(); }
+
+		// --- Wire up Recent Feedback pagination controls ---
+		document.addEventListener('DOMContentLoaded', () => {
+		  document.getElementById('recentPrev')?.addEventListener('click', prevRecentPage);
+		  document.getElementById('recentNext')?.addEventListener('click', nextRecentPage);
+		});
+
 	</script>
 </body>
 </html>
