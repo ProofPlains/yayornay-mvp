@@ -654,9 +654,38 @@
             <button class="link-button" onclick="showWelcome()">← Back to welcome</button>
             <span style="color: #ccc; margin: 0 10px;">|</span>
             <button class="link-button" onclick="showSignup()">Need an account? Sign up</button>
+			<span style="color: #ccc; margin: 0 10px;">|</span>
+			<button class="link-button" onclick="showForgotPassword()">Forgot password?</button>
         </div>
     </div>
 
+	<!-- Forgot Password (request link) -->
+	<div id="forgotPasswordScreen" style="display:none; max-width:420px; margin:40px auto;">
+	  <h2>Reset your password</h2>
+	  <p>Enter your email and we’ll send you a reset link.</p>
+	  <form id="forgotForm" onsubmit="handleRequestReset(event)" style="display:grid; gap:10px;">
+	    <input id="forgotEmail" type="email" placeholder="you@example.com" required />
+	    <button type="submit" class="primary-btn">Send reset link</button>
+	    <p id="forgotStatus" role="status" style="display:none; color:#4b5563; margin:0;"></p>
+	    <p id="forgotError" style="display:none; color:#b91c1c; margin:0;"></p>
+	  </form>
+	  <div style="margin-top:10px;">
+	    <a href="#" onclick="showLogin()">Back to login</a>
+	  </div>
+	</div>
+	
+	<!-- Reset Password (deep link) -->
+	<div id="resetPasswordScreen" style="display:none; max-width:420px; margin:40px auto;">
+	  <h2>Choose a new password</h2>
+	  <form id="resetForm" onsubmit="handleSubmitNewPassword(event)" style="display:grid; gap:10px;">
+	    <input id="newPassword" type="password" placeholder="New password" minlength="8" required />
+	    <input id="confirmNewPassword" type="password" placeholder="Confirm new password" minlength="8" required />
+	    <button type="submit" class="primary-btn">Update password</button>
+	    <p id="resetError" style="display:none; color:#b91c1c; margin:0;"></p>
+	  </form>
+	</div>
+
+	
     <!-- Customer Feedback View -->
     <div id="customerView" class="container" style="display: none;">
         <div id="customerDemoNotice" style="display: none; background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px; text-align: center;">
@@ -879,6 +908,16 @@
 			const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 			window.supabase = supabase; // expose the client for console/debug use
 
+			// Listen for password-recovery deep links and show the reset screen
+			supabase.auth.onAuthStateChange(async (event, session) => {
+			  if (event === 'PASSWORD_RECOVERY') {
+			    // The magic link established a temporary session; show reset UI
+			    showResetPassword();
+			  }
+			  // (Optional) keep or add your SIGNED_IN / SIGNED_OUT handlers here if needed
+			});
+
+		
 		// --- Shape DB rows into the structure your UI already uses ---
 		function buildLocationsShape(locationsRows, feedbackRows) {
 			const map = {};
@@ -1944,7 +1983,11 @@
 		  addLocation,
 		  updateLocationsList,
 		  updateAnalytics,
-		  logout
+		  logout,
+		  showForgotPassword,
+		  handleRequestReset,
+		  showResetPassword,
+		  handleSubmitNewPassword
 		});
 
 		// ---- Optional: Refresh feedback from server after login ----
@@ -2161,6 +2204,99 @@
 		  document.getElementById('recentNext')?.addEventListener('click', nextRecentPage);
 		});
 
+		// --- Forgot/Reset Password flow ---
+		
+		function showForgotPassword() {
+		  hideAllScreens();
+		  hideAdminControls?.();
+		  document.getElementById('forgotPasswordScreen').style.display = 'block';
+		  // Clear previous state
+		  const s = document.getElementById('forgotStatus');
+		  const e = document.getElementById('forgotError');
+		  if (s) { s.style.display = 'none'; s.textContent = ''; }
+		  if (e) { e.style.display = 'none'; e.textContent = ''; }
+		  currentView = 'forgot';
+		}
+		
+		async function handleRequestReset(event) {
+		  event.preventDefault?.();
+		
+		  const email = document.getElementById('forgotEmail')?.value.trim().toLowerCase();
+		  const statusEl = document.getElementById('forgotStatus');
+		  const errorEl  = document.getElementById('forgotError');
+		  if (!email) return;
+		
+		  showLoader?.();
+		  // IMPORTANT: ensure Supabase Auth -> URL config allows this redirect
+		  const redirectTo = `${window.location.origin}${window.location.pathname}`;
+		  try {
+		    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+		    if (error) {
+		      // Still show neutral message to avoid email enumeration
+		      console.warn('resetPasswordForEmail error:', error.message);
+		    }
+		    if (statusEl) {
+		      statusEl.textContent = 'If an account exists for that email, we’ve sent a reset link. Please check your inbox.';
+		      statusEl.style.display = 'block';
+		    }
+		    if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+		  } catch (e) {
+		    console.error(e);
+		    if (errorEl) { errorEl.textContent = 'Unable to send reset link right now.'; errorEl.style.display = 'block'; }
+		    if (statusEl) { statusEl.style.display = 'none'; }
+		  } finally {
+		    hideLoader?.();
+		  }
+		}
+		
+		function showResetPassword() {
+		  hideAllScreens();
+		  hideAdminControls?.();
+		  document.getElementById('resetPasswordScreen').style.display = 'block';
+		  // Clear errors
+		  const e = document.getElementById('resetError');
+		  if (e) { e.style.display = 'none'; e.textContent = ''; }
+		  currentView = 'reset';
+		}
+		
+		async function handleSubmitNewPassword(event) {
+		  event.preventDefault?.();
+		  const pwd = document.getElementById('newPassword')?.value || '';
+		  const confirm = document.getElementById('confirmNewPassword')?.value || '';
+		  const err = document.getElementById('resetError');
+		
+		  if (pwd.length < 8) {
+		    if (err) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; }
+		    return;
+		  }
+		  if (pwd !== confirm) {
+		    if (err) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; }
+		    return;
+		  }
+		
+		  showLoader?.();
+		  try {
+		    const { data, error } = await supabase.auth.updateUser({ password: pwd });
+		    if (error) throw error;
+		
+		    // Pattern A: keep the session and hydrate straight into dashboard
+		    const { data: { session } } = await supabase.auth.getSession();
+		    if (session?.user) {
+		      await hydrateAndShowDashboard(session.user);
+		    } else {
+		      // Fallback: show login with a friendly banner
+		      showLogin();
+		      showError?.('loginError', 'Password updated. Please sign in.');
+		    }
+		  } catch (e) {
+		    console.error(e);
+		    if (err) { err.textContent = e.message || 'Could not update password.'; err.style.display = 'block'; }
+		  } finally {
+		    hideLoader?.();
+		  }
+		}
+
+		
 	</script>
 </body>
 </html>
