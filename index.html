@@ -544,16 +544,14 @@
 		
 		/* --- Loader wrapper: full-page overlay style --- */
 		.loader-overlay {
-		  display: none; /* hidden by default */
 		  position: fixed;
 		  inset: 0;
 		  background: rgba(255,255,255,0.8);
 		  z-index: 9999;
-		  display: flex;
-		  align-items: center;
+		  display: none;           /* hidden by default */
+		  align-items: center;     /* flex props apply once visible */
 		  justify-content: center;
 		}
-
 		
     </style>
 </head>
@@ -935,7 +933,6 @@
 		});
 
 
-
         function showWelcome() {
 		  // Ensure drawer is closed and page can scroll
 		  try { closeNavDrawer(); } catch {}
@@ -944,6 +941,7 @@
 		  hideAllScreens();
 		  hideAdminControls();
 		  document.getElementById('welcomeScreen').style.display = 'block';
+		  hideLoader?.();
 		  currentView = 'welcome';
 		}
 
@@ -1070,6 +1068,7 @@
 		  updateCustomerLocationDisplay(locations);
 		
 		  currentView = 'customer';
+		  hideLoader?.(); // ensure loader is not left on
 		}
 
 
@@ -1272,7 +1271,8 @@
 		    const { data: login, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
 		    if (loginErr) {
 		      showError?.('loginError', loginErr.message || 'Login failed');
-		      return;
+		      hideLoader();
+			  return;
 		    }
 		
 		    const user = login.user;
@@ -1286,8 +1286,6 @@
 			hideLoader(); // 👈 ensure stop on error
 		  }
 		}
-
-
 
 
         function showAdminDashboard() {
@@ -1312,13 +1310,14 @@
 
 			// 👇 ensure we land at the very top on mobile/desktop
 			scrollToTop();
+			hideLoader?.();
 			}
 
         async function logout() {
 		  // Close drawer + restore scrolling (mobile safety)
 		  try { closeNavDrawer(); } catch {}
 		  document.body.style.overflow = '';
-		
+		  hideLoader?.();
 		  // Optional: brief UI disable to avoid double-taps
 		  const logoutBtns = document.querySelectorAll('.logout-btn');
 		  logoutBtns.forEach(btn => btn.disabled = true);
