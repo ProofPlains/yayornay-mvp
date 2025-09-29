@@ -516,6 +516,44 @@
 		
 		/* Prevent welcome flash before JS decides what to show */
  		 #welcomeScreen { display: none; }
+
+		/* --- Loader animation --- */
+		.loader {
+		  width: 40px;
+		  aspect-ratio: 1;
+		  display: grid;
+		  margin: 0 auto;
+		}
+		.loader::before,
+		.loader::after {
+		  content: "";
+		  grid-area: 1/1;
+		  background: orange;
+		  clip-path: polygon(0 0,101% 0, 0 100%);
+		  animation: l13 2s infinite;
+		}
+		.loader::after {
+		  --s:-1,-1;
+		}
+		@keyframes l13 {
+		  0%,10%   {transform:scale(var(--s,1)) translate(0,0)        rotate(0deg)}
+		  33%      {transform:scale(var(--s,1)) translate(20px,-20px) rotate(0deg)}
+		  66%      {transform:scale(var(--s,1)) translate(20px,-20px) rotate(180deg)}
+		  90%,100% {transform:scale(var(--s,1)) translate(0px,0px)    rotate(180deg)}
+		}
+		
+		/* --- Loader wrapper: full-page overlay style --- */
+		.loader-overlay {
+		  display: none; /* hidden by default */
+		  position: fixed;
+		  inset: 0;
+		  background: rgba(255,255,255,0.8);
+		  z-index: 9999;
+		  display: flex;
+		  align-items: center;
+		  justify-content: center;
+		}
+
 		
     </style>
 </head>
@@ -676,6 +714,12 @@
         </div>
     </div>
 
+	<!-- Global loader overlay -->
+	<div id="globalLoader" class="loader-overlay">
+	  <div class="loader"></div>
+	</div>
+
+	
     <!-- Admin View -->
     <div id="adminView">
         <!-- Navigation Drawer Overlay -->
@@ -1200,6 +1244,14 @@
 		  refreshFeedbackFromServer?.();
 		}
 
+		//loading animation helper
+		function showLoader() {
+		  document.getElementById('globalLoader').style.display = 'flex';
+		}
+		function hideLoader() {
+		  document.getElementById('globalLoader').style.display = 'none';
+		}
+
 		
 		// Supabase-backed login with self-heal and correct ordering
 		async function handleLogin(event) {
@@ -1214,7 +1266,9 @@
 		      showError?.('loginError', 'Please enter both email and password');
 		      return;
 		    }
-		
+
+			showLoader(); // 👈 start spinner
+			  
 		    const { data: login, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
 		    if (loginErr) {
 		      showError?.('loginError', loginErr.message || 'Login failed');
@@ -1223,10 +1277,13 @@
 		
 		    const user = login.user;
 		    await hydrateAndShowDashboard(user);
-		
+
+			hideLoader(); // 👈 stop once dashboard is ready
+			  
 		  } catch (e) {
 		    console.error(e);
 		    showError?.('loginError', e.message || 'There was a problem loading your account.');
+			hideLoader(); // 👈 ensure stop on error
 		  }
 		}
 
@@ -1333,7 +1390,8 @@
 		    location: currentLocation,
 		    comments
 		  };
-		
+
+		  showLoader(); // 👈 show while processing
 		  try {
 		    // 1) Find a business_id to insert against
 		    let businessId = currentUser?.businessId || null;
@@ -1389,7 +1447,9 @@
 		    console.error(e);
 		    alert(e.message || 'Could not submit feedback.');
 		  }
-		
+
+		  hideLoader(); // 👈 always hide before thank-you UI
+			
 		  // 4) Thank-you UI
 		  const section = document.querySelector('.feedback-section');
 		  if (section) section.style.display = 'none';
