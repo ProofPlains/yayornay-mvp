@@ -919,7 +919,8 @@
 
 	
     <script type="module">
-        // --- Supabase client setup ---
+        let recoveryMode = false;
+		// --- Supabase client setup ---
 		import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 			const SUPABASE_URL = 'https://evediwsocfbalzbzdden.supabase.co';
@@ -932,17 +933,23 @@
 			// Listen for password-recovery deep links and show the reset screen
 			supabase.auth.onAuthStateChange(async (event, session) => {
 			  if (event === 'PASSWORD_RECOVERY') {
-			    // Supabase has now created a temporary recovery session.
+			    recoveryMode = true;          // 👈 we’re in the reset flow
 			    showResetPassword();
-			
-			    // Clean up the URL *after* the session is set so refreshes don’t re-trigger.
-			    try {
-			      history.replaceState({}, document.title, window.location.pathname);
-			    } catch {}
+			    // Clean the URL *after* Supabase has established the recovery session
+			    try { history.replaceState({}, document.title, window.location.pathname); } catch {}
 			  }
 			
-			  // Optional: keep your SIGNED_IN/SIGNED_OUT handling if you have it
+			  if (event === 'SIGNED_IN') {
+			    // During recovery, do NOT auto-hydrate dashboard yet
+			    if (recoveryMode) return;
+			    // If you have a SIGNED_IN hydrate elsewhere, it’s safe to no-op here or hydrate if you prefer
+			  }
+			
+			  if (event === 'SIGNED_OUT') {
+			    recoveryMode = false;
+			  }
 			});
+
 
 
 		
@@ -973,6 +980,12 @@
 
         // Initialize app (session-aware + safe fallback)
 		document.addEventListener('DOMContentLoaded', async () => {
+		  // If the URL hash indicates a recovery link, don't hydrate or show welcome yet.
+		  // Let the PASSWORD_RECOVERY event drive the UI once Supabase sets the session.
+		  if (window.location.hash && window.location.hash.includes('type=recovery')) {
+		    showLoader?.();   // optional: show a spinner instead of a blank page
+		    return;
+		  }
 		  const urlParams = new URLSearchParams(window.location.search);
 		  const locationId = urlParams.get('location');
 		
@@ -2254,17 +2267,28 @@
 		  currentView = 'forgot';
 		}
 		
+		let _resetInFlight = false; // 👈 add once at top-level (above functions if you prefer)
+
 		async function handleRequestReset(event) {
 		  event.preventDefault?.();
+		
+		  if (_resetInFlight) return;        // 👈 guard: ignore double taps/presses
+		  _resetInFlight = true;
 		
 		  const email = document.getElementById('forgotEmail')?.value.trim().toLowerCase();
 		  const statusEl = document.getElementById('forgotStatus');
 		  const errorEl  = document.getElementById('forgotError');
-		  if (!email) return;
+		  const btn = event?.submitter || document.querySelector('#forgotForm button[type="submit"]');
 		
+		  if (!email) { _resetInFlight = false; return; }
+		
+		  // Disable the button immediately to prevent accidental double submits
+		  btn?.setAttribute('disabled', 'disabled');
 		  showLoader?.();
-		  // IMPORTANT: ensure Supabase Auth -> URL config allows this redirect
+		
+		  // IMPORTANT: redirectTo must be in Supabase Auth → URL Configuration → Redirect URLs
 		  const redirectTo = `${window.location.origin}${window.location.pathname}`;
+		
 		  try {
 		    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
 		    if (error) {
@@ -2282,8 +2306,11 @@
 		    if (statusEl) { statusEl.style.display = 'none'; }
 		  } finally {
 		    hideLoader?.();
+		    btn?.removeAttribute('disabled');
+		    _resetInFlight = false;
 		  }
 		}
+
 		
 		function showResetPassword() {
 		  hideAllScreens();
