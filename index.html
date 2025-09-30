@@ -933,22 +933,21 @@
 			// Listen for password-recovery deep links and show the reset screen
 			supabase.auth.onAuthStateChange(async (event, session) => {
 			  if (event === 'PASSWORD_RECOVERY') {
-			    recoveryMode = true;          // 👈 we’re in the reset flow
+			    recoveryMode = true;
 			    showResetPassword();
-			    // Clean the URL *after* Supabase has established the recovery session
+			    hideLoader?.(); // 👈 stop the overlay once the reset UI is visible
 			    try { history.replaceState({}, document.title, window.location.pathname); } catch {}
 			  }
 			
 			  if (event === 'SIGNED_IN') {
-			    // During recovery, do NOT auto-hydrate dashboard yet
-			    if (recoveryMode) return;
-			    // If you have a SIGNED_IN hydrate elsewhere, it’s safe to no-op here or hydrate if you prefer
+			    if (recoveryMode) return; // don’t auto-hydrate during recovery
 			  }
 			
 			  if (event === 'SIGNED_OUT') {
 			    recoveryMode = false;
 			  }
 			});
+
 
 
 
@@ -2316,11 +2315,12 @@
 		  hideAllScreens();
 		  hideAdminControls?.();
 		  document.getElementById('resetPasswordScreen').style.display = 'block';
-		  // Clear errors
 		  const e = document.getElementById('resetError');
 		  if (e) { e.style.display = 'none'; e.textContent = ''; }
 		  currentView = 'reset';
+		  hideLoader?.(); // 👈 ensure overlay is off even if called from elsewhere
 		}
+
 		
 		async function handleSubmitNewPassword(event) {
 		  event.preventDefault?.();
