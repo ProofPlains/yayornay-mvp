@@ -932,11 +932,18 @@
 			// Listen for password-recovery deep links and show the reset screen
 			supabase.auth.onAuthStateChange(async (event, session) => {
 			  if (event === 'PASSWORD_RECOVERY') {
-			    // The magic link established a temporary session; show reset UI
+			    // Supabase has now created a temporary recovery session.
 			    showResetPassword();
+			
+			    // Clean up the URL *after* the session is set so refreshes don’t re-trigger.
+			    try {
+			      history.replaceState({}, document.title, window.location.pathname);
+			    } catch {}
 			  }
-			  // (Optional) keep or add your SIGNED_IN / SIGNED_OUT handlers here if needed
+			
+			  // Optional: keep your SIGNED_IN/SIGNED_OUT handling if you have it
 			});
+
 
 		
 		// --- Shape DB rows into the structure your UI already uses ---
@@ -969,12 +976,6 @@
 		  const urlParams = new URLSearchParams(window.location.search);
 		  const locationId = urlParams.get('location');
 		
-		  // 👇 NEW: detect Supabase recovery deeplink in the URL hash or query
-		  const isRecovery =
-		    (window.location.hash && window.location.hash.includes('type=recovery')) ||
-		    (new URLSearchParams(window.location.hash.slice(1)).get('type') === 'recovery') ||
-		    (new URLSearchParams(window.location.search).get('type') === 'recovery');
-		
 		  let booted = false;
 		
 		  try {
@@ -985,16 +986,7 @@
 		      return;
 		    }
 		
-		    // 2) If we're in recovery mode, show reset screen, do NOT hydrate dashboard
-		    if (isRecovery) {
-		      showResetPassword();
-		      // clean the URL so a refresh doesn't keep recovery params
-		      history.replaceState({}, document.title, window.location.pathname);
-		      booted = true;
-		      return;
-		    }
-		
-		    // 3) Try to restore owner session (non-recovery)
+		    // 2) Try to restore owner session (non-recovery paths)
 		    const { data: { session } } = await supabase.auth.getSession();
 		    if (session?.user) {
 		      await hydrateAndShowDashboard(session.user);
@@ -1010,7 +1002,6 @@
 		    scrollToTop?.();
 		  }
 		});
-
 
 
         function showWelcome() {
@@ -2310,26 +2301,25 @@
 		  const confirm = document.getElementById('confirmNewPassword')?.value || '';
 		  const err = document.getElementById('resetError');
 		
-		  if (pwd.length < 8) {
-		    if (err) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; }
-		    return;
-		  }
-		  if (pwd !== confirm) {
-		    if (err) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; }
-		    return;
-		  }
+		  if (pwd.length < 8) { /* ...existing... */ }
+		  if (pwd !== confirm) { /* ...existing... */ }
 		
 		  showLoader?.();
 		  try {
+		    // 👇 NEW: ensure the temporary recovery session exists
+		    const { data: { session } } = await supabase.auth.getSession();
+		    if (!session?.access_token) {
+		      throw new Error('This reset link has expired or is invalid. Please request a new link.');
+		    }
+		
 		    const { data, error } = await supabase.auth.updateUser({ password: pwd });
 		    if (error) throw error;
 		
 		    // Pattern A: keep the session and hydrate straight into dashboard
-		    const { data: { session } } = await supabase.auth.getSession();
-		    if (session?.user) {
-		      await hydrateAndShowDashboard(session.user);
+		    const { data: { session: post } } = await supabase.auth.getSession();
+		    if (post?.user) {
+		      await hydrateAndShowDashboard(post.user);
 		    } else {
-		      // Fallback: show login with a friendly banner
 		      showLogin();
 		      showError?.('loginError', 'Password updated. Please sign in.');
 		    }
@@ -2340,6 +2330,7 @@
 		    hideLoader?.();
 		  }
 		}
+
 
 		
 	</script>
