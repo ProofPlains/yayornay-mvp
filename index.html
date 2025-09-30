@@ -660,30 +660,51 @@
     </div>
 
 	<!-- Forgot Password (request link) -->
-	<div id="forgotPasswordScreen" style="display:none; max-width:420px; margin:40px auto;">
-	  <h2>Reset your password</h2>
-	  <p>Enter your email and we’ll send you a reset link.</p>
-	  <form id="forgotForm" onsubmit="handleRequestReset(event)" style="display:grid; gap:10px;">
-	    <input id="forgotEmail" type="email" placeholder="you@example.com" required />
-	    <button type="submit" class="primary-btn">Send reset link</button>
-	    <p id="forgotStatus" role="status" style="display:none; color:#4b5563; margin:0;"></p>
-	    <p id="forgotError" style="display:none; color:#b91c1c; margin:0;"></p>
+	<div id="forgotPasswordScreen" class="login-container" style="display:none;">
+	  <div class="form-title">
+	    <h2>Reset your password</h2>
+	    <p>Enter your email and we’ll send you a reset link.</p>
+	  </div>
+	
+	  <form id="forgotForm" onsubmit="handleRequestReset(event)">
+	    <div class="form-group">
+	      <label for="forgotEmail">Email Address</label>
+	      <input id="forgotEmail" type="email" required />
+	    </div>
+	    <button type="submit" class="btn-primary" style="width:100%;margin-top:10px;">Send reset link</button>
+	    <p id="forgotStatus" role="status" style="display:none; color:#4b5563; margin-top:10px;"></p>
+	    <p id="forgotError" style="display:none; color:#b91c1c; margin-top:10px;"></p>
 	  </form>
-	  <div style="margin-top:10px;">
-	    <a href="#" onclick="showLogin()">Back to login</a>
+	
+	  <div style="text-align:center; margin-top: 20px;">
+	    <button class="link-button" onclick="showLogin()">← Back to login</button>
 	  </div>
 	</div>
 	
 	<!-- Reset Password (deep link) -->
-	<div id="resetPasswordScreen" style="display:none; max-width:420px; margin:40px auto;">
-	  <h2>Choose a new password</h2>
-	  <form id="resetForm" onsubmit="handleSubmitNewPassword(event)" style="display:grid; gap:10px;">
-	    <input id="newPassword" type="password" placeholder="New password" minlength="8" required />
-	    <input id="confirmNewPassword" type="password" placeholder="Confirm new password" minlength="8" required />
-	    <button type="submit" class="primary-btn">Update password</button>
-	    <p id="resetError" style="display:none; color:#b91c1c; margin:0;"></p>
+	<div id="resetPasswordScreen" class="login-container" style="display:none;">
+	  <div class="form-title">
+	    <h2>Choose a new password</h2>
+	  </div>
+	
+	  <form id="resetForm" onsubmit="handleSubmitNewPassword(event)">
+	    <div class="form-group">
+	      <label for="newPassword">New password</label>
+	      <input id="newPassword" type="password" minlength="8" required />
+	    </div>
+	    <div class="form-group">
+	      <label for="confirmNewPassword">Confirm new password</label>
+	      <input id="confirmNewPassword" type="password" minlength="8" required />
+	    </div>
+	    <button type="submit" class="btn-primary" style="width:100%;margin-top:10px;">Update password</button>
+	    <p id="resetError" style="display:none; color:#b91c1c; margin-top:10px;"></p>
 	  </form>
+	
+	  <div style="text-align:center; margin-top:20px;">
+	    <button class="link-button" onclick="showLogin()">← Back to login</button>
+	  </div>
 	</div>
+
 
 	
     <!-- Customer Feedback View -->
@@ -948,6 +969,12 @@
 		  const urlParams = new URLSearchParams(window.location.search);
 		  const locationId = urlParams.get('location');
 		
+		  // 👇 NEW: detect Supabase recovery deeplink in the URL hash or query
+		  const isRecovery =
+		    (window.location.hash && window.location.hash.includes('type=recovery')) ||
+		    (new URLSearchParams(window.location.hash.slice(1)).get('type') === 'recovery') ||
+		    (new URLSearchParams(window.location.search).get('type') === 'recovery');
+		
 		  let booted = false;
 		
 		  try {
@@ -958,7 +985,16 @@
 		      return;
 		    }
 		
-		    // 2) Try to restore owner session
+		    // 2) If we're in recovery mode, show reset screen, do NOT hydrate dashboard
+		    if (isRecovery) {
+		      showResetPassword();
+		      // clean the URL so a refresh doesn't keep recovery params
+		      history.replaceState({}, document.title, window.location.pathname);
+		      booted = true;
+		      return;
+		    }
+		
+		    // 3) Try to restore owner session (non-recovery)
 		    const { data: { session } } = await supabase.auth.getSession();
 		    if (session?.user) {
 		      await hydrateAndShowDashboard(session.user);
@@ -969,12 +1005,12 @@
 		    console.error('App boot error:', e);
 		  }
 		
-		  // 3) Fallback: always show Welcome when not booted yet
 		  if (!booted) {
-		    showWelcome();        // sets #welcomeScreen display:block
+		    showWelcome();
 		    scrollToTop?.();
 		  }
 		});
+
 
 
         function showWelcome() {
@@ -1037,11 +1073,20 @@
         }
 
         function hideAllScreens() {
-            var screens = ['welcomeScreen', 'signupScreen', 'loginScreen', 'customerView', 'adminView'];
-            screens.forEach(function(screen) {
-                document.getElementById(screen).style.display = 'none';
-            });
-        }
+		  var screens = [
+		    'welcomeScreen',
+		    'signupScreen',
+		    'loginScreen',
+		    'customerView',
+		    'adminView',
+		    'forgotPasswordScreen',   // 👈 add
+		    'resetPasswordScreen'     // 👈 add
+		  ];
+		  screens.forEach(function(screen) {
+		    document.getElementById(screen).style.display = 'none';
+		  });
+		}
+
 
         function hideAdminControls() {
             ['customerAdminToggle', 'customerLogoutBtn', 'customerDemoNotice'].forEach(function(id) {
