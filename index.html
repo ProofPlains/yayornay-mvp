@@ -1055,26 +1055,24 @@
 		    showLoader?.();
 		    return;
 		  }
-		  …
-		});
-
+		
+		  // 2) Normal boot
 		  const urlParams = new URLSearchParams(window.location.search);
 		  const locationId = urlParams.get('location');
-		
 		  let booted = false;
 		
 		  try {
-		    // 1) Public QR view takes precedence
+		    // Public QR view takes precedence
 		    if (locationId) {
 		      await showCustomerViewForLocation(locationId);
 		      booted = true;
 		      return;
 		    }
 		
-		    // 2) Try to restore owner session (non-recovery paths)
+		    // Restore owner session (non-recovery paths)
 		    const { data: { session } } = await supabase.auth.getSession();
 		    if (session?.user) {
-			  hydratedOnce = true;
+		      hydratedOnce = true;                 // prevent double hydration later
 		      await hydrateAndShowDashboard(session.user);
 		      booted = true;
 		      return;
@@ -1088,6 +1086,7 @@
 		    scrollToTop?.();
 		  }
 		});
+
 
 
         function showWelcome() {
@@ -2358,7 +2357,7 @@
 		  // Disable the button immediately to prevent accidental double submits
 		  btn?.setAttribute('disabled', 'disabled');
 		  showLoader?.();
-		
+			
 		  // IMPORTANT: redirectTo must be in Supabase Auth → URL Configuration → Redirect URLs
 		  const redirectTo = `${window.location.origin}${window.location.pathname}`;
 		
