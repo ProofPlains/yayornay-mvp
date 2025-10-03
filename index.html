@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HappySnap - Instant Customer Feedback with QR Codes</title>
+    <title>FlashFeedback - Instant Customer Feedback with QR Codes</title>
     <link rel="icon" href="data:,">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
@@ -558,7 +558,7 @@
 <body>
     <!-- Welcome Screen -->
     <div id="welcomeScreen" class="welcome-container">
-        <div class="logo">HappySnap</div>
+        <div class="logo">FlashFeedback</div>
         <div class="tagline">Instant customer feedback with QR codes</div>
         
         <div class="features">
@@ -633,7 +633,7 @@
     <div id="loginScreen" class="login-container" style="display: none;">
         <div class="form-title">
             <h2>Welcome Back</h2>
-            <p>Log in to your HappySnap account</p>
+            <p>Log in to your FlashFeedback account</p>
         </div>
 
         <div id="loginError" class="error-message" style="display: none;"></div>
@@ -777,7 +777,7 @@
         <nav class="nav-drawer" id="navDrawer">
             <button class="drawer-close-btn" onclick="closeNavDrawer()">✕</button>
             <div class="drawer-header">
-                <div class="drawer-logo">HappySnap</div>
+                <div class="drawer-logo">FlashFeedback</div>
             </div>
             
             <ul class="drawer-menu">
@@ -813,7 +813,7 @@
         <!-- Top App Bar -->
         <header class="admin-topbar">
             <button class="topbar-hamburger" onclick="openNavDrawer()">☰</button>
-            <h1 class="topbar-title">HappySnap</h1>
+            <h1 class="topbar-title">FlashFeedback</h1>
         </header>
 
         <!-- Main Content Area -->
@@ -1870,7 +1870,7 @@
             ctx.roundRect(cardX + 12, cardY + 12, cardWidth - 24, cardHeight - 24, 32);
             ctx.fill();
             
-            // HappySnap logo
+            // FlashFeedback logo
             var logoY = cardY + 132;
             var smileyX = signCanvas.width / 2 - 280;
             
@@ -1898,12 +1898,12 @@
             ctx.arc(smileyX, logoY - 5, 40, 0.15 * Math.PI, 0.85 * Math.PI);
             ctx.stroke();
             
-            // "HappySnap" text
+            // "FlashFeedback" text
             ctx.fillStyle = '#e67e22';
             ctx.font = 'bold 120px Arial';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
-            ctx.fillText('HappySnap', smileyX + 120, logoY);
+            ctx.fillText('FlashFeedback', smileyX + 120, logoY);
             
             // Main question
             ctx.fillStyle = '#2c3e50';
