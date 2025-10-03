@@ -1050,9 +1050,12 @@
 		    return;
 		  }
 		
-		  // 1) If it’s a recovery deep link, show the reset screen immediately.
-			// Try to set the session from hash tokens if present, then clear the hash.
-			if (window.location.hash && window.location.hash.includes('type=recovery')) {
+		  // 1) Recovery deep link → show reset screen immediately.
+			// Also allow a durable query hint (?flow=recovery) in case the hash is consumed.
+			const urlParams = new URLSearchParams(window.location.search);
+			const forceRecovery = urlParams.get('flow') === 'recovery';
+			
+			if ((window.location.hash && window.location.hash.includes('type=recovery')) || forceRecovery) {
 			  const p = parseAuthHashParams();
 			  try {
 			    if (p.access_token && p.refresh_token) {
@@ -1065,10 +1068,19 @@
 			    console.warn('setSession from recovery hash failed:', e?.message || e);
 			  }
 			  recoveryMode = true;
-			  showResetPassword();       // 👈 don’t wait for the event; render the form now
-			  clearHashFromAddressBar(); // avoid re-triggering on refresh
+			  showResetPassword();       // don’t wait for PASSWORD_RECOVERY
+			  clearHashFromAddressBar(); // clean the hash
+			  // remove ?flow=recovery to avoid re-trigger on refresh
+			  try {
+			    const u = new URL(window.location.href);
+			    if (u.searchParams.has('flow')) {
+			      u.searchParams.delete('flow');
+			      history.replaceState({}, document.title, u.pathname + (u.search ? u.search : ''));
+			    }
+			  } catch {}
 			  return;
 			}
+
 
 		
 		  // 2) Normal boot
@@ -2374,7 +2386,7 @@
 		 
 			
 		  // IMPORTANT: redirectTo must be in Supabase Auth → URL Configuration → Redirect URLs
-		  const redirectTo = `${window.location.origin}${window.location.pathname}`;
+		  const redirectTo = `${window.location.origin}${window.location.pathname}?flow=recovery`;
 		
 		  try {
 		    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
