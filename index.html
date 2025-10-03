@@ -985,14 +985,45 @@
 		      return;
 		    }
 		
-		    // 2) If we're in recovery mode, show reset screen, do NOT hydrate dashboard
-		    if (isRecovery) {
-		      showResetPassword();
-		      // clean the URL so a refresh doesn't keep recovery params
-		      history.replaceState({}, document.title, window.location.pathname);
-		      booted = true;
-		      return;
-		    }
+		    // 2) If we're in recovery mode, try to establish the recovery session first
+			if (isRecovery) {
+			  // Parse tokens from the hash
+			  const hash = new URLSearchParams(window.location.hash.slice(1));
+			  const at = hash.get('access_token');
+			  const rt = hash.get('refresh_token');
+			  const type = hash.get('type');
+			
+			  try {
+			    if (type === 'recovery' && at && rt) {
+			      // 2a) Establish the temporary recovery session
+			      const { data, error } = await supabase.auth.setSession({
+			        access_token: at,
+			        refresh_token: rt
+			      });
+			      if (error) throw error;
+			
+			      // 2b) Now it's safe to clean the URL and show the reset screen
+			      history.replaceState({}, document.title, window.location.pathname + '?flow=recovery');
+			      showResetPassword();
+			      booted = true;
+			      return;
+			    } else {
+			      // No tokens present -> likely a consumed/stripped link.
+			      // Show welcome with a clear banner.
+			      showWelcome();
+			      showError?.('loginError', 'Your reset link is missing or expired. Please request a new one from “Forgot password”.');
+			      booted = true;
+			      return;
+			    }
+			  } catch (err) {
+			    console.error('Failed to set recovery session:', err);
+			    showWelcome();
+			    showError?.('loginError', 'Could not start a reset session. Please request a new link and try again.');
+			    booted = true;
+			    return;
+			  }
+			}
+
 		
 		    // 3) Try to restore owner session (non-recovery)
 		    const { data: { session } } = await supabase.auth.getSession();
@@ -2318,7 +2349,18 @@
 		    if (err) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; }
 		    return;
 		  }
-		
+		  
+		  const { data: { session } } = await supabase.auth.getSession();
+			if (!session?.access_token) {
+			  if (err) {
+			    err.textContent = 'Your reset session has expired or is missing. Please open the newest reset link from your email.';
+			    err.style.display = 'block';
+			  }
+			  hideLoader?.();
+			  return;
+			}
+
+			
 		  showLoader?.();
 		  try {
 		    const { data, error } = await supabase.auth.updateUser({ password: pwd });
