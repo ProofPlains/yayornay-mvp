@@ -1050,11 +1050,26 @@
 		    return;
 		  }
 		
-		  // 1) If it’s a valid recovery deep link, let the PASSWORD_RECOVERY event drive the UI
-		  if (window.location.hash && window.location.hash.includes('type=recovery')) {
-		    showLoader?.();
-		    return;
-		  }
+		  // 1) If it’s a recovery deep link, show the reset screen immediately.
+			// Try to set the session from hash tokens if present, then clear the hash.
+			if (window.location.hash && window.location.hash.includes('type=recovery')) {
+			  const p = parseAuthHashParams();
+			  try {
+			    if (p.access_token && p.refresh_token) {
+			      await supabase.auth.setSession({
+			        access_token: p.access_token,
+			        refresh_token: p.refresh_token
+			      });
+			    }
+			  } catch (e) {
+			    console.warn('setSession from recovery hash failed:', e?.message || e);
+			  }
+			  recoveryMode = true;
+			  showResetPassword();       // 👈 don’t wait for the event; render the form now
+			  clearHashFromAddressBar(); // avoid re-triggering on refresh
+			  return;
+			}
+
 		
 		  // 2) Normal boot
 		  const urlParams = new URLSearchParams(window.location.search);
@@ -2356,7 +2371,7 @@
 		
 		  // Disable the button immediately to prevent accidental double submits
 		  btn?.setAttribute('disabled', 'disabled');
-		  showLoader?.();
+		 
 			
 		  // IMPORTANT: redirectTo must be in Supabase Auth → URL Configuration → Redirect URLs
 		  const redirectTo = `${window.location.origin}${window.location.pathname}`;
