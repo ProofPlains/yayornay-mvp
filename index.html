@@ -514,8 +514,8 @@
             .features { grid-template-columns: 1fr; }
         }
 		
-		/* Prevent welcome flash before JS decides what to show 
- 		 #welcomeScreen { display: none; }*/
+		/* Prevent welcome flash before JS decides what to show */
+ 		 #welcomeScreen { display: none; }
 
 		/* --- Loader animation --- */
 		.loader {
@@ -552,21 +552,6 @@
 		  align-items: center;     /* flex props apply once visible */
 		  justify-content: center;
 		}
-
-		/* Route banner */
-		.route-banner {
-		  display: none;
-		  margin: 16px auto 0;
-		  max-width: 600px;
-		  padding: 12px 16px;
-		  border-radius: 10px;
-		  font-size: 14px;
-		  text-align: center;
-		}
-		.route-banner.info  { background:#e6f4ff; border:1px solid #90cdf4; color:#1e3a8a; }
-		.route-banner.warn  { background:#fff7ed; border:1px solid #fb923c; color:#7c2d12; }
-		.route-banner.error { background:#fed7d7; border:1px solid #fc8181; color:#c53030; }
-	
 		
     </style>
 </head>
@@ -575,8 +560,7 @@
     <div id="welcomeScreen" class="welcome-container">
         <div class="logo">HappySnap</div>
         <div class="tagline">Instant customer feedback with QR codes</div>
-        <div id="routeBanner" class="route-banner warn">Link expired or invalid. Please request a new reset link.</div>
-
+        
         <div class="features">
             <div class="feature">
                 <div class="feature-icon">📱</div>
@@ -935,53 +919,24 @@
 
 	
     <script type="module">
-        let recoveryMode = false;
-		let hydratedOnce = false;
-
-		// --- Supabase client setup ---
+        // --- Supabase client setup ---
 		import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 			const SUPABASE_URL = 'https://evediwsocfbalzbzdden.supabase.co';
 			const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2ZWRpd3NvY2ZiYWx6YnpkZGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzQ1NzcsImV4cCI6MjA3MzYxMDU3N30.Y6TGgEuk97iFuuZmfWvOkwXx88y7397rzUhwbDG0p9Q';
 
 			// This object lets your frontend talk to Supabase Auth + DB
-			const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-			  auth: {
-			    persistSession: true,
-			    autoRefreshToken: true,
-			    detectSessionInUrl: true
-			  }
-			});
-			window.supabase = supabase;
-
+			const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+			window.supabase = supabase; // expose the client for console/debug use
 
 			// Listen for password-recovery deep links and show the reset screen
 			supabase.auth.onAuthStateChange(async (event, session) => {
 			  if (event === 'PASSWORD_RECOVERY') {
-			    recoveryMode = true;
+			    // The magic link established a temporary session; show reset UI
 			    showResetPassword();
-			    hideLoader?.();
-			    try { history.replaceState({}, document.title, window.location.pathname); } catch {}
-			    return;
 			  }
-			
-			  if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')
-			      && session?.user && !recoveryMode && !hydratedOnce) {
-			    hydratedOnce = true;
-			    await hydrateAndShowDashboard(session.user);
-			    return;
-			  }
-			
-			  if (event === 'SIGNED_OUT') {
-			    recoveryMode = false;
-			    hydratedOnce = false;
-			  }
+			  // (Optional) keep or add your SIGNED_IN / SIGNED_OUT handlers here if needed
 			});
-
-
-
-
-
 
 		
 		// --- Shape DB rows into the structure your UI already uses ---
@@ -1010,96 +965,38 @@
         var userDatabase = {};
 
         // Initialize app (session-aware + safe fallback)
-		function showRouteBanner(msg, tone = 'warn') {
-		  const el = document.getElementById('routeBanner');
-		  if (!el) return;
-		  el.textContent = msg;
-		  el.className = `route-banner ${tone}`;
-		  el.style.display = 'block';
-		}
-		function hideRouteBanner() {
-		  const el = document.getElementById('routeBanner');
-		  if (!el) return;
-		  el.style.display = 'none';
-		}
-		
-		function parseAuthHashParams() {
-		  // Supabase puts tokens/errors in the URL hash on redirect
-		  const h = window.location.hash || '';
-		  if (!h || h.length < 2) return {};
-		  const q = new URLSearchParams(h.slice(1));
-		  const obj = {};
-		  for (const [k, v] of q.entries()) obj[k] = v;
-		  return obj;
-		}
-		
-		function clearHashFromAddressBar() {
-		  try { history.replaceState({}, document.title, window.location.pathname + window.location.search); } catch {}
-		}
-
-		
-		 document.addEventListener('DOMContentLoaded', async () => {
-		  // 0) If the URL contains an error from Supabase (expired/used/invalid), show a friendly banner
-		  const hashParams = parseAuthHashParams();
-		  if (hashParams.error || hashParams.error_code || hashParams.error_description) {
-		    clearHashFromAddressBar();
-		    hideAllScreens();
-		    hideAdminControls();
-		    showWelcome();               // ensures a clean landing
-		    showRouteBanner('That password reset link has expired or is invalid. Please request a new link.', 'warn');
-		    return;
-		  }
-		
-		  // 1) Recovery deep link → show reset screen immediately.
-			// Also allow a durable query hint (?flow=recovery) in case the hash is consumed.
-			const urlParams = new URLSearchParams(window.location.search);
-			const forceRecovery = urlParams.get('flow') === 'recovery';
-			
-			if ((window.location.hash && window.location.hash.includes('type=recovery')) || forceRecovery) {
-			  const p = parseAuthHashParams();
-			  try {
-			    if (p.access_token && p.refresh_token) {
-			      await supabase.auth.setSession({
-			        access_token: p.access_token,
-			        refresh_token: p.refresh_token
-			      });
-			    }
-			  } catch (e) {
-			    console.warn('setSession from recovery hash failed:', e?.message || e);
-			  }
-			  recoveryMode = true;
-			  showResetPassword();       // don’t wait for PASSWORD_RECOVERY
-			  clearHashFromAddressBar(); // clean the hash
-			  // remove ?flow=recovery to avoid re-trigger on refresh
-			  try {
-			    const u = new URL(window.location.href);
-			    if (u.searchParams.has('flow')) {
-			      u.searchParams.delete('flow');
-			      history.replaceState({}, document.title, u.pathname + (u.search ? u.search : ''));
-			    }
-			  } catch {}
-			  return;
-			}
-
-
-		
-		  // 2) Normal boot
+		document.addEventListener('DOMContentLoaded', async () => {
 		  const urlParams = new URLSearchParams(window.location.search);
 		  const locationId = urlParams.get('location');
+		
+		  // 👇 NEW: detect Supabase recovery deeplink in the URL hash or query
+		  const isRecovery =
+		    (window.location.hash && window.location.hash.includes('type=recovery')) ||
+		    (new URLSearchParams(window.location.hash.slice(1)).get('type') === 'recovery') ||
+		    (new URLSearchParams(window.location.search).get('type') === 'recovery');
+		
 		  let booted = false;
 		
 		  try {
-		    // Public QR view takes precedence
+		    // 1) Public QR view takes precedence
 		    if (locationId) {
 		      await showCustomerViewForLocation(locationId);
 		      booted = true;
 		      return;
 		    }
 		
-		    // Restore owner session (non-recovery paths)
+		    // 2) If we're in recovery mode, show reset screen, do NOT hydrate dashboard
+		    if (isRecovery) {
+		      showResetPassword();
+		      // clean the URL so a refresh doesn't keep recovery params
+		      history.replaceState({}, document.title, window.location.pathname);
+		      booted = true;
+		      return;
+		    }
+		
+		    // 3) Try to restore owner session (non-recovery)
 		    const { data: { session } } = await supabase.auth.getSession();
 		    if (session?.user) {
-		      hydratedOnce = true;                 // prevent double hydration later
 		      await hydrateAndShowDashboard(session.user);
 		      booted = true;
 		      return;
@@ -2366,28 +2263,17 @@
 		  currentView = 'forgot';
 		}
 		
-		let _resetInFlight = false; // 👈 add once at top-level (above functions if you prefer)
-
 		async function handleRequestReset(event) {
 		  event.preventDefault?.();
-		
-		  if (_resetInFlight) return;        // 👈 guard: ignore double taps/presses
-		  _resetInFlight = true;
 		
 		  const email = document.getElementById('forgotEmail')?.value.trim().toLowerCase();
 		  const statusEl = document.getElementById('forgotStatus');
 		  const errorEl  = document.getElementById('forgotError');
-		  const btn = event?.submitter || document.querySelector('#forgotForm button[type="submit"]');
+		  if (!email) return;
 		
-		  if (!email) { _resetInFlight = false; return; }
-		
-		  // Disable the button immediately to prevent accidental double submits
-		  btn?.setAttribute('disabled', 'disabled');
-		 
-			
-		  // IMPORTANT: redirectTo must be in Supabase Auth → URL Configuration → Redirect URLs
-		  const redirectTo = `${window.location.origin}${window.location.pathname}?flow=recovery`;
-		
+		  showLoader?.();
+		  // IMPORTANT: ensure Supabase Auth -> URL config allows this redirect
+		  const redirectTo = `${window.location.origin}${window.location.pathname}`;
 		  try {
 		    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
 		    if (error) {
@@ -2405,22 +2291,18 @@
 		    if (statusEl) { statusEl.style.display = 'none'; }
 		  } finally {
 		    hideLoader?.();
-		    btn?.removeAttribute('disabled');
-		    _resetInFlight = false;
 		  }
 		}
-
 		
 		function showResetPassword() {
 		  hideAllScreens();
 		  hideAdminControls?.();
 		  document.getElementById('resetPasswordScreen').style.display = 'block';
+		  // Clear errors
 		  const e = document.getElementById('resetError');
 		  if (e) { e.style.display = 'none'; e.textContent = ''; }
 		  currentView = 'reset';
-		  hideLoader?.(); // 👈 ensure overlay is off even if called from elsewhere
 		}
-
 		
 		async function handleSubmitNewPassword(event) {
 		  event.preventDefault?.();
@@ -2428,25 +2310,26 @@
 		  const confirm = document.getElementById('confirmNewPassword')?.value || '';
 		  const err = document.getElementById('resetError');
 		
-		  if (pwd.length < 8) { /* ...existing... */ }
-		  if (pwd !== confirm) { /* ...existing... */ }
+		  if (pwd.length < 8) {
+		    if (err) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; }
+		    return;
+		  }
+		  if (pwd !== confirm) {
+		    if (err) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; }
+		    return;
+		  }
 		
 		  showLoader?.();
 		  try {
-		    // 👇 NEW: ensure the temporary recovery session exists
-		    const { data: { session } } = await supabase.auth.getSession();
-		    if (!session?.access_token) {
-		      throw new Error('This reset link has expired or is invalid. Please request a new link.');
-		    }
-		
 		    const { data, error } = await supabase.auth.updateUser({ password: pwd });
 		    if (error) throw error;
 		
 		    // Pattern A: keep the session and hydrate straight into dashboard
-		    const { data: { session: post } } = await supabase.auth.getSession();
-		    if (post?.user) {
-		      await hydrateAndShowDashboard(post.user);
+		    const { data: { session } } = await supabase.auth.getSession();
+		    if (session?.user) {
+		      await hydrateAndShowDashboard(session.user);
 		    } else {
+		      // Fallback: show login with a friendly banner
 		      showLogin();
 		      showError?.('loginError', 'Password updated. Please sign in.');
 		    }
@@ -2457,7 +2340,6 @@
 		    hideLoader?.();
 		  }
 		}
-
 
 		
 	</script>
