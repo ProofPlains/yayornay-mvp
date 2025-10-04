@@ -1613,16 +1613,21 @@
                 var existingNotice = document.getElementById('demoNotice');
                 if (existingNotice) existingNotice.remove();
                 
-                var notice = document.createElement('div');
-                notice.id = 'demoNotice';
-                notice.style.cssText = 'background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;';
-                notice.innerHTML = '<p style="color: #2e7d32; margin: 0 0 15px 0;">
-					<strong>Demo Mode</strong> - This is what business owners see!</p><div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-						<button onclick="showWelcome()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button>
-						<button onclick="toggleView()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">View as Customer</button>
-						<button onclick="showSignup()"style="background: white; color: #4299e1; border: 2px solid #4299e1; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Sign Up!</button></div>'
-                contentArea.insertBefore(notice, contentArea.firstChild);
-            }
+			var notice = document.createElement('div');
+				notice.id = 'demoNotice';
+				notice.style.cssText = 'background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: center;';
+				notice.innerHTML = `
+				  <p style="color: #2e7d32; margin: 0 0 15px 0;">
+				    <strong>Demo Mode</strong> - This is what business owners see!
+				  </p>
+				  <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+				    <button onclick="showWelcome()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button>
+				    <button onclick="toggleView()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">View as Customer</button>
+				    <button onclick="showSignup()" style="background: white; color: #4299e1; border: 2px solid #4299e1; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Sign Up!</button>
+				  </div>
+				`;
+				contentArea.insertBefore(notice, contentArea.firstChild);
+
             
             updateLocationSelects();
             showSection('Feedback');
