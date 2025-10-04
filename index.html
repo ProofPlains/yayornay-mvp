@@ -569,7 +569,7 @@
             </div>
             <div class="feature">
                 <div class="feature-icon">📊</div>
-                <h3>Live Analytics</h3>
+                <h3>Live Feedback</h3>
                 <p>Real-time sentiment tracking</p>
             </div>
             <div class="feature">
@@ -782,9 +782,9 @@
             
             <ul class="drawer-menu">
                 <li class="drawer-menu-item">
-                    <button class="drawer-menu-link active" onclick="showSection('analytics')" data-section="analytics">
+                    <button class="drawer-menu-link active" onclick="showSection('Feedback')" data-section="Feedback">
                         <span class="drawer-menu-icon">📊</span>
-                        <span>Analytics</span>
+                        <span>Feedback</span>
                     </button>
                 </li>
                 <li class="drawer-menu-item">
@@ -818,11 +818,11 @@
 
         <!-- Main Content Area -->
         <main class="admin-content">
-            <section id="analytics" class="content-section active">
-                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">Analytics Dashboard</h2>
+            <section id="Feedback" class="content-section active">
+                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">Feedback Dashboard</h2>
                 <div style="margin-bottom: 20px;">
                     <label>Select Location: </label>
-                    <select id="analyticsLocationSelect" onchange="updateAnalytics()">
+                    <select id="FeedbackLocationSelect" onchange="updateFeedback()">
                         <option value="all">All Locations</option>
                     </select>
                 </div>
@@ -1357,7 +1357,7 @@
 		  if (currentUser && currentUser.locations) {
 		    updateLocationSelects();
 		    updateLocationsList();
-		    updateAnalytics();
+		    updateFeedback();
 		  }
 		  // pull fresh rows (if any changed while you were away)
 		  refreshFeedbackFromServer?.();
@@ -1426,7 +1426,7 @@
 
             
             updateLocationSelects();
-            showSection('analytics');
+            showSection('Feedback');
 
 			// 👇 ensure we land at the very top on mobile/desktop
 			scrollToTop();
@@ -1542,7 +1542,7 @@
 		
 		      const ts = inserted?.submitted_at || localItem.timestamp;
 		
-		      // If logged in and we have in-memory state, mirror the new row for instant analytics
+		      // If logged in and we have in-memory state, mirror the new row for instant Feedback
 		      if (currentUser?.locations?.[currentLocation]) {
 		        const arr = currentUser.locations[currentLocation].feedback || [];
 		        arr.push({
@@ -1552,7 +1552,7 @@
 		          comments: inserted?.comments ?? localItem.comments
 		        });
 		        currentUser.locations[currentLocation].feedback = arr;
-		        updateAnalytics();
+		        updateFeedback();
 		      }
 		    } else {
 		      // 3) No business_id available (likely anon + strict RLS) → local fallback
@@ -1560,7 +1560,7 @@
 		      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
 		      existing.push(localItem);
 		      localStorage.setItem(storageKey, JSON.stringify(existing));
-		      updateAnalytics();
+		      updateFeedback();
 		    }
 		  } catch (e) {
 		    console.error(e);
@@ -1620,7 +1620,7 @@
             }
             
             updateLocationSelects();
-            showSection('analytics');
+            showSection('Feedback');
         }
 
         function openNavDrawer() {
@@ -1666,11 +1666,11 @@
         function updateLocationSelects() {
             var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
             
-            ['analyticsLocationSelect', 'qrLocationSelect'].forEach(function(selectId) {
+            ['FeedbackLocationSelect', 'qrLocationSelect'].forEach(function(selectId) {
                 var select = document.getElementById(selectId);
                 if (!select) return;
                 
-                if (selectId === 'analyticsLocationSelect') {
+                if (selectId === 'FeedbackLocationSelect') {
                     select.innerHTML = '<option value="all">All Locations</option>';
                 } else {
                     select.innerHTML = '';
@@ -1685,9 +1685,9 @@
             });
         }
 
-        function updateAnalytics() {
+        function updateFeedback() {
             var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
-            var selectedLocation = document.getElementById('analyticsLocationSelect')?.value || 'all';
+            var selectedLocation = document.getElementById('FeedbackLocationSelect')?.value || 'all';
             var allFeedback = [];
             
             if (selectedLocation === 'all') {
@@ -1986,8 +1986,8 @@
             
             // Update section content (no longer updating top bar title)
             switch(sectionName) {
-                case 'analytics':
-                    updateAnalytics();
+                case 'Feedback':
+                    updateFeedback();
                     break;
                 case 'locations':
                     updateLocationsList();
@@ -2014,10 +2014,10 @@
                     currentView = 'customer-demo';
                 } else {
                     // Real admin: switch to customer view
-                    var analyticsSelect = document.getElementById('analyticsLocationSelect');
-                    if (analyticsSelect && analyticsSelect.value !== 'all') {
-                        currentLocation = analyticsSelect.value;
-                    } else if (analyticsSelect && analyticsSelect.value === 'all') {
+                    var FeedbackSelect = document.getElementById('FeedbackLocationSelect');
+                    if (FeedbackSelect && FeedbackSelect.value !== 'all') {
+                        currentLocation = FeedbackSelect.value;
+                    } else if (FeedbackSelect && FeedbackSelect.value === 'all') {
                         currentLocation = Object.keys(currentUser.locations)[0];
                     }
                     
@@ -2057,7 +2057,7 @@
 		  generateSign,
 		  addLocation,
 		  updateLocationsList,
-		  updateAnalytics,
+		  updateFeedback,
 		  logout,
 		  showForgotPassword,
 		  handleRequestReset,
@@ -2096,7 +2096,7 @@
 		      });
 		    }
 		  }
-		  updateAnalytics();
+		  updateFeedback();
 		}
 		
 		// Update customer form with a human-readable location name
