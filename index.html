@@ -371,6 +371,49 @@
             background: rgba(255,255,255,0.1);
         }
 
+		/* ——— Top bar avatar ——— */
+		.topbar { position: relative; }
+		.topbar-title { padding-right: 64px; } /* avoid overlap with the avatar */
+		
+		/* Avatar button on the right of the top bar */
+		#accountAvatarBtn{
+		  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+		  width:36px; height:36px; border-radius:9999px; overflow:hidden;
+		  border:2px solid rgba(0,0,0,0.06); background:#f3f4f6; cursor:pointer;
+		  display:flex; align-items:center; justify-content:center;
+		}
+		#accountAvatarBtn img{ width:100%; height:100%; object-fit:cover; border-radius:inherit; }
+		#accountAvatarBtn svg{ width:22px; height:22px; opacity:0.65; }
+		
+		/* ——— Right-hand account drawer ——— */
+		#accountDrawerOverlay{
+		  position:fixed; inset:0; background:rgba(0,0,0,.35);
+		  opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:60;
+		}
+		#accountDrawer{
+		  position:fixed; top:0; right:0; height:100vh; width:320px; max-width:86vw;
+		  background:#111827; color:#fff; box-shadow:-6px 0 24px rgba(0,0,0,.25);
+		  transform:translateX(100%); transition:transform .25s ease; z-index:61;
+		  display:flex; flex-direction:column;
+		}
+		.account-drawer-open #accountDrawer{ transform:translateX(0); }
+		.account-drawer-open #accountDrawerOverlay{ opacity:1; pointer-events:auto; }
+		
+		.account-drawer-header{ padding:20px 16px; }
+		.account-drawer-header .business-name{ font-weight:700; font-size:18px; }
+		.account-drawer-header .user-email{ opacity:.85; font-size:13px; margin-top:4px; }
+		
+		.account-drawer-hr{ border:none; border-top:1px solid rgba(255,255,255,0.08); margin:8px 0; }
+		.account-drawer-list{ padding:6px 8px 14px 8px; }
+		.account-drawer-item{
+		  display:flex; gap:10px; align-items:center; width:100%;
+		  padding:10px 8px; border-radius:10px; cursor:pointer;
+		  background:transparent; color:#e5e7eb; text-align:left; border:none;
+		}
+		.account-drawer-item:hover{ background:rgba(255,255,255,0.06); }
+		.account-drawer-item .icon{ width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; }
+
+		
         .admin-content {
             flex: 1;
             padding: 30px;
@@ -996,6 +1039,24 @@
 	  </div>
 	</div>
 
+	<!-- Right-hand account drawer -->
+	<div id="accountDrawerOverlay" onclick="closeAccountMenu()" aria-hidden="true"></div>
+	<aside id="accountDrawer" aria-label="Account menu" role="complementary">
+	  <div class="account-drawer-header">
+	    <div class="business-name" id="accountBusinessName">—</div>
+	    <div class="user-email" id="accountUserEmail">—</div>
+	  </div>
+	  <hr class="account-drawer-hr">
+	  <nav class="account-drawer-list">
+	    <button class="account-drawer-item" onclick="openSettingsFromAccount()">
+	      <span class="icon">⚙️</span><span>Settings</span>
+	    </button>
+	    <button class="account-drawer-item" onclick="logout()">
+	      <span class="icon">⎋</span><span>Log out</span>
+	    </button>
+	  </nav>
+	</aside>
+
 	
     <script type="module">
         // --- Supabase client setup ---
@@ -1357,6 +1418,11 @@
 			// 6) Open your existing admin UI
 			showAdminDashboard();
 
+			// 6b) Brand/UI bits
+			renderBranding();
+			updateAvatarImage();
+			updateAccountMenuHeader();  
+			  
 		  } catch (e) {
 			console.error(e);
 			showError('signupError', e.message || 'Error creating your account.');
@@ -1443,13 +1509,20 @@
 			  : (locRows?.[0]?.id || null);
 
 		
-		  // 6) Render dashboard + UI
-		  showAdminDashboard();
-		  if (currentUser && currentUser.locations) {
-		    updateLocationSelects();
-		    updateLocationsList();
-		    updateFeedback();
-		  }
+		// 6) Render dashboard + UI
+		showAdminDashboard();
+		
+		// 6b) Brand/UI bits
+		renderBranding();
+		updateAvatarImage();
+		updateAccountMenuHeader();
+		
+		if (currentUser && currentUser.locations) {
+		  updateLocationSelects();
+		  updateLocationsList();
+		  updateFeedback();
+		}
+
 		  // pull fresh rows (if any changed while you were away)
 		  refreshFeedbackFromServer?.();
 		}
@@ -1464,20 +1537,97 @@
 
 		// Show customer branding
 		function renderBranding() {
-		  const name = currentUser?.businessName || 'FlashFeedback';
-		  const logoUrl = currentUser?.logoUrl || null;
-		
+		  // Keep product branding (not white-labeled)
 		  const drawerLogo = document.querySelector('.drawer-logo');
 		  const topbarTitle = document.querySelector('.topbar-title');
+		  if (drawerLogo) drawerLogo.textContent = 'FlashFeedback';
+		  if (topbarTitle) topbarTitle.textContent = 'FlashFeedback';
 		
-		  if (drawerLogo) {
-		    drawerLogo.innerHTML = logoUrl
-		      ? `<img src="${logoUrl}" alt="${name}" style="height:28px; vertical-align:middle; border-radius:6px; margin-right:8px;"> <span>${name}</span>`
-		      : name;
+		  // Ensure avatar exists on the right of the top bar and reflects current logoUrl
+		  ensureTopbarAvatar();
+		  updateAvatarImage();
+		
+		  // Keep the account drawer header updated
+		  updateAccountMenuHeader();
+		
+		  // Optional: hide Settings/Logout in the left drawer now that they live in the account menu
+		  hideLeftMenuItems();
+		}
+
+		// Simple generic profile SVG icon (fallback)
+		const PROFILE_SVG = `
+		<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+		  <circle cx="12" cy="8" r="4"></circle>
+		  <path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path>
+		</svg>`;
+		
+		// Create the topbar avatar button if missing
+		function ensureTopbarAvatar() {
+		  if (document.getElementById('accountAvatarBtn')) return;
+		  const topbar = document.querySelector('.topbar');
+		  if (!topbar) return;
+		
+		  const btn = document.createElement('button');
+		  btn.id = 'accountAvatarBtn';
+		  btn.type = 'button';
+		  btn.setAttribute('aria-label', 'Open account menu');
+		  btn.addEventListener('click', openAccountMenu);
+		  topbar.appendChild(btn);
+		}
+		
+		// Update the avatar image using business logo URL or fallback
+		function updateAvatarImage() {
+		  const btn = document.getElementById('accountAvatarBtn');
+		  if (!btn) return;
+		
+		  const logo = (currentUser && currentUser.logoUrl) ? String(currentUser.logoUrl).trim() : '';
+		  if (!logo) {
+		    btn.innerHTML = PROFILE_SVG;
+		    return;
 		  }
-		  if (topbarTitle) {
-		    topbarTitle.textContent = name;
-		  }
+		
+		  // Try to load the image; on error use fallback icon
+		  const img = new Image();
+		  img.alt = 'Account';
+		  img.onload = () => { btn.innerHTML = ''; btn.appendChild(img); };
+		  img.onerror = () => { btn.innerHTML = PROFILE_SVG; };
+		  img.src = logo;
+		}
+		
+		// Right drawer open/close
+		function openAccountMenu() {
+		  document.body.classList.add('account-drawer-open');
+		  // Close with Esc
+		  const onKey = (e) => { if (e.key === 'Escape') closeAccountMenu(); };
+		  document.addEventListener('keydown', onKey, { once: true });
+		}
+		function closeAccountMenu() {
+		  document.body.classList.remove('account-drawer-open');
+		}
+		
+		function openSettingsFromAccount() {
+		  closeAccountMenu();
+		  showSection('settings');
+		}
+		
+		// Populate Business Name + Email in account drawer header
+		function updateAccountMenuHeader() {
+		  const nameEl = document.getElementById('accountBusinessName');
+		  const emailEl = document.getElementById('accountUserEmail');
+		  if (nameEl) nameEl.textContent = currentUser?.businessName || '—';
+		  if (emailEl) emailEl.textContent = currentUser?.email || '—';
+		}
+		
+		// Hide/move items from the left drawer (best-effort; safe if absent)
+		function hideLeftMenuItems() {
+		  // Hide Settings item in left drawer if it exists
+		  document.querySelectorAll('.drawer-menu-link[data-section="settings"]')
+		    .forEach(el => el.closest('li')?.remove());
+		
+		  // Hide a left-drawer Logout if present (best-effort text match)
+		  Array.from(document.querySelectorAll('.drawer-menu-link, .drawer-footer button, .drawer-menu-item button'))
+		    .filter(el => /log\s*out/i.test(el.textContent || ''))
+		    .forEach(el => el.closest('li')?.remove?.());
 		}
 
 		
@@ -2194,7 +2344,10 @@
 		  saveProfileSettings,
 		  saveBusinessSettings,
 		  handleChangePassword,
-		  signOutEverywhere
+		  signOutEverywhere,
+		  openAccountMenu,
+		  closeAccountMenu,
+		  openSettingsFromAccount
 		});
 
 		async function loadSettings() {
