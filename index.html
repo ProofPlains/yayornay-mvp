@@ -1218,6 +1218,7 @@
         function showWelcome() {
 		  // Ensure drawer is closed and page can scroll
 		  try { closeNavDrawer(); } catch {}
+		  try { closeAccountMenu(); } catch {}	
 		  document.body.style.overflow = '';
 		
 		  hideAllScreens();
@@ -1739,6 +1740,7 @@
         async function logout() {
 		  // Close drawer + restore scrolling (mobile safety)
 		  try { closeNavDrawer(); } catch {}
+		  try { closeAccountMenu(); } catch {}	
 		  document.body.style.overflow = '';
 		  hideLoader?.();
 		  // Optional: brief UI disable to avoid double-taps
