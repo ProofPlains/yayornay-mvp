@@ -1436,7 +1436,8 @@
 			  logoUrl: business.logo_url || '',
 			  locations: buildLocationsShape(locRows, fbRows)
 			};
-
+			renderBranding();		  
+			
 		  currentLocation = (business.default_location_id && locRows.some(l => l.id === business.default_location_id))
 			  ? business.default_location_id
 			  : (locRows?.[0]?.id || null);
@@ -1459,6 +1460,24 @@
 		}
 		function hideLoader() {
 		  document.getElementById('globalLoader').style.display = 'none';
+		}
+
+		// Show customer branding
+		function renderBranding() {
+		  const name = currentUser?.businessName || 'FlashFeedback';
+		  const logoUrl = currentUser?.logoUrl || null;
+		
+		  const drawerLogo = document.querySelector('.drawer-logo');
+		  const topbarTitle = document.querySelector('.topbar-title');
+		
+		  if (drawerLogo) {
+		    drawerLogo.innerHTML = logoUrl
+		      ? `<img src="${logoUrl}" alt="${name}" style="height:28px; vertical-align:middle; border-radius:6px; margin-right:8px;"> <span>${name}</span>`
+		      : name;
+		  }
+		  if (topbarTitle) {
+		    topbarTitle.textContent = name;
+		  }
 		}
 
 		
