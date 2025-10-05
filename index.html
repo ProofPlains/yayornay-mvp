@@ -607,10 +607,16 @@
 		  max-width: 86vw;
 		  transform: translateX(100%);
 		  transition: transform .25s ease;
+		
+		  /* 🔷 match left drawer look */
+		  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+		  color: white;
+		  box-shadow: -2px 0 20px rgba(0,0,0,0.3);
 		}
 		.account-drawer-open #accountDrawer.drawer {
 		  transform: translateX(0);
 		}
+
 
     </style>
 </head>
@@ -1064,7 +1070,6 @@
 	    <div class="drawer-subtitle" id="accountUserEmail" style="opacity:.85;font-size:13px;margin-top:4px;">—</div>
 	  </div>
 	
-	  <hr class="drawer-hr">
 	
 	  <ul class="drawer-menu">
 	    <li class="drawer-menu-item">
@@ -1646,23 +1651,28 @@
 		
 		// Hide/move items from the left drawer (best-effort; safe if absent)
 		function hideLeftMenuItems() {
-		    // Hide Settings in left drawer (remove its <li> if present, otherwise the element itself)
-		    document.querySelectorAll('.drawer-menu-link[data-section="settings"]').forEach(el => {
+		  // Only touch the LEFT drawer
+		  const leftDrawer = document.getElementById('navDrawer');
+		  if (!leftDrawer) return;
+		
+		  // Hide Settings in the left drawer
+		  leftDrawer.querySelectorAll('.drawer-menu-link[data-section="settings"]').forEach(el => {
+		    const li = el.closest('li');
+		    if (li) li.remove(); else el.remove();
+		  });
+		
+		  // Hide the left-drawer "Log out" (bottom button or any list item)
+		  Array.from(leftDrawer.querySelectorAll('.drawer-menu-link, .drawer-menu-item button'))
+		    .filter(el => /log\s*out/i.test(el.textContent || ''))
+		    .forEach(el => {
 		      const li = el.closest('li');
-		      if (li) li.remove(); else el.remove();
+		      if (li) { li.remove(); return; }
+		      // bottom container is a <div> wrapping the button — remove that
+		      if (el.parentElement) el.parentElement.remove();
+		      else el.remove();
 		    });
-		 
-		    // Hide any left-drawer "Log out" (text match so it works across markup/copies)
-		    Array.from(document.querySelectorAll('.drawer-menu-link, .drawer-menu-item button'))
-		      .filter(el => /log\s*out/i.test(el.textContent || ''))
-		      .forEach(el => {
-		        const li = el.closest('li');
-		        if (li) { li.remove(); return; }
-		        // handle your bottom container (<div>…<button class="drawer-menu-link">Log out</button>…</div>)
-		        if (el.parentElement) el.parentElement.remove();
-		        else el.remove();
-		      });
-		  }
+		}
+
 
 		
 		// Supabase-backed login with self-heal and correct ordering
