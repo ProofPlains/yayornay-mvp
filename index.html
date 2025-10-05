@@ -388,12 +388,12 @@
 		/* ——— Right-hand account drawer ——— */
 		#accountDrawerOverlay{
 		  position:fixed; inset:0; background:rgba(0,0,0,.35);
-		  opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:60;
+		  opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:2000;
 		}
 		#accountDrawer{
 		  position:fixed; top:0; right:0; height:100vh; width:320px; max-width:86vw;
 		  background:#111827; color:#fff; box-shadow:-6px 0 24px rgba(0,0,0,.25);
-		  transform:translateX(100%); transition:transform .25s ease; z-index:61;
+		  transform:translateX(100%); transition:transform .25s ease; z-index:2001;
 		  display:flex; flex-direction:column;
 		}
 		.account-drawer-open #accountDrawer{ transform:translateX(0); }
@@ -596,6 +596,22 @@
 		  justify-content: center;
 		}
 		
+		/* Right-side variant that reuses the base .drawer visuals */
+		#accountDrawer.drawer {
+		  position: fixed;
+		  top: 0;
+		  right: 0;
+		  left: auto;
+		  height: 100vh;
+		  width: 320px;
+		  max-width: 86vw;
+		  transform: translateX(100%);
+		  transition: transform .25s ease;
+		}
+		.account-drawer-open #accountDrawer.drawer {
+		  transform: translateX(0);
+		}
+
     </style>
 </head>
 <body>
@@ -1041,21 +1057,31 @@
 
 	<!-- Right-hand account drawer -->
 	<div id="accountDrawerOverlay" onclick="closeAccountMenu()" aria-hidden="true"></div>
-	<aside id="accountDrawer" aria-label="Account menu" role="complementary">
-	  <div class="account-drawer-header">
-	    <div class="business-name" id="accountBusinessName">—</div>
-	    <div class="user-email" id="accountUserEmail">—</div>
+	
+	<aside id="accountDrawer" class="drawer" aria-label="Account menu" role="complementary">
+	  <div class="drawer-header">
+	    <div class="drawer-logo" id="accountBusinessName">—</div>
+	    <div class="drawer-subtitle" id="accountUserEmail" style="opacity:.85;font-size:13px;margin-top:4px;">—</div>
 	  </div>
-	  <hr class="account-drawer-hr">
-	  <nav class="account-drawer-list">
-	    <button class="account-drawer-item" onclick="openSettingsFromAccount()">
-	      <span class="icon">⚙️</span><span>Settings</span>
-	    </button>
-	    <button class="account-drawer-item" onclick="logout()">
-	      <span class="icon">⎋</span><span>Log out</span>
-	    </button>
-	  </nav>
+	
+	  <hr class="drawer-hr">
+	
+	  <ul class="drawer-menu">
+	    <li class="drawer-menu-item">
+	      <button class="drawer-menu-link" onclick="openSettingsFromAccount()">
+	        <span class="drawer-menu-icon">⚙️</span>
+	        <span>Settings</span>
+	      </button>
+	    </li>
+	    <li class="drawer-menu-item">
+	      <button class="drawer-menu-link" onclick="logout()">
+	        <span class="drawer-menu-icon">⎋</span>
+	        <span>Log out</span>
+	      </button>
+	    </li>
+	  </ul>
 	</aside>
+
 
 	
     <script type="module">
