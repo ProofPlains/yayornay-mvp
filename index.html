@@ -1564,7 +1564,7 @@
 		// Create the topbar avatar button if missing
 		function ensureTopbarAvatar() {
 		  if (document.getElementById('accountAvatarBtn')) return;
-		  const topbar = document.querySelector('.topbar');
+		  const topbar = document.querySelector('.admin-topbar');
 		  if (!topbar) return;
 		
 		  const btn = document.createElement('button');
@@ -1620,15 +1620,23 @@
 		
 		// Hide/move items from the left drawer (best-effort; safe if absent)
 		function hideLeftMenuItems() {
-		  // Hide Settings item in left drawer if it exists
-		  document.querySelectorAll('.drawer-menu-link[data-section="settings"]')
-		    .forEach(el => el.closest('li')?.remove());
-		
-		  // Hide a left-drawer Logout if present (best-effort text match)
-		  Array.from(document.querySelectorAll('.drawer-menu-link, .drawer-footer button, .drawer-menu-item button'))
-		    .filter(el => /log\s*out/i.test(el.textContent || ''))
-		    .forEach(el => el.closest('li')?.remove?.());
-		}
+		    // Hide Settings in left drawer (remove its <li> if present, otherwise the element itself)
+		    document.querySelectorAll('.drawer-menu-link[data-section="settings"]').forEach(el => {
+		      const li = el.closest('li');
+		      if (li) li.remove(); else el.remove();
+		    });
+		 
+		    // Hide any left-drawer "Log out" (text match so it works across markup/copies)
+		    Array.from(document.querySelectorAll('.drawer-menu-link, .drawer-menu-item button'))
+		      .filter(el => /log\s*out/i.test(el.textContent || ''))
+		      .forEach(el => {
+		        const li = el.closest('li');
+		        if (li) { li.remove(); return; }
+		        // handle your bottom container (<div>…<button class="drawer-menu-link">Log out</button>…</div>)
+		        if (el.parentElement) el.parentElement.remove();
+		        else el.remove();
+		      });
+		  }
 
 		
 		// Supabase-backed login with self-heal and correct ordering
