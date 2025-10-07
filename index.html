@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,77 @@
     <link rel="icon" href="data:,">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
+		:root{ 
+		  /* Colors (light fallback) */
+		  --ff-brand-1: #a78bfa;
+		  --ff-brand-2: #7c3aed;
+		  --ff-text-on-brand: #ffffff;
+		  --ff-surface: #ffffff;
+		  --ff-text: #0b1020;
+		  --ff-text-muted: #6b7280;
+		  --ff-border: #e5e7eb;
+		  --ff-success: #22c55e;
+		  --ff-warn: #f59e0b;
+		  --ff-error: #ef4444;
+		  --ff-link: var(--ff-brand-1);
+		
+		  /* Fonts */
+		  --ff-font-body: Inter, system-ui, sans-serif;
+		  --ff-font-heading: Inter, system-ui, sans-serif;
+		  --ff-font-brand: Anton, Impact, sans-serif;
+		
+		  /* Radii / Shadows / Spacing */
+		  --ff-radius-sm: 8px;
+		  --ff-radius: 12px;
+		  --ff-radius-lg: 16px;
+		  --ff-shadow: 0 4px 12px rgba(17,24,39,.10);
+		
+		  /* Z-index */
+		  --ff-z-overlay: 1000;
+		  --ff-z-topbar: 1001;
+		  --ff-z-drawer: 1002;
+		  --ff-z-account-overlay: 2000;
+		  --ff-z-account-drawer: 2001;
+		
+		  /* Spacing scale */
+		  --ff-space-1:4px; --ff-space-2:8px; --ff-space-3:12px; --ff-space-4:16px; --ff-space-5:20px; --ff-space-6:24px;
+		
+		  /* Type scale */
+		  --ff-fs-12:12px; --ff-fs-14:14px; --ff-fs-16:16px;
+		  --ff-h6:18px; --ff-h5:20px; --ff-h4:24px; --ff-h3:30px; --ff-h2:36px; --ff-h1:44px;
+		  --ff-lh-body:1.55; --ff-lh-heading:1.2;
+		
+		  /* Motion */
+		  --ff-motion: 150ms;
+		}
+		/* Dark overrides (default, since <html> has class="dark") */
+		.dark{
+		  --ff-surface: #0d1117;
+		  --ff-text: #e6edf3;
+		  --ff-text-muted: #9aa7b2;
+		  --ff-border: #30363d;
+		
+		  /* Keep your chosen brand + custom text on brand */
+		  --ff-brand-1: #a78bfa;  /* Grape */
+		  --ff-brand-2: #7c3aed;
+		  --ff-text-on-brand: #ece8dc; /* your pick */
+		}
+		
+		/* Base typography hook (keeps your current Inter import working) */
+		html{ font-family: var(--ff-font-body); }
+		h1,h2,h3,h4,h5,h6{ font-family: var(--ff-font-heading); line-height: var(--ff-lh-heading); }
+		body{ font-size: var(--ff-fs-14); line-height: var(--ff-lh-body); color: var(--ff-text); background: var(--ff-surface); }
+		
+		/* Brand title helper */
+		.brand-title{
+		  font-family: var(--ff-font-brand);
+		  text-transform: uppercase;
+		  font-style: italic;   /* you wanted italic */
+		  font-weight: 800;     /* and bold */
+		  letter-spacing: 0.02em;
+		}
+		.hamburger-img{ width:24px; height:24px; display:inline-block; object-fit:contain; }
+
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         * {
@@ -170,7 +241,7 @@
             transition: all 0.3s ease;
         }
 
-        .logo { font-size: 48px; font-weight: bold; color: #4299e1; margin-bottom: 10px; }
+        .logo { font-size: 48px; font-weight: bold; color: var(--ff-brand-1); margin-bottom: 10px; }
         .tagline { font-size: 20px; color: #718096; margin-bottom: 30px; }
 
         .features {
@@ -197,20 +268,21 @@
             border: none;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #4299e1, #3182ce);
-            color: white;
-        }
+       .btn-primary {
+		    background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2));
+		    color: var(--ff-text-on-brand);
+		}
 
-        .btn-secondary {
-            background: transparent;
-            color: #4299e1;
-            border: 2px solid #4299e1;
-        }
+       .btn-secondary {
+		    background: transparent;
+		    color: var(--ff-brand-1);
+		    border: 2px solid var(--ff-brand-1);
+		}
+
 
         .admin-topbar {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
+		    background: linear-gradient(135deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%);
+		    color: var(--ff-text-on-brand);
             padding: 0 20px;
             height: 64px;
             display: flex;
@@ -254,7 +326,7 @@
             left: -300px;
             width: 300px;
             height: 100vh;
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            background: linear-gradient(135deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%);
             color: white;
             transition: left 0.3s ease;
             z-index: 1002;
@@ -392,7 +464,7 @@
 		}
 		#accountDrawer{
 		  position:fixed; top:0; right:0; height:100vh; width:320px; max-width:86vw;
-		  background:#111827; color:#fff; box-shadow:-6px 0 24px rgba(0,0,0,.25);
+		  background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)); color: var(--ff-text-on-brand); box-shadow:-6px 0 24px rgba(0,0,0,.25);
 		  transform:translateX(100%); transition:transform .25s ease; z-index:2001;
 		  display:flex; flex-direction:column;
 		}
@@ -502,16 +574,16 @@
         .form-group input {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
+            border: 2px solid var(--ff-border);
+  			border-radius: var(--ff-radius-sm);
             font-size: 16px;
             transition: border-color 0.3s ease;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+            border-color: var(--ff-brand-1);
+   			box-shadow: 0 0 0 3px color-mix(in oklab, var(--ff-brand-1) 16%, transparent);
         }
 
         .form-title { text-align: center; color: #2d3748; margin-bottom: 30px; }
@@ -531,7 +603,7 @@
         .link-button {
             background: none;
             border: none;
-            color: #4299e1;
+            color: var(--ff-brand-1);
             text-decoration: underline;
             cursor: pointer;
             font-size: 14px;
@@ -539,11 +611,11 @@
         }
 
         .btn {
-            background: #4299e1;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+		    background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2));
+		    color: var(--ff-text-on-brand);
+		    border: none;
+		    padding: 10px 20px;
+		    border-radius: var(--ff-radius);
             cursor: pointer;
             font-size: 14px;
             transition: all 0.3s ease;
@@ -619,11 +691,12 @@
 
 
     </style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
 </head>
 <body>
     <!-- Welcome Screen -->
     <div id="welcomeScreen" class="welcome-container">
-        <div class="logo">FlashFeedback</div>
+        <div class="logo brand-title">FlashFeedback</div>
         <div class="tagline">Instant customer feedback with QR codes</div>
         
         <div class="features">
@@ -843,7 +916,7 @@
         <nav class="nav-drawer" id="navDrawer">
             <button class="drawer-close-btn" onclick="closeNavDrawer()">✕</button>
             <div class="drawer-header">
-                <div class="drawer-logo">FlashFeedback</div>
+                <div class="drawer-logo brand-title">FlashFeedback</div>
             </div>
             
             <ul class="drawer-menu">
@@ -885,8 +958,10 @@
 
         <!-- Top App Bar -->
         <header class="admin-topbar">
-            <button class="topbar-hamburger" onclick="openNavDrawer()">☰</button>
-            <h1 class="topbar-title">FlashFeedback</h1>
+            <button class="topbar-hamburger" onclick="openNavDrawer()" aria-label="Open menu">
+			  <img class="hamburger-img" src="https://proofplains.github.io/yayornay-mvp/Bolt%20Off-White%20Transparent%202.png" alt="">
+			</button>
+            <h1 class="topbar-title brand-title">FlashFeedback</h1>
         </header>
 
         <!-- Main Content Area -->
