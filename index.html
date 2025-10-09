@@ -282,7 +282,16 @@
 		    border: 2px solid var(--ff-brand-1);
 		}
 
-
+		.list-item {
+			background: #0d1117;
+		    border-radius: 15px;
+		    border: 1px solid #a78bfa;
+			display: flex;
+		    align-items: center;
+		    gap: 12px;
+		    flex: 1 1 auto;
+		    min-width: 200px;
+		}
         .admin-topbar {
 		    background: linear-gradient(135deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%);
 		    color: var(--ff-text-on-brand);
@@ -1136,7 +1145,7 @@ table th { color: var(--ff-text) !important; }
 				  <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 20px; font-weight: 700;">Account Settings</h2>
 				
 				  <!-- Profile -->
-				  <div style="background:#fff;border:1px solid rgba(45,55,72,0.06);box-shadow:0 4px 16px rgba(45,55,72,0.08);border-radius:15px;padding:20px;margin-bottom:20px;">
+				  <div style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:20px;margin-bottom:20px;">
 				    <h3 style="margin-bottom:12px;">Profile</h3>
 				    <div class="form-group">
 				      <label for="settingsOwnerName">Your name</label>
