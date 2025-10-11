@@ -2277,7 +2277,7 @@ table th { color: var(--ff-text) !important; }
                 
                 demoData.forEach(function(location) {
                     var div = document.createElement('div');
-                    div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;';
+                    div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
                     div.innerHTML = '<span>' + location.name + '</span><span style="color: #666; font-size: 14px;">' + location.feedback + ' feedback entries</span>';
                     container.appendChild(div);
                 });
