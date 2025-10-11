@@ -105,7 +105,7 @@
         .signup-container, .login-container { max-width: 500px; padding: 40px; }
 
         .header {
-            background: #212121;
+            background: #0d1117;
             color: white;
             padding: 30px;
             text-align: center;
@@ -1101,7 +1101,7 @@ table th { color: var(--ff-text) !important; }
 
                 <div style="margin-top: 30px;">
                     <h3>Recent Feedback</h3>
-                    <div id="recentFeedbackList"></div>
+                    <div id="recentFeedbackList" class="list-item"></div>
 					<div id="recentPagination" style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px;">
 					  <button id="recentPrev" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">‹ Prev</button>
 					  <span id="recentPageInfo" style="font-size:12px; color:#6b7280;">Page 1 of 1</span>
@@ -1426,7 +1426,7 @@ table th { color: var(--ff-text) !important; }
                 ownerName: 'Demo User',
                 locations: {
                     'demo': { 
-                        name: 'Demo Restaurant', 
+                        name: 'Demo', 
                         feedback: [
                             { sentiment: 'very-happy', timestamp: new Date(Date.now() - 3600000).toISOString(), location: 'demo', comments: 'Great service and amazing food!' },
                             { sentiment: 'happy', timestamp: new Date(Date.now() - 7200000).toISOString(), location: 'demo', comments: null },
