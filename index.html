@@ -1942,6 +1942,9 @@ table th { color: var(--ff-text) !important; }
 		  window.currentUser = null;
 		  currentLocation = 'main';
 		  window.currentLocation = 'main';
+		  // 3b) Immediately refresh account drawer UI to clear stale name/email/avatar
+          updateAccountMenuHeader?.();
+		  updateAvatarImage?.();
 		
 		  // 4) Land cleanly on Welcome (and ensure top-of-page)
 		  showWelcome();
@@ -2072,6 +2075,9 @@ table th { color: var(--ff-text) !important; }
             
             currentUser = null;
             currentView = 'admin-demo';
+			// Ensure the account drawer reflects demo (no user) immediately
+			updateAccountMenuHeader?.();
+			updateAvatarImage?.();
             
             var sidebar = adminView.querySelector('.admin-sidebar');
             if (sidebar) {
