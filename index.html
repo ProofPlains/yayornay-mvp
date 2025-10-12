@@ -1968,12 +1968,22 @@ table th { color: var(--ff-text) !important; }
 
 
         function updateCustomerLocationDisplay(locations) {
-            var display = document.getElementById('customerLocationDisplay');
-            if (display) {
-                var locationName = locations[currentLocation] ? locations[currentLocation].name : 'Unknown Location';
-                display.textContent = locationName;
-            }
-        }
+		  const display = document.getElementById('customerLocationDisplay');
+		  const ty = document.getElementById('thankYouLocationDisplay');
+		
+		  // Base location name (from the passed map)
+		  const locationName = locations[currentLocation]?.name || 'Unknown Location';
+		
+		  // Prefix with business name when logged-in; empty when public/QR
+		  const businessName = currentUser?.businessName ? String(currentUser.businessName).trim() : '';
+		
+		  // Compose "Business Location" (no extra spaces if biz missing)
+		  const composed = [businessName, locationName].filter(Boolean).join(' ').trim();
+		
+		  if (display) display.textContent = composed;
+		  if (ty) ty.textContent = composed;
+		}
+
 
         function selectSentiment(sentiment, button) {
             document.querySelectorAll('.emoji-btn').forEach(function(btn) {
