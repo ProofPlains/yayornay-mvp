@@ -2795,6 +2795,11 @@ table th { color: var(--ff-text) !important; }
 		  document.addEventListener('keydown', (e) => {
 		    if (e.key === 'Escape' && modal?.style.display === 'block') closeCommentModal();
 		  });
+			
+		  // Wire character counter for the public comment box
+		  const commentsEl = document.getElementById('additionalComments');
+		  commentsEl?.addEventListener('input', updateCommentCounter);
+		  updateCommentCounter(); // initialise on load
 		});
 
 		// --- Ensure viewport is at the very top (mobile-safe) ---
