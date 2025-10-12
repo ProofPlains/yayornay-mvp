@@ -985,15 +985,17 @@ table th { color: var(--ff-text) !important; }
         </div>
         
         <div class="thank-you" id="thankYou">
-            <h2>Thank you for your feedback! 🎉</h2>
-            <p>Your opinion helps us improve our service.</p>
-            
-            <div class="business-cta">
-                <h3>Powered by <i>FLASHFEEDBACK</i></h3>
-                <p>Get customer feedback like this for your business</p>
-                <button class="cta-button" onclick="goToSignup()">Learn more</button>
-            </div>
-        </div>
+		    <h2>Thank you for your feedback! 🎉</h2>
+		    <p>Your opinion helps us improve our service.</p>
+		    <div class="location-display"><span id="thankYouLocationDisplay"></span></div>
+		    
+		    <div class="business-cta">
+		        <h3>Powered by <i>FLASHFEEDBACK</i></h3>
+		        <p>Get customer feedback like this for your business</p>
+		        <button class="cta-button" onclick="goToSignup()">Learn more</button>
+		    </div>
+		</div>
+
     </div>
 
 	<!-- Global loader overlay -->
@@ -1518,16 +1520,25 @@ table th { color: var(--ff-text) !important; }
 		  currentLocation = locationId;
 		
 		  // Look up the real location row from Supabase
-		  const locRow = await getLocationById(locationId);
-		
-		  // Paint the header with the true name (fallback if not found)
-		  const humanName = locRow?.name || 'Unknown Location';
-		  setLocationName(humanName);
-		
-		  // Keep your existing display function happy (it expects a map keyed by currentLocation)
-		  const locations = {};
-		  locations[locationId] = { name: humanName, feedback: [] };
-		  updateCustomerLocationDisplay(locations);
+			const locRow = await getLocationById(locationId);
+			
+			// Also fetch the business to prefix its name
+			let bizName = '';
+			if (locRow?.business_id) {
+			  const bizRow = await getBusinessById(locRow.business_id);
+			  bizName = bizRow?.name || '';
+			}
+			
+			// Compose: "BusinessName LocationName" (trim spaces if biz missing)
+			const locName = locRow?.name || 'Unknown Location';
+			const displayName = [bizName, locName].filter(Boolean).join(' ').trim();
+			setLocationName(displayName);
+			
+			// Keep your existing display function happy (it expects a map keyed by currentLocation)
+			const locations = {};
+			locations[locationId] = { name: displayName, feedback: [] };
+			updateCustomerLocationDisplay(locations);
+
 		
 		  currentView = 'customer';
 		  hideLoader?.(); // ensure loader is not left on
@@ -2728,11 +2739,15 @@ table th { color: var(--ff-text) !important; }
 		  updateFeedback();
 		}
 		
-		// Update customer form with a human-readable location name
+		// Update customer + thank-you screens with a human-readable name
 		function setLocationName(name) {
-		  const el = document.getElementById('customerLocationDisplay');
-		  if (el) el.textContent = name;
+		  const el1 = document.getElementById('customerLocationDisplay');
+		  if (el1) el1.textContent = name;
+		
+		  const el2 = document.getElementById('thankYouLocationDisplay');
+		  if (el2) el2.textContent = name;
 		}
+
 
 		
 		// Fetch a location row (id, name, business_id) by UUID
@@ -2750,6 +2765,22 @@ table th { color: var(--ff-text) !important; }
 		  return data;
 		}
 
+		// Fetch a business row (id, name) by UUID
+		async function getBusinessById(id) {
+		  if (!id) return null;
+		  const { data, error } = await supabase
+		    .from('businesses')
+		    .select('id, name')
+		    .eq('id', id)
+		    .maybeSingle();
+		  if (error) {
+		    console.error('getBusinessById error:', error);
+		    return null;
+		  }
+		  return data;
+		}
+
+		
 		// --- Comment counter (500 max) ---
 		const COMMENT_MAX = 500;
 		
