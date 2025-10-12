@@ -2002,30 +2002,30 @@ table th { color: var(--ff-text) !important; }
 		    if (businessId && currentLocation) {
 		    const safeComments = comments ? comments.slice(0, 500) : null;
 
-			const { data: inserted, error } = await supabase
+			const { error } = await supabase
 			  .from('feedback')
 			  .insert({
 			    location_id: currentLocation,
 			    sentiment: selectedSentiment,
 			    comments: safeComments
-			  })
-			  .select()
-			  .single();
+			  }, { returning: 'minimal' });
+
 
 		
-		      if (error) throw error;
-		
-		      const ts = inserted?.submitted_at || localItem.timestamp;
+		     if (error) throw error;
+
+			 const ts = localItem.timestamp;
+
 		
 		      // If logged in and we have in-memory state, mirror the new row for instant Feedback
 		      if (currentUser?.locations?.[currentLocation]) {
 		        const arr = currentUser.locations[currentLocation].feedback || [];
 		        arr.push({
-		          sentiment: inserted?.sentiment ?? localItem.sentiment,
-		          timestamp: ts,
-		          location: currentLocation,
-		          comments: inserted?.comments ?? localItem.comments
-		        });
+				  sentiment: localItem.sentiment,
+				  timestamp: ts,
+				  location: currentLocation,
+				  comments: localItem.comments
+				});
 		        currentUser.locations[currentLocation].feedback = arr;
 		        updateFeedback();
 		      }
@@ -2736,7 +2736,7 @@ table th { color: var(--ff-text) !important; }
 		    .from('locations')
 		    .select('id, name, business_id')
 		    .eq('id', id)
-		    .single();
+		    .maybeSingle();
 		  if (error) {
 		    console.error('getLocationById error:', error);
 		    return null;
