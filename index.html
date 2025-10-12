@@ -1592,7 +1592,7 @@ table th { color: var(--ff-text) !important; }
 			// 4) Create default location
 			const { data: loc, error: locErr } = await supabase
 			  .from('locations')
-			  .insert({ business_id: biz.id, name: `${businessName} - Main Location` })
+			  .insert({ business_id: biz.id, name: 'Location 01' })
 			  .select()
 			  .single();
 			if (locErr) throw locErr;
@@ -1658,7 +1658,7 @@ table th { color: var(--ff-text) !important; }
 		
 		    const { error: blErr } = await supabase
 		      .from('locations')
-		      .insert({ business_id: newBiz.id, name: `${newBiz.name} - Main Location` })
+		      .insert({ business_id: newBiz.id, name: `Location 01` })
 		      .select()
 		      .single();
 		    if (blErr) throw blErr;
@@ -1677,7 +1677,7 @@ table th { color: var(--ff-text) !important; }
 		  if (!locRows || locRows.length === 0) {
 		    const { data: newLoc, error: newLocErr } = await supabase
 		      .from('locations')
-		      .insert({ business_id: business.id, name: `${business.name} - Main Location` })
+		      .insert({ business_id: business.id, name: `Location 01` })
 		      .select()
 		      .single();
 		    if (newLocErr) throw newLocErr;
