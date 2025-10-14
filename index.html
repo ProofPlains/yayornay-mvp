@@ -2015,11 +2015,21 @@ table th { color: var(--ff-text) !important; }
 		    let businessId = currentUser?.businessId || null;
 		
 		    // If we’re on a public QR page (no currentUser), look up the location row to derive business_id
-		    if (!businessId && currentLocation) {
-		      const locRow = await getLocationById(currentLocation);
-		      if (locRow?.name) setLocationName(locRow.name); // ensure UI shows human name
-		      businessId = locRow?.business_id || null;
-		    }
+			if (!businessId && currentLocation) {
+			  const locRow = await getLocationById(currentLocation);
+			  businessId = locRow?.business_id || null;
+			
+			  // Ensure the header shows "BusinessName LocationName" before thank-you
+			  let displayName = locRow?.name || 'Unknown Location';
+			  if (locRow?.business_id) {
+			    const biz = await getBusinessById(locRow.business_id);
+			    const bizName = biz?.name?.trim() || '';
+			    const locName = (locRow?.name || '').trim();
+			    displayName = [bizName, locName].filter(Boolean).join(' ') || displayName;
+			  }
+			  setLocationName(displayName);
+			}
+
 		
 		    // 2) If we have both business_id and currentLocation, try to insert into Supabase
 			  	//Update: The DB trigger now derives business_id from locations, so we don’t send it.
