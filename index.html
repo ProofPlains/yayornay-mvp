@@ -67,6 +67,11 @@
 		html{ font-family: var(--ff-font-body); }
 		h1,h2,h3,h4,h5,h6{ font-family: var(--ff-font-heading); line-height: var(--ff-lh-heading); }
 		body{ font-size: var(--ff-fs-14); line-height: var(--ff-lh-body); color: var(--ff-text); background: var(--ff-surface); }
+
+		/* brand header: bolt + wordmark */
+		.brand-header { display:flex; align-items:center; justify-content:center; gap:12px; }
+		.brand-logo { width:44px; height:44px; object-fit:contain; display:block; }
+
 		
 		/* Brand title helper */
 		.brand-title{
@@ -787,7 +792,11 @@ table th { color: var(--ff-text) !important; }
 <body>
     <!-- Welcome Screen -->
     <div id="welcomeScreen" class="welcome-container">
-        <div class="logo brand-title">FlashFeedback</div>
+        <div class="logo brand-header">
+		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <span class="brand-title">FLASHFEEDBACK</span>
+		</div>
+
         <div class="tagline">Instant customer feedback with QR codes</div>
         
         <div class="features">
@@ -820,7 +829,11 @@ table th { color: var(--ff-text) !important; }
 
     <!-- Sign Up Form -->
     <div id="signupScreen" class="signup-container" style="display: none;">
-        <div class="logo brand-title">FlashFeedback</div>
+        <div class="logo brand-header">
+		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <span class="brand-title">FLASHFEEDBACK</span>
+		</div>
+
 		<div class="form-title">
             <h2>Create Your Free Account</h2>
             <p>Start collecting feedback in minutes</p>
@@ -861,7 +874,11 @@ table th { color: var(--ff-text) !important; }
 
     <!-- Login Form -->
     <div id="loginScreen" class="login-container" style="display: none;">
-        <div class="logo brand-title">FlashFeedback</div>
+        <div class="logo brand-header">
+		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <span class="brand-title">FLASHFEEDBACK</span>
+		</div>
+
 		<div class="form-title">
             <h2>Welcome Back</h2>
             <p>Log in to your FlashFeedback account</p>
@@ -892,7 +909,11 @@ table th { color: var(--ff-text) !important; }
 
 	<!-- Forgot Password (request link) -->
 	<div id="forgotPasswordScreen" class="login-container" style="display:none;">
-	  <div class="logo brand-title">FlashFeedback</div>
+	  <div class="logo brand-header">
+		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <span class="brand-title">FLASHFEEDBACK</span>
+		</div>
+
 	  <div class="form-title">
 	    <h2>Reset your password</h2>
 	    <p>Enter your email and we’ll send you a reset link.</p>
@@ -915,7 +936,11 @@ table th { color: var(--ff-text) !important; }
 	
 	<!-- Reset Password (deep link) -->
 	<div id="resetPasswordScreen" class="login-container" style="display:none;">
-	  <div class="logo brand-title">FlashFeedback</div>
+	  <div class="logo brand-header">
+		<img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		<span class="brand-title">FLASHFEEDBACK</span>
+	  </div>
+
 	  <div class="form-title">
 	    <h2>Choose a new password</h2>
 	  </div>
