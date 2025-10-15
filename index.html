@@ -1567,6 +1567,29 @@
 		
 		  // Look up the real location row from Supabase
 			const locRow = await getLocationById(locationId);
+
+			// After: const locRow = await getLocationById(locationId);
+			if (locRow && locRow.is_active === false) {
+			  const locName = (locRow.name || 'Unknown Location').trim();
+			  let bizName = '';
+			  if (locRow.business_id) {
+			    const biz = await getBusinessById(locRow.business_id);
+			    bizName = biz?.name?.trim() || '';
+			  }
+			  const displayName = [bizName, locName].filter(Boolean).join(' ').trim();
+			  setLocationName(displayName);
+			
+			  // Disable the form and show a closed message
+			  const form = document.getElementById('customerForm');
+			  if (form) form.style.display = 'none';
+			  const closed = document.getElementById('locationClosedNotice') || document.createElement('div');
+			  closed.id = 'locationClosedNotice';
+			  closed.className = 'card notice';
+			  closed.innerHTML = '<p>This location is currently closed and cannot accept new feedback.</p>';
+			  document.getElementById('customerView')?.appendChild(closed);
+			  return;
+			}
+
 			
 			// Also fetch the business to prefix its name
 			let bizName = '';
@@ -2378,49 +2401,115 @@
 		  return false; // prevent link navigation
 		}
 							
+		async function toggleLocationActive(id, makeActive) {
+		  try {
+		    const { error, data } = await supabase
+		      .from('locations')
+		      .update({ is_active: !!makeActive })
+		      .eq('id', id)
+		      .select('id, is_active')
+		      .single();
+		
+		    if (error) throw error;
+		
+		    // Update in-memory state
+		    if (window.currentUser?.locations?.[id]) {
+		      window.currentUser.locations[id].is_active = !!makeActive;
+		    }
+		
+		    // Refresh UI
+		    updateLocationsList?.();
+		    updateLocationSelects?.(); // if you filter inactive items out of selects/QRs
+		
+		    try { showToast?.(makeActive ? 'Location activated.' : 'Location deactivated.', 'success'); } catch {}
+		  } catch (e) {
+		    console.error('Toggle location failed:', e);
+		    try { showToast?.('Could not update location status.', 'error'); } catch {}
+		  }
+		  return false; // so the inline <a onclick="return ..."> doesn’t navigate
+		}
 
+			
         function updateLocationsList() {
-            var container = document.getElementById('locationsList');
-            if (!container) return;
-            
-            container.innerHTML = '';
-            
-            if (currentView === 'admin-demo' && window.demoAccount) {
-                var demoData = [
-                    { name: 'Demo Restaurant', feedback: window.demoAccount.locations.demo.feedback.length },
-                    { name: 'Main Street Cafe', feedback: 12 },
-                    { name: 'Downtown Store', feedback: 8 }
-                ];
-                
-                demoData.forEach(function(location) {
-                    var div = document.createElement('div');
-                    div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
-                    div.innerHTML = '<span class="location-name">' + location.name +
-					  '</span><span style="opacity:0.8; font-size:14px;">' +
-					  '<a href="#" class="location-edit" onclick="alert(\'Editing is disabled in Demo Mode\'); return false;">Edit</a>' +
-					  '</span>';
-
-                    container.appendChild(div);
-                });
-                
-                var notice = document.createElement('div');
-                notice.style.cssText = 'background: color-mix(in oklab, var(--ff-surface) 96%, black) !important; border: 1px solid var(--ff-border) !important; border-radius: 8px; padding: 15px; margin-top: 20px; text-align: center;';
-                notice.innerHTML = '<p style="color: #22c55e; margin: 0;"><strong>Demo Mode:</strong> Location management is available in the full version</p>';
-                container.appendChild(notice);
-            } else if (currentUser) {
-                Object.keys(currentUser.locations).forEach(function(id) {
-                    var location = currentUser.locations[id];
-                    var div = document.createElement('div');
-                    div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
-                    div.innerHTML = '<span class="location-name">' + location.name +
-					  '</span><span style="opacity:0.8; font-size:14px;">' +
-					  '<a href="#" class="location-edit" onclick="return renameLocation(\'' + id + '\')">Edit</a>' +
-					  '</span>';
-
-                    container.appendChild(div);
-                });
-            }
-        }
+		  var container = document.getElementById('locationsList');
+		  if (!container) return;
+		
+		  container.innerHTML = '';
+		
+		  // --- DEMO MODE ---
+		  if (currentView === 'admin-demo' && window.demoAccount) {
+		    var demoData = [
+		      { name: 'Demo Restaurant', is_active: true },
+		      { name: 'Main Street Cafe', is_active: false },
+		      { name: 'Downtown Store', is_active: true }
+		    ];
+		
+		    demoData.forEach(function(location) {
+		      var isActive = location.is_active !== false;
+		      var div = document.createElement('div');
+		      div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
+		
+		      // name + (optional) Inactive badge
+		      var nameHTML = '<span class="location-name">' + location.name + '</span>';
+		      if (!isActive) {
+		        nameHTML = '<span class="location-name">' + location.name +
+		          ' <span class="badge" style="margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;">Inactive</span>' +
+		          '</span>';
+		      }
+		
+		      // actions: Edit (disabled in demo) + Activate/Deactivate (label only in demo)
+		      div.innerHTML = nameHTML +
+		        '<span style="opacity:0.8; font-size:14px;">' +
+		          '<a href="#" class="location-edit" onclick="alert(\'Editing is disabled in Demo Mode\'); return false;">Edit</a>' +
+		          ' &nbsp;·&nbsp; ' +
+		          '<span class="location-toggle" style="text-decoration:underline; cursor:default;" title="Unavailable in Demo Mode">' +
+		            (isActive ? 'Deactivate' : 'Activate') +
+		          '</span>' +
+		        '</span>';
+		
+		      container.appendChild(div);
+		    });
+		
+		    var notice = document.createElement('div');
+		    notice.style.cssText = 'background: color-mix(in oklab, var(--ff-surface) 96%, black) !important; border: 1px solid var(--ff-border) !important; border-radius: 8px; padding: 15px; margin-top: 20px; text-align: center;';
+		    notice.innerHTML = '<p style="color: #22c55e; margin: 0;"><strong>Demo Mode:</strong> Location management is available in the full version</p>';
+		    container.appendChild(notice);
+		    return;
+		  }
+		
+		  // --- LOGGED-IN ADMIN ---
+		  if (currentUser) {
+		    Object.keys(currentUser.locations).forEach(function(id) {
+		      var location = currentUser.locations[id];
+		      var isActive = location.is_active !== false;
+		
+		      var div = document.createElement('div');
+		      div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
+		      div.setAttribute('data-location-id', id);
+		
+		      // name + (optional) Inactive badge
+		      var nameHTML = '<span class="location-name">' + location.name + '</span>';
+		      if (!isActive) {
+		        nameHTML = '<span class="location-name">' + location.name +
+		          ' <span class="badge" style="margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;">Inactive</span>' +
+		          '</span>';
+		      }
+		
+		      // actions: Edit + Activate/Deactivate
+		      // NOTE: toggleLocationActive(id, makeActive) should update Supabase and refresh UI.
+		      div.innerHTML = nameHTML +
+		        '<span style="opacity:0.8; font-size:14px;">' +
+		          '<a href="#" class="location-edit" onclick="return renameLocation(\'' + id + '\')">Edit</a>' +
+		          ' &nbsp;·&nbsp; ' +
+		          '<a href="#" class="location-toggle" onclick="return toggleLocationActive(\'' + id + '\',' + (!isActive) + ')">' +
+		            (isActive ? 'Deactivate' : 'Activate') +
+		          '</a>' +
+		        '</span>';
+		
+		      container.appendChild(div);
+		    });
+		  }
+		}
 
         function generateQR() {
             var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
@@ -2675,6 +2764,7 @@
 		  generateSign,
 		  addLocation,
 		  renameLocation,
+		  toggleLocationActive,
 		  updateLocationsList,
 		  updateFeedback,
 		  logout,
@@ -2865,6 +2955,7 @@
 		  const { data, error } = await supabase
 		    .from('locations')
 		    .select('id, name, business_id')
+			.select('id, name, business_id, is_active')
 		    .eq('id', id)
 		    .maybeSingle();
 		  if (error) {
