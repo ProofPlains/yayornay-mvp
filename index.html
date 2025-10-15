@@ -725,83 +725,89 @@
 		}
 
 
-    /* === Grape Dark – consistency & contrast fixes === */
-	#customerView h1, #customerView h2, #customerView h3,
-	#welcomeView h1, #welcomeView h2, #welcomeView h3,
-	#loginView h1, #loginView h2, #loginView h3,
-	#signupView h1, #signupView h2, #signupView h3,
-	#resetView h1, #resetView h2, #resetView h3,
-	#adminView h1, #adminView h2, #adminView h3,
-	.section-title, .form-title, .card-title { color: var(--ff-text) !important; }
-	
-	#customerView, #welcomeView, #loginView, #signupView, #resetView, #adminView { color: var(--ff-text); }
-	#customerView p, #welcomeView p, #loginView p, #signupView p, #resetView p, #adminView p { color: var(--ff-text-muted); }
-	
-	#customerDemoNotice, #ownerDemoNotice, #demoNotice, .demo-banner, .demo-notice, .demo-panel, .notice.demo {
-	  background: color-mix(in oklab, var(--ff-surface) 96%, black) !important;
-	  border: 1px solid var(--ff-border) !important;
-	  color: var(--ff-text) !important;
-	  box-shadow: var(--ff-shadow);
-	  border-radius: var(--ff-radius-lg);
-	}
-	#ownerDemoNotice .btn, #ownerDemoNotice button,
-	.demo-banner .btn, .demo-banner button,
-	.demo-notice .btn, .demo-notice button,
-	#customerDemoNotice button, #demoNotice button {
-	  background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)) !important;
-	  color: var(--ff-text-on-brand) !important;
-	  border: none !important;
-	}
-	
-	.header { color: var(--ff-text-on-brand) !important; }
-	
-	.form-group input, .optional-feedback textarea {
-	  background: color-mix(in oklab, var(--ff-surface) 94%, black) !important;
-	  border-color: var(--ff-border) !important;
-	  color: var(--ff-text) !important;
-	}
-	.form-group input::placeholder, .optional-feedback textarea::placeholder {
-	  color: color-mix(in oklab, var(--ff-text) 55%, transparent) !important;
-	}
-	
-	.btn[disabled], .btn:disabled, .submit-btn[disabled], .submit-btn:disabled,
-	.btn-primary[disabled], .btn-primary:disabled {
-	  background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)) !important;
-	  color: var(--ff-text-on-brand) !important;
-	  opacity: .55; cursor: not-allowed;
-	}
-	
-	.stat-number, .stat-value { color: var(--ff-text) !important; }
-	.stat-label, .stat-caption { color: var(--ff-text-muted) !important; }
-	
-	a, .link-button { color: var(--ff-brand-1) !important; text-decoration: underline; }
-	a:hover, .link-button:hover { filter: brightness(1.08); text-decoration-thickness: 2px; }
-	
-	.admin-topbar, .nav-drawer, #accountDrawer.drawer, #accountDrawer {
-	  background: linear-gradient(135deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%) !important;
-	  color: var(--ff-text-on-brand) !important;
-	}
-	
-	.container, .welcome-container, .signup-container, .login-container, #adminView, .stat-card {
-	  background: var(--ff-surface) !important;
-	  border: 1px solid var(--ff-border) !important;
-	  border-radius: var(--ff-radius-lg) !important;
-	  box-shadow: var(--ff-shadow) !important;
-	}
-	
-	table thead { background: color-mix(in oklab, var(--ff-surface) 88%, black) !important; }
-	table th { color: var(--ff-text) !important; }
-	
-	#customerView .emoji-btn {
-	  background: var(--ff-surface) !important;
-	  border: 3px solid var(--ff-border) !important;
-	  color: var(--ff-text) !important;
-	}
-	#customerView .emoji-btn.selected {
-	  background: var(--ff-success) !important;
-	  border-color: var(--ff-success) !important;
-	  color: #fff !important;
-	}
+	    /* === Grape Dark – consistency & contrast fixes === */
+		#customerView h1, #customerView h2, #customerView h3,
+		#welcomeView h1, #welcomeView h2, #welcomeView h3,
+		#loginView h1, #loginView h2, #loginView h3,
+		#signupView h1, #signupView h2, #signupView h3,
+		#resetView h1, #resetView h2, #resetView h3,
+		#adminView h1, #adminView h2, #adminView h3,
+		.section-title, .form-title, .card-title { color: var(--ff-text) !important; }
+		
+		#customerView, #welcomeView, #loginView, #signupView, #resetView, #adminView { color: var(--ff-text); }
+		#customerView p, #welcomeView p, #loginView p, #signupView p, #resetView p, #adminView p { color: var(--ff-text-muted); }
+		
+		#customerDemoNotice, #ownerDemoNotice, #demoNotice, .demo-banner, .demo-notice, .demo-panel, .notice.demo {
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black) !important;
+		  border: 1px solid var(--ff-border) !important;
+		  color: var(--ff-text) !important;
+		  box-shadow: var(--ff-shadow);
+		  border-radius: var(--ff-radius-lg);
+		}
+		#ownerDemoNotice .btn, #ownerDemoNotice button,
+		.demo-banner .btn, .demo-banner button,
+		.demo-notice .btn, .demo-notice button,
+		#customerDemoNotice button, #demoNotice button {
+		  background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)) !important;
+		  color: var(--ff-text-on-brand) !important;
+		  border: none !important;
+		}
+		
+		.header { color: var(--ff-text-on-brand) !important; }
+		
+		.form-group input, .optional-feedback textarea {
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black) !important;
+		  border-color: var(--ff-border) !important;
+		  color: var(--ff-text) !important;
+		}
+		.form-group input::placeholder, .optional-feedback textarea::placeholder {
+		  color: color-mix(in oklab, var(--ff-text) 55%, transparent) !important;
+		}
+		
+		.btn[disabled], .btn:disabled, .submit-btn[disabled], .submit-btn:disabled,
+		.btn-primary[disabled], .btn-primary:disabled {
+		  background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)) !important;
+		  color: var(--ff-text-on-brand) !important;
+		  opacity: .55; cursor: not-allowed;
+		}
+		
+		.stat-number, .stat-value { color: var(--ff-text) !important; }
+		.stat-label, .stat-caption { color: var(--ff-text-muted) !important; }
+		
+		a, .link-button { color: var(--ff-brand-1) !important; text-decoration: underline; }
+		a:hover, .link-button:hover { filter: brightness(1.08); text-decoration-thickness: 2px; }
+		
+		.admin-topbar, .nav-drawer, #accountDrawer.drawer, #accountDrawer {
+		  background: linear-gradient(135deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%) !important;
+		  color: var(--ff-text-on-brand) !important;
+		}
+		
+		.container, .welcome-container, .signup-container, .login-container, #adminView, .stat-card {
+		  background: var(--ff-surface) !important;
+		  border: 1px solid var(--ff-border) !important;
+		  border-radius: var(--ff-radius-lg) !important;
+		  box-shadow: var(--ff-shadow) !important;
+		}
+		
+		table thead { background: color-mix(in oklab, var(--ff-surface) 88%, black) !important; }
+		table th { color: var(--ff-text) !important; }
+		
+		#customerView .emoji-btn {
+		  background: var(--ff-surface) !important;
+		  border: 3px solid var(--ff-border) !important;
+		  color: var(--ff-text) !important;
+		}
+		#customerView .emoji-btn.selected {
+		  background: var(--ff-success) !important;
+		  border-color: var(--ff-success) !important;
+		  color: #fff !important;
+		}
+		/* Location inline-edit UI */
+		.loc-edit-actions { display:flex; gap:8px; align-items:center; margin-left:8px; }
+		.loc-edit-input { background:#1f1f25; color:#eae7ff; border:1px solid rgba(167,139,250,.35); border-radius:8px; padding:6px 10px; min-width: 220px; }
+		.loc-edit-link, .loc-edit-save, .loc-edit-cancel { cursor:pointer; text-decoration:underline; }
+		.loc-edit-save, .loc-edit-cancel { font-size: 0.95rem; }
+
 	</style>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
 	
@@ -2338,6 +2344,40 @@
 		  }
 		}
 
+		async function renameLocation(id) {
+		  // Guard: must be logged in and know this location
+		  if (!currentUser || !currentUser.locations || !currentUser.locations[id]) return false;
+		
+		  var currentName = String(currentUser.locations[id].name || '').trim();
+		  var newName = prompt('Rename location', currentName);
+		  if (newName === null) return false;          // cancelled
+		  newName = newName.trim();
+		  if (!newName || newName === currentName) return false;
+		
+		  try {
+		    // Update Supabase
+		    const { error } = await supabase
+		      .from('locations')
+		      .update({ name: newName })
+		      .eq('id', id)
+		      .select('id, name')   // keep parity with RLS that allows owner read
+		      .single();
+		
+		    if (error) throw error;
+		
+		    // Update in-memory state and refresh UI
+		    currentUser.locations[id].name = newName;
+		    updateLocationSelects?.();
+		    updateLocationsList?.();
+		
+		    try { showToast?.('Location renamed.', 'success'); } catch (_) {}
+		  } catch (e) {
+		    console.error('Rename location failed:', e);
+		    try { showToast?.('Could not rename location (permissions or network).', 'error'); } catch (_) {}
+		  }
+		  return false; // prevent link navigation
+		}
+							
 
         function updateLocationsList() {
             var container = document.getElementById('locationsList');
@@ -2355,7 +2395,11 @@
                 demoData.forEach(function(location) {
                     var div = document.createElement('div');
                     div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
-                    div.innerHTML = '<span>' + location.name + '</span><span style="color: #666; font-size: 14px;">' + location.feedback + ' feedback entries</span>';
+                    div.innerHTML = '<span class="location-name">' + location.name +
+					  '</span><span style="opacity:0.8; font-size:14px;">' +
+					  '<a href="#" class="location-edit" onclick="alert(\'Editing is disabled in Demo Mode\'); return false;">Edit</a>' +
+					  '</span>';
+
                     container.appendChild(div);
                 });
                 
@@ -2368,7 +2412,11 @@
                     var location = currentUser.locations[id];
                     var div = document.createElement('div');
                     div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
-                    div.innerHTML = '<span>' + location.name + '</span><span style="color: #666; font-size: 14px;">' + (location.feedback?.length || 0) + ' feedback entries</span>';
+                    div.innerHTML = '<span class="location-name">' + location.name +
+					  '</span><span style="opacity:0.8; font-size:14px;">' +
+					  '<a href="#" class="location-edit" onclick="return renameLocation(\'' + id + '\')">Edit</a>' +
+					  '</span>';
+
                     container.appendChild(div);
                 });
             }
