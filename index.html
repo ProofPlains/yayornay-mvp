@@ -1330,21 +1330,26 @@
 		
 		// --- Shape DB rows into the structure your UI already uses ---
 		function buildLocationsShape(locationsRows, feedbackRows) {
-			const map = {};
-			for (const loc of locationsRows || []) {
-				map[loc.id] = { name: loc.name, feedback: [] };
-			}
-			for (const fb of feedbackRows || []) {
-				if (!map[fb.location_id]) continue; // ignore stray rows
-				map[fb.location_id].feedback.push({
-					sentiment: fb.sentiment,            // 'very-happy' | 'happy' | ...
-					timestamp: fb.submitted_at,         // ISO string from DB
-					location: fb.location_id,           // keep same field name your UI uses
-					comments: fb.comments ?? null
-				});
-			}
-			return map;
+		  const map = {};
+		  for (const loc of locationsRows || []) {
+		    map[loc.id] = {
+		      name: loc.name,
+		      is_active: (loc.is_active === false ? false : true),
+		      feedback: []
+		    };
+		  }
+		  for (const fb of feedbackRows || []) {
+		    if (!map[fb.location_id]) continue; // ignore stray rows
+		    map[fb.location_id].feedback.push({
+		      sentiment: fb.sentiment,            // 'very-happy' | 'happy' | ...
+		      timestamp: fb.submitted_at,         // ISO string from DB
+		      location: fb.location_id,           // keep same field name your UI uses
+		      comments: fb.comments ?? null
+		    });
+		  }
+		  return map;
 		}
+
 
 		
 		var currentView = 'welcome';
@@ -2353,8 +2358,13 @@
 		    if (error) throw error;
 		
 		    // Keep in-memory state in sync, keyed by UUID
-		    if (!currentUser.locations) currentUser.locations = {};
-		    currentUser.locations[newLoc.id] = { name: newLoc.name, feedback: [] };
+			if (!currentUser.locations) currentUser.locations = {};
+			currentUser.locations[newLoc.id] = {
+			  name: newLoc.name,
+			  is_active: (newLoc.is_active === false ? false : true),
+			  feedback: []
+			};
+
 		
 		    // Clear input and refresh all dependent UI
 		    input.value = '';
@@ -2403,7 +2413,8 @@
 							
 		async function toggleLocationActive(id, makeActive) {
 		  try {
-		    const { error, data } = await supabase
+		    // 1) Persist to DB and get the new value back
+		    const { data, error } = await supabase
 		      .from('locations')
 		      .update({ is_active: !!makeActive })
 		      .eq('id', id)
@@ -2412,22 +2423,23 @@
 		
 		    if (error) throw error;
 		
-		    // Update in-memory state
-		    if (window.currentUser?.locations?.[id]) {
-		      window.currentUser.locations[id].is_active = !!makeActive;
+		    // 2) Update in-memory state so the renderer sees it
+		    if (window.currentUser && window.currentUser.locations && window.currentUser.locations[id]) {
+		      window.currentUser.locations[id].is_active = data.is_active === false ? false : true;
 		    }
 		
-		    // Refresh UI
+		    // 3) Re-render UI
 		    updateLocationsList?.();
-		    updateLocationSelects?.(); // if you filter inactive items out of selects/QRs
+		    updateLocationSelects?.(); // harmless even if you aren’t filtering yet
 		
-		    try { showToast?.(makeActive ? 'Location activated.' : 'Location deactivated.', 'success'); } catch {}
+		    try { showToast?.(data.is_active ? 'Location activated.' : 'Location deactivated.', 'success'); } catch {}
 		  } catch (e) {
-		    console.error('Toggle location failed:', e);
-		    try { showToast?.('Could not update location status.', 'error'); } catch {}
+		    console.error('toggleLocationActive failed:', e);
+		    try { showToast?.('Could not update location status (permissions or network).', 'error'); } catch {}
 		  }
-		  return false; // so the inline <a onclick="return ..."> doesn’t navigate
+		  return false; // keep <a onclick="return ..."> from navigating
 		}
+
 
 			
         function updateLocationsList() {
