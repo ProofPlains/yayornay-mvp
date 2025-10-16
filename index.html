@@ -2091,6 +2091,13 @@
 		    // If we’re on a public QR page (no currentUser), look up the location row to derive business_id
 			if (!businessId && currentLocation) {
 			  const locRow = await getLocationById(currentLocation);
+			
+			  // If inactive, show message and stop
+			  if (locRow && locRow.is_active === false) {
+			    try { showToast?.('This location is closed and cannot accept new feedback.', 'error'); } catch {}
+			    return; // do not attempt the insert
+			  }
+			
 			  businessId = locRow?.business_id || null;
 			
 			  // Ensure the header shows "BusinessName LocationName" before thank-you
@@ -2103,6 +2110,7 @@
 			  }
 			  setLocationName(displayName);
 			}
+
 
 		
 		    // 2) If we have both business_id and currentLocation, try to insert into Supabase
@@ -2412,34 +2420,42 @@
 		}
 							
 		async function toggleLocationActive(id, makeActive) {
+		  const next = !!makeActive;
+		
+		  // Optimistic UI update so it flips immediately
+		  if (window.currentUser?.locations?.[id]) {
+		    window.currentUser.locations[id].is_active = next;
+		    updateLocationsList?.();
+		  }
+		
 		  try {
-		    // 1) Persist to DB and get the new value back
 		    const { data, error } = await supabase
 		      .from('locations')
-		      .update({ is_active: !!makeActive })
+		      .update({ is_active: next })
 		      .eq('id', id)
 		      .select('id, is_active')
 		      .single();
 		
 		    if (error) throw error;
 		
-		    // 2) Update in-memory state so the renderer sees it
-		    if (window.currentUser && window.currentUser.locations && window.currentUser.locations[id]) {
+		    // Ensure memory matches DB (paranoia)
+		    if (window.currentUser?.locations?.[id]) {
 		      window.currentUser.locations[id].is_active = data.is_active === false ? false : true;
 		    }
 		
-		    // 3) Re-render UI
-		    updateLocationsList?.();
-		    updateLocationSelects?.(); // harmless even if you aren’t filtering yet
-		
+		    updateLocationSelects?.(); // harmless if you’re not filtering yet
 		    try { showToast?.(data.is_active ? 'Location activated.' : 'Location deactivated.', 'success'); } catch {}
 		  } catch (e) {
+		    // Roll back optimistic change on failure
+		    if (window.currentUser?.locations?.[id]) {
+		      window.currentUser.locations[id].is_active = !next;
+		      updateLocationsList?.();
+		    }
 		    console.error('toggleLocationActive failed:', e);
 		    try { showToast?.('Could not update location status (permissions or network).', 'error'); } catch {}
 		  }
-		  return false; // keep <a onclick="return ..."> from navigating
+		  return false;
 		}
-
 
 			
         function updateLocationsList() {
