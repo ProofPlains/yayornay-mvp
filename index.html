@@ -1352,29 +1352,34 @@
 
 		// Instantly update one row's UI without a full re-render
 		function applyLocationRowState(id, isActive) {
-		  const row = document.querySelector('[data-location-id="' + id + '"]') || document.querySelector('[data-id="' + id + '"]');
+		  const row =
+		    document.querySelector('[data-location-id="' + id + '"]') ||
+		    document.querySelector('[data-id="' + id + '"]');
 		  if (!row) return;
 		
-		  // 1) Link text + data-active
+		  // Update the toggle link text/state and its next-call target
 		  const toggle = row.querySelector('a.location-toggle');
 		  if (toggle) {
 		    toggle.textContent = isActive ? 'Deactivate' : 'Activate';
 		    toggle.setAttribute('data-active', String(isActive));
+		    // Ensure subsequent clicks call with the new desired value
+		    toggle.setAttribute('onclick', "return toggleLocationActive('" + id + "', " + (!isActive) + ")");
 		  }
 		
-		  // 2) Inactive badge add/remove (badge sits after .location-name)
+		  // Add/remove the Inactive badge next to the name
 		  const nameSpan = row.querySelector('.location-name');
-		  const existingBadge = nameSpan?.querySelector('.badge');
-		  if (!isActive && nameSpan && !existingBadge) {
-		    const badge = document.createElement('span');
-		    badge.className = 'badge';
-		    badge.style.cssText = 'margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;';
-		    badge.textContent = 'Inactive';
-		    nameSpan.appendChild(badge);
-		  } else if (isActive && existingBadge) {
-		    existingBadge.remove();
+		  const badge = nameSpan?.querySelector('.badge');
+		  if (!isActive && nameSpan && !badge) {
+		    const b = document.createElement('span');
+		    b.className = 'badge';
+		    b.style.cssText = 'margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;';
+		    b.textContent = 'Inactive';
+		    nameSpan.appendChild(b);
+		  } else if (isActive && badge) {
+		    badge.remove();
 		  }
 		}
+
 
 		
 		var currentView = 'welcome';
@@ -2451,12 +2456,20 @@
 		async function toggleLocationActive(id, makeActive) {
 		  const next = !!makeActive;
 		
-		  // Optimistic: update in-memory and patch DOM immediately
-		  if (window.currentUser?.locations?.[id]) {
-		    window.currentUser.locations[id].is_active = next;
-		  }
+		  // --- Update the in-memory state used by the app (write to both names just in case) ---
+		  try {
+		    if (window.currentUser?.locations?.[id]) {
+		      window.currentUser.locations[id].is_active = next;
+		    }
+		    if (typeof currentUser !== 'undefined' && currentUser?.locations?.[id]) {
+		      currentUser.locations[id].is_active = next;
+		    }
+		  } catch (_) {}
+		
+		  // --- Patch just this row in the DOM immediately (no full re-render) ---
 		  applyLocationRowState(id, next);
 		
+		  // --- Persist to DB; if it fails, roll back UI + memory for this row only ---
 		  try {
 		    const { data, error } = await supabase
 		      .from('locations')
@@ -2467,25 +2480,37 @@
 		
 		    if (error) throw error;
 		
-		    // Paranoia: sync memory with DB, then do your normal re-render
+		    // Ensure memory matches DB (paranoia)
+		    const confirmed = (data?.is_active === false) ? false : true;
 		    if (window.currentUser?.locations?.[id]) {
-		      window.currentUser.locations[id].is_active = data.is_active === false ? false : true;
+		      window.currentUser.locations[id].is_active = confirmed;
 		    }
-		    updateLocationsList?.();
-		    updateLocationSelects?.(); // harmless if you’re not filtering yet
+		    if (typeof currentUser !== 'undefined' && currentUser?.locations?.[id]) {
+		      currentUser.locations[id].is_active = confirmed;
+		    }
 		
-		    try { showToast?.(data.is_active ? 'Location activated.' : 'Location deactivated.', 'success'); } catch {}
+		    // Update the one row again from the confirmed value (no list rebuild)
+		    applyLocationRowState(id, confirmed);
+		
+		    try { showToast?.(confirmed ? 'Location activated.' : 'Location deactivated.', 'success'); } catch {}
 		  } catch (e) {
-		    // Roll back on failure
-		    if (window.currentUser?.locations?.[id]) {
-		      window.currentUser.locations[id].is_active = !next;
-		    }
-		    applyLocationRowState(id, !next);
 		    console.error('toggleLocationActive failed:', e);
+		    // Roll back
+		    const prev = !next;
+		    if (window.currentUser?.locations?.[id]) {
+		      window.currentUser.locations[id].is_active = prev;
+		    }
+		    if (typeof currentUser !== 'undefined' && currentUser?.locations?.[id]) {
+		      currentUser.locations[id].is_active = prev;
+		    }
+		    applyLocationRowState(id, prev);
 		    try { showToast?.('Could not update location status (permissions or network).', 'error'); } catch {}
 		  }
+		
+		  // Keep anchors from navigating
 		  return false;
 		}
+
 
 
 			
