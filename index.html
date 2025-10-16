@@ -1350,6 +1350,31 @@
 		  return map;
 		}
 
+		// Instantly update one row's UI without a full re-render
+		function applyLocationRowState(id, isActive) {
+		  const row = document.querySelector('[data-location-id="' + id + '"]') || document.querySelector('[data-id="' + id + '"]');
+		  if (!row) return;
+		
+		  // 1) Link text + data-active
+		  const toggle = row.querySelector('a.location-toggle');
+		  if (toggle) {
+		    toggle.textContent = isActive ? 'Deactivate' : 'Activate';
+		    toggle.setAttribute('data-active', String(isActive));
+		  }
+		
+		  // 2) Inactive badge add/remove (badge sits after .location-name)
+		  const nameSpan = row.querySelector('.location-name');
+		  const existingBadge = nameSpan?.querySelector('.badge');
+		  if (!isActive && nameSpan && !existingBadge) {
+		    const badge = document.createElement('span');
+		    badge.className = 'badge';
+		    badge.style.cssText = 'margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;';
+		    badge.textContent = 'Inactive';
+		    nameSpan.appendChild(badge);
+		  } else if (isActive && existingBadge) {
+		    existingBadge.remove();
+		  }
+		}
 
 		
 		var currentView = 'welcome';
@@ -2088,13 +2113,16 @@
 		    // 1) Find a business_id to insert against
 		    let businessId = currentUser?.businessId || null;
 		
-		    // If we’re on a public QR page (no currentUser), look up the location row to derive business_id
-			if (!businessId && currentLocation) {
+	    // If we’re on a public QR page (no currentUser), look up the location row to derive business_id
+		if (!businessId && currentLocation) {
 			  const locRow = await getLocationById(currentLocation);
 			
-			  // If inactive, show message and stop
+			  // If inactive, show message and stop cleanly
 			  if (locRow && locRow.is_active === false) {
 			    try { showToast?.('This location is closed and cannot accept new feedback.', 'error'); } catch {}
+			    hideLoader?.(); // stop any loading indicator
+			    // If your button is disabled/spinning, re-enable it:
+			    document.getElementById('submitFeedbackBtn')?.removeAttribute('disabled');
 			    return; // do not attempt the insert
 			  }
 			
@@ -2109,7 +2137,8 @@
 			    displayName = [bizName, locName].filter(Boolean).join(' ') || displayName;
 			  }
 			  setLocationName(displayName);
-			}
+		}
+
 
 
 		
@@ -2422,11 +2451,11 @@
 		async function toggleLocationActive(id, makeActive) {
 		  const next = !!makeActive;
 		
-		  // Optimistic UI update so it flips immediately
+		  // Optimistic: update in-memory and patch DOM immediately
 		  if (window.currentUser?.locations?.[id]) {
 		    window.currentUser.locations[id].is_active = next;
-		    updateLocationsList?.();
 		  }
+		  applyLocationRowState(id, next);
 		
 		  try {
 		    const { data, error } = await supabase
@@ -2438,24 +2467,26 @@
 		
 		    if (error) throw error;
 		
-		    // Ensure memory matches DB (paranoia)
+		    // Paranoia: sync memory with DB, then do your normal re-render
 		    if (window.currentUser?.locations?.[id]) {
 		      window.currentUser.locations[id].is_active = data.is_active === false ? false : true;
 		    }
-		
+		    updateLocationsList?.();
 		    updateLocationSelects?.(); // harmless if you’re not filtering yet
+		
 		    try { showToast?.(data.is_active ? 'Location activated.' : 'Location deactivated.', 'success'); } catch {}
 		  } catch (e) {
-		    // Roll back optimistic change on failure
+		    // Roll back on failure
 		    if (window.currentUser?.locations?.[id]) {
 		      window.currentUser.locations[id].is_active = !next;
-		      updateLocationsList?.();
 		    }
+		    applyLocationRowState(id, !next);
 		    console.error('toggleLocationActive failed:', e);
 		    try { showToast?.('Could not update location status (permissions or network).', 'error'); } catch {}
 		  }
 		  return false;
 		}
+
 
 			
         function updateLocationsList() {
