@@ -2537,38 +2537,38 @@
 		  }
 		
 		  // --- LOGGED-IN ADMIN ---
-		  if (currentUser) {
-		    Object.keys(currentUser.locations).forEach(function(id) {
-		      var location = currentUser.locations[id];
-		      var isActive = location.is_active !== false;
-		
-		      var div = document.createElement('div');
-		      div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
-		      div.setAttribute('data-location-id', id);
-		
-		      // name + (optional) Inactive badge
-		      var nameHTML = '<span class="location-name">' + location.name + '</span>';
-		      if (!isActive) {
-		        nameHTML = '<span class="location-name">' + location.name +
-		          ' <span class="badge" style="margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;">Inactive</span>' +
-		          '</span>';
-		      }
-		
-		      // actions: Edit + Activate/Deactivate
-		      // NOTE: toggleLocationActive(id, makeActive) should update Supabase and refresh UI.
-		      div.innerHTML = nameHTML +
-		        '<span style="opacity:0.8; font-size:14px;">' +
-		          '<a href="#" class="location-edit" onclick="return renameLocation(\'' + id + '\')">Edit</a>' +
-		          ' &nbsp;·&nbsp; ' +
-		          '<a href="#" class="location-toggle" onclick="return toggleLocationActive(\'' + id + '\',' + (!isActive) + ')">' +
-		            (isActive ? 'Deactivate' : 'Activate') +
-		          '</a>' +
-		        '</span>';
-		
-		      container.appendChild(div);
-		    });
-		  }
-		}
+			const user = window.currentUser;  // ensure we read the same object the toggle updates
+			if (user && user.locations) {
+			  Object.keys(user.locations).forEach(function(id) {
+			    var location = user.locations[id];
+			    var isActive = location.is_active !== false;
+			
+			    var div = document.createElement('div');
+			    div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
+			    div.setAttribute('data-location-id', id);
+			
+			    // name + (optional) Inactive badge
+			    var nameHTML = '<span class="location-name">' + location.name + '</span>';
+			    if (!isActive) {
+			      nameHTML = '<span class="location-name">' + location.name +
+			        ' <span class="badge" style="margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;">Inactive</span>' +
+			        '</span>';
+			    }
+			
+			    // actions: Edit + Activate/Deactivate
+			    div.innerHTML = nameHTML +
+			      '<span style="opacity:0.8; font-size:14px;">' +
+			        '<a href="#" class="location-edit" onclick="return renameLocation(\'' + id + '\')">Edit</a>' +
+			        ' &nbsp;·&nbsp; ' +
+			        '<a href="#" class="location-toggle" onclick="return toggleLocationActive(\'' + id + '\',' + (!isActive) + ')">' +
+			          (isActive ? 'Deactivate' : 'Activate') +
+			        '</a>' +
+			      '</span>';
+			
+			    container.appendChild(div);
+			  });
+			}
+
 
         function generateQR() {
             var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
