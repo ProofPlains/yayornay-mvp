@@ -2089,7 +2089,7 @@
             document.querySelector('.submit-btn').classList.add('enabled');
         }
 
-        async function submitFeedback() {
+       async function submitFeedback() {
 		  if (!selectedSentiment) return;
 		
 		  const commentsEl = document.getElementById('additionalComments');
@@ -2102,68 +2102,59 @@
 		    location: currentLocation,
 		    comments
 		  };
-
+		
 		  showLoader(); // 👈 show while processing
 		  try {
-		    // 1) Find a business_id to insert against
+		    // 1) Derive display name on public QR view (no need to set businessId)
 		    let businessId = currentUser?.businessId || null;
 		
-	    // If we’re on a public QR page (no currentUser), fetch via public view
-		if (!businessId && currentLocation) {
-		  const locRow = await getLocationById(currentLocation);
+		    if (!businessId && currentLocation) {
+		      const locRow = await getLocationById(currentLocation);
 		
-		  // If inactive, show message and stop cleanly
-		  if (locRow && locRow.is_active === false) {
-		    try { showToast?.('This location is closed and cannot accept new feedback.', 'error'); } catch {}
-		    hideLoader?.();
-		    document.getElementById('submitFeedbackBtn')?.removeAttribute('disabled');
-		    return;
-		  }
+		      // If inactive, show message and stop cleanly
+		      if (locRow && locRow.is_active === false) {
+		        try { showToast?.('This location is closed and cannot accept new feedback.', 'error'); } catch {}
+		        hideLoader?.();
+		        document.getElementById('submitFeedbackBtn')?.removeAttribute('disabled');
+		        return;
+		      }
 		
-		  // We no longer need to set businessId here — the DB trigger fills it.
-		  // We only set the header.
-		  const displayName = [
-		    (locRow?.business_name || '').trim(),
-		    (locRow?.name || 'Unknown Location').trim()
-		  ].filter(Boolean).join(' ').trim();
-		  setLocationName(displayName);
-		}
-
-
-		    // 2) If we have both business_id and currentLocation, try to insert into Supabase
-			  	//Update: The DB trigger now derives business_id from locations, so we don’t send it.
-		    if (businessId && currentLocation) {
-		    const safeComments = comments ? comments.slice(0, 500) : null;
-
-			const { error } = await supabase
-			  .from('feedback')
-			  .insert({
-			    location_id: currentLocation,
-			    sentiment: selectedSentiment,
-			    comments: safeComments
-			  }, { returning: 'minimal' });
-
-
+		      const displayName = [
+		        (locRow?.business_name || '').trim(),
+		        (locRow?.name || 'Unknown Location').trim()
+		      ].filter(Boolean).join(' ').trim();
+		      setLocationName(displayName);
+		    }
 		
-		     if (error) throw error;
-
-			 const ts = localItem.timestamp;
-
+		    // 2) Always attempt DB insert when we have a location_id (trigger fills business_id)
+		    if (currentLocation) {
+		      const safeComments = comments ? comments.slice(0, 500) : null;
 		
-		      // If logged in and we have in-memory state, mirror the new row for instant Feedback
+		      const { error } = await supabase
+		        .from('feedback')
+		        .insert({
+		          location_id: currentLocation,
+		          sentiment: selectedSentiment,
+		          comments: safeComments
+		        }, { returning: 'minimal' });
+		
+		      if (error) throw error;
+		
+		      // Mirror in-memory state for instant UI if logged in
+		      const ts = localItem.timestamp;
 		      if (currentUser?.locations?.[currentLocation]) {
 		        const arr = currentUser.locations[currentLocation].feedback || [];
 		        arr.push({
-				  sentiment: localItem.sentiment,
-				  timestamp: ts,
-				  location: currentLocation,
-				  comments: localItem.comments
-				});
+		          sentiment: localItem.sentiment,
+		          timestamp: ts,
+		          location: currentLocation,
+		          comments: localItem.comments
+		        });
 		        currentUser.locations[currentLocation].feedback = arr;
 		        updateFeedback();
 		      }
 		    } else {
-		      // 3) No business_id available (likely anon + strict RLS) → local fallback
+		      // No location_id (shouldn't happen on QR page) — local fallback
 		      const storageKey = 'feedback_' + currentLocation;
 		      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
 		      existing.push(localItem);
@@ -2172,11 +2163,19 @@
 		    }
 		  } catch (e) {
 		    console.error(e);
-		    alert(e.message || 'Could not submit feedback.');
+		
+		    // Fallback only on failure
+		    const storageKey = 'feedback_' + currentLocation;
+		    const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+		    existing.push(localItem);
+		    localStorage.setItem(storageKey, JSON.stringify(existing));
+		    updateFeedback();
+		
+		    alert(e.message || 'Could not submit feedback (saved locally, will not appear on dashboard).');
 		  }
-
+		
 		  hideLoader(); // 👈 always hide before thank-you UI
-			
+		
 		  // 4) Thank-you UI
 		  const section = document.querySelector('.feedback-section');
 		  if (section) section.style.display = 'none';
@@ -2196,6 +2195,7 @@
 		    setTimeout(showDemoAdmin, 2000);
 		  }
 		}
+
 
 
         function showDemoAdmin() {
