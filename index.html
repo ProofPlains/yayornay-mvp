@@ -1600,21 +1600,15 @@
 		
 		  currentLocation = locationId;
 		
-		  // Look up the real location row from Supabase
+		  // Look up the real location row (from public view)
 			const locRow = await getLocationById(locationId);
-
-			// After: const locRow = await getLocationById(locationId);
+			
+			// If location is inactive, show “closed” message and stop
 			if (locRow && locRow.is_active === false) {
-			  const locName = (locRow.name || 'Unknown Location').trim();
-			  let bizName = '';
-			  if (locRow.business_id) {
-			    const biz = await getBusinessById(locRow.business_id);
-			    bizName = biz?.name?.trim() || '';
-			  }
-			  const displayName = [bizName, locName].filter(Boolean).join(' ').trim();
+			  const displayName = [locRow.business_name?.trim(), (locRow.name || 'Unknown Location').trim()]
+			    .filter(Boolean).join(' ').trim();
 			  setLocationName(displayName);
 			
-			  // Disable the form and show a closed message
 			  const form = document.getElementById('customerForm');
 			  if (form) form.style.display = 'none';
 			  const closed = document.getElementById('locationClosedNotice') || document.createElement('div');
@@ -1624,24 +1618,20 @@
 			  document.getElementById('customerView')?.appendChild(closed);
 			  return;
 			}
-
 			
-			// Also fetch the business to prefix its name
-			let bizName = '';
-			if (locRow?.business_id) {
-			  const bizRow = await getBusinessById(locRow.business_id);
-			  bizName = bizRow?.name || '';
-			}
+			// Compose: "BusinessName LocationName"
+			const displayName = [
+			  (locRow?.business_name || '').trim(),
+			  (locRow?.name || 'Unknown Location').trim()
+			].filter(Boolean).join(' ').trim();
 			
-			// Compose: "BusinessName LocationName" (trim spaces if biz missing)
-			const locName = locRow?.name || 'Unknown Location';
-			const displayName = [bizName, locName].filter(Boolean).join(' ').trim();
 			setLocationName(displayName);
 			
-			// Keep your existing display function happy (it expects a map keyed by currentLocation)
+			// Keep existing display function happy (expects a map keyed by currentLocation)
 			const locations = {};
 			locations[locationId] = { name: displayName, feedback: [] };
 			updateCustomerLocationDisplay(locations);
+
 
 		
 		  currentView = 'customer';
@@ -2118,35 +2108,28 @@
 		    // 1) Find a business_id to insert against
 		    let businessId = currentUser?.businessId || null;
 		
-	    // If we’re on a public QR page (no currentUser), look up the location row to derive business_id
+	    // If we’re on a public QR page (no currentUser), fetch via public view
 		if (!businessId && currentLocation) {
-			  const locRow = await getLocationById(currentLocation);
-			
-			  // If inactive, show message and stop cleanly
-			  if (locRow && locRow.is_active === false) {
-			    try { showToast?.('This location is closed and cannot accept new feedback.', 'error'); } catch {}
-			    hideLoader?.(); // stop any loading indicator
-			    // If your button is disabled/spinning, re-enable it:
-			    document.getElementById('submitFeedbackBtn')?.removeAttribute('disabled');
-			    return; // do not attempt the insert
-			  }
-			
-			  businessId = locRow?.business_id || null;
-			
-			  // Ensure the header shows "BusinessName LocationName" before thank-you
-			  let displayName = locRow?.name || 'Unknown Location';
-			  if (locRow?.business_id) {
-			    const biz = await getBusinessById(locRow.business_id);
-			    const bizName = biz?.name?.trim() || '';
-			    const locName = (locRow?.name || '').trim();
-			    displayName = [bizName, locName].filter(Boolean).join(' ') || displayName;
-			  }
-			  setLocationName(displayName);
+		  const locRow = await getLocationById(currentLocation);
+		
+		  // If inactive, show message and stop cleanly
+		  if (locRow && locRow.is_active === false) {
+		    try { showToast?.('This location is closed and cannot accept new feedback.', 'error'); } catch {}
+		    hideLoader?.();
+		    document.getElementById('submitFeedbackBtn')?.removeAttribute('disabled');
+		    return;
+		  }
+		
+		  // We no longer need to set businessId here — the DB trigger fills it.
+		  // We only set the header.
+		  const displayName = [
+		    (locRow?.business_name || '').trim(),
+		    (locRow?.name || 'Unknown Location').trim()
+		  ].filter(Boolean).join(' ').trim();
+		  setLocationName(displayName);
 		}
 
 
-
-		
 		    // 2) If we have both business_id and currentLocation, try to insert into Supabase
 			  	//Update: The DB trigger now derives business_id from locations, so we don’t send it.
 		    if (businessId && currentLocation) {
@@ -3033,21 +3016,31 @@
 
 
 		
-		// Fetch a location row (id, name, business_id) by UUID
+		// Fetch a public-safe location row by UUID (uses view, not base table)
 		async function getLocationById(id) {
 		  if (!id) return null;
 		  const { data, error } = await supabase
-		    .from('locations')
-		    .select('id, name, business_id')
-			.select('id, name, business_id, is_active')
-		    .eq('id', id)
+		    .from('location_public')
+		    .select('location_id, location_name, business_id, business_name, is_active')
+		    .eq('location_id', id)
 		    .maybeSingle();
+		
 		  if (error) {
 		    console.error('getLocationById error:', error);
 		    return null;
 		  }
-		  return data;
+		  if (!data) return null;
+		
+		  // Normalize field names so the rest of the app keeps working
+		  return {
+		    id: data.location_id,
+		    name: data.location_name,
+		    business_id: data.business_id,
+		    is_active: data.is_active,
+		    business_name: data.business_name
+		  };
 		}
+
 
 		// Fetch a business row (id, name) by UUID
 		async function getBusinessById(id) {
