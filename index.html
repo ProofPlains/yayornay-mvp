@@ -826,13 +826,31 @@
 	  .ff-footer{ text-align:center;font-size:14px;margin-top:24px;color:#9aa }
 	  .ff-footer a{ color:#b88aff;text-decoration:none }
 	  .ff-footer a:hover{ text-decoration:underline }
-	  @media (min-width:768px){
-	    .sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,calc(-50% + 24px));border-radius:18px;max-height:80vh;width:min(720px,92vw)}
-	    .sheet.open{transform:translate(-50%,-50%)}
-	    .sheet .handle{display:none}
-	    .sheet .inner{padding:20px 22px 22px}
-	    .sheet h2{font-size:22px}
-	  }
+	  @media (min-width: 768px) {
+		  .sheet{
+		    left:50%;
+		    right:auto;
+		    bottom:auto;
+		    top:50%;
+		    /* closed state (no .open): hidden + non-interactive */
+		    transform: translate(-50%, -40%);
+		    opacity: 0;
+		    pointer-events: none;
+		    border-radius:18px;
+		    max-height:80vh;
+		    width:min(720px,92vw);
+		  }
+		  .sheet.open{
+		    /* open state: visible + interactive */
+		    transform: translate(-50%, -50%);
+		    opacity: 1;
+		    pointer-events: auto;
+		  }
+		  .sheet .handle{ display:none }
+		  .sheet .inner{ padding:20px 22px 22px }
+		  .sheet h2{ font-size:22px }
+		}
+
 	  @media (prefers-reduced-motion:reduce){ .sheet{transition:none} }
 	  .no-scroll{ position:fixed;width:100%;overflow:hidden }
 	</style>
