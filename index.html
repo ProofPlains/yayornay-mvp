@@ -1232,6 +1232,9 @@
                         <h4>Your Customer Sign is Ready!</h4>
                         <p style="color: #666; margin-bottom: 15px;">Right-click/long-press on the image below and select "Save image as..." to download</p>
                         <div id="signImageContainer"></div>
+						<button id="ffDownloadQrBtn" class="btn" style="margin-top:12px;">
+						  Download Sign (PNG)
+						</button>
                     </div>
                 </div>
             </section>
@@ -1363,6 +1366,48 @@
 			const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 			window.supabase = supabase; // expose the client for console/debug use
 
+			// ---- Analytics helpers (events table already exists server-side) ----
+			let __ffBusinessId = null;
+			
+			async function getCurrentBusinessId() {
+			  if (__ffBusinessId) return __ffBusinessId;
+			  if (window.currentUser?.businessId) {
+			    __ffBusinessId = window.currentUser.businessId;
+			    return __ffBusinessId;
+			  }
+			  // Resolve from the authenticated user
+			  const { data: u } = await supabase.auth.getUser();
+			  const uid = u?.user?.id;
+			  if (!uid) return null;
+			
+			  // Find the first business owned by the user (mirrors your hydrate logic)
+			  const { data, error } = await supabase
+			    .from('businesses')
+			    .select('id')
+			    .eq('owner_id', uid)
+			    .order('created_at', { ascending: true })
+			    .limit(1);
+			  if (error || !data || !data[0]) return null;
+			
+			  __ffBusinessId = data[0].id;
+			  return __ffBusinessId;
+			}
+			
+			async function logEvent(eventType) {
+			  try {
+			    const bizId = await getCurrentBusinessId();
+			    if (!bizId) return; // silently skip if not authenticated/owner context
+			    await supabase.from('analytics_events').insert(
+			      { business_id: bizId, event_type: eventType },
+			      { returning: 'minimal' }
+			    );
+			  } catch (e) {
+			    // non-blocking
+			    console.warn('analytics log failed:', e?.message || e);
+			  }
+			}
+
+		
 			// Listen for password-recovery deep links and show the reset screen
 			supabase.auth.onAuthStateChange(async (event, session) => {
 			  if (event === 'PASSWORD_RECOVERY') {
@@ -2052,6 +2097,13 @@
             updateLocationSelects();
             showSection('Feedback');
 
+			// Log a dashboard view once per session
+			if (!sessionStorage.getItem('ff_dashboard_view_logged')) {
+			  sessionStorage.setItem('ff_dashboard_view_logged', '1');
+			  logEvent('dashboard_view');
+			}
+
+			
 			// 👇 ensure we land at the very top on mobile/desktop
 			scrollToTop();
 			hideLoader?.();
@@ -3272,6 +3324,28 @@
 		  document.getElementById('recentNext')?.addEventListener('click', nextRecentPage);
 		});
 
+		// Download the generated sign image and log activation
+		function downloadQrSignAndLog() {
+		  const img = document.querySelector('#signImageContainer img');
+		  if (!img || !img.src) {
+		    alert('Please generate the sign first.');
+		    return;
+		  }
+		  const a = document.createElement('a');
+		  a.href = img.src;
+		  a.download = 'FlashFeedback-QR-Sign.png';
+		  document.body.appendChild(a);
+		  a.click();
+		  a.remove();
+		  logEvent('qr_downloaded');
+		}
+		
+		// Wire the button after DOM is ready
+		document.addEventListener('DOMContentLoaded', () => {
+		  document.getElementById('ffDownloadQrBtn')?.addEventListener('click', downloadQrSignAndLog);
+		});
+
+		
 		// --- Forgot/Reset Password flow ---
 		
 		function showForgotPassword() {
