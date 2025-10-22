@@ -918,6 +918,13 @@
                 <label for="ownerName">Your Name</label>
                 <input type="text" id="ownerName" required>
             </div>
+			<div class="form-group">
+			  <label for="signupLocationName">First Location Name <span style="opacity:.6">(optional)</span></label>
+			  <input type="text" id="signupLocationName" placeholder="e.g. Main Branch">
+			  <div style="font-size:12px;color:#9aa;margin-top:6px;">
+			    If you leave this blank we’ll use <em>Location 01</em>.
+			  </div>
+			</div>
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <input type="email" id="email" required>
@@ -1414,6 +1421,11 @@
 			    // The magic link established a temporary session; show reset UI
 			    showResetPassword();
 			  }
+
+			  // These two lines clear the cached business resolution and the “dashboard view logged” flag whenever the auth state changes, preventing cross-account mixups during QA or rapid sign-in/out.
+			  try { window.__ffBusinessId = null; } catch {}
+			  try { sessionStorage.removeItem('ff_dashboard_view_logged'); } catch {}
+				
 			  // (Optional) keep or add your SIGNED_IN / SIGNED_OUT handlers here if needed
 			});
 
@@ -1748,6 +1760,7 @@
 		  const email        = document.getElementById('email').value.trim().toLowerCase();
 		  const password     = document.getElementById('password').value;
 		  const confirmPwd   = document.getElementById('confirmPassword').value;
+		  const locationName = (document.getElementById('signupLocationName')?.value || '').trim() || 'Location 01';
 
 		  // Basic client-side checks
 		  if (!businessName || !ownerName || !email || !password || !confirmPwd) {
@@ -1784,15 +1797,17 @@
 			  .insert({ business_id: biz.id, user_id: user.id, role: 'owner' });
 			if (buErr) throw buErr;
 
-			// 4) Create default location
+			// 4) Create first location (uses optional name or falls back to "Location 01")
 			const { data: loc, error: locErr } = await supabase
 			  .from('locations')
-			  .insert({ business_id: biz.id, name: 'Location 01' })
+			  .insert({ business_id: biz.id, name: locationName, is_active: true })
 			  .select()
 			  .single();
 			if (locErr) throw locErr;
-			  // set this as the business default
-			await supabase.from('businesses')
+			
+			// Set as default location on the business
+			await supabase
+			  .from('businesses')
 			  .update({ default_location_id: loc.id })
 			  .eq('id', biz.id);
 
@@ -1815,6 +1830,28 @@
 			// 6) Open your existing admin UI
 			showAdminDashboard();
 
+			// === Onboarding: land on QR generator immediately and pre-populate ===
+			try {
+			  // show the QR section
+			  showSection('qr');
+			
+			  // pre-select the newly created location in the QR dropdown
+			  const sel = document.getElementById('qrLocationSelect');
+			  if (sel && window.currentLocation) {
+			    sel.value = window.currentLocation;
+			  }
+			
+			  // build the QR automatically; users can hit Download right away
+			  if (typeof generateQR === 'function') { generateQR(); }
+			  if (typeof generateSign === 'function') { 
+			    // optional: if you want the full sign ready instantly
+			    generateSign();
+			  }
+			} catch (e) {
+			  console.warn('onboarding→QR jump failed:', e?.message || e);
+			}
+
+			  
 			// 6b) Brand/UI bits
 			renderBranding();
 			updateAvatarImage();
