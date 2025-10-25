@@ -3491,34 +3491,56 @@
 
 		// Logs anon "learn more" click for the current location, then goes to signup
 		async function onLearnMoreClick() {
-		  try {
-		    // Avoid duplicate logs in the same tab/session for this location
-		    const locFromState = window.currentLocation || null;
-		    const locFromUrl = new URLSearchParams(window.location.search).get('location');
-		    const locationId = locFromState || locFromUrl || null;
+		  // Resolve the location id (from state or URL)
+		  const locFromState = window.currentLocation || null;
+		  const locFromUrl = new URLSearchParams(window.location.search).get('location');
+		  const locationId = locFromState || locFromUrl || null;
 		
-		    const guardKey = 'lm_click_' + (locationId || 'unknown');
-		    if (!sessionStorage.getItem(guardKey)) {
-		      sessionStorage.setItem(guardKey, '1');
+		  // Guard: avoid duplicate logs per session/location
+		  const guardKey = 'lm_click_' + (locationId || 'unknown');
+		  if (!sessionStorage.getItem(guardKey)) {
+		    sessionStorage.setItem(guardKey, '1');
 		
-		      if (locationId) {
-		        await supabase
-		          .from('customer_events')
-		          .insert(
-		            { location_id: locationId, event_type: 'learn_more_click' },
-		            { returning: 'minimal' }
-		          );
+		    if (locationId) {
+		      try {
+		        // Use raw fetch with explicit headers to avoid missing/invalid JWT in anon contexts
+		        const url = 'https://evediwsocfbalzbzdden.supabase.co/rest/v1/customer_events';
+		        const body = JSON.stringify({
+		          location_id: locationId,
+		          event_type: 'learn_more_click'
+		        });
+		
+		        // Reuse your existing constants (exactly as in your Supabase init)
+		        // const SUPABASE_ANON_KEY = '...'; // already declared earlier in your file
+		
+		        const res = await fetch(url, {
+		          method: 'POST',
+		          headers: {
+		            'Content-Type': 'application/json',
+		            'Prefer': 'return=minimal',
+		            'apikey': SUPABASE_ANON_KEY,
+		            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+		          },
+		          body
+		        });
+		
+		        // If it ever fails, don't block the user; just log to console
+		        if (!res.ok) {
+		          console.warn('learn_more_click log failed:', res.status, await res.text());
+		        }
+		      } catch (e) {
+		        console.warn('learn_more_click log exception:', e?.message || e);
 		      }
-		      // If no locationId, we skip inserting (no error shown to user)
 		    }
-		  } catch (e) {
-		    // Non-blocking: still take them to signup
-		    console.warn('learn_more_click log failed:', e?.message || e);
 		  }
 		
 		  // Continue to your existing signup flow
 		  try { goToSignup(); } catch {}
 		}
+		
+		// expose for inline onclick
+		window.onLearnMoreClick = onLearnMoreClick;
+
 		
 		// expose for inline onclick
 		window.onLearnMoreClick = onLearnMoreClick;
