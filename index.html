@@ -1084,15 +1084,18 @@
             <button class="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
         </div>
         
-        <div class="thank-you" id="thankYou">
-		    <h2>Thank you for your feedback! 🎉</h2>
-		    <p>Your opinion helps us improve our service.</p>   
-		    <div class="business-cta">
-		        <h3>Powered by <i>FLASHFEEDBACK</i></h3>
-		        <p>Get customer feedback like this for your business</p>
-		        <button class="cta-button" onclick="goToSignup()">Learn more</button>
-		    </div>
+       <div class="thank-you" id="thankYou">
+		  <h2>Thank you for your feedback! 🎉</h2>
+		  <p>Your opinion helps us improve our service.</p>
+		
+		  <div class="business-cta">
+		    <h3>Powered by <i>FLASHFEEDBACK</i></h3>
+		    <p>Get customer feedback like this for your business</p>
+		    <!-- changed: added id and new onclick -->
+		    <button id="learnMoreBtn" class="cta-button" onclick="onLearnMoreClick()">Learn more</button>
+		  </div>
 		</div>
+
 
     </div>
 
@@ -3485,6 +3488,40 @@
 		    hideLoader?.();
 		  }
 		}
+
+		// Logs anon "learn more" click for the current location, then goes to signup
+		async function onLearnMoreClick() {
+		  try {
+		    // Avoid duplicate logs in the same tab/session for this location
+		    const locFromState = window.currentLocation || null;
+		    const locFromUrl = new URLSearchParams(window.location.search).get('location');
+		    const locationId = locFromState || locFromUrl || null;
+		
+		    const guardKey = 'lm_click_' + (locationId || 'unknown');
+		    if (!sessionStorage.getItem(guardKey)) {
+		      sessionStorage.setItem(guardKey, '1');
+		
+		      if (locationId) {
+		        await supabase
+		          .from('customer_events')
+		          .insert(
+		            { location_id: locationId, event_type: 'learn_more_click' },
+		            { returning: 'minimal' }
+		          );
+		      }
+		      // If no locationId, we skip inserting (no error shown to user)
+		    }
+		  } catch (e) {
+		    // Non-blocking: still take them to signup
+		    console.warn('learn_more_click log failed:', e?.message || e);
+		  }
+		
+		  // Continue to your existing signup flow
+		  try { goToSignup(); } catch {}
+		}
+		
+		// expose for inline onclick
+		window.onLearnMoreClick = onLearnMoreClick;
 
 		
 	</script>
