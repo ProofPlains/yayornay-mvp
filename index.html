@@ -808,6 +808,36 @@
 		.loc-edit-link, .loc-edit-save, .loc-edit-cancel { cursor:pointer; text-decoration:underline; }
 		.loc-edit-save, .loc-edit-cancel { font-size: 0.95rem; }
 
+		/* === Emoji-centric dashboard header === */
+		.mood-hero {
+		  display:grid; gap:14px; margin-bottom:18px;
+		  grid-template-columns: minmax(260px,1fr) 2fr;
+		}
+		.mood-card, .emoji-bar {
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
+		  border: 1px solid var(--ff-border);
+		  border-radius: var(--ff-radius-lg);
+		}
+		.mood-card { padding:18px; display:flex; align-items:center; gap:16px; }
+		.mood-emoji {
+		  font-size:56px; width:72px; height:72px; display:flex; align-items:center; justify-content:center;
+		  border-radius:18px;
+		  background: color-mix(in oklab, var(--ff-surface) 90%, black);
+		}
+		.mood-score { font-size:42px; font-weight:900; line-height:1; }
+		.mood-sub { color: var(--ff-text-muted); margin-top:4px; font-size:13px; }
+		.emoji-bar { padding:12px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+		.emoji-pill {
+		  display:flex; align-items:center; gap:10px;
+		  padding:10px 12px; border-radius:14px; border:1px solid var(--ff-border);
+		  background: color-mix(in oklab, var(--ff-surface) 90%, black);
+		  min-width:160px; justify-content:space-between;
+		}
+		.emoji-pill .left { display:flex; align-items:center; gap:10px; }
+		.emoji-pill .big { font-size:22px; }
+		.emoji-pill .pct { font-weight:700; }
+
+		
 	</style>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
 	
@@ -1178,7 +1208,41 @@
         <main class="admin-content">
             <section id="Feedback" class="content-section active">
                 <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">Feedback Dashboard</h2>
-                <div style="margin-bottom: 20px;">
+                <!-- Emoji-centric hero -->
+				<div class="mood-hero" id="moodHero">
+				  <div class="mood-card" aria-label="Overall customer mood">
+				    <div class="mood-emoji" id="moodEmoji" title="Calculated from emoji feedback">🙂</div>
+				    <div>
+				      <div class="mood-score"><span id="moodScore">—</span>/100</div>
+				      <div class="mood-sub">Overall customer mood (all feedback)</div>
+				    </div>
+				  </div>
+				
+				  <div class="emoji-bar" aria-label="Emoji distribution">
+				    <div class="emoji-pill">
+				      <div class="left"><span class="big">😍</span><span>Very happy</span></div>
+				      <div><span class="pct" id="pctVeryHappy">0%</span> · <span id="cntVeryHappy">0</span></div>
+				    </div>
+				    <div class="emoji-pill">
+				      <div class="left"><span class="big">😊</span><span>Happy</span></div>
+				      <div><span class="pct" id="pctHappy">0%</span> · <span id="cntHappy">0</span></div>
+				    </div>
+				    <div class="emoji-pill">
+				      <div class="left"><span class="big">😐</span><span>Neutral</span></div>
+				      <div><span class="pct" id="pctNeutral">0%</span> · <span id="cntNeutral">0</span></div>
+				    </div>
+				    <div class="emoji-pill">
+				      <div class="left"><span class="big">😞</span><span>Unhappy</span></div>
+				      <div><span class="pct" id="pctSad">0%</span> · <span id="cntSad">0</span></div>
+				    </div>
+				    <div class="emoji-pill">
+				      <div class="left"><span class="big">😭</span><span>Very unhappy</span></div>
+				      <div><span class="pct" id="pctVerySad">0%</span> · <span id="cntVerySad">0</span></div>
+				    </div>
+				  </div>
+				</div>
+
+				<div style="margin-bottom: 20px;">
                     <label>Select Location: </label>
                     <select id="FeedbackLocationSelect" onchange="updateFeedback()">
                         <option value="all">All Locations</option>
@@ -2458,49 +2522,95 @@
 		  });
 		}
 
+		// === Emoji-centric mood score helpers ===
+		const SENTIMENT_WEIGHT = { 'very-happy': 2, 'happy': 1, 'neutral': 0, 'sad': -1, 'very-sad': -2 };
+		
+		function computeMoodScoreFromCounts(counts) {
+		  const total = Object.values(counts).reduce((a,b)=>a+b, 0);
+		  if (!total) return null;
+		  const weighted = (counts['very-happy']*2) + (counts['happy']*1) + (counts['neutral']*0) + (counts['sad']*-1) + (counts['very-sad']*-2);
+		  // normalize -2..+2 -> -1..+1 by dividing by 2, then scale to 0..100
+		  const raw = (weighted / total) / 2;
+		  return Math.round((raw + 1) * 50);
+		}
+		function pickEmojiByScore(score) {
+		  if (score == null) return '🙂';
+		  if (score >= 85) return '😍';
+		  if (score >= 65) return '😊';
+		  if (score >= 45) return '😐';
+		  if (score >= 25) return '😞';
+		  return '😭';
+		}
+		function pct(n,total){ return total > 0 ? Math.round((n/total)*100)+'%' : '0%'; }
+
 
         function updateFeedback() {
-            var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
-            var selectedLocation = document.getElementById('FeedbackLocationSelect')?.value || 'all';
-            var allFeedback = [];
-            
-            if (selectedLocation === 'all') {
-                Object.values(locations).forEach(function(location) {
-                    if (location.feedback) {
-                        allFeedback = allFeedback.concat(location.feedback);
-                    }
-                });
-            } else if (locations[selectedLocation]?.feedback) {
-                allFeedback = locations[selectedLocation].feedback;
-            }
-            
-            var total = allFeedback.length;
-            var counts = { 'very-happy': 0, 'happy': 0, 'neutral': 0, 'sad': 0, 'very-sad': 0 };
-            var commentsCount = 0;
-            
-            allFeedback.forEach(function(item) {
-                counts[item.sentiment]++;
-                if (item.comments && item.comments.trim()) {
-                    commentsCount++;
-                }
-            });
-            
-            var percentages = {
-                'totalFeedback': total,
-                'commentsPercent': total > 0 ? Math.round((commentsCount / total) * 100) + '%' : '0%',
-                'veryHappyPercent': total > 0 ? Math.round((counts['very-happy'] / total) * 100) + '%' : '0%',
-                'happyPercent': total > 0 ? Math.round((counts['happy'] / total) * 100) + '%' : '0%',
-                'neutralPercent': total > 0 ? Math.round((counts['neutral'] / total) * 100) + '%' : '0%',
-                'sadPercent': total > 0 ? Math.round((counts['sad'] / total) * 100) + '%' : '0%',
-                'verySadPercent': total > 0 ? Math.round((counts['very-sad'] / total) * 100) + '%' : '0%'
-            };
-            
-            Object.keys(percentages).forEach(function(key) {
-                var element = document.getElementById(key);
-                if (element) element.textContent = percentages[key];
-            });
-            recentPage = 0; // reset to first page whenever filters/data change
-            updateRecentFeedback(allFeedback);
+                var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+			    var selectedLocation = document.getElementById('FeedbackLocationSelect')?.value || 'all';
+			    var allFeedback = [];
+			    
+			    if (selectedLocation === 'all') {
+			        Object.values(locations).forEach(function(location) {
+			            if (location.feedback) {
+			                allFeedback = allFeedback.concat(location.feedback);
+			            }
+			        });
+			    } else if (locations[selectedLocation]?.feedback) {
+			        allFeedback = locations[selectedLocation].feedback;
+			    }
+			    
+			    var total = allFeedback.length;
+			    var counts = { 'very-happy': 0, 'happy': 0, 'neutral': 0, 'sad': 0, 'very-sad': 0 };
+			    var commentsCount = 0;
+			    
+			    allFeedback.forEach(function(item) {
+			        counts[item.sentiment] = (counts[item.sentiment] || 0) + 1;
+			        if (item.comments && item.comments.trim()) {
+			            commentsCount++;
+			        }
+			    });
+			    
+			    // Existing stat cards (kept)
+			    var percentages = {
+			        'totalFeedback': total,
+			        'commentsPercent': total > 0 ? Math.round((commentsCount / total) * 100) + '%' : '0%',
+			        'veryHappyPercent': total > 0 ? Math.round((counts['very-happy'] / total) * 100) + '%' : '0%',
+			        'happyPercent': total > 0 ? Math.round((counts['happy'] / total) * 100) + '%' : '0%',
+			        'neutralPercent': total > 0 ? Math.round((counts['neutral'] / total) * 100) + '%' : '0%',
+			        'sadPercent': total > 0 ? Math.round((counts['sad'] / total) * 100) + '%' : '0%',
+			        'verySadPercent': total > 0 ? Math.round((counts['very-sad'] / total) * 100) + '%' : '0%'
+			    };
+			    Object.keys(percentages).forEach(function(key) {
+			        var element = document.getElementById(key);
+			        if (element) element.textContent = percentages[key];
+			    });
+			
+			    // NEW: Emoji hero + distribution bar
+			    (function updateEmojiHeader(){
+			      var score = computeMoodScoreFromCounts(counts);
+			      var scoreEl = document.getElementById('moodScore');
+			      var emojiEl = document.getElementById('moodEmoji');
+			      if (scoreEl) scoreEl.textContent = (score == null ? '—' : String(score));
+			      if (emojiEl) emojiEl.textContent = pickEmojiByScore(score);
+			
+			      // Counts + % in the emoji bar
+			      var setText = (id, val) => { var el = document.getElementById(id); if (el) el.textContent = val; };
+			      setText('cntVeryHappy', counts['very-happy']);
+			      setText('cntHappy', counts['happy']);
+			      setText('cntNeutral', counts['neutral']);
+			      setText('cntSad', counts['sad']);
+			      setText('cntVerySad', counts['very-sad']);
+			
+			      setText('pctVeryHappy', pct(counts['very-happy'], total));
+			      setText('pctHappy', pct(counts['happy'], total));
+			      setText('pctNeutral', pct(counts['neutral'], total));
+			      setText('pctSad', pct(counts['sad'], total));
+			      setText('pctVerySad', pct(counts['very-sad'], total));
+			    })();
+			
+			    // Recent list (unchanged)
+			    recentPage = 0;
+			    updateRecentFeedback(allFeedback);
         }
 
        function updateRecentFeedback(feedback) {
