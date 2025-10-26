@@ -865,29 +865,35 @@
 		  <span class="brand-title">FLASHFEEDBACK</span>
 		</div>
 
-        <div class="tagline">Instant customer feedback with QR codes</div>
+        <div class="tagline">Instant feedback, zero fuss.</div>
+		<p style="margin-top:8px; opacity:.9;">
+		Turn real-world customer moments into simple, actionable insights — all from a single QR code.
+		</p>
+
         
         <div class="features">
             <div class="feature">
                 <div class="feature-icon">📱</div>
-                <h3>QR Code Magic</h3>
-                <p>Customers scan, rate instantly</p>
+                <h3>Scan. Tap. Done.</h3>
+				<p>Customers leave emoji feedback in seconds.</p>
+
             </div>
             <div class="feature">
                 <div class="feature-icon">📊</div>
-                <h3>Live Feedback</h3>
-                <p>Real-time sentiment tracking</p>
+                <h3>See how you’re doing.</h3>
+				<p>Track happiness trends as they happen.</p>
             </div>
             <div class="feature">
                 <div class="feature-icon">🏪</div>
-                <h3>Multi-Location</h3>
-                <p>Manage all your venues</p>
+                <h3>One dashboard, all your spots.</h3>
+				<p>Perfect for cafés, salons, or chains.</p>
             </div>
         </div>
 
         <div class="cta-buttons">
-            <button class="btn-primary" onclick="showSignup()">Sign Up</button>
-            <button class="btn-secondary" onclick="showDemo()">See Demo</button>
+            <button class="btn-primary" title="It only takes a minute to create your first QR." onclick="onLearnMoreClick()">Get Started Free →</button>
+            <button class="btn-secondary" title="Explore what you and your customers would see — no sign-up needed." onclick="showDemo()">Try Demo First</button>
+
         </div>
 
         <div style="text-align: center; margin-top: 20px;">
@@ -913,10 +919,16 @@
             <div class="form-group">
                 <label for="businessName">Business Name</label>
                 <input type="text" id="businessName" required>
+				<div class="help-text" style="font-size:12px;color:#9aa;margin-top:6px;">
+					This appears on your customer feedback screen.
+				  </div>				  
             </div>
             <div class="form-group">
                 <label for="ownerName">Your Name</label>
                 <input type="text" id="ownerName" required>
+				<div class="help-text" style="font-size:12px;color:#9aa;margin-top:6px;">
+					We’ll use this to personalize your dashboard.
+				  </div>				  
             </div>
 			<div class="form-group">
 			  <label for="signupLocationName">First Location Name <span style="opacity:.6">(optional)</span></label>
@@ -955,9 +967,9 @@
 		</div>
 
 		<div class="form-title">
-            <h2>Welcome Back</h2>
-            <p>Log in to your FlashFeedback account</p>
-        </div>
+			<h2>Welcome back 👋</h2>
+			<p style="opacity:.9;">Log in to see what your customers are saying.</p>
+		  </div>
 
         <div id="loginError" class="error-message" style="display: none;"></div>
 
@@ -991,7 +1003,7 @@
 
 	  <div class="form-title">
 	    <h2>Reset your password</h2>
-	    <p>Enter your email and we’ll send you a reset link.</p>
+		<p style="opacity:.9;">We’ll email you a secure reset link.</p>
 	  </div>
 	
 	  <form id="forgotForm" onsubmit="handleRequestReset(event)">
@@ -3479,7 +3491,7 @@
 		    } else {
 		      // Fallback: show login with a friendly banner
 		      showLogin();
-		      showError?.('loginError', 'Password updated. Please sign in.');
+		      showError?.('loginError', '🎉 Password updated! Please sign in with your new password.');
 		    }
 		  } catch (e) {
 		    console.error(e);
