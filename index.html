@@ -903,24 +903,48 @@
 		  position: absolute;
 		  inset: 0;
 		  z-index: 1;
-		  filter: drop-shadow(0 2px 8px rgba(0,0,0,.35));
 		  transform: rotate(-90deg); /* start at 12 o’clock */
+		  /* removed the old subtle drop-shadow so we can glow only the progress */
 		}
+		
 		.mood-ring .track{
 		  fill: none;
-		  stroke: color-mix(in oklab, var(--ff-brand-1) 65%, black);
-		  opacity: .35;
+		  /* darker, cleaner track so the progress color pops */
+		  stroke: color-mix(in oklab, var(--ff-surface) 70%, black);
+		  opacity: .28;
 		  stroke-width: 10;
 		}
+		
 		.mood-ring .progress{
 		  fill: none;
 		  stroke: var(--mood-color, var(--ff-success));
 		  stroke-linecap: round;
-		  stroke-width: 10;
+		  /* make the stroke a touch thicker for presence */
+		  stroke-width: 12;
 		  stroke-dasharray: 326.725;   /* circumference of r=52 */
 		  stroke-dashoffset: 326.725;  /* fully empty by default */
-		  transition: stroke-dashoffset .35s ease, stroke .25s ease;
+		  transition: stroke-dashoffset .35s ease, stroke .25s ease, filter .25s ease;
+		  /* neon-ish glow that matches the current stroke color */
+		  filter: drop-shadow(0 0 10px var(--mood-color, #2ee6a6))
+		          drop-shadow(0 0 18px color-mix(in oklab, var(--mood-color, #2ee6a6) 60%, white));
 		}
+
+		/* Soft halo under the ring to lift it from the card background */
+		.mood-emoji-wrap::before{
+		  content: "";
+		  position: absolute;
+		  inset: -6px;                 /* slightly larger than the ring */
+		  border-radius: 50%;
+		  z-index: 0;                  /* sits below the SVG ring */
+		  background: radial-gradient(
+		    40% 40% at 50% 50%,
+		    color-mix(in oklab, var(--ff-brand-1) 45%, transparent) 0%,
+		    transparent 70%
+		  );
+		  filter: blur(10px);
+		  opacity: .55;
+		}
+
 		
 		/* Mobile sizing: align with your smaller emoji */
 		@media (max-width: 640px){
