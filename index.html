@@ -820,10 +820,35 @@
 		}
 		.mood-card { padding:18px; display:flex; align-items:center; gap:16px; }
 		.mood-emoji {
-		  font-size:56px; width:72px; height:72px; display:flex; align-items:center; justify-content:center;
-		  border-radius:18px;
+		  font-size:80px;
+		  width:88px;
+		  height:88px;
+		  display:flex;
+		  align-items:center;
+		  justify-content:center;
+		  border-radius:20px;
 		  background: color-mix(in oklab, var(--ff-surface) 90%, black);
 		}
+
+		/* --- Compact stat chips --- */
+		.mini-stats {
+		  display:flex;
+		  flex-wrap:wrap;
+		  gap:8px;
+		  margin-top:6px;
+		}
+		.stat-chip {
+		  display:inline-flex;
+		  align-items:center;
+		  gap:8px;
+		  padding:6px 10px;
+		  border:1px solid var(--ff-border);
+		  border-radius:12px;
+		  background:color-mix(in oklab, var(--ff-surface) 92%, black);
+		  font-size:13px;
+		}
+
+		
 		.mood-score { font-size:42px; font-weight:900; line-height:1; }
 		.mood-sub { color: var(--ff-text-muted); margin-top:4px; font-size:13px; }
 		.emoji-bar {
@@ -1228,7 +1253,15 @@
         <main class="admin-content">
             <section id="Feedback" class="content-section active">
                 <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">Feedback Dashboard</h2>
-                <!-- Emoji-centric hero -->
+                
+				<div style="margin-bottom: 20px;">
+                    <label>Select Location: </label>
+                    <select id="FeedbackLocationSelect" onchange="updateFeedback()">
+                        <option value="all">All Locations</option>
+                    </select>
+                </div>
+				
+				<!-- Emoji-centric hero -->
 				<div class="mood-hero" id="moodHero">
 				  <div class="mood-card" aria-label="Overall customer mood">
 				    <div class="mood-emoji" id="moodEmoji" title="Calculated from emoji feedback">🙂</div>
@@ -1262,43 +1295,14 @@
 				  </div>
 				</div>
 
-				<div style="margin-bottom: 20px;">
-                    <label>Select Location: </label>
-                    <select id="FeedbackLocationSelect" onchange="updateFeedback()">
-                        <option value="all">All Locations</option>
-                    </select>
-                </div>
+				
                 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalFeedback">0</div>
-                        <div class="stat-label">Total Feedback</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="commentsPercent">0%</div>
-                        <div class="stat-label">Left Comments</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="veryHappyPercent">0%</div>
-                        <div class="stat-label">Very Happy</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="happyPercent">0%</div>
-                        <div class="stat-label">Happy</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="neutralPercent">0%</div>
-                        <div class="stat-label">Neutral</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="sadPercent">0%</div>
-                        <div class="stat-label">Sad</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="verySadPercent">0%</div>
-                        <div class="stat-label">Very Sad</div>
-                    </div>
-                </div>
+                <!-- Compact chips for Total Feedback + Left Comments -->
+				<div class="mini-stats">
+				  <div class="stat-chip">🧮 Total feedback: <strong id="miniTotalFeedback">0</strong></div>
+				  <div class="stat-chip">📝 Left comments: <strong id="miniCommentsCount">0</strong> (<span id="miniCommentsPercent">0%</span>)</div>
+				</div>
+
 
                 <div style="margin-top: 30px;">
                     <h3>Recent Feedback</h3>
@@ -2601,9 +2605,16 @@
 			        'verySadPercent': total > 0 ? Math.round((counts['very-sad'] / total) * 100) + '%' : '0%'
 			    };
 			    Object.keys(percentages).forEach(function(key) {
-			        var element = document.getElementById(key);
-			        if (element) element.textContent = percentages[key];
-			    });
+				  var element = document.getElementById(key);
+				  if (element) element.textContent = percentages[key];
+				});
+				
+				// --- Update new mini chips ---
+				document.getElementById('miniTotalFeedback').textContent = total;
+				document.getElementById('miniCommentsCount').textContent = commentsCount;
+				document.getElementById('miniCommentsPercent').textContent =
+				  total > 0 ? Math.round((commentsCount / total) * 100) + '%' : '0%';
+
 			
 			    // NEW: Emoji hero + distribution bar
 			    (function updateEmojiHeader(){
