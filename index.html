@@ -885,47 +885,62 @@
 		  .emoji-bar { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 		}
 
-		/* --- Circular mood ring around the emoji --- */
+		/* --- Circular mood ring around the emoji (size-locked) --- */
 		.mood-emoji-wrap{
+		  /* Desktop defaults (override in the mobile media query below) */
+		  --ring-size: 112px;          /* outer box of the ring */
+		  --ring-thickness: 10px;      /* SVG stroke-width */
+		  --ring-gap: 8px;             /* padding between ring and emoji */
+		
 		  position: relative;
-		  width: 120px;  /* desktop size; mobile override below */
-		  height: 120px;
+		  width: var(--ring-size);
+		  height: var(--ring-size);
 		  display: grid;
 		  place-items: center;
 		}
+		
+		/* Size the emoji from the same variables so it always fits the ring */
 		.mood-emoji-wrap .mood-emoji{
-		  position: relative;
-		  z-index: 2;
+		  width: calc(var(--ring-size) - (var(--ring-thickness) + var(--ring-gap)) * 2);
+		  height: calc(var(--ring-size) - (var(--ring-thickness) + var(--ring-gap)) * 2);
+		  /* keep your font-size rules if you like; this is enough for fit */
 		}
 		
-		/* SVG ring sits behind the emoji */
+		/* SVG ring fills the wrapper */
 		.mood-ring{
 		  position: absolute;
 		  inset: 0;
 		  z-index: 1;
-		  filter: drop-shadow(0 2px 8px rgba(0,0,0,.35));
 		  transform: rotate(-90deg); /* start at 12 o’clock */
 		}
+		
 		.mood-ring .track{
 		  fill: none;
-		  stroke: color-mix(in oklab, var(--ff-brand-1) 65%, black);
-		  opacity: .35;
-		  stroke-width: 10;
+		  stroke: color-mix(in oklab, var(--ff-surface) 70%, black);
+		  opacity: .28;
+		  stroke-width: var(--ring-thickness);
 		}
+		
 		.mood-ring .progress{
 		  fill: none;
 		  stroke: var(--mood-color, var(--ff-success));
 		  stroke-linecap: round;
-		  stroke-width: 10;
-		  stroke-dasharray: 326.725;   /* circumference of r=52 */
-		  stroke-dashoffset: 326.725;  /* fully empty by default */
+		  stroke-width: var(--ring-thickness);
+		  /* circumference for r=45 in a 0..100 viewBox */
+		  stroke-dasharray: 282.743;         /* 2π*45 */
+		  stroke-dashoffset: 282.743;        /* empty by default */
 		  transition: stroke-dashoffset .35s ease, stroke .25s ease;
 		}
 		
-		/* Mobile sizing: align with your smaller emoji */
+		/* Mobile: scale both ring and emoji together */
 		@media (max-width: 640px){
-		  .mood-emoji-wrap{ width: 90px; height: 90px; }
+		  .mood-emoji-wrap{
+		    --ring-size: 96px;         /* smaller outer box on phones */
+		    --ring-thickness: 8px;     /* slightly thinner on mobile */
+		    --ring-gap: 6px;
+		  }
 		}
+
 
 		
 	</style>
@@ -1311,12 +1326,12 @@
 				  <div class="mood-card" aria-label="Overall customer mood">
 				    <div class="mood-emoji-wrap" aria-hidden="false">
 					  <div class="mood-emoji" id="moodEmoji" title="Calculated from emoji feedback">🙂</div>
-					  <svg class="mood-ring" viewBox="0 0 120 120" focusable="false" aria-hidden="true">
-					    <!-- track -->
-					    <circle class="track" cx="60" cy="60" r="52"></circle>
-					    <!-- animated progress -->
-					    <circle id="moodRingProgress" class="progress" cx="60" cy="60" r="52"></circle>
+					  <svg class="mood-ring" viewBox="0 0 100 100" focusable="false" aria-hidden="true">
+						  <!-- r=45 gives us a clean round number for circumference -->
+						  <circle class="track" cx="50" cy="50" r="45"></circle>
+						  <circle id="moodRingProgress" class="progress" cx="50" cy="50" r="45"></circle>
 					  </svg>
+
 					</div>
 
 				    <div>
@@ -2685,10 +2700,12 @@
 				
 				    // percentage (0..1) from score (0..100)
 				    const pct = (typeof score === 'number' && score >= 0) ? Math.min(Math.max(score / 100, 0), 1) : 0;
-				    const CIRC = 326.725; // 2πr for r=52 (matches CSS)
-				    if (progressEl) {
-				      progressEl.style.strokeDashoffset = String(CIRC * (1 - pct));
-				    }
+				    const CIRC = 282.743; // 2π*45 for viewBox 0..100, r=45
+					if (progressEl) {
+					  progressEl.style.strokeDasharray = CIRC;
+					  progressEl.style.strokeDashoffset = String(CIRC * (1 - pct));
+					}
+
 				
 				    // mood color mapping (matches your palette)
 				    // very happy (>=85): success green
