@@ -882,6 +882,48 @@
 		  .emoji-bar { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 		}
 
+		/* --- Circular mood ring around the emoji --- */
+		.mood-emoji-wrap{
+		  position: relative;
+		  width: 120px;  /* desktop size; mobile override below */
+		  height: 120px;
+		  display: grid;
+		  place-items: center;
+		}
+		.mood-emoji-wrap .mood-emoji{
+		  position: relative;
+		  z-index: 2;
+		}
+		
+		/* SVG ring sits behind the emoji */
+		.mood-ring{
+		  position: absolute;
+		  inset: 0;
+		  z-index: 1;
+		  filter: drop-shadow(0 2px 8px rgba(0,0,0,.35));
+		  transform: rotate(-90deg); /* start at 12 o’clock */
+		}
+		.mood-ring .track{
+		  fill: none;
+		  stroke: color-mix(in oklab, var(--ff-brand-1) 65%, black);
+		  opacity: .35;
+		  stroke-width: 10;
+		}
+		.mood-ring .progress{
+		  fill: none;
+		  stroke: var(--mood-color, var(--ff-success));
+		  stroke-linecap: round;
+		  stroke-width: 10;
+		  stroke-dasharray: 326.725;   /* circumference of r=52 */
+		  stroke-dashoffset: 326.725;  /* fully empty by default */
+		  transition: stroke-dashoffset .35s ease, stroke .25s ease;
+		}
+		
+		/* Mobile sizing: align with your smaller emoji */
+		@media (max-width: 640px){
+		  .mood-emoji-wrap{ width: 90px; height: 90px; }
+		}
+
 		
 	</style>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
@@ -1264,7 +1306,16 @@
 				<!-- Emoji-centric hero -->
 				<div class="mood-hero" id="moodHero">
 				  <div class="mood-card" aria-label="Overall customer mood">
-				    <div class="mood-emoji" id="moodEmoji" title="Calculated from emoji feedback">🙂</div>
+				    <div class="mood-emoji-wrap" aria-hidden="false">
+					  <div class="mood-emoji" id="moodEmoji" title="Calculated from emoji feedback">🙂</div>
+					  <svg class="mood-ring" viewBox="0 0 120 120" focusable="false" aria-hidden="true">
+					    <!-- track -->
+					    <circle class="track" cx="60" cy="60" r="52"></circle>
+					    <!-- animated progress -->
+					    <circle id="moodRingProgress" class="progress" cx="60" cy="60" r="52"></circle>
+					  </svg>
+					</div>
+
 				    <div>
 				      <div class="mood-score"><span id="moodScore">—</span>/100</div>
 				      <div class="mood-sub">Overall customer mood (all feedback)</div>
@@ -2616,28 +2667,60 @@
 				  total > 0 ? Math.round((commentsCount / total) * 100) + '%' : '0%';
 
 			
-			    // NEW: Emoji hero + distribution bar
-			    (function updateEmojiHeader(){
-			      var score = computeMoodScoreFromCounts(counts);
-			      var scoreEl = document.getElementById('moodScore');
-			      var emojiEl = document.getElementById('moodEmoji');
-			      if (scoreEl) scoreEl.textContent = (score == null ? '—' : String(score));
-			      if (emojiEl) emojiEl.textContent = pickEmojiByScore(score);
-			
-			      // Counts + % in the emoji bar
-			      var setText = (id, val) => { var el = document.getElementById(id); if (el) el.textContent = val; };
-			      setText('cntVeryHappy', counts['very-happy']);
-			      setText('cntHappy', counts['happy']);
-			      setText('cntNeutral', counts['neutral']);
-			      setText('cntSad', counts['sad']);
-			      setText('cntVerySad', counts['very-sad']);
-			
-			      setText('pctVeryHappy', pct(counts['very-happy'], total));
-			      setText('pctHappy', pct(counts['happy'], total));
-			      setText('pctNeutral', pct(counts['neutral'], total));
-			      setText('pctSad', pct(counts['sad'], total));
-			      setText('pctVerySad', pct(counts['very-sad'], total));
-			    })();
+			    // NEW: Emoji hero + distribution bar (+ ring)
+				(function updateEmojiHeader(){
+				  var score = computeMoodScoreFromCounts(counts);
+				  var scoreEl = document.getElementById('moodScore');
+				  var emojiEl = document.getElementById('moodEmoji');
+				  if (scoreEl) scoreEl.textContent = (score == null ? '—' : String(score));
+				  if (emojiEl) emojiEl.textContent = pickEmojiByScore(score);
+				
+				  // --- Circular ring progress ---
+				  try {
+				    const progressEl = document.getElementById('moodRingProgress');
+				    const wrap = progressEl ? progressEl.closest('.mood-emoji-wrap') : null;
+				
+				    // percentage (0..1) from score (0..100)
+				    const pct = (typeof score === 'number' && score >= 0) ? Math.min(Math.max(score / 100, 0), 1) : 0;
+				    const CIRC = 326.725; // 2πr for r=52 (matches CSS)
+				    if (progressEl) {
+				      progressEl.style.strokeDashoffset = String(CIRC * (1 - pct));
+				    }
+				
+				    // mood color mapping (matches your palette)
+				    // very happy (>=85): success green
+				    // happy (>=65): green-ish
+				    // neutral (>=45): muted gray
+				    // sad (>=25): amber
+				    // very sad (<25): red
+				    function moodColor(s){
+				      if (s == null) return 'var(--ff-text-muted)';
+				      if (s >= 85) return 'var(--ff-success)';           // #22c55e
+				      if (s >= 65) return 'color-mix(in oklab, var(--ff-success) 80%, white)'; 
+				      if (s >= 45) return 'var(--ff-text-muted)';        // neutral
+				      if (s >= 25) return 'var(--ff-warn)';              // #f59e0b
+				      return 'var(--ff-error)';                          // #ef4444
+				    }
+				    const col = moodColor(score);
+				    if (progressEl) progressEl.style.stroke = col;
+				    if (wrap) wrap.style.setProperty('--mood-color', col);
+				  } catch (_) { /* non-blocking */ }
+				
+				  // Counts + % in the emoji bar
+				  var setText = (id, val) => { var el = document.getElementById(id); if (el) el.textContent = val; };
+				  setText('cntVeryHappy', counts['very-happy']);
+				  setText('cntHappy', counts['happy']);
+				  setText('cntNeutral', counts['neutral']);
+				  setText('cntSad', counts['sad']);
+				  setText('cntVerySad', counts['very-sad']);
+				
+				  setText('pctVeryHappy', pct(counts['very-happy'], total));
+				  setText('pctHappy', pct(counts['happy'], total));
+				  setText('pctNeutral', pct(counts['neutral'], total));
+				  setText('pctSad', pct(counts['sad'], total));
+				  setText('pctVerySad', pct(counts['very-sad'], total));
+				})();
+
 			
 			    // Recent list (unchanged)
 			    recentPage = 0;
