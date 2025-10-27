@@ -1,0 +1,3802 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>    
+	<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0"> <!-- Prevent caching of the HTML document so users always fetch the latest -->
+	<meta http-equiv="Pragma" content="no-cache"> <!-- Prevent caching of the HTML document so users always fetch the latest -->
+	<meta http-equiv="Expires" content="0"> <!-- Prevent caching of the HTML document so users always fetch the latest -->
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashFeedback - Instant Customer Feedback with QR Codes</title>
+    <link rel="icon" href="data:,">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+		:root{ 
+		  /* Colors (light fallback) */
+		  --ff-brand-1: #a78bfa;
+		  --ff-brand-2: #7c3aed;
+		  --ff-text-on-brand: #ffffff;
+		  --ff-surface: #ffffff;
+		  --ff-text: #0b1020;
+		  --ff-text-muted: #6b7280;
+		  --ff-border: #e5e7eb;
+		  --ff-success: #22c55e;
+		  --ff-warn: #f59e0b;
+		  --ff-error: #ef4444;
+		  --ff-link: var(--ff-brand-1);
+		
+		  /* Fonts */
+		  --ff-font-body: Inter, system-ui, sans-serif;
+		  --ff-font-heading: Inter, system-ui, sans-serif;
+		  --ff-font-brand: Anton, Impact, sans-serif;
+		
+		  /* Radii / Shadows / Spacing */
+		  --ff-radius-sm: 8px;
+		  --ff-radius: 12px;
+		  --ff-radius-lg: 16px;
+		  --ff-shadow: 0 4px 12px rgba(17,24,39,.10);
+		
+		  /* Z-index */
+		  --ff-z-overlay: 1000;
+		  --ff-z-topbar: 1001;
+		  --ff-z-drawer: 1002;
+		  --ff-z-account-overlay: 2000;
+		  --ff-z-account-drawer: 2001;
+		
+		  /* Spacing scale */
+		  --ff-space-1:4px; --ff-space-2:8px; --ff-space-3:12px; --ff-space-4:16px; --ff-space-5:20px; --ff-space-6:24px;
+		
+		  /* Type scale */
+		  --ff-fs-12:12px; --ff-fs-14:14px; --ff-fs-16:16px;
+		  --ff-h6:18px; --ff-h5:20px; --ff-h4:24px; --ff-h3:30px; --ff-h2:36px; --ff-h1:44px;
+		  --ff-lh-body:1.55; --ff-lh-heading:1.2;
+		
+		  /* Motion */
+		  --ff-motion: 150ms;
+		}
+		/* Dark overrides (default, since <html> has class="dark") */
+		.dark{
+		  --ff-surface: #212121;
+		  --ff-text: #e6edf3;
+		  --ff-text-muted: #9aa7b2;
+		  --ff-border: #30363d;
+		
+		  /* Keep your chosen brand + custom text on brand */
+		  --ff-brand-1: #a78bfa;  /* Grape */
+		  --ff-brand-2: #7c3aed;
+		  --ff-text-on-brand: #ece8dc; /* your pick */
+		}
+		
+		/* Base typography hook (keeps your current Inter import working) */
+		html{ font-family: var(--ff-font-body); }
+		h1,h2,h3,h4,h5,h6{ font-family: var(--ff-font-heading); line-height: var(--ff-lh-heading); }
+		body{ font-size: var(--ff-fs-14); line-height: var(--ff-lh-body); color: var(--ff-text); background: var(--ff-surface); }
+
+		/* brand header: bolt + wordmark */
+		/* Brand header: tighter gap + bolt scales with text size */
+		.brand-header {
+		  display: flex;
+		  align-items: center;
+		  justify-content: center;
+		  gap: 0px; /* was 12px: tighter spacing between bolt and wordmark */
+		}
+		
+		.brand-logo {
+		  height: 1.3em;      /* scales with the wordmark font-size; larger than before */
+		  width: auto;         /* keep aspect ratio */
+		  object-fit: contain;
+		  display: block;
+		}
+
+
+		
+		/* Brand title helper */
+		.brand-title{
+		  font-family: var(--ff-font-brand);
+		  text-transform: uppercase;
+		  font-style: italic;   /* you wanted italic */
+		  font-weight: 800;     /* and bold */
+		  letter-spacing: 0.02em;
+		  text-align: center;
+		}
+		.hamburger-img{ width:24px; height:24px; display:inline-block; object-fit:contain; }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { background: var(--ff-surface); }
+
+        .container, .welcome-container, .signup-container, .login-container {
+		  margin: 0 auto;
+		  background: var(--ff-surface);
+		  color: var(--ff-text);
+		  border-radius: 20px;
+		  box-shadow: var(--ff-shadow);
+		  overflow: hidden;
+		  border: 1px solid var(--ff-border);
+		}
+
+
+        .container { max-width: 400px; }
+        .welcome-container { max-width: 600px; padding: 40px; text-align: center; }
+        .signup-container, .login-container { max-width: 500px; padding: 40px; }
+
+        .header {
+            background: #0d1117;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 24px; margin-bottom: 10px; font-weight: 700; }
+
+        .location-display {
+            margin-top: 15px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .feedback-section { padding: 40px 30px; text-align: center; background: #151b23; }
+        .feedback-question { font-size: 20px; margin-bottom: 30px; color: #var(--ff-text); font-weight: 600; }
+
+        .optional-feedback {
+            margin: 25px 0;
+            text-align: left;
+        }
+
+        .optional-feedback label {
+            display: block;
+            font-size: 14px;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .optional-feedback textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: white;
+            color: #2d3748;
+        }
+
+        .optional-feedback textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .emoji-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+            margin-bottom: 30px;
+            flex-wrap: nowrap;
+            padding: 0 10px;
+        }
+
+        .emoji-btn {
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 50%;
+            width: 65px;
+            height: 65px;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(45, 55, 72, 0.08);
+        }
+
+        .emoji-btn:hover { 
+            transform: scale(1.1); 
+            border-color: #48bb78;
+            box-shadow: 0 4px 16px rgba(72, 187, 120, 0.2);
+        }
+        
+        .emoji-btn.selected { 
+            border-color: #48bb78; 
+            background: #48bb78; 
+            color: white;
+            box-shadow: 0 4px 16px rgba(72, 187, 120, 0.3);
+        }
+
+        .emoji-btn[data-sentiment="very-happy"]::after { content: "😍"; }
+        .emoji-btn[data-sentiment="happy"]::after { content: "😊"; }
+        .emoji-btn[data-sentiment="neutral"]::after { content: "😐"; }
+        .emoji-btn[data-sentiment="sad"]::after { content: "😞"; }
+        .emoji-btn[data-sentiment="very-sad"]::after { content: "😭"; }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2));
+   			color: var(--ff-text-on-brand);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .submit-btn.enabled { opacity: 1; pointer-events: auto; }
+
+        .thank-you { display: none; background: #151b23; padding: 40px; text-align: center; }
+        .thank-you h2 { color: #48bb78; margin-bottom: 15px; }
+
+        .business-cta {
+            background: #212121;
+            border: 1px solid #e2e8f0;
+            color: #2d3748;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .cta-button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logo { font-size: 48px; font-weight: bold; color: var(--ff-brand-1); margin-bottom: 10px; }
+        .tagline { font-size: 20px; color: #718096; margin-bottom: 30px; }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .feature {
+		    padding: 20px;
+		    background: #212121;
+		    border-radius: 15px;
+		    border: 1px solid #a78bfa;
+		}
+        .feature-icon { font-size: 36px; margin-bottom: 10px; }
+        .feature h3 { font-size: 16px; color: #718096; margin-bottom: 8px; font-weight: 600; }
+        .feature p { font-size: 14px; color: #718096; }
+
+        .cta-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 30px; }
+
+        .btn-primary, .btn-secondary {
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+       .btn-primary {
+		    background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2));
+		    color: var(--ff-text-on-brand);
+		}
+
+       .btn-secondary {
+		    background: transparent;
+		    color: var(--ff-brand-1);
+		    border: 2px solid var(--ff-brand-1);
+		}
+
+		.list-item {
+			background: #212121;
+		    border-radius: 15px;
+		    border: 1px solid #a78bfa;
+			display: flex;
+		    align-items: center;
+		    gap: 12px;
+		    flex: 1 1 auto;
+		    min-width: 200px;
+		}
+
+		
+        .admin-topbar {
+		    background: linear-gradient(135deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%);
+		    color: var(--ff-text-on-brand);
+            padding: 0 20px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1001;
+        }
+
+        .topbar-hamburger {
+            background: none;
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-right: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .topbar-hamburger:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .topbar-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            font-family: 'Gilroy', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .nav-drawer {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%);
+            color: white;
+            transition: left 0.3s ease;
+            z-index: 1002;
+            box-shadow: 2px 0 20px rgba(0,0,0,0.3);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-drawer.open {
+            left: 0;
+        }
+
+        .nav-drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .nav-drawer-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer-header {
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+        }
+
+        .drawer-logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: white;
+        }
+
+        .drawer-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .drawer-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .drawer-menu-item {
+            margin-bottom: 5px;
+        }
+
+        .drawer-menu-link {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .drawer-menu-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .drawer-menu-link.active {
+            background: rgba(255,255,255,0.15);
+            border-right: 4px solid white;
+            color: white;
+            font-weight: 600;
+        }
+
+        .drawer-menu-icon {
+            font-size: 18px;
+            margin-right: 15px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .drawer-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .drawer-close-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+		/* ——— Top bar avatar ——— */
+		.topbar { position: relative; }
+		.topbar-title { padding-right: 64px; } /* avoid overlap with the avatar */
+		
+		/* Avatar button on the right of the top bar */
+		#accountAvatarBtn{
+		  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+		  width:36px; height:36px; border-radius:9999px; overflow:hidden;
+		  border:2px solid rgba(0,0,0,0.06); background:#f3f4f6; cursor:pointer;
+		  display:flex; align-items:center; justify-content:center;
+		}
+		#accountAvatarBtn img{ width:100%; height:100%; object-fit:cover; border-radius:inherit; }
+		#accountAvatarBtn svg{ width:22px; height:22px; opacity:0.65; }
+		
+		/* ——— Right-hand account drawer ——— */
+		#accountDrawerOverlay{
+		  position:fixed; inset:0; background:rgba(0,0,0,.35);
+		  opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:2000;
+		}
+		#accountDrawer{
+		  position:fixed; top:0; right:0; height:100vh; width:320px; max-width:86vw;
+		  background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)); color: var(--ff-text-on-brand); box-shadow:-6px 0 24px rgba(0,0,0,.25);
+		  transform:translateX(100%); transition:transform .25s ease; z-index:2001;
+		  display:flex; flex-direction:column;
+		}
+		.account-drawer-open #accountDrawer{ transform:translateX(0); }
+		.account-drawer-open #accountDrawerOverlay{ opacity:1; pointer-events:auto; }
+		
+		.account-drawer-header{ padding:20px 16px; }
+		.account-drawer-header .business-name{ font-weight:700; font-size:18px; }
+		.account-drawer-header .user-email{ opacity:.85; font-size:13px; margin-top:4px; }
+		
+		.account-drawer-hr{ border:none; border-top:1px solid rgba(255,255,255,0.08); margin:8px 0; }
+		.account-drawer-list{ padding:6px 8px 14px 8px; }
+		.account-drawer-item{
+		  display:flex; gap:10px; align-items:center; width:100%;
+		  padding:10px 8px; border-radius:10px; cursor:pointer;
+		  background:transparent; color:#e5e7eb; text-align:left; border:none;
+		}
+		.account-drawer-item:hover{ background:rgba(255,255,255,0.06); }
+		.account-drawer-item .icon{ width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; }
+
+		
+        .admin-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            margin-top: 0;
+        }
+
+        .admin-header h1 {
+            font-size: 28px;
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(45, 55, 72, 0.08);
+            border: 1px solid rgba(45, 55, 72, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%);
+        }
+
+        .stat-number { font-size: 36px; font-weight: bold; margin-bottom: 10px; color: #2d3748; }
+        .stat-label { font-size: 14px; opacity: 0.9; color: #718096; font-weight: 500; }
+
+        #adminView {
+            display: none;
+            flex-direction: column;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(45, 55, 72, 0.12);
+            overflow: hidden;
+            border: 1px solid rgba(45, 55, 72, 0.06);
+            min-height: 80vh;
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            background: #e53e3e;
+            border: 2px solid #c53030;
+        }
+
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #718096; }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--ff-border);
+  			border-radius: var(--ff-radius-sm);
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--ff-brand-1);
+   			box-shadow: 0 0 0 3px color-mix(in oklab, var(--ff-brand-1) 16%, transparent);
+        }
+
+        .form-title { text-align: center; color: #2d3748; margin-bottom: 30px; }
+        .form-title h2 { font-size: 28px; margin-bottom: 8px; }
+        .form-title p { color: #718096; font-size: 16px; }
+
+        .error-message {
+            background: #fed7d7;
+            border: 1px solid #fc8181;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #c53030;
+        }
+
+        .link-button {
+            background: none;
+            border: none;
+            color: var(--ff-brand-1);
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+        }
+
+        .btn {
+		    background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2));
+		    color: var(--ff-text-on-brand);
+		    border: none;
+		    padding: 10px 20px;
+		    border-radius: var(--ff-radius);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover { background: #3182ce; }
+
+        @media (max-width: 480px) {
+            .emoji-btn { width: 50px; height: 50px; font-size: 24px; border-width: 2px; }
+            .cta-buttons { flex-direction: column; align-items: center; }
+            .features { grid-template-columns: 1fr; }
+        }
+		
+		/* Prevent welcome flash before JS decides what to show */
+ 		 #welcomeScreen { display: none; }
+
+		/* --- Loader animation --- */
+		.loader {
+		  width: 40px;
+		  aspect-ratio: 1;
+		  display: grid;
+		  margin: 0 auto;
+		}
+		.loader::before,
+		.loader::after {
+		  content: "";
+		  grid-area: 1/1;
+		  background: #A78BFA;
+		  clip-path: polygon(0 0,101% 0, 0 100%);
+		  animation: l13 2s infinite;
+		}
+		.loader::after {
+		  --s:-1,-1;
+		}
+		@keyframes l13 {
+		  0%,10%   {transform:scale(var(--s,1)) translate(0,0)        rotate(0deg)}
+		  33%      {transform:scale(var(--s,1)) translate(20px,-20px) rotate(0deg)}
+		  66%      {transform:scale(var(--s,1)) translate(20px,-20px) rotate(180deg)}
+		  90%,100% {transform:scale(var(--s,1)) translate(0px,0px)    rotate(180deg)}
+		}
+		
+		/* --- Loader wrapper: full-page overlay style --- */
+		.loader-overlay {
+		  position: fixed;
+		  inset: 0;
+		  background: #212121;
+		  z-index: 9999;
+		  display: none;           /* hidden by default */
+		  align-items: center;     /* flex props apply once visible */
+		  justify-content: center;
+		}
+		
+		/* Right-side variant that reuses the base .drawer visuals */
+		#accountDrawer.drawer {
+		  position: fixed;
+		  top: 0;
+		  right: 0;
+		  left: auto;
+		  height: 100vh;
+		  width: 320px;
+		  max-width: 86vw;
+		  transform: translateX(100%);
+		  transition: transform .25s ease;
+		
+		  /* 🔷 match left drawer look */
+		  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+		  color: white;
+		  box-shadow: -2px 0 20px rgba(0,0,0,0.3);
+		}
+		.account-drawer-open #accountDrawer.drawer {
+		  transform: translateX(0);
+		}
+
+
+	    /* === Grape Dark – consistency & contrast fixes === */
+		#customerView h1, #customerView h2, #customerView h3,
+		#welcomeView h1, #welcomeView h2, #welcomeView h3,
+		#loginView h1, #loginView h2, #loginView h3,
+		#signupView h1, #signupView h2, #signupView h3,
+		#resetView h1, #resetView h2, #resetView h3,
+		#adminView h1, #adminView h2, #adminView h3,
+		.section-title, .form-title, .card-title { color: var(--ff-text) !important; }
+		
+		#customerView, #welcomeView, #loginView, #signupView, #resetView, #adminView { color: var(--ff-text); }
+		#customerView p, #welcomeView p, #loginView p, #signupView p, #resetView p, #adminView p { color: var(--ff-text-muted); }
+		
+		#customerDemoNotice, #ownerDemoNotice, #demoNotice, .demo-banner, .demo-notice, .demo-panel, .notice.demo {
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black) !important;
+		  border: 1px solid var(--ff-border) !important;
+		  color: var(--ff-text) !important;
+		  box-shadow: var(--ff-shadow);
+		  border-radius: var(--ff-radius-lg);
+		}
+		#ownerDemoNotice .btn, #ownerDemoNotice button,
+		.demo-banner .btn, .demo-banner button,
+		.demo-notice .btn, .demo-notice button,
+		#customerDemoNotice button, #demoNotice button {
+		  background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)) !important;
+		  color: var(--ff-text-on-brand) !important;
+		  border: none !important;
+		}
+		
+		.header { color: var(--ff-text-on-brand) !important; }
+		
+		.form-group input, .optional-feedback textarea {
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black) !important;
+		  border-color: var(--ff-border) !important;
+		  color: var(--ff-text) !important;
+		}
+		.form-group input::placeholder, .optional-feedback textarea::placeholder {
+		  color: color-mix(in oklab, var(--ff-text) 55%, transparent) !important;
+		}
+		
+		.btn[disabled], .btn:disabled, .submit-btn[disabled], .submit-btn:disabled,
+		.btn-primary[disabled], .btn-primary:disabled {
+		  background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)) !important;
+		  color: var(--ff-text-on-brand) !important;
+		  opacity: .55; cursor: not-allowed;
+		}
+		
+		.stat-number, .stat-value { color: var(--ff-text) !important; }
+		.stat-label, .stat-caption { color: var(--ff-text-muted) !important; }
+		
+		a, .link-button { color: var(--ff-brand-1) !important; text-decoration: underline; }
+		a:hover, .link-button:hover { filter: brightness(1.08); text-decoration-thickness: 2px; }
+		
+		.admin-topbar, .nav-drawer, #accountDrawer.drawer, #accountDrawer {
+		  background: linear-gradient(135deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%) !important;
+		  color: var(--ff-text-on-brand) !important;
+		}
+		
+		.container, .welcome-container, .signup-container, .login-container, #adminView, .stat-card {
+		  background: var(--ff-surface) !important;
+		  border: 1px solid var(--ff-border) !important;
+		  border-radius: var(--ff-radius-lg) !important;
+		  box-shadow: var(--ff-shadow) !important;
+		}
+		
+		table thead { background: color-mix(in oklab, var(--ff-surface) 88%, black) !important; }
+		table th { color: var(--ff-text) !important; }
+		
+		#customerView .emoji-btn {
+		  background: var(--ff-surface) !important;
+		  border: 3px solid var(--ff-border) !important;
+		  color: var(--ff-text) !important;
+		}
+		#customerView .emoji-btn.selected {
+		  background: var(--ff-success) !important;
+		  border-color: var(--ff-success) !important;
+		  color: #fff !important;
+		}
+		/* Location inline-edit UI */
+		.loc-edit-actions { display:flex; gap:8px; align-items:center; margin-left:8px; }
+		.loc-edit-input { background:#1f1f25; color:#eae7ff; border:1px solid rgba(167,139,250,.35); border-radius:8px; padding:6px 10px; min-width: 220px; }
+		.loc-edit-link, .loc-edit-save, .loc-edit-cancel { cursor:pointer; text-decoration:underline; }
+		.loc-edit-save, .loc-edit-cancel { font-size: 0.95rem; }
+
+		/* === Emoji-centric dashboard header === */
+		.mood-hero {
+		  display:grid; gap:14px; margin-bottom:18px;
+		  grid-template-columns: minmax(260px,1fr) 2fr;
+		}
+		.mood-card, .emoji-bar {
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
+		  border: 1px solid var(--ff-border);
+		  border-radius: var(--ff-radius-lg);
+		}
+		.mood-card { padding:18px; display:flex; align-items:center; gap:16px; }
+		.mood-emoji {
+		  font-size:80px;
+		  width:88px;
+		  height:88px;
+		  display:flex;
+		  align-items:center;
+		  justify-content:center;
+		  border-radius:20px;
+		  background: color-mix(in oklab, var(--ff-surface) 90%, black);
+		}
+
+		/* --- Compact stat chips --- */
+		.mini-stats {
+		  display:flex;
+		  flex-wrap:wrap;
+		  gap:8px;
+		  margin-top:6px;
+		}
+		.stat-chip {
+		  display:inline-flex;
+		  align-items:center;
+		  gap:8px;
+		  padding:6px 10px;
+		  border:1px solid var(--ff-border);
+		  border-radius:12px;
+		  background:color-mix(in oklab, var(--ff-surface) 92%, black);
+		  font-size:13px;
+		}
+
+		
+		.mood-score { font-size:42px; font-weight:900; line-height:1; }
+		.mood-sub { color: var(--ff-text-muted); margin-top:4px; font-size:13px; }
+		.emoji-bar {
+		  padding:10px;
+		  display:grid;
+		  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		  gap:8px;
+		}
+
+		.emoji-pill {
+		  display:flex; align-items:center; gap:10px;
+		  padding:10px 12px; border-radius:14px; border:1px solid var(--ff-border);
+		  background: color-mix(in oklab, var(--ff-surface) 90%, black);
+		  min-width:160px; justify-content:space-between;
+		}
+		.emoji-pill .left { display:flex; align-items:center; gap:10px; }
+		.emoji-pill .big { font-size:22px; }
+		.emoji-pill .pct { font-weight:700; }
+
+		/* Mobile-first sizing and stacking */
+		@media (max-width: 640px) {
+		  .mood-hero { grid-template-columns: 1fr; gap: 12px; }
+		  .mood-card { padding: 14px; gap: 12px; }
+		  .mood-emoji { font-size: 50px; width: 64px; height: 64px; border-radius: 12px; }
+		  .mood-score { font-size: 30px; }
+		  .mood-sub { font-size: 12px; margin-top: 2px; }
+		}
+
+		@media (min-width: 640px) {
+		  .mood-hero { grid-template-columns: minmax(260px, 1fr) 2fr; gap: 14px; }
+		  .emoji-bar { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+		}
+
+		
+	</style>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+	
+	<!-- ===== Privacy & Terms (Mobile bottom-sheets) CSS ===== -->
+	<style>
+	  .sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;z-index:50}
+	  .sheet-backdrop[aria-hidden="false"]{display:block}
+	  .sheet{position:fixed;left:0;right:0;bottom:0;background:#1a1325;color:#e5e7eb;border-radius:18px 18px 0 0;box-shadow:0 20px 60px rgba(0,0,0,.5);transform:translateY(100%);transition:transform .22s ease-out;max-height:85vh;overflow:auto;z-index:51}
+	  .sheet.open{transform:translateY(0)}
+	  .sheet .handle{width:44px;height:5px;border-radius:3px;background:#3b3350;margin:10px auto 6px}
+	  .sheet .inner{padding:16px 16px 20px}
+	  .sheet h2{margin:6px 0 10px;font-size:20px;color:#b88aff}
+	  .sheet p{line-height:1.55;color:#c9c9d1;margin:0 0 10px}
+	  .sheet .meta{color:#9aa;font-size:12px;margin-bottom:8px}
+	  .sheet .close-btn{display:inline-block;margin-top:6px;padding:10px 14px;border:0;border-radius:10px;background:#9b5de5;color:#fff;font-weight:600;cursor:pointer}
+	  .ff-footer{ text-align:center;font-size:14px;margin-top:24px;color:#9aa }
+	  .ff-footer a{ color:#b88aff;text-decoration:none }
+	  .ff-footer a:hover{ text-decoration:underline }
+	  @media (min-width: 768px) {
+		  .sheet{
+		    left:50%;
+		    right:auto;
+		    bottom:auto;
+		    top:50%;
+		    /* closed state (no .open): hidden + non-interactive */
+		    transform: translate(-50%, -40%);
+		    opacity: 0;
+		    pointer-events: none;
+		    border-radius:18px;
+		    max-height:80vh;
+		    width:min(720px,92vw);
+		  }
+		  .sheet.open{
+		    /* open state: visible + interactive */
+		    transform: translate(-50%, -50%);
+		    opacity: 1;
+		    pointer-events: auto;
+		  }
+		  .sheet .handle{ display:none }
+		  .sheet .inner{ padding:20px 22px 22px }
+		  .sheet h2{ font-size:22px }
+		}
+
+	  @media (prefers-reduced-motion:reduce){ .sheet{transition:none} }
+	  .no-scroll{ position:fixed;width:100%;overflow:hidden }
+	</style>
+	<!-- ===== End Privacy & Terms CSS ===== -->
+
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen" class="welcome-container">
+        <div class="logo brand-header">
+		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <span class="brand-title">FLASHFEEDBACK</span>
+		</div>
+
+        <div class="tagline">Instant feedback, zero fuss.</div>
+		<p style="margin-top:8px; opacity:.9;">
+		Turn real-world customer moments into simple, actionable insights — all from a single QR code.
+		</p>
+
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <h3>Scan. Tap. Done.</h3>
+				<p>Customers leave emoji feedback in seconds.</p>
+
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h3>See how you’re doing.</h3>
+				<p>Track happiness trends as they happen.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🏪</div>
+                <h3>One dashboard, all your spots.</h3>
+				<p>Perfect for cafés, salons, or chains.</p>
+            </div>
+        </div>
+
+        <div class="cta-buttons">
+            <button class="btn-primary" title="It only takes a minute to create your first QR." onclick="showSignup()">Get Started Free →</button>
+            <button class="btn-secondary" title="Explore what you and your customers would see — no sign-up needed." onclick="showDemo()">Try Demo First</button>
+
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="link-button" onclick="showLogin()">Already have an account? Log in</button>
+        </div>
+    </div>
+
+    <!-- Sign Up Form -->
+    <div id="signupScreen" class="signup-container" style="display: none;">
+        <div class="logo brand-header">
+		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <span class="brand-title">FLASHFEEDBACK</span>
+		</div>
+
+		<div class="form-title">
+            <h2>Create Your Free Account</h2>
+            <p>Start collecting feedback in minutes</p>
+        </div>
+
+        <div id="signupError" class="error-message" style="display: none;"></div>
+
+        <form id="signupForm" onsubmit="handleSignup(event)">
+            <div class="form-group">
+                <label for="businessName">Business Name</label>
+                <input type="text" id="businessName" required>
+				<div class="help-text" style="font-size:12px;color:#9aa;margin-top:6px;">
+					This appears on your customer feedback screen.
+				  </div>				  
+            </div>
+            <div class="form-group">
+                <label for="ownerName">Your Name</label>
+                <input type="text" id="ownerName" required>
+				<div class="help-text" style="font-size:12px;color:#9aa;margin-top:6px;">
+					We’ll use this to personalize your dashboard.
+				  </div>				  
+            </div>
+			<div class="form-group">
+			  <label for="signupLocationName">First Location Name <span style="opacity:.6">(optional)</span></label>
+			  <input type="text" id="signupLocationName" placeholder="e.g. Main Branch">
+			  <div style="font-size:12px;color:#9aa;margin-top:6px;">
+			    If you leave this blank we’ll use <em>Location 01</em>.
+			  </div>
+			</div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" required minlength="6">
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Create Account</button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="link-button" onclick="showWelcome()">← Back to welcome</button>
+            <span style="color: #ccc; margin: 0 10px;">|</span>
+            <button class="link-button" onclick="showLogin()">Already have an account?</button>
+        </div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginScreen" class="login-container" style="display: none;">
+        <div class="logo brand-header">
+		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <span class="brand-title">FLASHFEEDBACK</span>
+		</div>
+
+		<div class="form-title">
+			<h2>Welcome back 👋</h2>
+			<p style="opacity:.9;">Log in to see what your customers are saying.</p>
+		  </div>
+
+        <div id="loginError" class="error-message" style="display: none;"></div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="loginEmail">Email Address</label>
+                <input type="email" id="loginEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" required>
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Log In</button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="link-button" onclick="showWelcome()">← Back to welcome</button>
+            <span style="color: #ccc; margin: 0 10px;">|</span>
+            <button class="link-button" onclick="showSignup()">Need an account? Sign up</button>
+			<span style="color: #ccc; margin: 0 10px;">|</span>
+			<button class="link-button" onclick="showForgotPassword()">Forgot password?</button>
+        </div>
+    </div>
+
+	<!-- Forgot Password (request link) -->
+	<div id="forgotPasswordScreen" class="login-container" style="display:none;">
+	  <div class="logo brand-header">
+		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <span class="brand-title">FLASHFEEDBACK</span>
+		</div>
+
+	  <div class="form-title">
+	    <h2>Reset your password</h2>
+		<p style="opacity:.9;">We’ll email you a secure reset link.</p>
+	  </div>
+	
+	  <form id="forgotForm" onsubmit="handleRequestReset(event)">
+	    <div class="form-group">
+	      <label for="forgotEmail">Email Address</label>
+	      <input id="forgotEmail" type="email" required />
+	    </div>
+	    <button type="submit" class="btn-primary" style="width:100%;margin-top:10px;">Send reset link</button>
+	    <p id="forgotStatus" role="status" style="display:none; color:#4b5563; margin-top:10px;"></p>
+	    <p id="forgotError" style="display:none; color:#b91c1c; margin-top:10px;"></p>
+	  </form>
+	
+	  <div style="text-align:center; margin-top: 20px;">
+	    <button class="link-button" onclick="showLogin()">← Back to login</button>
+	  </div>
+	</div>
+	
+	<!-- Reset Password (deep link) -->
+	<div id="resetPasswordScreen" class="login-container" style="display:none;">
+	  <div class="logo brand-header">
+		<img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		<span class="brand-title">FLASHFEEDBACK</span>
+	  </div>
+
+	  <div class="form-title">
+	    <h2>Choose a new password</h2>
+	  </div>
+	
+	  <form id="resetForm" onsubmit="handleSubmitNewPassword(event)">
+	    <div class="form-group">
+	      <label for="newPassword">New password</label>
+	      <input id="newPassword" type="password" minlength="8" required />
+	    </div>
+	    <div class="form-group">
+	      <label for="confirmNewPassword">Confirm new password</label>
+	      <input id="confirmNewPassword" type="password" minlength="8" required />
+	    </div>
+	    <button type="submit" class="btn-primary" style="width:100%;margin-top:10px;">Update password</button>
+	    <p id="resetError" style="display:none; color:#b91c1c; margin-top:10px;"></p>
+	  </form>
+	
+	  <div style="text-align:center; margin-top:20px;">
+	    <button class="link-button" onclick="showLogin()">← Back to login</button>
+	  </div>
+	</div>
+
+
+	
+    <!-- Customer Feedback View -->
+    <div id="customerView" class="container" style="display: none;">
+        <div id="customerDemoNotice" style="display: none; background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px; text-align: center;">
+            <p style="color: #22c55e; margin: 0 0 15px 0;"><strong>Demo Mode</strong> - This is what your customers see!</p>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="showWelcome()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button>
+                <button onclick="toggleView()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">View as Admin</button>
+				 <button onclick="showSignup()"style="background: white; color: #4299e1; border: 2px solid #4299e1; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Sign Up!</button>
+            </div>
+        </div>
+        
+        <button id="customerLogoutBtn" class="logout-btn" onclick="logout()" style="display: none;">Logout</button>
+
+        <div class="header">
+            <h1>How was your experience?</h1>
+            <div class="location-display">
+                <span id="customerLocationDisplay"></span>
+            </div>
+        </div>
+        
+        <div class="feedback-section">
+            <div class="feedback-question">
+                Please rate your experience with us today
+            </div>
+            
+            <div class="emoji-buttons">
+                <button class="emoji-btn" data-sentiment="very-happy" onclick="selectSentiment('very-happy', this)"></button>
+                <button class="emoji-btn" data-sentiment="happy" onclick="selectSentiment('happy', this)"></button>
+                <button class="emoji-btn" data-sentiment="neutral" onclick="selectSentiment('neutral', this)"></button>
+                <button class="emoji-btn" data-sentiment="sad" onclick="selectSentiment('sad', this)"></button>
+                <button class="emoji-btn" data-sentiment="very-sad" onclick="selectSentiment('very-sad', this)"></button>
+            </div>
+            
+            <div class="optional-feedback">
+                <label for="additionalComments">Any additional feedback? (optional)</label>
+                <textarea id="additionalComments" placeholder="Optional comments..." rows="4" maxlength="500" aria-describedby="commentCounter"></textarea>
+					<div id="commentCounter" style="margin-top:6px;font-size:12px;color:#6b7280;">
+					  0 / 500
+					</div>
+            </div>
+            
+            <button class="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
+        </div>
+        
+       <div class="thank-you" id="thankYou">
+		  <h2>Thank you for your feedback! 🎉</h2>
+		  <p>Your opinion helps us improve our service.</p>
+		
+		  <div class="business-cta">
+		    <h3>Powered by <i>FLASHFEEDBACK</i></h3>
+		    <p>Get customer feedback like this for your business</p>
+		    <!-- changed: added id and new onclick -->
+		    <button id="learnMoreBtn" class="cta-button" onclick="onLearnMoreClick()">Learn more</button>
+		  </div>
+		</div>
+
+
+    </div>
+
+	<!-- Global loader overlay -->
+	<div id="globalLoader" class="loader-overlay">
+	  <div class="loader"></div>
+	</div>
+
+	
+    <!-- Admin View -->
+    <div id="adminView">
+        <!-- Navigation Drawer Overlay -->
+        <div class="nav-drawer-overlay" id="navDrawerOverlay" onclick="closeNavDrawer()"></div>
+
+        <!-- Navigation Drawer -->
+        <nav class="nav-drawer" id="navDrawer">
+            <button class="drawer-close-btn" onclick="closeNavDrawer()">✕</button>
+            <div class="drawer-header">
+                <div class="drawer-logo brand-title">FlashFeedback</div>
+            </div>
+            
+            <ul class="drawer-menu">
+                <li class="drawer-menu-item">
+                    <button class="drawer-menu-link active" onclick="showSection('Feedback')" data-section="Feedback">
+                        <span class="drawer-menu-icon">📊</span>
+                        <span>Feedback</span>
+                    </button>
+                </li>
+                <li class="drawer-menu-item">
+                    <button class="drawer-menu-link" onclick="showSection('locations')" data-section="locations">
+                        <span class="drawer-menu-icon">🏪</span>
+                        <span>Locations</span>
+                    </button>
+                </li>
+                <li class="drawer-menu-item">
+                    <button class="drawer-menu-link" onclick="showSection('qr')" data-section="qr">
+                        <span class="drawer-menu-icon">⬛</span>
+                        <span>QR Codes</span>
+                    </button>
+                </li>
+				<li class="drawer-menu-item">
+					  <button class="drawer-menu-link" onclick="showSection('settings')" data-section="settings">
+					    <span class="drawer-menu-icon">⚙️</span>
+					    <span>Settings</span>
+					  </button>
+					</li>
+
+            </ul>
+            
+            <!-- Bottom Navigation Item -->
+            <div style="margin-top: auto; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.2);">
+                <button class="drawer-menu-link" onclick="logout()" style="margin: 0; color: rgba(255,255,255,0.9);">
+                    <span class="drawer-menu-icon">🚪</span>
+                    <span>Log out</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Top App Bar -->
+        <header class="admin-topbar">
+            <button class="topbar-hamburger" onclick="openNavDrawer()" aria-label="Open menu">
+			  <img class="hamburger-img" src="https://proofplains.github.io/yayornay-mvp/Bolt%20Off-White%20Transparent%202.png" alt="">
+			</button>
+            <h1 class="topbar-title brand-title">FlashFeedback</h1>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="admin-content">
+            <section id="Feedback" class="content-section active">
+                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">Feedback Dashboard</h2>
+                
+				<div style="margin-bottom: 20px;">
+                    <label>Select Location: </label>
+                    <select id="FeedbackLocationSelect" onchange="updateFeedback()">
+                        <option value="all">All Locations</option>
+                    </select>
+                </div>
+				
+				<!-- Emoji-centric hero -->
+				<div class="mood-hero" id="moodHero">
+				  <div class="mood-card" aria-label="Overall customer mood">
+				    <div class="mood-emoji" id="moodEmoji" title="Calculated from emoji feedback">🙂</div>
+				    <div>
+				      <div class="mood-score"><span id="moodScore">—</span>/100</div>
+				      <div class="mood-sub">Overall customer mood (all feedback)</div>
+				    </div>
+				  </div>
+				
+				  <div class="emoji-bar" aria-label="Emoji distribution">
+				    <div class="emoji-pill">
+				      <div class="left"><span class="big">😍</span><span>Very happy</span></div>
+				      <div><span class="pct" id="pctVeryHappy">0%</span> · <span id="cntVeryHappy">0</span></div>
+				    </div>
+				    <div class="emoji-pill">
+				      <div class="left"><span class="big">😊</span><span>Happy</span></div>
+				      <div><span class="pct" id="pctHappy">0%</span> · <span id="cntHappy">0</span></div>
+				    </div>
+				    <div class="emoji-pill">
+				      <div class="left"><span class="big">😐</span><span>Neutral</span></div>
+				      <div><span class="pct" id="pctNeutral">0%</span> · <span id="cntNeutral">0</span></div>
+				    </div>
+				    <div class="emoji-pill">
+				      <div class="left"><span class="big">😞</span><span>Unhappy</span></div>
+				      <div><span class="pct" id="pctSad">0%</span> · <span id="cntSad">0</span></div>
+				    </div>
+				    <div class="emoji-pill">
+				      <div class="left"><span class="big">😭</span><span>Very unhappy</span></div>
+				      <div><span class="pct" id="pctVerySad">0%</span> · <span id="cntVerySad">0</span></div>
+				    </div>
+				  </div>
+				</div>
+
+				
+                
+                <!-- Compact chips for Total Feedback + Left Comments -->
+				<div class="mini-stats">
+				  <div class="stat-chip">🧮 Total feedback: <strong id="miniTotalFeedback">0</strong></div>
+				  <div class="stat-chip">📝 Left comments: <strong id="miniCommentsCount">0</strong> (<span id="miniCommentsPercent">0%</span>)</div>
+				</div>
+
+
+                <div style="margin-top: 30px;">
+                    <h3>Recent Feedback</h3>
+                    <div id="recentFeedbackList"></div>
+					<div id="recentPagination" style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px;">
+					  <button id="recentPrev" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">‹ Prev</button>
+					  <span id="recentPageInfo" style="font-size:12px; color:#6b7280;">Page 1 of 1</span>
+					  <button id="recentNext" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">Next ›</button>
+					</div>
+                </div>
+            </section>
+
+            <section id="locations" class="content-section">
+                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">Location Management</h2>
+                <div class="form-group">
+                    <input type="text" id="newLocationInput" placeholder="Enter location name" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; margin-right: 10px; width: 200px;">
+                    <button class="btn" onclick="addLocation()">Add Location</button>
+                </div>
+                
+                <div id="locationsList"></div>
+            </section>
+
+            <section id="qr" class="content-section">
+                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">QR Code Generator</h2>
+                <div style="margin-bottom: 20px;">
+                    <label>Generate QR Code for: </label>
+                    <select id="qrLocationSelect" onchange="generateQR()">
+                    </select>
+                </div>
+                
+                <div style="background: #212121; padding: 30px; border-radius: 15px; text-align: center; margin-top: 20px; border: 1px solid rgba(45, 55, 72, 0.06);">
+                    <h3>QR Code Sign Generator</h3>
+                    <div id="qrContainer"></div>
+                    <p>Generate a complete sign with call-to-action text</p>
+                    <button class="btn" onclick="generateSign()">Generate Customer Sign</button>
+                    <div id="generatedSign" style="display: none; margin-top: 20px; text-align: center;">
+                        <h4>Your Customer Sign is Ready!</h4>
+                        <button id="ffDownloadQrBtn" class="btn" style="margin-top:12px;">
+						  Download Sign (PNG)
+						</button>
+                        <div id="signImageContainer"></div>
+						
+                    </div>
+                </div>
+            </section>
+
+			<section id="settings" class="content-section">
+				  <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 20px; font-weight: 700;">Account Settings</h2>
+				
+				  <!-- Profile -->
+				  <div style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:20px;margin-bottom:20px;">
+				    <h3 style="margin-bottom:12px;">Profile</h3>
+				    <div class="form-group">
+				      <label for="settingsOwnerName">Your name</label>
+				      <input id="settingsOwnerName" type="text" placeholder="Owner name">
+				    </div>
+				    <div class="form-group">
+				      <label>Email (read-only)</label>
+				      <div id="settingsEmail" style="padding:12px;border:2px solid #e2e8f0;border-radius:8px;background: var(--ff-surface) !important"></div>
+				    </div>
+				    <div style="margin-top:8px;">
+				      <button class="btn" onclick="saveProfileSettings()">Save profile</button>
+				      <span id="settingsProfileStatus" style="margin-left:10px;color:#4b5563;"></span>
+				    </div>
+				    <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
+				    <h4 style="margin:0 0 10px 0;">Change password</h4>
+				    <div class="form-group">
+				      <label for="settingsNewPwd">New password</label>
+				      <input id="settingsNewPwd" type="password" minlength="8" placeholder="At least 8 characters">
+				    </div>
+				    <div class="form-group">
+				      <label for="settingsConfirmPwd">Confirm new password</label>
+				      <input id="settingsConfirmPwd" type="password" minlength="8">
+				    </div>
+				    <button class="btn" onclick="handleChangePassword()">Update password</button>
+				    <span id="settingsPwdStatus" style="margin-left:10px;color:#4b5563;"></span>
+				  </div>
+				
+				  <!-- Business -->
+				  <div style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:20px;margin-bottom:20px;">
+				    <h3 style="margin-bottom:12px;">Business</h3>
+				    <div class="form-group">
+				      <label for="settingsBusinessName">Business name</label>
+				      <input id="settingsBusinessName" type="text" placeholder="Business name">
+				    </div>
+				    <div class="form-group">
+				      <label for="settingsDefaultLocationSelect">Default location</label>
+				      <select id="settingsDefaultLocationSelect"></select>
+				    </div>
+				    <div class="form-group">
+				      <label for="settingsTimezoneSelect">Timezone</label>
+				      <select id="settingsTimezoneSelect">
+				        <option value="Europe/London">Europe/London</option>
+				        <option value="UTC">UTC</option>
+				        <option value="Europe/Dublin">Europe/Dublin</option>
+				        <option value="Europe/Paris">Europe/Paris</option>
+				        <option value="America/New_York">America/New_York</option>
+				        <option value="Asia/Tokyo">Asia/Tokyo</option>
+				      </select>
+				    </div>
+				    <div class="form-group">
+				      <label for="settingsLogoUrl">Business logo URL (optional)</label>
+				      <input id="settingsLogoUrl" type="url" placeholder="https://…">
+				    </div>
+				    <button class="btn" onclick="saveBusinessSettings()">Save business</button>
+				    <span id="settingsBusinessStatus" style="margin-left:10px;color:#4b5563;"></span>
+				  </div>
+				
+				  <!-- Security
+				  <div style="background:#fff;border:1px solid rgba(45,55,72,0.06);box-shadow:0 4px 16px rgba(45,55,72,0.08);border-radius:15px;padding:20px;">
+				    <h3 style="margin-bottom:12px;">Security</h3>
+				    <button class="btn" onclick="signOutEverywhere()">Sign out everywhere</button>
+				    <span style="margin-left:10px;color:#4b5563;">Use if a device is lost.</span>
+				  </div> -->
+				</section>
+
+        </main>
+    </div>
+
+	<!-- Comment Modal -->
+	<div id="commentModal" role="dialog" aria-modal="true" aria-labelledby="commentModalTitle"
+	     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999; padding:16px;">
+	  <div style="max-width:560px; margin:40px auto; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.2); overflow:hidden;">
+	    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #eee;">
+	      <h3 id="commentModalTitle" style="margin:0; font-size:16px; color:#111;">Customer comment</h3>
+	      <button id="commentModalClose" aria-label="Close"
+	              style="background:transparent; border:none; font-size:20px; line-height:1; cursor:pointer; padding:4px 8px;">×</button>
+	    </div>
+	    <div style="padding:16px;">
+	      <p id="commentModalBody" style="margin:0; white-space:pre-wrap; color:#111;"></p>
+	    </div>
+	  </div>
+	</div>
+
+	<!-- Right-hand account drawer -->
+	<div id="accountDrawerOverlay" onclick="closeAccountMenu()" aria-hidden="true"></div>
+	
+	<aside id="accountDrawer" class="drawer" aria-label="Account menu" role="complementary">
+	  <div class="drawer-header">
+	    <div class="drawer-logo" id="accountBusinessName">—</div>
+	    <div class="drawer-subtitle" id="accountUserEmail" style="opacity:.85;font-size:13px;margin-top:4px;">—</div>
+	  </div>
+	
+	
+	  <ul class="drawer-menu">
+	    <li class="drawer-menu-item">
+	      <button class="drawer-menu-link" onclick="openSettingsFromAccount()">
+	        <span class="drawer-menu-icon">⚙️</span>
+	        <span>Settings</span>
+	      </button>
+	    </li>
+	    <li class="drawer-menu-item">
+	      <button class="drawer-menu-link" onclick="logout()">
+	        <span class="drawer-menu-icon">⎋</span>
+	        <span>Log out</span>
+	      </button>
+	    </li>
+	  </ul>
+	</aside>
+
+
+	
+    <script type="module">
+        // --- Supabase client setup ---
+		import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+			const SUPABASE_URL = 'https://evediwsocfbalzbzdden.supabase.co';
+			const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2ZWRpd3NvY2ZiYWx6YnpkZGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzQ1NzcsImV4cCI6MjA3MzYxMDU3N30.Y6TGgEuk97iFuuZmfWvOkwXx88y7397rzUhwbDG0p9Q';
+
+			// This object lets your frontend talk to Supabase Auth + DB
+			const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+			window.supabase = supabase; // expose the client for console/debug use
+
+			// ---- Analytics helpers (events table already exists server-side) ----
+			let __ffBusinessId = null;
+			
+			async function getCurrentBusinessId() {
+			  if (__ffBusinessId) return __ffBusinessId;
+			  if (window.currentUser?.businessId) {
+			    __ffBusinessId = window.currentUser.businessId;
+			    return __ffBusinessId;
+			  }
+			  // Resolve from the authenticated user
+			  const { data: u } = await supabase.auth.getUser();
+			  const uid = u?.user?.id;
+			  if (!uid) return null;
+			
+			  // Find the first business owned by the user (mirrors your hydrate logic)
+			  const { data, error } = await supabase
+			    .from('businesses')
+			    .select('id')
+			    .eq('owner_id', uid)
+			    .order('created_at', { ascending: true })
+			    .limit(1);
+			  if (error || !data || !data[0]) return null;
+			
+			  __ffBusinessId = data[0].id;
+			  return __ffBusinessId;
+			}
+			
+			async function logEvent(eventType) {
+			  try {
+			    const bizId = await getCurrentBusinessId();
+			    if (!bizId) return; // silently skip if not authenticated/owner context
+			    await supabase.from('analytics_events').insert(
+			      { business_id: bizId, event_type: eventType },
+			      { returning: 'minimal' }
+			    );
+			  } catch (e) {
+			    // non-blocking
+			    console.warn('analytics log failed:', e?.message || e);
+			  }
+			}
+
+		
+			// Listen for password-recovery deep links and show the reset screen
+			supabase.auth.onAuthStateChange(async (event, session) => {
+			  if (event === 'PASSWORD_RECOVERY') {
+			    // The magic link established a temporary session; show reset UI
+			    showResetPassword();
+			  }
+
+			  // These two lines clear the cached business resolution and the “dashboard view logged” flag whenever the auth state changes, preventing cross-account mixups during QA or rapid sign-in/out.
+			  try { window.__ffBusinessId = null; } catch {}
+			  try { sessionStorage.removeItem('ff_dashboard_view_logged'); } catch {}
+				
+			  // (Optional) keep or add your SIGNED_IN / SIGNED_OUT handlers here if needed
+			});
+
+		
+		// --- Shape DB rows into the structure your UI already uses ---
+		function buildLocationsShape(locationsRows, feedbackRows) {
+		  const map = {};
+		  for (const loc of locationsRows || []) {
+		    map[loc.id] = {
+		      name: loc.name,
+		      is_active: (loc.is_active === false ? false : true),
+		      feedback: []
+		    };
+		  }
+		  for (const fb of feedbackRows || []) {
+		    if (!map[fb.location_id]) continue; // ignore stray rows
+		    map[fb.location_id].feedback.push({
+		      sentiment: fb.sentiment,            // 'very-happy' | 'happy' | ...
+		      timestamp: fb.submitted_at,         // ISO string from DB
+		      location: fb.location_id,           // keep same field name your UI uses
+		      comments: fb.comments ?? null
+		    });
+		  }
+		  return map;
+		}
+
+		// Instantly update one row's UI without a full re-render
+		function applyLocationRowState(id, isActive) {
+		  const row =
+		    document.querySelector('[data-location-id="' + id + '"]') ||
+		    document.querySelector('[data-id="' + id + '"]');
+		  if (!row) return;
+		
+		  // Update the toggle link text/state and its next-call target
+		  const toggle = row.querySelector('a.location-toggle');
+		  if (toggle) {
+		    toggle.textContent = isActive ? 'Deactivate' : 'Activate';
+		    toggle.setAttribute('data-active', String(isActive));
+		    // Ensure subsequent clicks call with the new desired value
+		    toggle.setAttribute('onclick', "return toggleLocationActive('" + id + "', " + (!isActive) + ")");
+		  }
+		
+		  // Add/remove the Inactive badge next to the name
+		  const nameSpan = row.querySelector('.location-name');
+		  const badge = nameSpan?.querySelector('.badge');
+		  if (!isActive && nameSpan && !badge) {
+		    const b = document.createElement('span');
+		    b.className = 'badge';
+		    b.style.cssText = 'margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;';
+		    b.textContent = 'Inactive';
+		    nameSpan.appendChild(b);
+		  } else if (isActive && badge) {
+		    badge.remove();
+		  }
+		}
+
+
+		
+		var currentView = 'welcome';
+        var selectedSentiment = null;
+        var currentLocation = 'main';
+        var currentUser = null;
+        var userDatabase = {};
+
+        // Initialize app (session-aware + safe fallback)
+		document.addEventListener('DOMContentLoaded', async () => {
+		  const urlParams = new URLSearchParams(window.location.search);
+		  const locationId = urlParams.get('location');
+		
+		  // 👇 NEW: detect Supabase recovery deeplink in the URL hash or query
+		  const isRecovery =
+		    (window.location.hash && window.location.hash.includes('type=recovery')) ||
+		    (new URLSearchParams(window.location.hash.slice(1)).get('type') === 'recovery') ||
+		    (new URLSearchParams(window.location.search).get('type') === 'recovery');
+		
+		  let booted = false;
+		
+		  try {
+		    // 1) Public QR view takes precedence
+		    if (locationId) {
+		      await showCustomerViewForLocation(locationId);
+		      booted = true;
+		      return;
+		    }
+		
+		    // 2) If we're in recovery mode, try to establish the recovery session first
+			if (isRecovery) {
+			  // Parse tokens from the hash
+			  const hash = new URLSearchParams(window.location.hash.slice(1));
+			  const at = hash.get('access_token');
+			  const rt = hash.get('refresh_token');
+			  const type = hash.get('type');
+			
+			  try {
+			    if (type === 'recovery' && at && rt) {
+			      // 2a) Establish the temporary recovery session
+			      const { data, error } = await supabase.auth.setSession({
+			        access_token: at,
+			        refresh_token: rt
+			      });
+			      if (error) throw error;
+			
+			      // 2b) Now it's safe to clean the URL and show the reset screen
+			      history.replaceState({}, document.title, window.location.pathname + '?flow=recovery');
+			      showResetPassword();
+			      booted = true;
+			      return;
+			    } else {
+			      // No tokens present -> likely a consumed/stripped link.
+			      // Show welcome with a clear banner.
+			      showWelcome();
+			      showError?.('loginError', 'Your reset link is missing or expired. Please request a new one from “Forgot password”.');
+			      booted = true;
+			      return;
+			    }
+			  } catch (err) {
+			    console.error('Failed to set recovery session:', err);
+			    showWelcome();
+			    showError?.('loginError', 'Could not start a reset session. Please request a new link and try again.');
+			    booted = true;
+			    return;
+			  }
+			}
+
+		
+		    // 3) Try to restore owner session (non-recovery)
+		    const { data: { session } } = await supabase.auth.getSession();
+		    if (session?.user) {
+		      await hydrateAndShowDashboard(session.user);
+		      booted = true;
+		      return;
+		    }
+		  } catch (e) {
+		    console.error('App boot error:', e);
+		  }
+		
+		  if (!booted) {
+		    showWelcome();
+		    scrollToTop?.();
+		  }
+		});
+
+
+
+        function showWelcome() {
+		  // Ensure drawer is closed and page can scroll
+		  try { closeNavDrawer(); } catch {}
+		  try { closeAccountMenu(); } catch {}	
+		  document.body.style.overflow = '';
+		
+		  hideAllScreens();
+		  hideAdminControls();
+		  document.getElementById('welcomeScreen').style.display = 'block';
+		  hideLoader?.();
+		  currentView = 'welcome';
+		}
+
+
+        function showSignup() {
+            hideAllScreens();
+            hideAdminControls();
+            document.getElementById('signupScreen').style.display = 'block';
+            currentView = 'signup';
+            clearFormErrors();
+        }
+
+        function showLogin() {
+            hideAllScreens();
+            hideAdminControls();
+            document.getElementById('loginScreen').style.display = 'block';
+            currentView = 'login';
+            clearFormErrors();
+        }
+
+        function showDemo() {
+            hideAllScreens();
+            document.getElementById('customerView').style.display = 'block';
+            document.getElementById('customerDemoNotice').style.display = 'block';
+            
+            resetCustomerView();
+            
+            window.demoAccount = {
+                userId: 'demo',
+                businessName: 'Demo Business',
+                ownerName: 'Demo User',
+                locations: {
+                    'demo': { 
+                        name: 'Demo', 
+                        feedback: [
+                            { sentiment: 'very-happy', timestamp: new Date(Date.now() - 3600000).toISOString(), location: 'demo', comments: 'Great service and amazing food!' },
+                            { sentiment: 'happy', timestamp: new Date(Date.now() - 7200000).toISOString(), location: 'demo', comments: null },
+                            { sentiment: 'neutral', timestamp: new Date(Date.now() - 10800000).toISOString(), location: 'demo', comments: 'Food was okay, service could be faster.' },
+                            { sentiment: 'sad', timestamp: new Date(Date.now() - 14400000).toISOString(), location: 'demo', comments: null }
+                        ]
+                    }
+                }
+            };
+            
+            currentLocation = 'demo';
+            updateCustomerLocationDisplay(window.demoAccount.locations);
+            showDemoControls();
+            currentView = 'customer-demo';
+        }
+
+        function hideAllScreens() {
+		  var screens = [
+		    'welcomeScreen',
+		    'signupScreen',
+		    'loginScreen',
+		    'customerView',
+		    'adminView',
+		    'forgotPasswordScreen',   // 👈 add
+		    'resetPasswordScreen'     // 👈 add
+		  ];
+		  screens.forEach(function(screen) {
+		    document.getElementById(screen).style.display = 'none';
+		  });
+		}
+
+
+        function hideAdminControls() {
+            ['customerAdminToggle', 'customerLogoutBtn', 'customerDemoNotice'].forEach(function(id) {
+                var element = document.getElementById(id);
+                if (element) element.style.display = 'none';
+            });
+        }
+
+        function showAdminControls() {
+            var toggle = document.getElementById('customerAdminToggle');
+            var logout = document.getElementById('customerLogoutBtn');
+            if (toggle) toggle.style.display = 'flex';
+            if (logout) logout.style.display = 'block';
+        }
+
+        function showDemoControls() {
+            var toggle = document.getElementById('customerAdminToggle');
+            if (toggle) toggle.style.display = 'flex';
+        }
+
+        function resetCustomerView() {
+            document.querySelector('.feedback-section').style.display = 'block';
+            document.getElementById('thankYou').style.display = 'none';
+            selectedSentiment = null;
+            document.querySelectorAll('.emoji-btn').forEach(function(btn) {
+                btn.classList.remove('selected');
+            });
+            document.querySelector('.submit-btn').classList.remove('enabled');
+            document.getElementById('additionalComments').value = '';
+			updateCommentCounter();
+        }
+
+        function clearFormErrors() {
+            ['signupError', 'loginError'].forEach(function(id) {
+                var element = document.getElementById(id);
+                if (element) {
+                    element.style.display = 'none';
+                    element.textContent = '';
+                }
+            });
+        }
+
+        function showError(elementId, message) {
+            var element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.style.display = 'block';
+            }
+        }
+
+        async function showCustomerViewForLocation(locationId) {
+		  hideAllScreens();
+		  hideAdminControls();
+		  document.getElementById('customerView').style.display = 'block';
+		
+		  currentLocation = locationId;
+		
+		  // Look up the real location row (from public view)
+			const locRow = await getLocationById(locationId);
+			
+			// If location is inactive, show “closed” message and stop
+			if (locRow && locRow.is_active === false) {
+			  const displayName = [locRow.business_name?.trim(), (locRow.name || 'Unknown Location').trim()]
+			    .filter(Boolean).join(' ').trim();
+			  setLocationName(displayName);
+			
+			  const form = document.getElementById('customerForm');
+			  if (form) form.style.display = 'none';
+			  const closed = document.getElementById('locationClosedNotice') || document.createElement('div');
+			  closed.id = 'locationClosedNotice';
+			  closed.className = 'card notice';
+			  closed.innerHTML = '<p>This location is currently closed and cannot accept new feedback.</p>';
+			  document.getElementById('customerView')?.appendChild(closed);
+			  return;
+			}
+			
+			// Compose: "BusinessName LocationName"
+			const displayName = [
+			  (locRow?.business_name || '').trim(),
+			  (locRow?.name || 'Unknown Location').trim()
+			].filter(Boolean).join(' ').trim();
+			
+			setLocationName(displayName);
+			
+			// Keep existing display function happy (expects a map keyed by currentLocation)
+			const locations = {};
+			locations[locationId] = { name: displayName, feedback: [] };
+			updateCustomerLocationDisplay(locations);
+
+
+		
+		  currentView = 'customer';
+		  hideLoader?.(); // ensure loader is not left on
+		}
+
+
+        function getLocationDisplayName(locationId) {
+            if (locationId === 'demo') return 'Demo Restaurant';
+            return locationId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
+
+        function goToSignup() {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            showWelcome();
+        }
+
+        async function handleSignup(event) {
+		  event.preventDefault();
+		  clearFormErrors?.(); // keep if you already have this helper
+
+		  const businessName = document.getElementById('businessName').value.trim();
+		  const ownerName    = document.getElementById('ownerName').value.trim();
+		  const email        = document.getElementById('email').value.trim().toLowerCase();
+		  const password     = document.getElementById('password').value;
+		  const confirmPwd   = document.getElementById('confirmPassword').value;
+		  const locationName = (document.getElementById('signupLocationName')?.value || '').trim() || 'Location 01';
+
+		  // Basic client-side checks
+		  if (!businessName || !ownerName || !email || !password || !confirmPwd) {
+			showError('signupError', 'Please fill in all fields'); return;
+		  }
+		  if (password !== confirmPwd) {
+			showError('signupError', 'Passwords do not match'); return;
+		  }
+		  if (password.length < 6) {
+			showError('signupError', 'Password must be at least 6 characters long'); return;
+		  }
+		  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			showError('signupError', 'Please enter a valid email address'); return;
+		  }
+
+		  // 1) Create auth user in Supabase
+		  const { data: signup, error: authErr } = await supabase.auth.signUp({ email, password });
+		  if (authErr) { showError('signupError', authErr.message); return; }
+		  const user = signup.user;
+		  if (!user) { showError('signupError', 'Please check your email to confirm your account.'); return; }
+
+		  try {
+			// 2) Create business owned by this user
+			const { data: biz, error: bizErr } = await supabase
+			  .from('businesses')
+			  .insert({ name: businessName, owner_id: user.id, owner_name: ownerName, timezone: 'Europe/London' })
+			  .select()
+			  .single();
+			if (bizErr) throw bizErr;
+
+			// 3) Add membership (owner)
+			const { error: buErr } = await supabase
+			  .from('business_users')
+			  .insert({ business_id: biz.id, user_id: user.id, role: 'owner' });
+			if (buErr) throw buErr;
+
+			// 4) Create first location (uses optional name or falls back to "Location 01")
+			const { data: loc, error: locErr } = await supabase
+			  .from('locations')
+			  .insert({ business_id: biz.id, name: locationName, is_active: true })
+			  .select()
+			  .single();
+			if (locErr) throw locErr;
+			
+			// Set as default location on the business
+			await supabase
+			  .from('businesses')
+			  .update({ default_location_id: loc.id })
+			  .eq('id', biz.id);
+
+			// 5) Build the in-memory shape your UI expects
+			currentUser = {
+			  userId: user.id,
+			  businessId: biz.id,
+			  businessName,
+			  ownerName,
+			  email,
+			  locations: buildLocationsShape([loc], [])
+			};
+			currentLocation = loc.id;
+			// also expose for console/debug
+			window.currentUser = currentUser;
+			window.currentLocation = currentLocation;
+			currentUser.timezone = 'Europe/London';
+			currentUser.defaultLocationId = loc.id;
+
+			// 6) Open your existing admin UI
+			showAdminDashboard();
+
+			// === Onboarding: land on QR generator immediately and pre-populate ===
+			try {
+			  // show the QR section
+			  showSection('qr');
+			
+			  // pre-select the newly created location in the QR dropdown
+			  const sel = document.getElementById('qrLocationSelect');
+			  if (sel && window.currentLocation) {
+			    sel.value = window.currentLocation;
+			  }
+			
+			  // build the QR automatically; users can hit Download right away
+			  if (typeof generateQR === 'function') { generateQR(); }
+			  if (typeof generateSign === 'function') { 
+			    // optional: if you want the full sign ready instantly
+			    generateSign();
+			  }
+			} catch (e) {
+			  console.warn('onboarding→QR jump failed:', e?.message || e);
+			}
+
+			  
+			// 6b) Brand/UI bits
+			renderBranding();
+			updateAvatarImage();
+			updateAccountMenuHeader();  
+			  
+		  } catch (e) {
+			console.error(e);
+			showError('signupError', e.message || 'Error creating your account.');
+		  }
+		}
+
+		// Re-usable path after we know "user" is authenticated (fresh login or restored session)
+		async function hydrateAndShowDashboard(user) {
+		  // 2) Load or create business
+		  let { data: bizRows, error: bizErr } = await supabase
+		    .from('businesses')
+		    .select('*')
+		    .eq('owner_id', user.id)
+		    .order('created_at', { ascending: true })
+		    .limit(1);
+		  if (bizErr) throw bizErr;
+		
+		  let business = bizRows && bizRows[0];
+		  if (!business) {
+		    const { data: newBiz, error: nbErr } = await supabase
+		      .from('businesses')
+		      .insert({ name: 'My Business', owner_id: user.id })
+		      .select()
+		      .single();
+		    if (nbErr) throw nbErr;
+		
+		    const { error: buErr } = await supabase
+		      .from('business_users')
+		      .insert({ business_id: newBiz.id, user_id: user.id, role: 'owner' });
+		    if (buErr) throw buErr;
+		
+		    const { error: blErr } = await supabase
+		      .from('locations')
+		      .insert({ business_id: newBiz.id, name: `Location 01` })
+		      .select()
+		      .single();
+		    if (blErr) throw blErr;
+		
+		    business = newBiz;
+		  }
+		
+		  // 3) Load locations (create one if none)
+		  let { data: locRows, error: locErr } = await supabase
+		    .from('locations')
+		    .select('*')
+		    .eq('business_id', business.id)
+		    .order('created_at', { ascending: true });
+		  if (locErr) throw locErr;
+		
+		  if (!locRows || locRows.length === 0) {
+		    const { data: newLoc, error: newLocErr } = await supabase
+		      .from('locations')
+		      .insert({ business_id: business.id, name: `Location 01` })
+		      .select()
+		      .single();
+		    if (newLocErr) throw newLocErr;
+		    locRows = [newLoc];
+		  }
+		
+		  // 4) Load feedback
+		  const { data: fbRows, error: fbErr } = await supabase
+		    .from('feedback')
+		    .select('*')
+		    .eq('business_id', business.id)
+		    .order('submitted_at', { ascending: true });
+		  if (fbErr) throw fbErr;
+		
+		  // 5) Set state
+		  currentUser = {
+			  userId: user.id,
+			  businessId: business.id,
+			  businessName: business.name,
+			  ownerName: business.owner_name || '',
+			  email: user.email || '',
+			  timezone: business.timezone || 'Europe/London',
+			  defaultLocationId: business.default_location_id || null,
+			  logoUrl: business.logo_url || '',
+			  locations: buildLocationsShape(locRows, fbRows)
+			};
+			renderBranding();		  
+			
+		  currentLocation = (business.default_location_id && locRows.some(l => l.id === business.default_location_id))
+			  ? business.default_location_id
+			  : (locRows?.[0]?.id || null);
+
+		
+		// 6) Render dashboard + UI
+		showAdminDashboard();
+		
+		// 6b) Brand/UI bits
+		renderBranding();
+		updateAvatarImage();
+		updateAccountMenuHeader();
+		
+		if (currentUser && currentUser.locations) {
+		  updateLocationSelects();
+		  updateLocationsList();
+		  updateFeedback();
+		}
+
+		  // pull fresh rows (if any changed while you were away)
+		  refreshFeedbackFromServer?.();
+		}
+
+		//loading animation helper
+		function showLoader() {
+		  document.getElementById('globalLoader').style.display = 'flex';
+		}
+		function hideLoader() {
+		  document.getElementById('globalLoader').style.display = 'none';
+		}
+
+		// Show customer branding
+		function renderBranding() {
+		  // Keep product branding (not white-labeled)
+		  const drawerLogo = document.querySelector('.drawer-logo');
+		  const topbarTitle = document.querySelector('.topbar-title');
+		  if (drawerLogo) drawerLogo.textContent = 'FlashFeedback';
+		  if (topbarTitle) topbarTitle.textContent = 'FlashFeedback';
+		
+		  // Ensure avatar exists on the right of the top bar and reflects current logoUrl
+		  ensureTopbarAvatar();
+		  updateAvatarImage();
+		
+		  // Keep the account drawer header updated
+		  updateAccountMenuHeader();
+		
+		  // Optional: hide Settings/Logout in the left drawer now that they live in the account menu
+		  hideLeftMenuItems();
+		}
+
+		// Simple generic profile SVG icon (fallback)
+		const PROFILE_SVG = `
+		<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+		  <circle cx="12" cy="8" r="4"></circle>
+		  <path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path>
+		</svg>`;
+		
+		// Create the topbar avatar button if missing
+		function ensureTopbarAvatar() {
+		  if (document.getElementById('accountAvatarBtn')) return;
+		  const topbar = document.querySelector('.admin-topbar');
+		  if (!topbar) return;
+		
+		  const btn = document.createElement('button');
+		  btn.id = 'accountAvatarBtn';
+		  btn.type = 'button';
+		  btn.setAttribute('aria-label', 'Open account menu');
+		  btn.addEventListener('click', openAccountMenu);
+		  topbar.appendChild(btn);
+		}
+		
+		// Update the avatar image using business logo URL or fallback
+		function updateAvatarImage() {
+		  const btn = document.getElementById('accountAvatarBtn');
+		  if (!btn) return;
+		
+		  const logo = (currentUser && currentUser.logoUrl) ? String(currentUser.logoUrl).trim() : '';
+		  if (!logo) {
+		    btn.innerHTML = PROFILE_SVG;
+		    return;
+		  }
+		
+		  // Try to load the image; on error use fallback icon
+		  const img = new Image();
+		  img.alt = 'Account';
+		  img.onload = () => { btn.innerHTML = ''; btn.appendChild(img); };
+		  img.onerror = () => { btn.innerHTML = PROFILE_SVG; };
+		  img.src = logo;
+		}
+		
+		// Right drawer open/close
+		function openAccountMenu() {
+		  document.body.classList.add('account-drawer-open');
+		  // Close with Esc
+		  const onKey = (e) => { if (e.key === 'Escape') closeAccountMenu(); };
+		  document.addEventListener('keydown', onKey, { once: true });
+		}
+		function closeAccountMenu() {
+		  document.body.classList.remove('account-drawer-open');
+		}
+		
+		function openSettingsFromAccount() {
+		  closeAccountMenu();
+		  showSection('settings');
+		}
+		
+		// Populate Business Name + Email in account drawer header
+		function updateAccountMenuHeader() {
+		  const nameEl = document.getElementById('accountBusinessName');
+		  const emailEl = document.getElementById('accountUserEmail');
+		  if (nameEl) nameEl.textContent = currentUser?.businessName || '—';
+		  if (emailEl) emailEl.textContent = currentUser?.email || '—';
+		}
+		
+		// Hide/move items from the left drawer (best-effort; safe if absent)
+		function hideLeftMenuItems() {
+		  // Only touch the LEFT drawer
+		  const leftDrawer = document.getElementById('navDrawer');
+		  if (!leftDrawer) return;
+		
+		  // Hide Settings in the left drawer
+		  leftDrawer.querySelectorAll('.drawer-menu-link[data-section="settings"]').forEach(el => {
+		    const li = el.closest('li');
+		    if (li) li.remove(); else el.remove();
+		  });
+		
+		  // Hide the left-drawer "Log out" (bottom button or any list item)
+		  Array.from(leftDrawer.querySelectorAll('.drawer-menu-link, .drawer-menu-item button'))
+		    .filter(el => /log\s*out/i.test(el.textContent || ''))
+		    .forEach(el => {
+		      const li = el.closest('li');
+		      if (li) { li.remove(); return; }
+		      // bottom container is a <div> wrapping the button — remove that
+		      if (el.parentElement) el.parentElement.remove();
+		      else el.remove();
+		    });
+		}
+
+
+		
+		// Supabase-backed login with self-heal and correct ordering
+		async function handleLogin(event) {
+		  try {
+		    if (event && event.preventDefault) event.preventDefault();
+		    clearFormErrors?.();
+		
+		    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+		    const password = document.getElementById('loginPassword').value;
+		
+		    if (!email || !password) {
+		      showError?.('loginError', 'Please enter both email and password');
+		      return;
+		    }
+
+			showLoader(); // 👈 start spinner
+			  
+		    const { data: login, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+		    if (loginErr) {
+		      showError?.('loginError', loginErr.message || 'Login failed');
+		      hideLoader();
+			  return;
+		    }
+		
+		    const user = login.user;
+		    await hydrateAndShowDashboard(user);
+
+			hideLoader(); // 👈 stop once dashboard is ready
+			  
+		  } catch (e) {
+		    console.error(e);
+		    showError?.('loginError', e.message || 'There was a problem loading your account.');
+			hideLoader(); // 👈 ensure stop on error
+		  }
+		}
+
+
+        function showAdminDashboard() {
+            hideAllScreens();
+            var adminView = document.getElementById('adminView');
+            adminView.style.display = 'flex';
+            
+            currentView = 'admin';
+            
+            var demoNotice = document.getElementById('demoNotice');
+            if (demoNotice) demoNotice.remove();
+            
+            var logoutBtn = adminView.querySelector('.logout-btn');
+			if (logoutBtn) {
+			  logoutBtn.style.display = 'block';
+			  logoutBtn.textContent = 'Log out'; // rename from “Logout”
+			}
+
+            
+            updateLocationSelects();
+            showSection('Feedback');
+
+			// Log a dashboard view once per session
+			if (!sessionStorage.getItem('ff_dashboard_view_logged')) {
+			  sessionStorage.setItem('ff_dashboard_view_logged', '1');
+			  logEvent('dashboard_view');
+			}
+
+			
+			// 👇 ensure we land at the very top on mobile/desktop
+			scrollToTop();
+			hideLoader?.();
+			}
+
+        async function logout() {
+		  // Close drawer + restore scrolling (mobile safety)
+		  try { closeNavDrawer(); } catch {}
+		  try { closeAccountMenu(); } catch {}	
+		  document.body.style.overflow = '';
+		  hideLoader?.();
+		  // Optional: brief UI disable to avoid double-taps
+		  const logoutBtns = document.querySelectorAll('.logout-btn');
+		  logoutBtns.forEach(btn => btn.disabled = true);
+		
+		  try {
+		    // 1) Tell Supabase to end the session (clears its storage keys)
+		    const { error } = await supabase.auth.signOut();
+		    if (error) throw error;
+		  } catch (e) {
+		    console.warn('Supabase signOut error:', e?.message || e);
+		    // 2) Belt & braces: nuke any stray auth keys if signOut fails or is offline
+		    try {
+		      const toDelete = [];
+		      for (let i = 0; i < localStorage.length; i++) {
+		        const k = localStorage.key(i);
+		        // Supabase v2 uses "sb-" prefix; older libs may use "supabase." keys
+		        if (k && (k.startsWith('sb-') || k.startsWith('supabase.'))) {
+		          toDelete.push(k);
+		        }
+		      }
+		      toDelete.forEach(k => localStorage.removeItem(k));
+		    } catch {}
+		  }
+		
+		  // 3) Clear in-memory app state
+		  currentUser = null;
+		  window.currentUser = null;
+		  currentLocation = 'main';
+		  window.currentLocation = 'main';
+		  // 3b) Immediately refresh account drawer UI to clear stale name/email/avatar
+          updateAccountMenuHeader?.();
+		  updateAvatarImage?.();
+		
+		  // 4) Land cleanly on Welcome (and ensure top-of-page)
+		  showWelcome();
+		  scrollToTop?.();
+		
+		  // 5) Re-enable buttons
+		  logoutBtns.forEach(btn => btn.disabled = false);
+		}
+
+
+
+        function updateCustomerLocationDisplay(locations) {
+		  const display = document.getElementById('customerLocationDisplay');
+		  const ty = document.getElementById('thankYouLocationDisplay');
+		
+		  // Base location name (from the passed map)
+		  const locationName = locations[currentLocation]?.name || 'Unknown Location';
+		
+		  // Prefix with business name when logged-in; empty when public/QR
+		  const businessName = currentUser?.businessName ? String(currentUser.businessName).trim() : '';
+		
+		  // Compose "Business Location" (no extra spaces if biz missing)
+		  const composed = [businessName, locationName].filter(Boolean).join(' ').trim();
+		
+		  if (display) display.textContent = composed;
+		  if (ty) ty.textContent = composed;
+		}
+
+
+        function selectSentiment(sentiment, button) {
+            document.querySelectorAll('.emoji-btn').forEach(function(btn) {
+                btn.classList.remove('selected');
+            });
+            
+            button.classList.add('selected');
+            selectedSentiment = sentiment;
+            document.querySelector('.submit-btn').classList.add('enabled');
+        }
+
+       async function submitFeedback() {
+		  if (!selectedSentiment) return;
+		
+		  const commentsEl = document.getElementById('additionalComments');
+		  const comments = (commentsEl?.value || '').trim() || null;
+		
+		  // Optimistic local object for UI/fallbacks
+		  const localItem = {
+		    sentiment: selectedSentiment,
+		    timestamp: new Date().toISOString(),
+		    location: currentLocation,
+		    comments
+		  };
+		
+		  showLoader(); // 👈 show while processing
+		  try {
+		    // 1) Derive display name on public QR view (no need to set businessId)
+		    let businessId = currentUser?.businessId || null;
+		
+		    if (!businessId && currentLocation) {
+		      const locRow = await getLocationById(currentLocation);
+		
+		      // If inactive, show message and stop cleanly
+		      if (locRow && locRow.is_active === false) {
+		        try { showToast?.('This location is closed and cannot accept new feedback.', 'error'); } catch {}
+		        hideLoader?.();
+		        document.getElementById('submitFeedbackBtn')?.removeAttribute('disabled');
+		        return;
+		      }
+		
+		      const displayName = [
+		        (locRow?.business_name || '').trim(),
+		        (locRow?.name || 'Unknown Location').trim()
+		      ].filter(Boolean).join(' ').trim();
+		      setLocationName(displayName);
+		    }
+		
+		    // 2) Always attempt DB insert when we have a location_id (trigger fills business_id)
+		    if (currentLocation) {
+		      const safeComments = comments ? comments.slice(0, 500) : null;
+		
+		      const { error } = await supabase
+		        .from('feedback')
+		        .insert({
+		          location_id: currentLocation,
+		          sentiment: selectedSentiment,
+		          comments: safeComments
+		        }, { returning: 'minimal' });
+		
+		      if (error) throw error;
+		
+		      // Mirror in-memory state for instant UI if logged in
+		      const ts = localItem.timestamp;
+		      if (currentUser?.locations?.[currentLocation]) {
+		        const arr = currentUser.locations[currentLocation].feedback || [];
+		        arr.push({
+		          sentiment: localItem.sentiment,
+		          timestamp: ts,
+		          location: currentLocation,
+		          comments: localItem.comments
+		        });
+		        currentUser.locations[currentLocation].feedback = arr;
+		        updateFeedback();
+		      }
+		    } else {
+		      // No location_id (shouldn't happen on QR page) — local fallback
+		      const storageKey = 'feedback_' + currentLocation;
+		      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+		      existing.push(localItem);
+		      localStorage.setItem(storageKey, JSON.stringify(existing));
+		      updateFeedback();
+		    }
+		  } catch (e) {
+		    console.error(e);
+		
+		    // Fallback only on failure
+		    const storageKey = 'feedback_' + currentLocation;
+		    const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+		    existing.push(localItem);
+		    localStorage.setItem(storageKey, JSON.stringify(existing));
+		    updateFeedback();
+		
+		    alert(e.message || 'Could not submit feedback (saved locally, will not appear on dashboard).');
+		  }
+		
+		  hideLoader(); // 👈 always hide before thank-you UI
+		
+		  // 4) Thank-you UI
+		  const section = document.querySelector('.feedback-section');
+		  if (section) section.style.display = 'none';
+		  const thankYouDiv = document.getElementById('thankYou');
+		  if (thankYouDiv) thankYouDiv.style.display = 'block';
+		
+		  const businessCta = thankYouDiv?.querySelector?.('.business-cta');
+		  if (businessCta) {
+		    businessCta.style.display =
+		      (currentView === 'customer-demo') ||
+		      (currentUser && currentView === 'customer')
+		        ? 'none'
+		        : 'block';
+		  }
+		
+		  if (currentView === 'customer-demo') {
+		    setTimeout(showDemoAdmin, 2000);
+		  }
+		}
+
+
+
+        function showDemoAdmin() {
+            hideAllScreens();
+            var adminView = document.getElementById('adminView');
+            adminView.style.display = 'flex';
+            
+            currentUser = null;
+            currentView = 'admin-demo';
+			// Ensure the account drawer reflects demo (no user) immediately
+			updateAccountMenuHeader?.();
+			updateAvatarImage?.();
+            
+            var sidebar = adminView.querySelector('.admin-sidebar');
+            if (sidebar) {
+                sidebar.classList.remove('expanded');
+                applySidebarStyling();
+            }
+            
+            var logoutBtn = adminView.querySelector('.logout-btn');
+            if (logoutBtn) logoutBtn.style.display = 'none';
+            
+            var contentArea = adminView.querySelector('.admin-content');
+            if (contentArea) {
+                var existingNotice = document.getElementById('demoNotice');
+                if (existingNotice) existingNotice.remove();
+                
+                var notice = document.createElement('div');
+                notice.id = 'demoNotice';
+                notice.style.cssText = 'background: #e8f5e8; border: 1px solid #4caf50; border-radius: 8px; padding: 15px; margin: 20px; text-align: center;';
+				notice.innerHTML = '<p style="color: #22c55e; margin: 0 0 15px 0;"><strong>Demo Mode</strong> - This is what YOU will see!</p><div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;"><button onclick="showWelcome()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">← Back to Welcome</button><button onclick="toggleView()" style="background: #4299e1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">View as Customer</button><button onclick="showSignup()"style="background: white; color: #4299e1; border: 2px solid #4299e1; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Sign Up!</button></div>';
+                contentArea.insertBefore(notice, contentArea.firstChild);
+            }
+            
+            updateLocationSelects();
+            showSection('Feedback');
+        }
+
+        function openNavDrawer() {
+		  var drawer = document.getElementById('navDrawer');
+		  var overlay = document.getElementById('navDrawerOverlay');
+		  
+		  if (drawer && overlay) {
+		    drawer.classList.add('open');
+		    overlay.classList.add('open');
+		
+		    // Enable scrolling inside the drawer on mobile
+		    drawer.style.overflowY = 'auto';
+		    drawer.style.maxHeight = '100vh';
+		    drawer.style.webkitOverflowScrolling = 'touch'; // iOS momentum scroll
+		    drawer.style.overscrollBehavior = 'contain';
+		
+		    // Make sure there is a bit of padding at the bottom so last items are tappable
+		    // (Non-destructive: only adds once.)
+		    if (!document.getElementById('navDrawerBottomSpacer')) {
+		      var spacer = document.createElement('div');
+		      spacer.id = 'navDrawerBottomSpacer';
+		      spacer.style.height = '96px';  // space above the device bottom edge / gesture bar
+		      spacer.style.flexShrink = '0';
+		      drawer.appendChild(spacer);
+		    }
+		
+		    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+		  }
+		}
+
+
+        function closeNavDrawer() {
+            var drawer = document.getElementById('navDrawer');
+            var overlay = document.getElementById('navDrawerOverlay');
+            
+            if (drawer && overlay) {
+                drawer.classList.remove('open');
+                overlay.classList.remove('open');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+        }
+
+        function updateLocationSelects() {
+		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+		  const defaultId = currentUser?.defaultLocationId || null;
+		
+		  ['FeedbackLocationSelect', 'qrLocationSelect', 'settingsDefaultLocationSelect'].forEach(function(selectId) {
+		    const select = document.getElementById(selectId);
+		    if (!select) return;
+		
+		    // Feedback gets an "All" option
+		    if (selectId === 'FeedbackLocationSelect') {
+		      select.innerHTML = '<option value="all">All Locations</option>';
+		    } else {
+		      select.innerHTML = '';
+		    }
+		
+		    Object.keys(locations).forEach(function(id) {
+		      const opt = document.createElement('option');
+		      opt.value = id;
+		      opt.textContent = locations[id].name;
+		      select.appendChild(opt);
+		    });
+		
+		    // Preselect default where it makes sense
+		    if (defaultId && locations[defaultId]) {
+		      try { select.value = selectId === 'FeedbackLocationSelect' ? (select.value || 'all') : defaultId; } catch {}
+		    } else {
+		      // Fallback to first location (except Feedback which keeps "all")
+		      if (selectId !== 'FeedbackLocationSelect') {
+		        const first = Object.keys(locations)[0];
+		        if (first) select.value = first;
+		      }
+		    }
+		  });
+		}
+
+		// === Emoji-centric mood score helpers ===
+		const SENTIMENT_WEIGHT = { 'very-happy': 2, 'happy': 1, 'neutral': 0, 'sad': -1, 'very-sad': -2 };
+		
+		function computeMoodScoreFromCounts(counts) {
+		  const total = Object.values(counts).reduce((a,b)=>a+b, 0);
+		  if (!total) return null;
+		  const weighted = (counts['very-happy']*2) + (counts['happy']*1) + (counts['neutral']*0) + (counts['sad']*-1) + (counts['very-sad']*-2);
+		  // normalize -2..+2 -> -1..+1 by dividing by 2, then scale to 0..100
+		  const raw = (weighted / total) / 2;
+		  return Math.round((raw + 1) * 50);
+		}
+		function pickEmojiByScore(score) {
+		  if (score == null) return '🙂';
+		  if (score >= 85) return '😍';
+		  if (score >= 65) return '😊';
+		  if (score >= 45) return '😐';
+		  if (score >= 25) return '😞';
+		  return '😭';
+		}
+		function pct(n,total){ return total > 0 ? Math.round((n/total)*100)+'%' : '0%'; }
+
+
+        function updateFeedback() {
+                var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+			    var selectedLocation = document.getElementById('FeedbackLocationSelect')?.value || 'all';
+			    var allFeedback = [];
+			    
+			    if (selectedLocation === 'all') {
+			        Object.values(locations).forEach(function(location) {
+			            if (location.feedback) {
+			                allFeedback = allFeedback.concat(location.feedback);
+			            }
+			        });
+			    } else if (locations[selectedLocation]?.feedback) {
+			        allFeedback = locations[selectedLocation].feedback;
+			    }
+			    
+			    var total = allFeedback.length;
+			    var counts = { 'very-happy': 0, 'happy': 0, 'neutral': 0, 'sad': 0, 'very-sad': 0 };
+			    var commentsCount = 0;
+			    
+			    allFeedback.forEach(function(item) {
+			        counts[item.sentiment] = (counts[item.sentiment] || 0) + 1;
+			        if (item.comments && item.comments.trim()) {
+			            commentsCount++;
+			        }
+			    });
+			    
+			    // Existing stat cards (kept)
+			    var percentages = {
+			        'totalFeedback': total,
+			        'commentsPercent': total > 0 ? Math.round((commentsCount / total) * 100) + '%' : '0%',
+			        'veryHappyPercent': total > 0 ? Math.round((counts['very-happy'] / total) * 100) + '%' : '0%',
+			        'happyPercent': total > 0 ? Math.round((counts['happy'] / total) * 100) + '%' : '0%',
+			        'neutralPercent': total > 0 ? Math.round((counts['neutral'] / total) * 100) + '%' : '0%',
+			        'sadPercent': total > 0 ? Math.round((counts['sad'] / total) * 100) + '%' : '0%',
+			        'verySadPercent': total > 0 ? Math.round((counts['very-sad'] / total) * 100) + '%' : '0%'
+			    };
+			    Object.keys(percentages).forEach(function(key) {
+				  var element = document.getElementById(key);
+				  if (element) element.textContent = percentages[key];
+				});
+				
+				// --- Update new mini chips ---
+				document.getElementById('miniTotalFeedback').textContent = total;
+				document.getElementById('miniCommentsCount').textContent = commentsCount;
+				document.getElementById('miniCommentsPercent').textContent =
+				  total > 0 ? Math.round((commentsCount / total) * 100) + '%' : '0%';
+
+			
+			    // NEW: Emoji hero + distribution bar
+			    (function updateEmojiHeader(){
+			      var score = computeMoodScoreFromCounts(counts);
+			      var scoreEl = document.getElementById('moodScore');
+			      var emojiEl = document.getElementById('moodEmoji');
+			      if (scoreEl) scoreEl.textContent = (score == null ? '—' : String(score));
+			      if (emojiEl) emojiEl.textContent = pickEmojiByScore(score);
+			
+			      // Counts + % in the emoji bar
+			      var setText = (id, val) => { var el = document.getElementById(id); if (el) el.textContent = val; };
+			      setText('cntVeryHappy', counts['very-happy']);
+			      setText('cntHappy', counts['happy']);
+			      setText('cntNeutral', counts['neutral']);
+			      setText('cntSad', counts['sad']);
+			      setText('cntVerySad', counts['very-sad']);
+			
+			      setText('pctVeryHappy', pct(counts['very-happy'], total));
+			      setText('pctHappy', pct(counts['happy'], total));
+			      setText('pctNeutral', pct(counts['neutral'], total));
+			      setText('pctSad', pct(counts['sad'], total));
+			      setText('pctVerySad', pct(counts['very-sad'], total));
+			    })();
+			
+			    // Recent list (unchanged)
+			    recentPage = 0;
+			    updateRecentFeedback(allFeedback);
+        }
+
+       function updateRecentFeedback(feedback) {
+		  // always sort newest first
+		  recentSorted = [...(feedback || [])].sort((a, b) => {
+		    const ta = new Date(a.timestamp).getTime();
+		    const tb = new Date(b.timestamp).getTime();
+		    return tb - ta; // DESC
+		  });
+		  renderRecentPage();
+		}
+
+
+        async function addLocation() {
+		  if (!currentUser) return;
+		
+		  const input = document.getElementById('newLocationInput');
+		  const name = (input?.value || '').trim();
+		  if (!name) return;
+		
+		  try {
+		    // Create the location in Supabase and return the full row
+		    const { data: newLoc, error } = await supabase
+		      .from('locations')
+		      .insert({ business_id: currentUser.businessId, name })
+		      .select()
+		      .single();
+		
+		    if (error) throw error;
+		
+		    // Keep in-memory state in sync, keyed by UUID
+			if (!currentUser.locations) currentUser.locations = {};
+			currentUser.locations[newLoc.id] = {
+			  name: newLoc.name,
+			  is_active: (newLoc.is_active === false ? false : true),
+			  feedback: []
+			};
+
+		
+		    // Clear input and refresh all dependent UI
+		    input.value = '';
+		    updateLocationSelects();
+		    updateLocationsList();
+		    generateQR(); // keeps QR tab in sync if it’s open
+		  } catch (e) {
+		    console.error(e);
+		    alert(e?.message || 'Failed to add location.');
+		  }
+		}
+
+		async function renameLocation(id) {
+		  // Guard: must be logged in and know this location
+		  if (!currentUser || !currentUser.locations || !currentUser.locations[id]) return false;
+		
+		  var currentName = String(currentUser.locations[id].name || '').trim();
+		  var newName = prompt('Rename location', currentName);
+		  if (newName === null) return false;          // cancelled
+		  newName = newName.trim();
+		  if (!newName || newName === currentName) return false;
+		
+		  try {
+		    // Update Supabase
+		    const { error } = await supabase
+		      .from('locations')
+		      .update({ name: newName })
+		      .eq('id', id)
+		      .select('id, name')   // keep parity with RLS that allows owner read
+		      .single();
+		
+		    if (error) throw error;
+		
+		    // Update in-memory state and refresh UI
+		    currentUser.locations[id].name = newName;
+		    updateLocationSelects?.();
+		    updateLocationsList?.();
+		
+		    try { showToast?.('Location renamed.', 'success'); } catch (_) {}
+		  } catch (e) {
+		    console.error('Rename location failed:', e);
+		    try { showToast?.('Could not rename location (permissions or network).', 'error'); } catch (_) {}
+		  }
+		  return false; // prevent link navigation
+		}
+							
+		async function toggleLocationActive(id, makeActive) {
+		  const next = !!makeActive;
+		
+		  // --- Update the in-memory state used by the app (write to both names just in case) ---
+		  try {
+		    if (window.currentUser?.locations?.[id]) {
+		      window.currentUser.locations[id].is_active = next;
+		    }
+		    if (typeof currentUser !== 'undefined' && currentUser?.locations?.[id]) {
+		      currentUser.locations[id].is_active = next;
+		    }
+		  } catch (_) {}
+		
+		  // --- Patch just this row in the DOM immediately (no full re-render) ---
+		  applyLocationRowState(id, next);
+		
+		  // --- Persist to DB; if it fails, roll back UI + memory for this row only ---
+		  try {
+		    const { data, error } = await supabase
+		      .from('locations')
+		      .update({ is_active: next })
+		      .eq('id', id)
+		      .select('id, is_active')
+		      .single();
+		
+		    if (error) throw error;
+		
+		    // Ensure memory matches DB (paranoia)
+		    const confirmed = (data?.is_active === false) ? false : true;
+		    if (window.currentUser?.locations?.[id]) {
+		      window.currentUser.locations[id].is_active = confirmed;
+		    }
+		    if (typeof currentUser !== 'undefined' && currentUser?.locations?.[id]) {
+		      currentUser.locations[id].is_active = confirmed;
+		    }
+		
+		    // Update the one row again from the confirmed value (no list rebuild)
+		    applyLocationRowState(id, confirmed);
+		
+		    try { showToast?.(confirmed ? 'Location activated.' : 'Location deactivated.', 'success'); } catch {}
+		  } catch (e) {
+		    console.error('toggleLocationActive failed:', e);
+		    // Roll back
+		    const prev = !next;
+		    if (window.currentUser?.locations?.[id]) {
+		      window.currentUser.locations[id].is_active = prev;
+		    }
+		    if (typeof currentUser !== 'undefined' && currentUser?.locations?.[id]) {
+		      currentUser.locations[id].is_active = prev;
+		    }
+		    applyLocationRowState(id, prev);
+		    try { showToast?.('Could not update location status (permissions or network).', 'error'); } catch {}
+		  }
+		
+		  // Keep anchors from navigating
+		  return false;
+		}
+
+
+
+			
+        function updateLocationsList() {
+		  var container = document.getElementById('locationsList');
+		  if (!container) return;
+		
+		  container.innerHTML = '';
+		
+		  // --- DEMO MODE ---
+		  if (currentView === 'admin-demo' && window.demoAccount) {
+		    var demoData = [
+		      { name: 'Demo Restaurant', is_active: true },
+		      { name: 'Main Street Cafe', is_active: false },
+		      { name: 'Downtown Store', is_active: true }
+		    ];
+		
+		    demoData.forEach(function(location) {
+		      var isActive = location.is_active !== false;
+		      var div = document.createElement('div');
+		      div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
+		
+		      // name + (optional) Inactive badge
+		      var nameHTML = '<span class="location-name">' + location.name + '</span>';
+		      if (!isActive) {
+		        nameHTML = '<span class="location-name">' + location.name +
+		          ' <span class="badge" style="margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;">Inactive</span>' +
+		          '</span>';
+		      }
+		
+		      // actions: Edit (disabled in demo) + Activate/Deactivate (label only in demo)
+		      div.innerHTML = nameHTML +
+		        '<span style="opacity:0.8; font-size:14px;">' +
+		          '<a href="#" class="location-edit" onclick="alert(\'Editing is disabled in Demo Mode\'); return false;">Edit</a>' +
+		          ' &nbsp;·&nbsp; ' +
+		          '<span class="location-toggle" style="text-decoration:underline; cursor:default;" title="Unavailable in Demo Mode">' +
+		            (isActive ? 'Deactivate' : 'Activate') +
+		          '</span>' +
+		        '</span>';
+		
+		      container.appendChild(div);
+		    });
+		
+		    var notice = document.createElement('div');
+		    notice.style.cssText = 'background: color-mix(in oklab, var(--ff-surface) 96%, black) !important; border: 1px solid var(--ff-border) !important; border-radius: 8px; padding: 15px; margin-top: 20px; text-align: center;';
+		    notice.innerHTML = '<p style="color: #22c55e; margin: 0;"><strong>Demo Mode:</strong> Location management is available in the full version</p>';
+		    container.appendChild(notice);
+		    return;
+		  }
+		
+		  // --- LOGGED-IN ADMIN ---
+		  if (currentUser) {
+		    Object.keys(currentUser.locations).forEach(function(id) {
+		      var location = currentUser.locations[id];
+		      var isActive = location.is_active !== false;
+		
+		      var div = document.createElement('div');
+		      div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
+		      div.setAttribute('data-location-id', id);
+		
+		      // name + (optional) Inactive badge
+		      var nameHTML = '<span class="location-name">' + location.name + '</span>';
+		      if (!isActive) {
+		        nameHTML = '<span class="location-name">' + location.name +
+		          ' <span class="badge" style="margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;">Inactive</span>' +
+		          '</span>';
+		      }
+		
+		      // actions: Edit + Activate/Deactivate
+		      // NOTE: toggleLocationActive(id, makeActive) should update Supabase and refresh UI.
+		      div.innerHTML = nameHTML +
+		        '<span style="opacity:0.8; font-size:14px;">' +
+		          '<a href="#" class="location-edit" onclick="return renameLocation(\'' + id + '\')">Edit</a>' +
+		          ' &nbsp;·&nbsp; ' +
+		          '<a href="#" class="location-toggle" onclick="return toggleLocationActive(\'' + id + '\',' + (!isActive) + ')">' +
+		            (isActive ? 'Deactivate' : 'Activate') +
+		          '</a>' +
+		        '</span>';
+		
+		      container.appendChild(div);
+		    });
+		  }
+		}
+
+        function generateQR() {
+            var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+            var qrSelect = document.getElementById('qrLocationSelect');
+            var selectedLocation = qrSelect?.value || Object.keys(locations)[0] || currentLocation;
+            
+            var container = document.getElementById('qrContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            var canvas = document.createElement('canvas');
+            var qr = new QRious({
+                element: canvas,
+                value: window.location.origin + window.location.pathname + '?location=' + selectedLocation,
+                size: 200,
+                background: 'white',
+                foreground: 'black'
+            });
+            
+            container.appendChild(canvas);
+        }
+
+        function generateSign() {
+            var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+            var qrSelect = document.getElementById('qrLocationSelect');
+            var selectedLocation = qrSelect?.value || Object.keys(locations)[0] || currentLocation;
+            var locationName = locations[selectedLocation]?.name || 'Unknown Location';
+            var canvas = document.querySelector('#qrContainer canvas');
+            
+            if (!canvas) {
+                alert('Please generate a QR code first');
+                return;
+            }
+
+            var signCanvas = document.createElement('canvas');
+            var ctx = signCanvas.getContext('2d');
+            
+            // Set canvas size (8.5" x 11" at 150 DPI)
+            signCanvas.width = 1275;
+            signCanvas.height = 1650;
+            
+            // Background
+            ctx.fillStyle = '#f5f5f0';
+            ctx.fillRect(0, 0, signCanvas.width, signCanvas.height);
+            
+            // Main card with border
+            var cardX = 60, cardY = 80;
+            var cardWidth = signCanvas.width - 120;
+            var cardHeight = signCanvas.height - 160;
+            
+            // Orange border
+            ctx.fillStyle = '#e67e22';
+            ctx.beginPath();
+            ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
+            ctx.fill();
+            
+            // White inner card
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.roundRect(cardX + 12, cardY + 12, cardWidth - 24, cardHeight - 24, 32);
+            ctx.fill();
+            
+            // FlashFeedback logo
+            var logoY = cardY + 132;
+            var smileyX = signCanvas.width / 2 - 280;
+            
+           // Centered Smiley Face
+			var logoY = cardY + 180; // vertical position
+			var smileyX = signCanvas.width / 2; // center horizontally
+			
+			ctx.strokeStyle = '#e67e22';
+			ctx.lineWidth = 12;
+			ctx.beginPath();
+			ctx.arc(smileyX, logoY, 60, 0, 2 * Math.PI);
+			ctx.stroke();
+			
+			// Eyes
+			ctx.fillStyle = '#e67e22';
+			ctx.beginPath();
+			ctx.arc(smileyX - 20, logoY - 15, 8, 0, 2 * Math.PI);
+			ctx.fill();
+			ctx.beginPath();
+			ctx.arc(smileyX + 20, logoY - 15, 8, 0, 2 * Math.PI);
+			ctx.fill();
+			
+			// Mouth
+			ctx.strokeStyle = '#e67e22';
+			ctx.lineWidth = 10;
+			ctx.lineCap = 'round';
+			ctx.beginPath();
+			ctx.arc(smileyX, logoY - 5, 40, 0.15 * Math.PI, 0.85 * Math.PI);
+			ctx.stroke();
+
+            
+                       
+            // Main question
+			ctx.fillStyle = '#2c3e50';
+			ctx.font = 'bold 110px Arial';
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			var questionY = logoY + 180; // was cardY + 220 before
+			ctx.fillText('HOW WAS YOUR', signCanvas.width / 2, questionY);
+			ctx.fillText('EXPERIENCE?', signCanvas.width / 2, questionY + 130);
+	
+            
+            // QR code
+            var qrSize = 350;
+            var qrX = signCanvas.width / 2 - qrSize / 2;
+            var qrY = questionY + 280;
+            ctx.drawImage(canvas, qrX, qrY, qrSize, qrSize);
+            
+            // Location name
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(locationName, signCanvas.width / 2, qrY + qrSize + 60);
+            
+            // "SCAN TO RATE" button
+            var buttonY = qrY + qrSize + 140;
+            var buttonWidth = 500;
+            var buttonHeight = 100;
+            var buttonX = signCanvas.width / 2 - buttonWidth / 2;
+            
+            ctx.fillStyle = '#e67e22';
+            ctx.beginPath();
+            ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 50);
+            ctx.fill();
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 52px Arial';
+            ctx.fillText('SCAN TO RATE', signCanvas.width / 2, buttonY + buttonHeight / 2);
+            
+            // Display sign
+            var img = document.createElement('img');
+            img.src = signCanvas.toDataURL('image/png');
+            img.style.maxWidth = '100%';
+            img.style.border = '1px solid #ddd';
+            img.style.borderRadius = '10px';
+            img.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
+            
+            var signContainer = document.getElementById('generatedSign');
+            var imageContainer = document.getElementById('signImageContainer');
+            imageContainer.innerHTML = '';
+            imageContainer.appendChild(img);
+            signContainer.style.display = 'block';
+            signContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleSidebar() {
+            // Legacy function - now just opens the nav drawer
+            openNavDrawer();
+        }
+
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(function(section) {
+                section.classList.remove('active');
+            });
+            
+            // Remove active from all menu links
+            document.querySelectorAll('.drawer-menu-link').forEach(function(link) {
+                link.classList.remove('active');
+            });
+            
+            // Show selected section
+            var targetSection = document.getElementById(sectionName);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Add active to clicked menu link
+            var activeLink = document.querySelector('[data-section="' + sectionName + '"]');
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+            
+            // Update section content (no longer updating top bar title)
+            switch(sectionName) {
+                case 'Feedback':
+                    updateFeedback();
+                    break;
+                case 'locations':
+                    updateLocationsList();
+                    break;
+                case 'qr':
+                    generateQR();
+                    break;
+				case 'settings':
+				    loadSettings();
+					break;
+
+            }
+            
+            // Close the navigation drawer after selection (mobile UX)
+            closeNavDrawer();
+        }
+
+        function toggleView() {
+            if (currentView === 'admin' || currentView === 'admin-demo') {
+                if (currentView === 'admin-demo') {
+                    // Demo mode: switch to demo customer view
+                    hideAllScreens();
+                    document.getElementById('customerView').style.display = 'block';
+                    document.getElementById('customerDemoNotice').style.display = 'block';
+                    showDemoControls();
+                    updateCustomerLocationDisplay(window.demoAccount.locations);
+                    resetCustomerView();
+                    currentView = 'customer-demo';
+                } else {
+                    // Real admin: switch to customer view
+                    var FeedbackSelect = document.getElementById('FeedbackLocationSelect');
+                    if (FeedbackSelect && FeedbackSelect.value !== 'all') {
+                        currentLocation = FeedbackSelect.value;
+                    } else if (FeedbackSelect && FeedbackSelect.value === 'all') {
+                        currentLocation = Object.keys(currentUser.locations)[0];
+                    }
+                    
+                    hideAllScreens();
+                    document.getElementById('customerView').style.display = 'block';
+                    resetCustomerView();
+                    updateCustomerLocationDisplay(currentUser.locations);
+                    showAdminControls();
+                    currentView = 'customer';
+                }
+            } else {
+                // Customer view: switch back to admin
+                if (currentView === 'customer-demo') {
+                    showDemoAdmin();
+                } else if (currentUser) {
+                    showAdminDashboard();
+                }
+            }
+        }
+		// Make functions callable from inline HTML attributes (onclick/onsubmit) in module mode
+		Object.assign(window, {
+		  showWelcome,
+		  showSignup,
+		  showLogin,
+		  showDemo,
+		  showCustomerViewForLocation,
+		  goToSignup,
+		  handleSignup,
+		  handleLogin,
+		  selectSentiment,
+		  submitFeedback,
+		  toggleView,
+		  openNavDrawer,
+		  closeNavDrawer,
+		  showSection,
+		  generateQR,
+		  generateSign,
+		  addLocation,
+		  renameLocation,
+		  toggleLocationActive,
+		  updateLocationsList,
+		  updateFeedback,
+		  logout,
+		  showForgotPassword,
+		  handleRequestReset,
+		  showResetPassword,
+		  handleSubmitNewPassword,
+		  loadSettings,
+		  saveProfileSettings,
+		  saveBusinessSettings,
+		  handleChangePassword,
+		  signOutEverywhere,
+		  openAccountMenu,
+		  closeAccountMenu,
+		  openSettingsFromAccount
+		});
+
+		async function loadSettings() {
+		  if (!currentUser?.businessId) return;
+		
+		  // Pull fresh business row (ensures we reflect external changes too)
+		  const { data: biz, error } = await supabase
+		    .from('businesses')
+		    .select('id,name,owner_name,timezone,default_location_id,logo_url')
+		    .eq('id', currentUser.businessId)
+		    .single();
+		  if (error) {
+		    console.error(error);
+		    return;
+		  }
+		
+		  // Hydrate fields/state
+		  currentUser.businessName    = biz.name || currentUser.businessName;
+		  currentUser.ownerName       = biz.owner_name || '';
+		  currentUser.timezone        = biz.timezone || 'Europe/London';
+		  currentUser.defaultLocationId = biz.default_location_id || currentUser.defaultLocationId || null;
+		  currentUser.logoUrl         = biz.logo_url || '';
+		
+		  // Populate controls
+		  document.getElementById('settingsOwnerName').value = currentUser.ownerName || '';
+		  document.getElementById('settingsEmail').textContent = currentUser.email || '';
+		  document.getElementById('settingsBusinessName').value = currentUser.businessName || '';
+		  document.getElementById('settingsTimezoneSelect').value = currentUser.timezone || 'Europe/London';
+		  document.getElementById('settingsLogoUrl').value = currentUser.logoUrl || '';
+		
+		  // Locations dropdown in Settings
+		  updateLocationSelects();
+		  const sel = document.getElementById('settingsDefaultLocationSelect');
+		  if (sel && currentUser.defaultLocationId) {
+		    try { sel.value = currentUser.defaultLocationId; } catch {}
+		  }
+		}
+
+		async function saveProfileSettings() {
+		  const ownerName = document.getElementById('settingsOwnerName')?.value.trim() || '';
+		  const status = document.getElementById('settingsProfileStatus');
+		  status.textContent = 'Saving...';
+		
+		  const { error } = await supabase
+		    .from('businesses')
+		    .update({ owner_name: ownerName })
+		    .eq('id', currentUser.businessId);
+		
+		  if (error) {
+		    console.error(error);
+		    status.textContent = 'Error saving profile';
+		    return;
+		  }
+		  currentUser.ownerName = ownerName;
+		  status.textContent = 'Saved ✓';
+		  setTimeout(() => status.textContent = '', 1500);
+		}
+		
+		async function saveBusinessSettings() {
+		  const name = document.getElementById('settingsBusinessName')?.value.trim() || '';
+		  const tz   = document.getElementById('settingsTimezoneSelect')?.value || 'Europe/London';
+		  const def  = document.getElementById('settingsDefaultLocationSelect')?.value || null;
+		  const logo = document.getElementById('settingsLogoUrl')?.value.trim() || null;
+		  const status = document.getElementById('settingsBusinessStatus');
+		  status.textContent = 'Saving...';
+		
+		  const patch = { name, timezone: tz, logo_url: logo || null };
+		  if (def) patch.default_location_id = def;
+		
+		  const { error } = await supabase
+		    .from('businesses')
+		    .update(patch)
+		    .eq('id', currentUser.businessId);
+		
+		  if (error) {
+		    console.error(error);
+		    status.textContent = 'Error saving business';
+		    return;
+		  }
+		
+		  // Update in-memory + dependent UI
+		  currentUser.businessName = name;
+		  currentUser.timezone = tz;
+		  if (def) currentUser.defaultLocationId = def;
+		
+		  updateLocationSelects();
+		  updateFeedback(); // recalcs dashboard (timestamp TZ will reflect on next renders)
+		  status.textContent = 'Saved ✓';
+		  setTimeout(() => status.textContent = '', 1500);
+		}
+		
+		async function handleChangePassword() {
+		  const pwd = document.getElementById('settingsNewPwd')?.value || '';
+		  const confirm = document.getElementById('settingsConfirmPwd')?.value || '';
+		  const status = document.getElementById('settingsPwdStatus');
+		
+		  if (pwd.length < 8) { status.textContent = 'Password too short'; return; }
+		  if (pwd !== confirm) { status.textContent = 'Passwords do not match'; return; }
+		
+		  status.textContent = 'Updating...';
+		  const { error } = await supabase.auth.updateUser({ password: pwd });
+		  if (error) {
+		    console.error(error);
+		    status.textContent = error.message || 'Could not update';
+		    return;
+		  }
+		  document.getElementById('settingsNewPwd').value = '';
+		  document.getElementById('settingsConfirmPwd').value = '';
+		  status.textContent = 'Password updated ✓';
+		  setTimeout(() => status.textContent = '', 1500);
+		}
+		
+		async function signOutEverywhere() {
+		  try {
+		    await supabase.auth.signOut({ scope: 'global' }); // revoke sessions on all devices
+		  } catch (e) {
+		    console.warn('Global sign out error:', e?.message || e);
+		  } finally {
+		    // End this session locally and land on welcome
+		    await logout();
+		  }
+		}
+
+			
+		// ---- Optional: Refresh feedback from server after login ----
+		async function refreshFeedbackFromServer() {
+		  if (!currentUser?.businessId) return;
+		
+		  const { data: rows, error } = await supabase
+		    .from('feedback')
+		    .select('location_id, sentiment, comments, submitted_at')
+		    .eq('business_id', currentUser.businessId)
+		    .order('submitted_at', { ascending: true });
+		
+		  if (error) {
+		    console.error(error);
+		    return;
+		  }
+		
+		  // Reset feedback arrays
+		  for (const locId of Object.keys(currentUser.locations || {})) {
+		    currentUser.locations[locId].feedback = [];
+		  }
+		
+		  // Re-populate with server rows
+		  for (const r of rows) {
+		    if (currentUser.locations?.[r.location_id]) {
+		      currentUser.locations[r.location_id].feedback.push({
+		        sentiment: r.sentiment,
+		        timestamp: r.submitted_at,
+		        location: r.location_id,
+		        comments: r.comments
+		      });
+		    }
+		  }
+		  updateFeedback();
+		}
+		
+		// Update customer + thank-you screens with a human-readable name
+		function setLocationName(name) {
+		  const el1 = document.getElementById('customerLocationDisplay');
+		  if (el1) el1.textContent = name;
+		
+		  const el2 = document.getElementById('thankYouLocationDisplay');
+		  if (el2) el2.textContent = name;
+		}
+
+
+		
+		// Fetch a public-safe location row by UUID (uses view, not base table)
+		async function getLocationById(id) {
+		  if (!id) return null;
+		  const { data, error } = await supabase
+		    .from('location_public')
+		    .select('location_id, location_name, business_id, business_name, is_active')
+		    .eq('location_id', id)
+		    .maybeSingle();
+		
+		  if (error) {
+		    console.error('getLocationById error:', error);
+		    return null;
+		  }
+		  if (!data) return null;
+		
+		  // Normalize field names so the rest of the app keeps working
+		  return {
+		    id: data.location_id,
+		    name: data.location_name,
+		    business_id: data.business_id,
+		    is_active: data.is_active,
+		    business_name: data.business_name
+		  };
+		}
+
+
+		// Fetch a business row (id, name) by UUID
+		async function getBusinessById(id) {
+		  if (!id) return null;
+		  const { data, error } = await supabase
+		    .from('businesses')
+		    .select('id, name')
+		    .eq('id', id)
+		    .maybeSingle();
+		  if (error) {
+		    console.error('getBusinessById error:', error);
+		    return null;
+		  }
+		  return data;
+		}
+
+		
+		// --- Comment counter (500 max) ---
+		const COMMENT_MAX = 500;
+		
+		function updateCommentCounter() {
+		  const el = document.getElementById('additionalComments');
+		  const counter = document.getElementById('commentCounter');
+		  if (!el || !counter) return;
+		  const len = (el.value || '').length;
+		  counter.textContent = `${len} / ${COMMENT_MAX}`;
+		  // Subtle color shift when close to the limit
+		  counter.style.color = len >= COMMENT_MAX ? '#b91c1c' : (len >= COMMENT_MAX - 50 ? '#b45309' : '#6b7280');
+		}
+
+		// --- Safe text setter (prevents HTML injection) ---
+		function setText(el, text) {
+		  if (!el) return;
+		  el.textContent = text ?? '';
+		}
+		
+		// --- Modal controls ---
+		function showCommentModal(text) {
+		  const modal = document.getElementById('commentModal');
+		  const body  = document.getElementById('commentModalBody');
+		  setText(body, text && text.trim() ? text : 'No comment');
+		  modal.style.display = 'block';
+		  // focus close for accessibility
+		  document.getElementById('commentModalClose')?.focus();
+		}
+		
+		function closeCommentModal() {
+		  const modal = document.getElementById('commentModal');
+		  modal.style.display = 'none';
+		}
+		
+		// Wire modal close (once DOM is ready)
+		document.addEventListener('DOMContentLoaded', () => {
+		  const modal = document.getElementById('commentModal');
+		  const closeBtn = document.getElementById('commentModalClose');
+		  closeBtn?.addEventListener('click', closeCommentModal);
+		  modal?.addEventListener('click', (e) => {
+		    if (e.target === modal) closeCommentModal(); // click outside card
+		  });
+		  document.addEventListener('keydown', (e) => {
+		    if (e.key === 'Escape' && modal?.style.display === 'block') closeCommentModal();
+		  });
+			
+		  // Wire character counter for the public comment box
+		  const commentsEl = document.getElementById('additionalComments');
+		  commentsEl?.addEventListener('input', updateCommentCounter);
+		  updateCommentCounter(); // initialise on load
+		});
+
+		// --- Ensure viewport is at the very top (mobile-safe) ---
+		function scrollToTop() {
+		  // Defocus any element that might cause auto-scroll
+		  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+		    document.activeElement.blur();
+		  }
+		  // Do both for cross-browser reliability
+		  document.body.scrollTop = 0;            // Safari
+		  document.documentElement.scrollTop = 0; // Chrome/Firefox/Edge
+		
+		  // One more nudge after layout settles (mobile)
+		  requestAnimationFrame(() => {
+		    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+		  });
+		}
+
+		// --- Recent Feedback pagination state ---
+		let RECENT_PAGE_SIZE = 10;
+		let recentPage = 0;
+		let recentSorted = []; // always newest -> oldest
+		
+		function renderRecentPage() {
+		  const container = document.getElementById('recentFeedbackList');
+		  if (!container) return;
+		  container.innerHTML = '';
+		
+		  const total = recentSorted.length;
+		  const totalPages = Math.max(1, Math.ceil(total / RECENT_PAGE_SIZE));
+		  // clamp page
+		  if (recentPage < 0) recentPage = 0;
+		  if (recentPage > totalPages - 1) recentPage = totalPages - 1;
+		
+		  const start = recentPage * RECENT_PAGE_SIZE;
+		  const pageItems = recentSorted.slice(start, start + RECENT_PAGE_SIZE);
+		
+		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+		  const emojiMap = { 'very-happy':'😍','happy':'😊','neutral':'😐','sad':'😞','very-sad':'😭' };
+		
+		  pageItems.forEach((item) => {
+		    const row = document.createElement('div');
+		    row.style.cssText = 'display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:15px; background:#0d1117; border: 1px solid var(--ff-border) !important; border-radius:8px; margin-bottom:10px;';
+		
+		    // Left: emoji
+		    const left = document.createElement('span');
+		    left.style.fontSize = '24px';
+		    left.textContent = emojiMap[item.sentiment] || '•';
+		
+		    // Middle: location + action (View comment / No comment)
+		    const middle = document.createElement('div');
+		    middle.style.cssText = 'display:flex; align-items:center; gap:12px; flex:1 1 auto; min-width:200px;';
+		
+		    const locSpan = document.createElement('span');
+		    locSpan.textContent = locations[item.location]?.name || 'Unknown';
+		
+		    const hasComment = !!(item.comments && item.comments.trim());
+		    let actionEl;
+		    if (hasComment) {
+		      const btn = document.createElement('button');
+		      btn.type = 'button';
+		      btn.className = 'view-comment';
+		      btn.style.cssText = 'background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)) !important; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; color: var(--ff-text-on-brand) !important; font-size:13px;';
+		      btn.textContent = 'View comment';
+		      btn.addEventListener('click', () => showCommentModal(item.comments));
+		      actionEl = btn;
+		    } else {
+		      const txt = document.createElement('span');
+		      txt.style.cssText = 'font-size:13px; color:#6b7280;';
+		      txt.textContent = 'No comment';
+		      actionEl = txt;
+		    }
+		
+		    middle.appendChild(locSpan);
+		    middle.appendChild(actionEl);
+		
+		    // Right: timestamp
+		    const right = document.createElement('span');
+		    right.style.cssText = 'color:#666; font-size:14px;';
+		    try {
+			  const tz = currentUser?.timezone || 'Europe/London';
+			  right.textContent = new Date(item.timestamp).toLocaleString(undefined, { timeZone: tz });
+			} catch {
+			  right.textContent = new Date(item.timestamp).toLocaleString();
+			}
+
+		
+		    row.appendChild(left);
+		    row.appendChild(middle);
+		    row.appendChild(right);
+		    container.appendChild(row);
+		  });
+		
+		  // pagination controls
+		  const info = document.getElementById('recentPageInfo');
+		  const prev = document.getElementById('recentPrev');
+		  const next = document.getElementById('recentNext');
+		
+		  if (info) info.textContent = `Page ${Math.min(recentPage + 1, totalPages)} of ${totalPages}`;
+		  if (prev) {
+		    prev.disabled = recentPage === 0;
+		    prev.style.opacity = prev.disabled ? '0.5' : '1';
+		  }
+		  if (next) {
+		    next.disabled = recentPage >= totalPages - 1;
+		    next.style.opacity = next.disabled ? '0.5' : '1';
+		  }
+		}
+
+		
+		function nextRecentPage() { recentPage += 1; renderRecentPage(); }
+		function prevRecentPage() { recentPage -= 1; renderRecentPage(); }
+
+		// --- Wire up Recent Feedback pagination controls ---
+		document.addEventListener('DOMContentLoaded', () => {
+		  document.getElementById('recentPrev')?.addEventListener('click', prevRecentPage);
+		  document.getElementById('recentNext')?.addEventListener('click', nextRecentPage);
+		});
+
+		// Download the generated sign image and log activation
+		function downloadQrSignAndLog() {
+		  const img = document.querySelector('#signImageContainer img');
+		  if (!img || !img.src) {
+		    alert('Please generate the sign first.');
+		    return;
+		  }
+		  const a = document.createElement('a');
+		  a.href = img.src;
+		  a.download = 'FlashFeedback-QR-Sign.png';
+		  document.body.appendChild(a);
+		  a.click();
+		  a.remove();
+		  logEvent('qr_downloaded');
+		}
+		
+		// Wire the button after DOM is ready
+		document.addEventListener('DOMContentLoaded', () => {
+		  document.getElementById('ffDownloadQrBtn')?.addEventListener('click', downloadQrSignAndLog);
+		});
+
+		
+		// --- Forgot/Reset Password flow ---
+		
+		function showForgotPassword() {
+		  hideAllScreens();
+		  hideAdminControls?.();
+		  document.getElementById('forgotPasswordScreen').style.display = 'block';
+		  // Clear previous state
+		  const s = document.getElementById('forgotStatus');
+		  const e = document.getElementById('forgotError');
+		  if (s) { s.style.display = 'none'; s.textContent = ''; }
+		  if (e) { e.style.display = 'none'; e.textContent = ''; }
+		  currentView = 'forgot';
+		}
+		
+		async function handleRequestReset(event) {
+		  event.preventDefault?.();
+		
+		  const email = document.getElementById('forgotEmail')?.value.trim().toLowerCase();
+		  const statusEl = document.getElementById('forgotStatus');
+		  const errorEl  = document.getElementById('forgotError');
+		  if (!email) return;
+		
+		  showLoader?.();
+		  // IMPORTANT: ensure Supabase Auth -> URL config allows this redirect
+		  const redirectTo = `${window.location.origin}${window.location.pathname}`;
+		  try {
+		    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+		    if (error) {
+		      // Still show neutral message to avoid email enumeration
+		      console.warn('resetPasswordForEmail error:', error.message);
+		    }
+		    if (statusEl) {
+		      statusEl.textContent = 'If an account exists for that email, we’ve sent a reset link. Please check your inbox.';
+		      statusEl.style.display = 'block';
+		    }
+		    if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
+		  } catch (e) {
+		    console.error(e);
+		    if (errorEl) { errorEl.textContent = 'Unable to send reset link right now.'; errorEl.style.display = 'block'; }
+		    if (statusEl) { statusEl.style.display = 'none'; }
+		  } finally {
+		    hideLoader?.();
+		  }
+		}
+		
+		function showResetPassword() {
+		  hideAllScreens();
+		  hideAdminControls?.();
+		  document.getElementById('resetPasswordScreen').style.display = 'block';
+		  // Clear errors
+		  const e = document.getElementById('resetError');
+		  if (e) { e.style.display = 'none'; e.textContent = ''; }
+		  currentView = 'reset';
+		}
+		
+		async function handleSubmitNewPassword(event) {
+		  event.preventDefault?.();
+		  const pwd = document.getElementById('newPassword')?.value || '';
+		  const confirm = document.getElementById('confirmNewPassword')?.value || '';
+		  const err = document.getElementById('resetError');
+		
+		  if (pwd.length < 8) {
+		    if (err) { err.textContent = 'Password must be at least 8 characters.'; err.style.display = 'block'; }
+		    return;
+		  }
+		  if (pwd !== confirm) {
+		    if (err) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; }
+		    return;
+		  }
+		  
+		  const { data: { session } } = await supabase.auth.getSession();
+			if (!session?.access_token) {
+			  if (err) {
+			    err.textContent = 'Your reset session has expired or is missing. Please open the newest reset link from your email.';
+			    err.style.display = 'block';
+			  }
+			  hideLoader?.();
+			  return;
+			}
+
+			
+		  showLoader?.();
+		  try {
+		    const { data, error } = await supabase.auth.updateUser({ password: pwd });
+		    if (error) throw error;
+		
+		    // Pattern A: keep the session and hydrate straight into dashboard
+		    const { data: { session } } = await supabase.auth.getSession();
+		    if (session?.user) {
+		      await hydrateAndShowDashboard(session.user);
+		    } else {
+		      // Fallback: show login with a friendly banner
+		      showLogin();
+		      showError?.('loginError', '🎉 Password updated! Please sign in with your new password.');
+		    }
+		  } catch (e) {
+		    console.error(e);
+		    if (err) { err.textContent = e.message || 'Could not update password.'; err.style.display = 'block'; }
+		  } finally {
+		    hideLoader?.();
+		  }
+		}
+
+		// Logs anon "learn more" click for the current location, then goes to signup
+		async function onLearnMoreClick() {
+		  // Resolve the location id (from state or URL)
+		  const locFromState = window.currentLocation || null;
+		  const locFromUrl = new URLSearchParams(window.location.search).get('location');
+		  const locationId = locFromState || locFromUrl || null;
+		
+		  // Guard: avoid duplicate logs per session/location
+		  const guardKey = 'lm_click_' + (locationId || 'unknown');
+		  if (!sessionStorage.getItem(guardKey)) {
+		    sessionStorage.setItem(guardKey, '1');
+		
+		    if (locationId) {
+		      try {
+		        // Use raw fetch with explicit headers to avoid missing/invalid JWT in anon contexts
+		        const url = 'https://evediwsocfbalzbzdden.supabase.co/rest/v1/customer_events';
+		        const body = JSON.stringify({
+		          location_id: locationId,
+		          event_type: 'learn_more_click'
+		        });
+		
+		        // Reuse your existing constants (exactly as in your Supabase init)
+		        // const SUPABASE_ANON_KEY = '...'; // already declared earlier in your file
+		
+		        const res = await fetch(url, {
+		          method: 'POST',
+		          headers: {
+		            'Content-Type': 'application/json',
+		            'Prefer': 'return=minimal',
+		            'apikey': SUPABASE_ANON_KEY,
+		            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+		          },
+		          body
+		        });
+		
+		        // If it ever fails, don't block the user; just log to console
+		        if (!res.ok) {
+		          console.warn('learn_more_click log failed:', res.status, await res.text());
+		        }
+		      } catch (e) {
+		        console.warn('learn_more_click log exception:', e?.message || e);
+		      }
+		    }
+		  }
+		
+		  // Continue to your existing signup flow
+		  try { goToSignup(); } catch {}
+		}
+		
+		// expose for inline onclick
+		window.onLearnMoreClick = onLearnMoreClick;
+
+		
+		// expose for inline onclick
+		window.onLearnMoreClick = onLearnMoreClick;
+
+		
+	</script>
+	
+	<!-- ===== Footer with links ===== -->
+	<footer class="ff-footer">
+	  © 2025 FlashFeedback —
+	  <a href="#" data-sheet-open="privacy">Privacy Policy</a> ·
+	  <a href="#" data-sheet-open="terms">Terms of Service</a>
+	</footer>
+	
+	<!-- Backdrop (shared) -->
+	<div class="sheet-backdrop" id="sheetBackdrop" aria-hidden="true"></div>
+	
+	<!-- Privacy bottom-sheet -->
+	<div class="sheet" id="sheet-privacy" role="dialog" aria-modal="true" aria-labelledby="sheet-privacy-title" aria-hidden="true">
+	  <div class="handle" aria-hidden="true"></div>
+	  <div class="inner" tabindex="-1">
+	    <h2 id="sheet-privacy-title">Privacy Policy</h2>
+	    <p class="meta"><strong>Last updated:</strong> 20 October 2025</p>
+	    <p class="meta"><strong>Operator:</strong> FlashFeedback (independent creator)</p>
+	    <p class="meta"><strong>Contact:</strong> privacy@flashfeedback.app</p>
+	
+	    <p>FlashFeedback helps businesses collect quick, private feedback from customers. This Privacy Policy explains what information we collect, how it’s used, and your rights under the UK GDPR and South Africa’s POPIA laws.</p>
+	    <p><strong>Information we collect:</strong> feedback ratings, optional comments or contact details, business account details, and limited technical data.</p>
+	    <p><strong>Use of information:</strong> to provide the service, improve performance, and contact users only if requested. We never sell or share your data with advertisers.</p>
+	    <p><strong>Legal basis:</strong> consent (POPIA) and legitimate interest (UK GDPR).</p>
+	    <p><strong>Data storage:</strong> hosted securely on Supabase; retained as long as necessary; deletion available upon request.</p>
+	    <p><strong>Access:</strong> only the business owning the location can view feedback.</p>
+	    <p><strong>Your rights:</strong> access, correction, and deletion via <em>privacy@flashfeedback.app</em>.</p>
+	
+	    <button class="close-btn" data-sheet-close>Close</button>
+	  </div>
+	</div>
+	
+	<!-- Terms bottom-sheet -->
+	<div class="sheet" id="sheet-terms" role="dialog" aria-modal="true" aria-labelledby="sheet-terms-title" aria-hidden="true">
+	  <div class="handle" aria-hidden="true"></div>
+	  <div class="inner" tabindex="-1">
+	    <h2 id="sheet-terms-title">Terms of Service</h2>
+	    <p class="meta"><strong>Last updated:</strong> 20 October 2025</p>
+	    <p class="meta"><strong>Operator:</strong> FlashFeedback (independent creator)</p>
+	    <p class="meta"><strong>Contact:</strong> privacy@flashfeedback.app</p>
+	
+	    <p>By using FlashFeedback, you agree to these Terms of Service. The platform allows businesses to collect voluntary customer feedback.</p>
+	    <p><strong>Business responsibilities:</strong> ensure lawful data handling; do not collect sensitive info in free-text fields.</p>
+	    <p><strong>Customer feedback:</strong> voluntary and may be anonymous; follow-up only if requested.</p>
+	    <p><strong>Account management:</strong> keep login details secure; misuse may lead to suspension.</p>
+	    <p><strong>Data ownership:</strong> businesses own their feedback; FlashFeedback owns the platform.</p>
+	    <p><strong>Liability:</strong> service provided “as is”; operator not liable for feedback content or downtime.</p>
+	    <p><strong>Jurisdiction:</strong> governed by South African and UK law.</p>
+	
+	    <button class="close-btn" data-sheet-close>Close</button>
+	  </div>
+	</div>
+	
+	<script>
+	  (function () {
+	    const body = document.body;
+	    const backdrop = document.getElementById('sheetBackdrop');
+	    const sheets = {
+	      privacy: document.getElementById('sheet-privacy'),
+	      terms: document.getElementById('sheet-terms')
+	    };
+	
+	    function openSheet(key) {
+	      const el = sheets[key];
+	      if (!el) return;
+	      el.classList.add('open');
+	      el.setAttribute('aria-hidden', 'false');
+	      backdrop.setAttribute('aria-hidden', 'false');
+	      body.classList.add('no-scroll');
+	      const focusTarget = el.querySelector('.inner');
+	      focusTarget && focusTarget.focus();
+	      document.addEventListener('keydown', escListener);
+	    }
+	    function closeAllSheets() {
+	      Object.values(sheets).forEach(el => {
+	        el.classList.remove('open');
+	        el.setAttribute('aria-hidden', 'true');
+	      });
+	      backdrop.setAttribute('aria-hidden', 'true');
+	      body.classList.remove('no-scroll');
+	      document.removeEventListener('keydown', escListener);
+	    }
+	    function escListener(e){ if (e.key === 'Escape') closeAllSheets(); }
+	
+	    document.querySelectorAll('[data-sheet-open]').forEach(a => {
+	      a.addEventListener('click', (e) => {
+	        e.preventDefault();
+	        openSheet(a.getAttribute('data-sheet-open'));
+	      });
+	    });
+	    document.querySelectorAll('[data-sheet-close]').forEach(btn => {
+	      btn.addEventListener('click', closeAllSheets);
+	    });
+	    backdrop.addEventListener('click', closeAllSheets);
+	  })();
+	</script>
+
+	
+</body>
+</html>
