@@ -827,8 +827,11 @@
 		  align-items:center;
 		  justify-content:center;
 		  border-radius:20px;
-		  background: color-mix(in oklab, var(--ff-surface) 90%, black);
+		  background: transparent;          /* removed dark blob */
+		  box-shadow: none;                  /* ensure no halo */
+		  position: relative; z-index: 2;    /* sit cleanly above the ring */
 		}
+
 
 		/* --- Compact stat chips --- */
 		.mini-stats {
@@ -872,7 +875,7 @@
 		@media (max-width: 640px) {
 		  .mood-hero { grid-template-columns: 1fr; gap: 12px; }
 		  .mood-card { padding: 14px; gap: 12px; }
-		  .mood-emoji { font-size: 50px; width: 64px; height: 64px; border-radius: 12px; }
+		  .mood-emoji { font-size: 50px; width: 64px; height: 64px; border-radius: 12px; background: transparent; position: relative; z-index: 2; }
 		  .mood-score { font-size: 30px; }
 		  .mood-sub { font-size: 12px; margin-top: 2px; }
 		}
