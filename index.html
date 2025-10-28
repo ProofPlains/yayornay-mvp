@@ -2910,7 +2910,7 @@
             signCanvas.height = 1650;
             
             // Background
-            ctx.fillStyle = '#f5f5f0';
+            ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, signCanvas.width, signCanvas.height);
             
             // Main card with border
@@ -2919,7 +2919,7 @@
             var cardHeight = signCanvas.height - 160;
             
             // Orange border
-            ctx.fillStyle = '#e67e22';
+            ctx.fillStyle = '#000000';
             ctx.beginPath();
             ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
             ctx.fill();
@@ -2938,14 +2938,14 @@
 			var logoY = cardY + 180; // vertical position
 			var smileyX = signCanvas.width / 2; // center horizontally
 			
-			ctx.strokeStyle = '#e67e22';
+			ctx.strokeStyle = '#000000';
 			ctx.lineWidth = 12;
 			ctx.beginPath();
 			ctx.arc(smileyX, logoY, 60, 0, 2 * Math.PI);
 			ctx.stroke();
 			
 			// Eyes
-			ctx.fillStyle = '#e67e22';
+			ctx.fillStyle = '#000000';
 			ctx.beginPath();
 			ctx.arc(smileyX - 20, logoY - 15, 8, 0, 2 * Math.PI);
 			ctx.fill();
@@ -2954,7 +2954,7 @@
 			ctx.fill();
 			
 			// Mouth
-			ctx.strokeStyle = '#e67e22';
+			ctx.strokeStyle = '#000000';
 			ctx.lineWidth = 10;
 			ctx.lineCap = 'round';
 			ctx.beginPath();
@@ -2964,7 +2964,7 @@
             
                        
             // Main question
-			ctx.fillStyle = '#2c3e50';
+			ctx.fillStyle = '#000000';
 			ctx.font = 'bold 110px Arial';
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
@@ -2980,7 +2980,7 @@
             ctx.drawImage(canvas, qrX, qrY, qrSize, qrSize);
             
             // Location name
-            ctx.fillStyle = '#2c3e50';
+            ctx.fillStyle = '#000000';
             ctx.font = 'bold 48px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(locationName, signCanvas.width / 2, qrY + qrSize + 60);
@@ -2991,7 +2991,7 @@
             var buttonHeight = 100;
             var buttonX = signCanvas.width / 2 - buttonWidth / 2;
             
-            ctx.fillStyle = '#e67e22';
+            ctx.fillStyle = '#000000';
             ctx.beginPath();
             ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 50);
             ctx.fill();
