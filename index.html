@@ -2891,138 +2891,154 @@
         }
 
         function generateSign() {
+		  // --- Data lookups ---
 		  var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
 		  var qrSelect = document.getElementById('qrLocationSelect');
 		  var selectedLocation = qrSelect?.value || Object.keys(locations)[0] || currentLocation;
 		
 		  var locationName = locations[selectedLocation]?.name || 'Unknown Location';
-		  // NEW: get business name for real/demo, then compose "Business – Location"
 		  var bizName =
 		    (currentUser && currentUser.businessName) ||
 		    (window.demoAccount && window.demoAccount.businessName) ||
 		    '';
 		  var combinedName = [bizName, locationName].filter(Boolean).join(' – ');
 		
-		  var canvas = document.querySelector('#qrContainer canvas');            
-		  if (!canvas) {
+		  var qrCanvas = document.querySelector('#qrContainer canvas');
+		  if (!qrCanvas) {
 		    alert('Please generate a QR code first');
 		    return;
 		  }
 		
+		  // --- A4 @ 150 DPI (portrait): 8.27" x 11.69" => 1241 x 1754 px ---
 		  var signCanvas = document.createElement('canvas');
-		  var ctx = signCanvas.getContext('2d');
+		  var ctx = signCanvas.getContext('2d', { alpha: false });
 		
-		  // Set canvas size (8.5" x 11" at 150 DPI)
-		  signCanvas.width = 1275;
-		  signCanvas.height = 1650;
+		  const W = signCanvas.width = 1241;   // width  px
+		  const H = signCanvas.height = 1754;  // height px
 		
-		  // Background
+		  // Scale helpers (original artwork was tuned around 1275x1650)
+		  const baseW = 1275, baseH = 1650;
+		  const sx = W / baseW;
+		  const sy = H / baseH;
+		  const sf = Math.min(sx, sy); // use the smaller of the two for font sizes / radii
+		
+		  // Internal "non-borderless" safety margin (~8mm)
+		  const margin = Math.round(0.31 * 150); // 0.31" ≈ 8 mm at 150 DPI => ~47 px
+		  const innerX = margin;
+		  const innerY = margin;
+		  const innerW = W - margin * 2;
+		  const innerH = H - margin * 2;
+		
+		  // --- Background (pure white, no bleed) ---
 		  ctx.fillStyle = '#ffffff';
-		  ctx.fillRect(0, 0, signCanvas.width, signCanvas.height);
+		  ctx.fillRect(0, 0, W, H);
 		
-		  // Main card with border
-		  var cardX = 60, cardY = 80;
-		  var cardWidth = signCanvas.width - 120;
-		  var cardHeight = signCanvas.height - 160;
-		
-		  // White border
+		  // (Optional subtle card to keep layout consistent, still white)
 		  ctx.fillStyle = '#ffffff';
-		  ctx.beginPath();
-		  ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
+		  roundRect(ctx, innerX, innerY, innerW, innerH, 32 * sf);
 		  ctx.fill();
 		
-		  // White inner card
-		  ctx.fillStyle = 'white';
-		  ctx.beginPath();
-		  ctx.roundRect(cardX + 12, cardY + 12, cardWidth - 24, cardHeight - 24, 32);
-		  ctx.fill();
-		
-		  // Centered Smiley Face
-		  var logoY = cardY + 180; // vertical position
-		  var smileyX = signCanvas.width / 2; // center horizontally
+		  // --- Smiley (black) ---
+		  const logoY = innerY + (180 * sy);
+		  const smileyX = W / 2;
 		
 		  ctx.strokeStyle = '#000000';
-		  ctx.lineWidth = 12;
+		  ctx.lineWidth = 12 * sf;
 		  ctx.beginPath();
-		  ctx.arc(smileyX, logoY, 60, 0, 2 * Math.PI);
+		  ctx.arc(smileyX, logoY, 60 * sf, 0, 2 * Math.PI);
 		  ctx.stroke();
 		
-		  // Eyes
 		  ctx.fillStyle = '#000000';
 		  ctx.beginPath();
-		  ctx.arc(smileyX - 20, logoY - 15, 8, 0, 2 * Math.PI);
+		  ctx.arc(smileyX - 20 * sx, logoY - 15 * sy, 8 * sf, 0, 2 * Math.PI);
 		  ctx.fill();
 		  ctx.beginPath();
-		  ctx.arc(smileyX + 20, logoY - 15, 8, 0, 2 * Math.PI);
+		  ctx.arc(smileyX + 20 * sx, logoY - 15 * sy, 8 * sf, 0, 2 * Math.PI);
 		  ctx.fill();
 		
-		  // Mouth
 		  ctx.strokeStyle = '#000000';
-		  ctx.lineWidth = 10;
+		  ctx.lineWidth = 10 * sf;
 		  ctx.lineCap = 'round';
 		  ctx.beginPath();
-		  ctx.arc(smileyX, logoY - 5, 40, 0.15 * Math.PI, 0.85 * Math.PI);
+		  ctx.arc(smileyX, logoY - 5 * sy, 40 * sf, 0.15 * Math.PI, 0.85 * Math.PI);
 		  ctx.stroke();
 		
-		  // Main question
+		  // --- Headline ---
 		  ctx.fillStyle = '#000000';
-		  ctx.font = 'bold 110px Arial';
 		  ctx.textAlign = 'center';
 		  ctx.textBaseline = 'middle';
-		  var questionY = logoY + 180;
-		  ctx.fillText('HOW WAS YOUR', signCanvas.width / 2, questionY);
-		  ctx.fillText('EXPERIENCE?', signCanvas.width / 2, questionY + 130);
 		
-		  // QR code
-		  var qrSize = 350;
-		  var qrX = signCanvas.width / 2 - qrSize / 2;
-		  var qrY = questionY + 280;
-		  ctx.drawImage(canvas, qrX, qrY, qrSize, qrSize);
+		  const questionY = logoY + (180 * sy);
+		  setFont(ctx, 110 * sf, true);
+		  ctx.fillText('HOW WAS YOUR', W / 2, questionY);
+		  ctx.fillText('EXPERIENCE?', W / 2, questionY + (130 * sy));
 		
-		  // CHANGED: Business Name + Location Name (auto-fit width)
+		  // --- QR code ---
+		  const qrSize = 350 * sf;
+		  const qrX = (W / 2) - (qrSize / 2);
+		  const qrY = questionY + (280 * sy);
+		  ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+		
+		  // --- Business – Location (auto-fit to width) ---
 		  ctx.fillStyle = '#000000';
 		  ctx.textAlign = 'center';
-		  var maxTextWidth = signCanvas.width - 240; // margins so long names don’t touch edges
-		  var fontSize = 48;                         // starting size
-		  var minSize = 28;
-		  do {
-		    ctx.font = `bold ${fontSize}px Arial`;
-		    var w = ctx.measureText(combinedName).width;
-		    if (w <= maxTextWidth || fontSize <= minSize) break;
-		    fontSize -= 2;
-		  } while (fontSize >= minSize);
-		  ctx.fillText(combinedName, signCanvas.width / 2, qrY + qrSize + 60);
 		
-		  // "SCAN TO RATE" button
-		  var buttonY = qrY + qrSize + 140;
-		  var buttonWidth = 500;
-		  var buttonHeight = 100;
-		  var buttonX = signCanvas.width / 2 - buttonWidth / 2;
+		  const maxTextWidth = innerW - (120 * sx); // keep good side margins
+		  let fontSize = 48 * sf;
+		  const minFont = 28 * sf;
+		
+		  while (fontSize >= minFont) {
+		    setFont(ctx, fontSize, true);
+		    if (ctx.measureText(combinedName).width <= maxTextWidth) break;
+		    fontSize -= 2;
+		  }
+		  ctx.fillText(combinedName, W / 2, qrY + qrSize + (60 * sy));
+		
+		  // --- "SCAN TO RATE" button (black fill, white label) ---
+		  const buttonY = qrY + qrSize + (140 * sy);
+		  const buttonW = 500 * sx;
+		  const buttonH = 100 * sy;
+		  const buttonX = (W / 2) - (buttonW / 2);
 		
 		  ctx.fillStyle = '#000000';
-		  ctx.beginPath();
-		  ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 50);
+		  roundRect(ctx, buttonX, buttonY, buttonW, buttonH, 50 * sf);
 		  ctx.fill();
 		
-		  ctx.fillStyle = 'white';
-		  ctx.font = 'bold 52px Arial';
-		  ctx.fillText('SCAN TO RATE', signCanvas.width / 2, buttonY + buttonHeight / 2);
+		  ctx.fillStyle = '#ffffff';
+		  setFont(ctx, 52 * sf, true);
+		  ctx.fillText('SCAN TO RATE', W / 2, buttonY + (buttonH / 2));
 		
-		  // Display sign
-		  var img = document.createElement('img');
-		  img.src = signCanvas.toDataURL('image/png');
+		  // --- Preview image (PNG) ---
+		  const img = document.createElement('img');
+		  img.src = signCanvas.toDataURL('image/png'); // A4-sized bitmap
+		  img.className = 'sign-preview';
 		  img.style.maxWidth = '100%';
 		  img.style.border = '1px solid #ddd';
 		  img.style.borderRadius = '10px';
 		  img.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
 		
-		  var signContainer = document.getElementById('generatedSign');
-		  var imageContainer = document.getElementById('signImageContainer');
+		  const signContainer = document.getElementById('generatedSign');
+		  const imageContainer = document.getElementById('signImageContainer');
 		  imageContainer.innerHTML = '';
 		  imageContainer.appendChild(img);
 		  signContainer.style.display = 'block';
 		  signContainer.scrollIntoView({ behavior: 'smooth' });
+		
+		  // --- Helpers ---
+		  function setFont(context, sizePx, bold = false) {
+		    context.font = `${bold ? 'bold ' : ''}${Math.round(sizePx)}px Arial`;
+		  }
+		  function roundRect(context, x, y, w, h, r) {
+		    context.beginPath();
+		    context.moveTo(x + r, y);
+		    context.arcTo(x + w, y, x + w, y + h, r);
+		    context.arcTo(x + w, y + h, x, y + h, r);
+		    context.arcTo(x, y + h, x, y, r);
+		    context.arcTo(x, y, x + w, y, r);
+		    context.closePath();
+		  }
 		}
+
 
 
         function toggleSidebar() {
