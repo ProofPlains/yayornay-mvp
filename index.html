@@ -819,19 +819,24 @@
 		  border: 1px solid var(--ff-border);
 		  border-radius: var(--ff-radius-lg);
 		}
-		.mood-card { padding:18px; display:flex; align-items:center; gap:16px; }
 		.mood-emoji {
-		  font-size:80px;
-		  width:88px;
-		  height:88px;
-		  display:flex;
-		  align-items:center;
-		  justify-content:center;
-		  border-radius:20px;
-		  background: transparent;          /* removed dark blob */
-		  box-shadow: none;                  /* ensure no halo */
-		  position: relative; z-index: 2;    /* sit cleanly above the ring */
+		  /* Size is now driven from the wrapper’s variables so it always fits
+		     the ring, regardless of orientation or container width */
+		  font-size: calc(
+		    var(--ring-size) - (var(--ring-thickness) + var(--ring-gap)) * 2 - 4px
+		  );
+		  line-height: 1;               /* prevent glyph overflow */
+		  display: flex;
+		  align-items: center;
+		  justify-content: center;
+		  border-radius: 20px;
+		  background: transparent;
+		  box-shadow: none;
+		  position: relative;
+		  z-index: 2;
+		  overflow: hidden;             /* extra safety on some Android fonts */
 		}
+
 
 
 		/* --- Compact stat chips --- */
@@ -876,7 +881,6 @@
 		@media (max-width: 640px) {
 		  .mood-hero { grid-template-columns: 1fr; gap: 12px; }
 		  .mood-card { padding: 14px; gap: 12px; }
-		  .mood-emoji { font-size: 50px; width: 64px; height: 64px; border-radius: 12px; background: transparent; position: relative; z-index: 2; }
 		  .mood-score { font-size: 30px; }
 		  .mood-sub { font-size: 12px; margin-top: 2px; }
 		}
@@ -888,10 +892,10 @@
 
 		/* --- Circular mood ring around the emoji (size-locked) --- */
 		.mood-emoji-wrap{
-		  /* Desktop defaults (override in the mobile media query below) */
-		  --ring-size: 112px;          /* outer box of the ring */
-		  --ring-thickness: 10px;      /* SVG stroke-width */
-		  --ring-gap: 8px;             /* padding between ring and emoji */
+		  /* Fluid sizing: clamp(min, fluid, max) */
+		  --ring-size: clamp(96px, 20vw, 160px);
+		  --ring-thickness: clamp(6px, 1vw, 12px);
+		  --ring-gap: clamp(6px, 0.8vw, 10px);
 		
 		  position: relative;
 		  width: var(--ring-size);
@@ -899,6 +903,7 @@
 		  display: grid;
 		  place-items: center;
 		}
+
 		
 		/* Size the emoji from the same variables so it always fits the ring */
 		.mood-emoji-wrap .mood-emoji{
@@ -933,14 +938,7 @@
 		  transition: stroke-dashoffset .35s ease, stroke .25s ease;
 		}
 		
-		/* Mobile: scale both ring and emoji together */
-		@media (max-width: 640px){
-		  .mood-emoji-wrap{
-		    --ring-size: 96px;         /* smaller outer box on phones */
-		    --ring-thickness: 8px;     /* slightly thinner on mobile */
-		    --ring-gap: 6px;
-		  }
-		}
+		
 
 
 		
