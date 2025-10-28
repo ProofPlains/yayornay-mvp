@@ -2891,131 +2891,139 @@
         }
 
         function generateSign() {
-            var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
-            var qrSelect = document.getElementById('qrLocationSelect');
-            var selectedLocation = qrSelect?.value || Object.keys(locations)[0] || currentLocation;
-            var locationName = locations[selectedLocation]?.name || 'Unknown Location';
-            
-			var canvas = document.querySelector('#qrContainer canvas');
-            
-            if (!canvas) {
-                alert('Please generate a QR code first');
-                return;
-            }
+		  var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+		  var qrSelect = document.getElementById('qrLocationSelect');
+		  var selectedLocation = qrSelect?.value || Object.keys(locations)[0] || currentLocation;
+		
+		  var locationName = locations[selectedLocation]?.name || 'Unknown Location';
+		  // NEW: get business name for real/demo, then compose "Business – Location"
+		  var bizName =
+		    (currentUser && currentUser.businessName) ||
+		    (window.demoAccount && window.demoAccount.businessName) ||
+		    '';
+		  var combinedName = [bizName, locationName].filter(Boolean).join(' – ');
+		
+		  var canvas = document.querySelector('#qrContainer canvas');            
+		  if (!canvas) {
+		    alert('Please generate a QR code first');
+		    return;
+		  }
+		
+		  var signCanvas = document.createElement('canvas');
+		  var ctx = signCanvas.getContext('2d');
+		
+		  // Set canvas size (8.5" x 11" at 150 DPI)
+		  signCanvas.width = 1275;
+		  signCanvas.height = 1650;
+		
+		  // Background
+		  ctx.fillStyle = '#ffffff';
+		  ctx.fillRect(0, 0, signCanvas.width, signCanvas.height);
+		
+		  // Main card with border
+		  var cardX = 60, cardY = 80;
+		  var cardWidth = signCanvas.width - 120;
+		  var cardHeight = signCanvas.height - 160;
+		
+		  // Orange border
+		  ctx.fillStyle = '#000000';
+		  ctx.beginPath();
+		  ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
+		  ctx.fill();
+		
+		  // White inner card
+		  ctx.fillStyle = 'white';
+		  ctx.beginPath();
+		  ctx.roundRect(cardX + 12, cardY + 12, cardWidth - 24, cardHeight - 24, 32);
+		  ctx.fill();
+		
+		  // Centered Smiley Face
+		  var logoY = cardY + 180; // vertical position
+		  var smileyX = signCanvas.width / 2; // center horizontally
+		
+		  ctx.strokeStyle = '#000000';
+		  ctx.lineWidth = 12;
+		  ctx.beginPath();
+		  ctx.arc(smileyX, logoY, 60, 0, 2 * Math.PI);
+		  ctx.stroke();
+		
+		  // Eyes
+		  ctx.fillStyle = '#000000';
+		  ctx.beginPath();
+		  ctx.arc(smileyX - 20, logoY - 15, 8, 0, 2 * Math.PI);
+		  ctx.fill();
+		  ctx.beginPath();
+		  ctx.arc(smileyX + 20, logoY - 15, 8, 0, 2 * Math.PI);
+		  ctx.fill();
+		
+		  // Mouth
+		  ctx.strokeStyle = '#000000';
+		  ctx.lineWidth = 10;
+		  ctx.lineCap = 'round';
+		  ctx.beginPath();
+		  ctx.arc(smileyX, logoY - 5, 40, 0.15 * Math.PI, 0.85 * Math.PI);
+		  ctx.stroke();
+		
+		  // Main question
+		  ctx.fillStyle = '#000000';
+		  ctx.font = 'bold 110px Arial';
+		  ctx.textAlign = 'center';
+		  ctx.textBaseline = 'middle';
+		  var questionY = logoY + 180;
+		  ctx.fillText('HOW WAS YOUR', signCanvas.width / 2, questionY);
+		  ctx.fillText('EXPERIENCE?', signCanvas.width / 2, questionY + 130);
+		
+		  // QR code
+		  var qrSize = 350;
+		  var qrX = signCanvas.width / 2 - qrSize / 2;
+		  var qrY = questionY + 280;
+		  ctx.drawImage(canvas, qrX, qrY, qrSize, qrSize);
+		
+		  // CHANGED: Business Name + Location Name (auto-fit width)
+		  ctx.fillStyle = '#000000';
+		  ctx.textAlign = 'center';
+		  var maxTextWidth = signCanvas.width - 240; // margins so long names don’t touch edges
+		  var fontSize = 48;                         // starting size
+		  var minSize = 28;
+		  do {
+		    ctx.font = `bold ${fontSize}px Arial`;
+		    var w = ctx.measureText(combinedName).width;
+		    if (w <= maxTextWidth || fontSize <= minSize) break;
+		    fontSize -= 2;
+		  } while (fontSize >= minSize);
+		  ctx.fillText(combinedName, signCanvas.width / 2, qrY + qrSize + 60);
+		
+		  // "SCAN TO RATE" button
+		  var buttonY = qrY + qrSize + 140;
+		  var buttonWidth = 500;
+		  var buttonHeight = 100;
+		  var buttonX = signCanvas.width / 2 - buttonWidth / 2;
+		
+		  ctx.fillStyle = '#000000';
+		  ctx.beginPath();
+		  ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 50);
+		  ctx.fill();
+		
+		  ctx.fillStyle = 'white';
+		  ctx.font = 'bold 52px Arial';
+		  ctx.fillText('SCAN TO RATE', signCanvas.width / 2, buttonY + buttonHeight / 2);
+		
+		  // Display sign
+		  var img = document.createElement('img');
+		  img.src = signCanvas.toDataURL('image/png');
+		  img.style.maxWidth = '100%';
+		  img.style.border = '1px solid #ddd';
+		  img.style.borderRadius = '10px';
+		  img.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
+		
+		  var signContainer = document.getElementById('generatedSign');
+		  var imageContainer = document.getElementById('signImageContainer');
+		  imageContainer.innerHTML = '';
+		  imageContainer.appendChild(img);
+		  signContainer.style.display = 'block';
+		  signContainer.scrollIntoView({ behavior: 'smooth' });
+		}
 
-            var signCanvas = document.createElement('canvas');
-            var ctx = signCanvas.getContext('2d');
-            
-            // Set canvas size (8.5" x 11" at 150 DPI)
-            signCanvas.width = 1275;
-            signCanvas.height = 1650;
-            
-            // Background
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, signCanvas.width, signCanvas.height);
-            
-            // Main card with border
-            var cardX = 60, cardY = 80;
-            var cardWidth = signCanvas.width - 120;
-            var cardHeight = signCanvas.height - 160;
-            
-            // Orange border
-            ctx.fillStyle = '#000000';
-            ctx.beginPath();
-            ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 40);
-            ctx.fill();
-            
-            // White inner card
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.roundRect(cardX + 12, cardY + 12, cardWidth - 24, cardHeight - 24, 32);
-            ctx.fill();
-            
-            // FlashFeedback logo
-            var logoY = cardY + 132;
-            var smileyX = signCanvas.width / 2 - 280;
-            
-           // Centered Smiley Face
-			var logoY = cardY + 180; // vertical position
-			var smileyX = signCanvas.width / 2; // center horizontally
-			
-			ctx.strokeStyle = '#000000';
-			ctx.lineWidth = 12;
-			ctx.beginPath();
-			ctx.arc(smileyX, logoY, 60, 0, 2 * Math.PI);
-			ctx.stroke();
-			
-			// Eyes
-			ctx.fillStyle = '#000000';
-			ctx.beginPath();
-			ctx.arc(smileyX - 20, logoY - 15, 8, 0, 2 * Math.PI);
-			ctx.fill();
-			ctx.beginPath();
-			ctx.arc(smileyX + 20, logoY - 15, 8, 0, 2 * Math.PI);
-			ctx.fill();
-			
-			// Mouth
-			ctx.strokeStyle = '#000000';
-			ctx.lineWidth = 10;
-			ctx.lineCap = 'round';
-			ctx.beginPath();
-			ctx.arc(smileyX, logoY - 5, 40, 0.15 * Math.PI, 0.85 * Math.PI);
-			ctx.stroke();
-
-            
-                       
-            // Main question
-			ctx.fillStyle = '#000000';
-			ctx.font = 'bold 110px Arial';
-			ctx.textAlign = 'center';
-			ctx.textBaseline = 'middle';
-			var questionY = logoY + 180; // was cardY + 220 before
-			ctx.fillText('HOW WAS YOUR', signCanvas.width / 2, questionY);
-			ctx.fillText('EXPERIENCE?', signCanvas.width / 2, questionY + 130);
-	
-            
-            // QR code
-            var qrSize = 350;
-            var qrX = signCanvas.width / 2 - qrSize / 2;
-            var qrY = questionY + 280;
-            ctx.drawImage(canvas, qrX, qrY, qrSize, qrSize);
-            
-            // Location name
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 48px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(locationName, signCanvas.width / 2, qrY + qrSize + 60);
-            
-            // "SCAN TO RATE" button
-            var buttonY = qrY + qrSize + 140;
-            var buttonWidth = 500;
-            var buttonHeight = 100;
-            var buttonX = signCanvas.width / 2 - buttonWidth / 2;
-            
-            ctx.fillStyle = '#000000';
-            ctx.beginPath();
-            ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 50);
-            ctx.fill();
-            
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 52px Arial';
-            ctx.fillText('SCAN TO RATE', signCanvas.width / 2, buttonY + buttonHeight / 2);
-            
-            // Display sign
-            var img = document.createElement('img');
-            img.src = signCanvas.toDataURL('image/png');
-            img.style.maxWidth = '100%';
-            img.style.border = '1px solid #ddd';
-            img.style.borderRadius = '10px';
-            img.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
-            
-            var signContainer = document.getElementById('generatedSign');
-            var imageContainer = document.getElementById('signImageContainer');
-            imageContainer.innerHTML = '';
-            imageContainer.appendChild(img);
-            signContainer.style.display = 'block';
-            signContainer.scrollIntoView({ behavior: 'smooth' });
-        }
 
         function toggleSidebar() {
             // Legacy function - now just opens the nav drawer
