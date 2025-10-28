@@ -2895,7 +2895,8 @@
             var qrSelect = document.getElementById('qrLocationSelect');
             var selectedLocation = qrSelect?.value || Object.keys(locations)[0] || currentLocation;
             var locationName = locations[selectedLocation]?.name || 'Unknown Location';
-            var canvas = document.querySelector('#qrContainer canvas');
+            
+			var canvas = document.querySelector('#qrContainer canvas');
             
             if (!canvas) {
                 alert('Please generate a QR code first');
@@ -2983,7 +2984,7 @@
             ctx.fillStyle = '#000000';
             ctx.font = 'bold 48px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(displayName, signCanvas.width / 2, qrY + qrSize + 60);
+            ctx.fillText(locationName, signCanvas.width / 2, qrY + qrSize + 60);
             
             // "SCAN TO RATE" button
             var buttonY = qrY + qrSize + 140;
