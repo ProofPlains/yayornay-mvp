@@ -890,53 +890,34 @@
 		  .emoji-bar { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 		}
 
-		/* --- Circular mood ring around the emoji (size-locked) --- */
-		.mood-emoji-wrap{
-		  /* Fluid sizing: clamp(min, fluid, max) */
-		  --ring-size: clamp(96px, 20vw, 160px);
-		  --ring-thickness: clamp(6px, 1vw, 12px);
-		  --ring-gap: clamp(6px, 0.8vw, 10px);
+		/* =========================================
+		   Mood bar (replaces circular mood ring)
+		   ========================================= */
+		.mood-score-wrap { display: flex; flex-direction: column; gap: 6px; }
 		
-		  position: relative;
-		  width: var(--ring-size);
-		  height: var(--ring-size);
-		  display: grid;
-		  place-items: center;
+		.mood-bar {
+		  width: clamp(180px, 44vw, 520px);    /* scales nicely from phone to desktop */
+		  height: 12px;
+		  background: rgba(255,255,255,0.08);
+		  border-radius: 999px;
+		  overflow: hidden;
+		  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+		  margin-top: 6px;
+		}
+		
+		.mood-bar__fill {
+		  width: 0%;
+		  height: 100%;
+		  background: var(--ff-success);
+		  border-radius: 999px;                /* keeps ends rounded during animation */
+		  transition: width .35s ease, background-color .25s ease;
+		}
+		
+		/* Tweak sizes on small screens */
+		@media (max-width: 600px) {
+		  .mood-bar { width: clamp(160px, 70vw, 420px); height: 10px; }
 		}
 
-		
-		/* Size the emoji from the same variables so it always fits the ring */
-		.mood-emoji-wrap .mood-emoji{
-		  width: calc(var(--ring-size) - (var(--ring-thickness) + var(--ring-gap)) * 2);
-		  height: calc(var(--ring-size) - (var(--ring-thickness) + var(--ring-gap)) * 2);
-		  /* keep your font-size rules if you like; this is enough for fit */
-		}
-		
-		/* SVG ring fills the wrapper */
-		.mood-ring{
-		  position: absolute;
-		  inset: 0;
-		  z-index: 1;
-		  transform: rotate(-90deg); /* start at 12 o’clock */
-		}
-		
-		.mood-ring .track{
-		  fill: none;
-		  stroke: color-mix(in oklab, var(--ff-surface) 70%, black);
-		  opacity: .28;
-		  stroke-width: var(--ring-thickness);
-		}
-		
-		.mood-ring .progress{
-		  fill: none;
-		  stroke: var(--mood-color, var(--ff-success));
-		  stroke-linecap: round;
-		  stroke-width: var(--ring-thickness);
-		  /* circumference for r=45 in a 0..100 viewBox */
-		  stroke-dasharray: 282.743;         /* 2π*45 */
-		  stroke-dashoffset: 282.743;        /* empty by default */
-		  transition: stroke-dashoffset .35s ease, stroke .25s ease;
-		}
 		
 		
 
@@ -1321,23 +1302,20 @@
                 </div>
 				
 				<!-- Emoji-centric hero -->
-				<div class="mood-hero" id="moodHero">
-				  <div class="mood-card" aria-label="Overall customer mood">
-				    <div class="mood-emoji-wrap" aria-hidden="false">
-					  <div class="mood-emoji" id="moodEmoji" title="Calculated from emoji feedback">🙂</div>
-					  <svg class="mood-ring" viewBox="0 0 100 100" focusable="false" aria-hidden="true">
-						  <!-- r=45 gives us a clean round number for circumference -->
-						  <circle class="track" cx="50" cy="50" r="45"></circle>
-						  <circle id="moodRingProgress" class="progress" cx="50" cy="50" r="45"></circle>
-					  </svg>
-
-					</div>
-
-				    <div>
-				      <div class="mood-score"><span id="moodScore">—</span>/100</div>
-				      <div class="mood-sub">Overall customer mood (all feedback)</div>
+				<div class="mood-card" aria-label="Overall customer mood">
+				  <div class="mood-emoji" id="moodEmoji" title="Calculated from emoji feedback">🙂</div>
+				
+				  <div class="mood-score-wrap">
+				    <div class="mood-score"><span id="moodScore">—</span>/100</div>
+				    <div class="mood-sub">Overall customer mood (all feedback)</div>
+				
+				    <!-- NEW: horizontal mood bar -->
+				    <div class="mood-bar" aria-label="Overall mood">
+				      <div class="mood-bar__fill" id="moodBarFill"></div>
 				    </div>
 				  </div>
+				</div>
+
 				
 				  <div class="emoji-bar" aria-label="Emoji distribution">
 				    <div class="emoji-pill">
@@ -2692,38 +2670,32 @@
 				  if (scoreEl) scoreEl.textContent = (score == null ? '—' : String(score));
 				  if (emojiEl) emojiEl.textContent = pickEmojiByScore(score);
 				
-				  // --- Circular ring progress ---
-				  try {
-				    const progressEl = document.getElementById('moodRingProgress');
-				    const wrap = progressEl ? progressEl.closest('.mood-emoji-wrap') : null;
-				
-				    // percentage (0..1) from score (0..100)
-				    const pct = (typeof score === 'number' && score >= 0) ? Math.min(Math.max(score / 100, 0), 1) : 0;
-				    const CIRC = 282.743; // 2π*45 for viewBox 0..100, r=45
-					if (progressEl) {
-					  progressEl.style.strokeDasharray = CIRC;
-					  progressEl.style.strokeDashoffset = String(CIRC * (1 - pct));
-					}
+				  // --- Horizontal mood bar (replaces ring) ---
+					try {
+					  const fill = document.getElementById('moodBarFill');
+					
+					  // Clamp 0..100 and convert to % width
+					  const pct = (typeof score === 'number' && score >= 0)
+					    ? Math.min(Math.max(score, 0), 100)
+					    : 0;
+					
+					  // Map score to a mood color (same palette logic you had)
+					  function moodColor(s) {
+					    if (s == null) return 'var(--ff-text-muted)';
+					    if (s >= 85) return 'var(--ff-success)';                          // very happy
+					    if (s >= 65) return 'color-mix(in oklab, var(--ff-success) 80%, white)'; 
+					    if (s >= 45) return 'var(--ff-text-muted)';                       // neutral
+					    if (s >= 25) return 'var(--ff-warn)';                             // unhappy
+					    return 'var(--ff-error)';                                         // very unhappy
+					  }
+					  const col = moodColor(score);
+					
+					  if (fill) {
+					    fill.style.width = pct + '%';
+					    fill.style.backgroundColor = col;
+					  }
+					} catch (_) { /* non-blocking */ }
 
-				
-				    // mood color mapping (matches your palette)
-				    // very happy (>=85): success green
-				    // happy (>=65): green-ish
-				    // neutral (>=45): muted gray
-				    // sad (>=25): amber
-				    // very sad (<25): red
-				    function moodColor(s){
-				      if (s == null) return 'var(--ff-text-muted)';
-				      if (s >= 85) return 'var(--ff-success)';           // #22c55e
-				      if (s >= 65) return 'color-mix(in oklab, var(--ff-success) 80%, white)'; 
-				      if (s >= 45) return 'var(--ff-text-muted)';        // neutral
-				      if (s >= 25) return 'var(--ff-warn)';              // #f59e0b
-				      return 'var(--ff-error)';                          // #ef4444
-				    }
-				    const col = moodColor(score);
-				    if (progressEl) progressEl.style.stroke = col;
-				    if (wrap) wrap.style.setProperty('--mood-color', col);
-				  } catch (_) { /* non-blocking */ }
 				
 				  // Counts + % in the emoji bar
 				  var setText = (id, val) => { var el = document.getElementById(id); if (el) el.textContent = val; };
