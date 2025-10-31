@@ -2325,6 +2325,13 @@
             document.querySelector('.submit-btn').classList.add('enabled');
         }
 
+	   // Validate UUID v1–v5 (used to prevent demo/non-UUID writes)
+	   function isUuid(v) {
+		  return typeof v === 'string'
+		    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+		}
+
+		
        async function submitFeedback() {
 		  if (!selectedSentiment) return;
 		
@@ -2339,12 +2346,11 @@
 		    comments
 		  };
 		
-		  showLoader(); // 👈 show while processing
+		  showLoader();
 		  try {
-		    // 1) Derive display name on public QR view (no need to set businessId)
+		    // 1) On public QR view, hydrate display name (but skip for demo)
 		    let businessId = currentUser?.businessId || null;
-		
-		    if (!businessId && currentLocation) {
+		    if (!businessId && isUuid(currentLocation)) {
 		      const locRow = await getLocationById(currentLocation);
 		
 		      // If inactive, show message and stop cleanly
@@ -2362,8 +2368,11 @@
 		      setLocationName(displayName);
 		    }
 		
-		    // 2) Always attempt DB insert when we have a location_id (trigger fills business_id)
-		    if (currentLocation) {
+		    // 2) Only write to DB when the location is a real UUID and we’re not in demo
+		    const inDemo = (currentView === 'customer-demo') || (currentLocation === 'demo') || !!window.demoAccount;
+		    const canWrite = isUuid(currentLocation) && !inDemo;
+		
+		    if (canWrite) {
 		      const safeComments = comments ? comments.slice(0, 500) : null;
 		
 		      const { error } = await supabase
@@ -2390,7 +2399,7 @@
 		        updateFeedback();
 		      }
 		    } else {
-		      // No location_id (shouldn't happen on QR page) — local fallback
+		      // Demo or non-UUID → local-only path (no DB write)
 		      const storageKey = 'feedback_' + currentLocation;
 		      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
 		      existing.push(localItem);
@@ -2399,8 +2408,7 @@
 		    }
 		  } catch (e) {
 		    console.error(e);
-		
-		    // Fallback only on failure
+		    // Fallback on unexpected failures (saves locally)
 		    const storageKey = 'feedback_' + currentLocation;
 		    const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
 		    existing.push(localItem);
@@ -2410,7 +2418,7 @@
 		    alert(e.message || 'Could not submit feedback (saved locally, will not appear on dashboard).');
 		  }
 		
-		  hideLoader(); // 👈 always hide before thank-you UI
+		  hideLoader(); // always hide before thank-you UI
 		
 		  // 4) Thank-you UI
 		  const section = document.querySelector('.feedback-section');
@@ -2431,6 +2439,7 @@
 		    setTimeout(showDemoAdmin, 2000);
 		  }
 		}
+
 
 
 
@@ -3678,17 +3687,14 @@
 		  if (!sessionStorage.getItem(guardKey)) {
 		    sessionStorage.setItem(guardKey, '1');
 		
-		    if (locationId) {
+		    // ✅ Only log if it’s a real UUID (skip "demo" etc.)
+		    if (isUuid(locationId)) {
 		      try {
-		        // Use raw fetch with explicit headers to avoid missing/invalid JWT in anon contexts
 		        const url = 'https://evediwsocfbalzbzdden.supabase.co/rest/v1/customer_events';
 		        const body = JSON.stringify({
 		          location_id: locationId,
 		          event_type: 'learn_more_click'
 		        });
-		
-		        // Reuse your existing constants (exactly as in your Supabase init)
-		        // const SUPABASE_ANON_KEY = '...'; // already declared earlier in your file
 		
 		        const res = await fetch(url, {
 		          method: 'POST',
@@ -3701,7 +3707,6 @@
 		          body
 		        });
 		
-		        // If it ever fails, don't block the user; just log to console
 		        if (!res.ok) {
 		          console.warn('learn_more_click log failed:', res.status, await res.text());
 		        }
@@ -3714,6 +3719,7 @@
 		  // Continue to your existing signup flow
 		  try { goToSignup(); } catch {}
 		}
+
 		
 		// expose for inline onclick
 		window.onLearnMoreClick = onLearnMoreClick;
