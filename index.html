@@ -9,7 +9,8 @@
     <title>FlashFeedback - Instant Customer Feedback with QR Codes</title>
     <link rel="icon" href="data:,">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-    <style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+	<style>
 		:root{ 
 		  /* Colors (light fallback) */
 		  --ff-brand-1: #a78bfa;
@@ -882,6 +883,41 @@
 		  .emoji-bar { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 		}
 
+		/* === Grape Dark: selects === */
+		select, .form-group select {
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
+		  color: var(--ff-text);
+		  border: 1px solid var(--ff-border);
+		  border-radius: var(--ff-radius-sm);
+		  padding: 10px 12px;
+		  font-size: 14px;
+		  appearance: none; /* hide native arrow (most browsers) */
+		  background-image:
+		    linear-gradient(45deg, transparent 50%, var(--ff-text) 50%),
+		    linear-gradient(135deg, var(--ff-text) 50%, transparent 50%),
+		    linear-gradient(to right, transparent, transparent);
+		  background-position:
+		    calc(100% - 18px) calc(50% - 3px),
+		    calc(100% - 12px) calc(50% - 3px),
+		    0 0;
+		  background-size: 6px 6px, 6px 6px, 100% 100%;
+		  background-repeat: no-repeat;
+		}
+		select:focus, .form-group select:focus {
+		  outline: none;
+		  border-color: var(--ff-brand-1);
+		  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ff-brand-1) 18%, transparent);
+		}
+		select option {
+		  background: var(--ff-surface);
+		  color: var(--ff-text);
+		}
+		
+		/* Optional: labels a touch brighter in dark */
+		.form-group label, label {
+		  color: var(--ff-text) !important;
+		}
+
 		
 	</style>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
@@ -1270,29 +1306,10 @@
 				    </div>
 				  </div>
 				
-				  <div class="emoji-bar" aria-label="Emoji distribution">
-				    <div class="emoji-pill">
-				      <div class="left"><span class="big">😍</span><span>Very happy</span></div>
-				      <div><span class="pct" id="pctVeryHappy">0%</span> · <span id="cntVeryHappy">0</span></div>
-				    </div>
-				    <div class="emoji-pill">
-				      <div class="left"><span class="big">😊</span><span>Happy</span></div>
-				      <div><span class="pct" id="pctHappy">0%</span> · <span id="cntHappy">0</span></div>
-				    </div>
-				    <div class="emoji-pill">
-				      <div class="left"><span class="big">😐</span><span>Neutral</span></div>
-				      <div><span class="pct" id="pctNeutral">0%</span> · <span id="cntNeutral">0</span></div>
-				    </div>
-				    <div class="emoji-pill">
-				      <div class="left"><span class="big">😞</span><span>Unhappy</span></div>
-				      <div><span class="pct" id="pctSad">0%</span> · <span id="cntSad">0</span></div>
-				    </div>
-				    <div class="emoji-pill">
-				      <div class="left"><span class="big">😭</span><span>Very unhappy</span></div>
-				      <div><span class="pct" id="pctVerySad">0%</span> · <span id="cntVerySad">0</span></div>
-				    </div>
+				  <div id="emojiChartWrap" class="emoji-bar" aria-label="Emoji distribution" style="min-height:280px;">
+					  <canvas id="emojiPolar"></canvas>
 				  </div>
-				</div>
+
 
 				
                 
@@ -2575,6 +2592,88 @@
 		}
 		function pct(n,total){ return total > 0 ? Math.round((n/total)*100)+'%' : '0%'; }
 
+		// --- Polar area chart for emoji distribution ---
+		let _emojiPolarChart;
+		
+		function renderEmojiPolar(counts) {
+		  const wrap = document.getElementById('emojiChartWrap');
+		  const canvas = document.getElementById('emojiPolar');
+		  if (!wrap || !canvas || typeof Chart === 'undefined') return;
+		
+		  // Order: very-sad, sad, neutral, happy, very-happy
+		  const labels = ['😭','😞','😐','😊','😍'];
+		  const data = [
+		    counts['very-sad']  || 0,
+		    counts['sad']       || 0,
+		    counts['neutral']   || 0,
+		    counts['happy']     || 0,
+		    counts['very-happy']|| 0
+		  ];
+		  const total = Math.max(1, data.reduce((a,b)=>a+b,0));
+		
+		  // Grape-friendly fills (soft alphas)
+		  const fills = [
+		    'rgba(239, 68, 68, 0.6)',   // very-sad
+		    'rgba(245, 158, 11, 0.6)',  // sad
+		    'rgba(148, 163, 184, 0.6)', // neutral
+		    'rgba(34, 197, 94, 0.6)',   // happy
+		    'rgba(167, 139, 250, 0.7)'  // very-happy (grape)
+		  ];
+		
+		  // Make container control height responsively
+		  wrap.style.position = 'relative';
+		  wrap.style.height = '320px';
+		
+		  const cfg = {
+		    type: 'polarArea',
+		    data: {
+		      labels,
+		      datasets: [{
+		        data,
+		        backgroundColor: fills,
+		        borderWidth: 0
+		      }]
+		    },
+		    options: {
+		      responsive: true,
+		      maintainAspectRatio: false,
+		      layout: { padding: 8 },
+		      scales: {
+		        r: {
+		          pointLabels: {
+		            display: true,
+		            centerPointLabels: true,
+		            font: { size: 16 }
+		          },
+		          grid: { color: 'rgba(255,255,255,0.10)' },
+		          angleLines: { color: 'rgba(255,255,255,0.08)' },
+		          ticks: { display: false }
+		        }
+		      },
+		      plugins: {
+		        legend: { display: false },
+		        tooltip: {
+		          callbacks: {
+		            label: (ctx) => {
+		              const v = ctx.raw ?? 0;
+		              const pct = ((v / total) * 100).toFixed(1);
+		              return `${ctx.label}: ${v} (${pct}%)`;
+		            }
+		          }
+		        }
+		      }
+		    }
+		  };
+		
+		  if (_emojiPolarChart) {
+		    _emojiPolarChart.data = cfg.data;
+		    _emojiPolarChart.options = cfg.options;
+		    _emojiPolarChart.update();
+		  } else {
+		    _emojiPolarChart = new Chart(canvas, cfg);
+		  }
+		}
+
 
         function updateFeedback() {
                 var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
@@ -2622,6 +2721,8 @@
 				document.getElementById('miniCommentsCount').textContent = commentsCount;
 				document.getElementById('miniCommentsPercent').textContent =
 				  total > 0 ? Math.round((commentsCount / total) * 100) + '%' : '0%';
+				// Render/refresh emoji polar chart
+				renderEmojiPolar(counts);
 
 			
 			    // NEW: Emoji hero + distribution bar
