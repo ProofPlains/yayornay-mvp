@@ -883,25 +883,35 @@
 		  .emoji-bar { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 		}
 
-		/* === Grape Dark: selects === */
+		/* === Grape Dark: selects (no text/arrow overlap) === */
 		select, .form-group select {
 		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
 		  color: var(--ff-text);
 		  border: 1px solid var(--ff-border);
 		  border-radius: var(--ff-radius-sm);
 		  padding: 10px 12px;
+		  /* reserve space for the chevron so long labels don't collide */
+		  padding-right: 2.75rem;
+		
 		  font-size: 14px;
-		  appearance: none; /* hide native arrow (most browsers) */
+		  line-height: 1.25;
+		  appearance: none; /* hide native arrow */
 		  background-image:
 		    linear-gradient(45deg, transparent 50%, var(--ff-text) 50%),
 		    linear-gradient(135deg, var(--ff-text) 50%, transparent 50%),
 		    linear-gradient(to right, transparent, transparent);
+		  /* pull chevron slightly inward and center it vertically */
 		  background-position:
-		    calc(100% - 18px) calc(50% - 3px),
-		    calc(100% - 12px) calc(50% - 3px),
+		    right 1.15rem center,
+		    right 0.65rem center,
 		    0 0;
 		  background-size: 6px 6px, 6px 6px, 100% 100%;
 		  background-repeat: no-repeat;
+		
+		  /* keep long labels tidy rather than wrapping under the arrow */
+		  white-space: nowrap;
+		  overflow: hidden;
+		  text-overflow: ellipsis;
 		}
 		select:focus, .form-group select:focus {
 		  outline: none;
@@ -912,11 +922,7 @@
 		  background: var(--ff-surface);
 		  color: var(--ff-text);
 		}
-		
-		/* Optional: labels a touch brighter in dark */
-		.form-group label, label {
-		  color: var(--ff-text) !important;
-		}
+
 
 		
 	</style>
