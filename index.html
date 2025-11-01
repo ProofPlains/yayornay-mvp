@@ -3566,13 +3566,22 @@
 		  });
 		}
 
-		// Returns the array to render on the list (filtered or not)
+		// Canonical, reverse-chronological view (never mutates the source)
 		function getRecentView() {
-		  const checked = document.getElementById('commentsOnlyToggle')?.checked;
-		  return checked
-		    ? recentSorted.filter(it => it.comments && it.comments.trim())
-		    : recentSorted;
+		  const base = Array.isArray(recentSorted) ? recentSorted.slice() : [];
+		  // Always sort a COPY newest → oldest to avoid side effects
+		  base.sort((a, b) => {
+		    const ta = (a && a.timestamp) ? new Date(a.timestamp).getTime() : 0;
+		    const tb = (b && b.timestamp) ? new Date(b.timestamp).getTime() : 0;
+		    return tb - ta;
+		  });
+		
+		  const commentsOnly = document.getElementById('commentsOnlyToggle')?.checked;
+		  return commentsOnly
+		    ? base.filter(it => it?.comments && it.comments.trim())
+		    : base;
 		}
+
 		
 		// Re-render when the checkbox is toggled
 		document.getElementById('commentsOnlyToggle')?.addEventListener('change', () => {
