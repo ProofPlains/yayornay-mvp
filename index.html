@@ -1325,22 +1325,24 @@
 
 				
                 
-                <!-- Compact chips for Total Feedback + Left Comments -->
-				<div class="mini-stats">
-				  <div class="stat-chip">🧮 Total feedback: <strong id="miniTotalFeedback">0</strong></div>
-				  <div class="stat-chip">📝 Left comments: <strong id="miniCommentsCount">0</strong> (<span id="miniCommentsPercent">0%</span>)</div>
-				</div>  
+                <!-- Header row with total count + "comments only" filter -->
+				<div style="margin-top: 30px;">
+				  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px;">
+				    <h2 style="margin:0;">Feedback <span id="feedbackCount" style="opacity:.7;font-weight:500;">(0)</span></h2>
+				    <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer;">
+				      <input id="commentsOnlyToggle" type="checkbox" />
+				      <span>Show comments only</span>
+				    </label>
+				  </div>
+				
+				  <div id="recentFeedbackList"></div>
+				  <div id="recentPagination" style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px;">
+				    <button id="recentPrev" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">‹ Prev</button>
+				    <span id="recentPageInfo" style="font-size:12px; color:#6b7280;">Page 1 of 1</span>
+				    <button id="recentNext" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">Next ›</button>
+				  </div>
+				</div>
 
-
-                <div style="margin-top: 30px;">
-                    <h2>Feedback</h2>
-                    <div id="recentFeedbackList"></div>
-					<div id="recentPagination" style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px;">
-					  <button id="recentPrev" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">‹ Prev</button>
-					  <span id="recentPageInfo" style="font-size:12px; color:#6b7280;">Page 1 of 1</span>
-					  <button id="recentNext" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">Next ›</button>
-					</div>
-                </div>
             </section>
 
             <section id="locations" class="content-section">
@@ -2728,13 +2730,13 @@
 				  if (element) element.textContent = percentages[key];
 				});
 				
-				// --- Update new mini chips ---
-				document.getElementById('miniTotalFeedback').textContent = total;
-				document.getElementById('miniCommentsCount').textContent = commentsCount;
-				document.getElementById('miniCommentsPercent').textContent =
-				  total > 0 ? Math.round((commentsCount / total) * 100) + '%' : '0%';
+				// Update header count "(N)" after "Feedback"
+				const fc = document.getElementById('feedbackCount');
+				if (fc) fc.textContent = `(${total})`;
+				
 				// Render/refresh emoji polar chart
 				renderEmojiPolar(counts);
+
 
 			
 			    // NEW: Emoji hero + distribution bar
@@ -3562,6 +3564,21 @@
 		  });
 		}
 
+		// Returns the array to render on the list (filtered or not)
+		function getRecentView() {
+		  const checked = document.getElementById('commentsOnlyToggle')?.checked;
+		  return checked
+		    ? recentSorted.filter(it => it.comments && it.comments.trim())
+		    : recentSorted;
+		}
+		
+		// Re-render when the checkbox is toggled
+		document.getElementById('commentsOnlyToggle')?.addEventListener('change', () => {
+		  recentPage = 1;           // reset to first page when filter changes
+		  renderRecentPage();       // re-render list & pagination
+		});
+
+		
 		// --- Recent Feedback pagination state ---
 		let RECENT_PAGE_SIZE = 10;
 		let recentPage = 0;
@@ -3572,14 +3589,19 @@
 		  if (!container) return;
 		  container.innerHTML = '';
 		
-		  const total = recentSorted.length;
+		  // Use filtered or full list depending on the checkbox
+		  const src = (typeof getRecentView === 'function') ? getRecentView() : recentSorted;
+		
+		  const total = src.length;
 		  const totalPages = Math.max(1, Math.ceil(total / RECENT_PAGE_SIZE));
-		  // clamp page
+		
+		  // clamp page (0-based)
 		  if (recentPage < 0) recentPage = 0;
 		  if (recentPage > totalPages - 1) recentPage = totalPages - 1;
 		
 		  const start = recentPage * RECENT_PAGE_SIZE;
-		  const pageItems = recentSorted.slice(start, start + RECENT_PAGE_SIZE);
+		  const end = start + RECENT_PAGE_SIZE;
+		  const pageItems = src.slice(start, end);
 		
 		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
 		  const emojiMap = { 'very-happy':'😍','happy':'😊','neutral':'😐','sad':'😞','very-sad':'😠' };
@@ -3624,12 +3646,11 @@
 		    const right = document.createElement('span');
 		    right.style.cssText = 'color:#666; font-size:14px;';
 		    try {
-			  const tz = currentUser?.timezone || 'Europe/London';
-			  right.textContent = new Date(item.timestamp).toLocaleString(undefined, { timeZone: tz });
-			} catch {
-			  right.textContent = new Date(item.timestamp).toLocaleString();
-			}
-
+		      const tz = currentUser?.timezone || 'Europe/London';
+		      right.textContent = new Date(item.timestamp).toLocaleString(undefined, { timeZone: tz });
+		    } catch {
+		      right.textContent = new Date(item.timestamp).toLocaleString();
+		    }
 		
 		    row.appendChild(left);
 		    row.appendChild(middle);
@@ -3643,6 +3664,7 @@
 		  const next = document.getElementById('recentNext');
 		
 		  if (info) info.textContent = `Page ${Math.min(recentPage + 1, totalPages)} of ${totalPages}`;
+		
 		  if (prev) {
 		    prev.disabled = recentPage === 0;
 		    prev.style.opacity = prev.disabled ? '0.5' : '1';
@@ -3652,10 +3674,17 @@
 		    next.style.opacity = next.disabled ? '0.5' : '1';
 		  }
 		}
-
 		
-		function nextRecentPage() { recentPage += 1; renderRecentPage(); }
-		function prevRecentPage() { recentPage -= 1; renderRecentPage(); }
+		function nextRecentPage() {
+		  recentPage += 1;
+		  renderRecentPage();
+		}
+		
+		function prevRecentPage() {
+		  recentPage -= 1;
+		  renderRecentPage();
+		}
+
 
 		// --- Wire up Recent Feedback pagination controls ---
 		document.addEventListener('DOMContentLoaded', () => {
