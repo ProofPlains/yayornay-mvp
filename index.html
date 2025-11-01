@@ -3608,18 +3608,33 @@
 		
 		  pageItems.forEach((item) => {
 		    const row = document.createElement('div');
-		    row.style.cssText = 'display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:15px; background:#0d1117; border: 1px solid var(--ff-border) !important; border-radius:8px; margin-bottom:10px;';
+		    row.style.cssText = [
+		      'display:flex',
+		      'flex-wrap:wrap',                 // wrap on narrow screens
+		      'gap:10px',
+		      'align-items:center',
+		      'padding:15px',
+		      'background:#0d1117',
+		      'border: 1px solid var(--ff-border) !important',
+		      'border-radius:8px',
+		      'margin-bottom:10px',
+		      'width:100%',                    // <-- fill container width
+		      'box-sizing:border-box'          // <-- include padding in width
+		    ].join(';');
 		
-		    // Left: emoji
+		    // Left: emoji (fixed)
 		    const left = document.createElement('span');
-		    left.style.fontSize = '24px';
+		    left.style.cssText = 'font-size:24px; flex:0 0 auto;';
 		    left.textContent = emojiMap[item.sentiment] || '•';
 		
-		    // Middle: location + action (View comment / No comment)
+		    // Middle: location + action (flexible; allow shrink)
 		    const middle = document.createElement('div');
-		    middle.style.cssText = 'display:flex; align-items:center; gap:12px; flex:1 1 auto; min-width:200px;';
+		    // min-width:0 lets this column actually shrink rather than forcing overflow
+		    middle.style.cssText = 'display:flex; align-items:center; gap:12px; flex:1 1 300px; min-width:0;';
 		
 		    const locSpan = document.createElement('span');
+		    // allow long names to truncate nicely
+		    locSpan.style.cssText = 'min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
 		    locSpan.textContent = locations[item.location]?.name || 'Unknown';
 		
 		    const hasComment = !!(item.comments && item.comments.trim());
@@ -3628,13 +3643,13 @@
 		      const btn = document.createElement('button');
 		      btn.type = 'button';
 		      btn.className = 'view-comment';
-		      btn.style.cssText = 'background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)) !important; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; color: var(--ff-text-on-brand) !important; font-size:13px;';
+		      btn.style.cssText = 'background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)) !important; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; color: var(--ff-text-on-brand) !important; font-size:13px; flex:0 0 auto;';
 		      btn.textContent = 'View comment';
 		      btn.addEventListener('click', () => showCommentModal(item.comments));
 		      actionEl = btn;
 		    } else {
 		      const txt = document.createElement('span');
-		      txt.style.cssText = 'font-size:13px; color:#6b7280;';
+		      txt.style.cssText = 'font-size:13px; color:#6b7280; flex:0 0 auto;';
 		      txt.textContent = 'No comment';
 		      actionEl = txt;
 		    }
@@ -3642,9 +3657,9 @@
 		    middle.appendChild(locSpan);
 		    middle.appendChild(actionEl);
 		
-		    // Right: timestamp
+		    // Right: timestamp (fixed, no wrap)
 		    const right = document.createElement('span');
-		    right.style.cssText = 'color:#666; font-size:14px;';
+		    right.style.cssText = 'color:#666; font-size:14px; flex:0 0 auto; white-space:nowrap;';
 		    try {
 		      const tz = currentUser?.timezone || 'Europe/London';
 		      right.textContent = new Date(item.timestamp).toLocaleString(undefined, { timeZone: tz });
@@ -3684,6 +3699,7 @@
 		  recentPage -= 1;
 		  renderRecentPage();
 		}
+
 
 
 		// --- Wire up Recent Feedback pagination controls ---
