@@ -883,45 +883,51 @@
 		  .emoji-bar { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 		}
 
-		/* === Grape Dark: selects (no text/arrow overlap) === */
+		/* === Grape Dark: selects (clean caret, no overlap) === */
 		select, .form-group select {
 		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
 		  color: var(--ff-text);
 		  border: 1px solid var(--ff-border);
 		  border-radius: var(--ff-radius-sm);
 		  padding: 10px 12px;
-		  /* reserve space for the chevron so long labels don't collide */
+		  /* reserve space for caret so long labels don't collide */
 		  padding-right: 2.75rem;
 		
 		  font-size: 14px;
 		  line-height: 1.25;
-		  appearance: none; /* hide native arrow */
-		  background-image:
-		    linear-gradient(45deg, transparent 50%, var(--ff-text) 50%),
-		    linear-gradient(135deg, var(--ff-text) 50%, transparent 50%),
-		    linear-gradient(to right, transparent, transparent);
-		  /* pull chevron slightly inward and center it vertically */
-		  background-position:
-		    right 1.15rem center,
-		    right 0.65rem center,
-		    0 0;
-		  background-size: 6px 6px, 6px 6px, 100% 100%;
-		  background-repeat: no-repeat;
+		  appearance: none;                 /* hide native arrow */
 		
-		  /* keep long labels tidy rather than wrapping under the arrow */
+		  /* single crisp caret via inline SVG */
+		  background-repeat: no-repeat;
+		  background-position: right 0.9rem center;
+		  background-size: 12px 8px;
+		  background-image: url("data:image/svg+xml;utf8,\
+		<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'>\
+		<path d='M1 2.25l5 4.5 5-4.5' fill='none' stroke='%23ece8dc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>\
+		</svg>");
+		
+		  /* prevent wrap under the caret */
 		  white-space: nowrap;
 		  overflow: hidden;
 		  text-overflow: ellipsis;
+		
+		  transition: border-color .15s ease, box-shadow .15s ease;
 		}
 		select:focus, .form-group select:focus {
 		  outline: none;
 		  border-color: var(--ff-brand-1);
 		  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ff-brand-1) 18%, transparent);
+		  /* brand-tinted caret on focus */
+		  background-image: url("data:image/svg+xml;utf8,\
+		<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'>\
+		<path d='M1 2.25l5 4.5 5-4.5' fill='none' stroke='%239f7aea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>\
+		</svg>");
 		}
 		select option {
 		  background: var(--ff-surface);
 		  color: var(--ff-text);
 		}
+
 
 
 		
