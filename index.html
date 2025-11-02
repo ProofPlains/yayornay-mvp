@@ -3569,11 +3569,19 @@
 		// Canonical, reverse-chronological view (never mutates the source)
 		function getRecentView() {
 		  const base = Array.isArray(recentSorted) ? recentSorted.slice() : [];
-		  // Always sort a COPY newest → oldest to avoid side effects
+		
+		  // Always sort a COPY newest → oldest; add a stable tie-breaker so the
+		  // order doesn't shuffle when toggling the filter or changing pages.
 		  base.sort((a, b) => {
 		    const ta = (a && a.timestamp) ? new Date(a.timestamp).getTime() : 0;
 		    const tb = (b && b.timestamp) ? new Date(b.timestamp).getTime() : 0;
-		    return tb - ta;
+		    if (tb !== ta) return tb - ta; // newest first
+		
+		    // Stable tie-breaker: keep the original relative order from recentSorted
+		    // when timestamps are equal.
+		    const ia = Array.isArray(recentSorted) ? recentSorted.indexOf(a) : 0;
+		    const ib = Array.isArray(recentSorted) ? recentSorted.indexOf(b) : 0;
+		    return ia - ib;
 		  });
 		
 		  const commentsOnly = document.getElementById('commentsOnlyToggle')?.checked;
@@ -3585,9 +3593,10 @@
 		
 		// Re-render when the checkbox is toggled
 		document.getElementById('commentsOnlyToggle')?.addEventListener('change', () => {
-		  recentPage = 1;           // reset to first page when filter changes
-		  renderRecentPage();       // re-render list & pagination
+		  recentPage = 0;           // 0-based index avoids off-by-one after toggling
+		  renderRecentPage();
 		});
+
 
 		
 		// --- Recent Feedback pagination state ---
