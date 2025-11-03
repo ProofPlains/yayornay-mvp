@@ -1046,6 +1046,31 @@
 					This appears on your customer feedback screen.
 				  </div>				  
             </div>
+			<!-- NEW: Industry -->
+			<div class="form-group">
+			  <label for="signupIndustry">Industry</label>
+			  <select id="signupIndustry" required>
+			    <option value="">— Select an industry —</option>
+			    <option>Hospitality</option>
+			    <option>Healthcare</option>
+			    <option>Retail</option>
+			    <option>Events</option>
+			    <option>Beauty & Wellness</option>
+			    <option>Fitness & Sport</option>
+			    <option>Automotive</option>
+			    <option>Education</option>
+			    <option>Government & Public</option>
+			    <option>Nonprofit</option>
+			    <option>Other</option>
+			  </select>
+			</div>
+			
+			<!-- NEW: Business type (free text for specificity) -->
+			<div class="form-group">
+			  <label for="signupBusinessType">Business type (optional)</label>
+			  <input id="signupBusinessType" type="text" placeholder="e.g., Restaurant, Doctor’s Practice, Salon">
+			</div>
+
             <div class="form-group">
                 <label for="ownerName">Your Name</label>
                 <input type="text" id="ownerName" required>
@@ -1435,6 +1460,31 @@
 				        <option value="Asia/Tokyo">Asia/Tokyo</option>
 				      </select>
 				    </div>
+					<!-- NEW: Industry -->
+					<div class="form-group">
+					  <label for="settingsIndustry">Industry</label>
+					  <select id="settingsIndustry">
+					    <option value="">— Select an industry —</option>
+					    <option>Hospitality</option>
+					    <option>Healthcare</option>
+					    <option>Retail</option>
+					    <option>Events</option>
+					    <option>Beauty & Wellness</option>
+					    <option>Fitness & Sport</option>
+					    <option>Automotive</option>
+					    <option>Education</option>
+					    <option>Government & Public</option>
+					    <option>Nonprofit</option>
+					    <option>Other</option>
+					  </select>
+					</div>
+					
+					<!-- NEW: Business type -->
+					<div class="form-group">
+					  <label for="settingsBusinessType">Business type (optional)</label>
+					  <input id="settingsBusinessType" type="text" placeholder="e.g., Restaurant, Doctor’s Practice, Salon">
+					</div>
+
 				    <div class="form-group">
 				      <label for="settingsLogoUrl">Business logo URL (optional)</label>
 				      <input id="settingsLogoUrl" type="url" placeholder="https://…">
@@ -1896,6 +1946,9 @@
 		  const password     = document.getElementById('password').value;
 		  const confirmPwd   = document.getElementById('confirmPassword').value;
 		  const locationName = (document.getElementById('signupLocationName')?.value || '').trim() || 'Location 01';
+		  const industry     = (document.getElementById('signupIndustry')?.value || '').trim();
+		  const businessType = (document.getElementById('signupBusinessType')?.value || '').trim();
+
 
 		  // Basic client-side checks
 		  if (!businessName || !ownerName || !email || !password || !confirmPwd) {
@@ -1921,7 +1974,14 @@
 			// 2) Create business owned by this user
 			const { data: biz, error: bizErr } = await supabase
 			  .from('businesses')
-			  .insert({ name: businessName, owner_id: user.id, owner_name: ownerName, timezone: 'Europe/London' })
+			  .insert({
+				  name: businessName,
+				  owner_id: user.id,
+				  owner_name: ownerName,
+				  timezone: 'Europe/London',
+				  industry: industry || null,
+				  business_type: businessType || null
+				})
 			  .select()
 			  .single();
 			if (bizErr) throw bizErr;
@@ -3295,7 +3355,7 @@
 		  // Pull fresh business row (ensures we reflect external changes too)
 		  const { data: biz, error } = await supabase
 		    .from('businesses')
-		    .select('id,name,owner_name,timezone,default_location_id,logo_url')
+		    .select('id,name,owner_name,timezone,default_location_id,logo_url,industry,business_type')
 		    .eq('id', currentUser.businessId)
 		    .single();
 		  if (error) {
@@ -3309,6 +3369,8 @@
 		  currentUser.timezone        = biz.timezone || 'Europe/London';
 		  currentUser.defaultLocationId = biz.default_location_id || currentUser.defaultLocationId || null;
 		  currentUser.logoUrl         = biz.logo_url || '';
+		  currentUser.industry = biz.industry || '';
+		  currentUser.businessType = biz.business_type || '';
 		
 		  // Populate controls
 		  document.getElementById('settingsOwnerName').value = currentUser.ownerName || '';
@@ -3316,6 +3378,9 @@
 		  document.getElementById('settingsBusinessName').value = currentUser.businessName || '';
 		  document.getElementById('settingsTimezoneSelect').value = currentUser.timezone || 'Europe/London';
 		  document.getElementById('settingsLogoUrl').value = currentUser.logoUrl || '';
+		  document.getElementById('settingsIndustry').value = biz.industry || '';
+		  document.getElementById('settingsBusinessType').value = biz.business_type || '';
+
 		
 		  // Locations dropdown in Settings
 		  updateLocationSelects();
@@ -3349,11 +3414,13 @@
 		  const name = document.getElementById('settingsBusinessName')?.value.trim() || '';
 		  const tz   = document.getElementById('settingsTimezoneSelect')?.value || 'Europe/London';
 		  const def  = document.getElementById('settingsDefaultLocationSelect')?.value || null;
+		  const industry = document.getElementById('settingsIndustry')?.value || '';
+  		  const businessType = document.getElementById('settingsBusinessType')?.value?.trim() || '';
 		  const logo = document.getElementById('settingsLogoUrl')?.value.trim() || null;
 		  const status = document.getElementById('settingsBusinessStatus');
 		  status.textContent = 'Saving...';
 		
-		  const patch = { name, timezone: tz, logo_url: logo || null };
+		  const patch = { name, timezone: tz, logo_url: logo || null, industry: industry || null, business_type: businessType || null };
 		  if (def) patch.default_location_id = def;
 		
 		  const { error } = await supabase
