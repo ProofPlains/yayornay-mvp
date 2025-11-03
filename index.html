@@ -859,6 +859,18 @@
 		  gap:8px;
 		}
 
+		/* Tooltip emoji anchors around the chart */
+		.chart-emoji {
+		  font-size: 28px;
+		  line-height: 1;
+		  cursor: pointer;
+		  user-select: none;
+		  z-index: 2;
+		}
+		@media (min-width: 640px) {
+		  .chart-emoji { font-size: 34px; }
+		}
+
 		.emoji-pill {
 		  display:flex; align-items:center; gap:10px;
 		  padding:10px 12px; border-radius:14px; border:1px solid var(--ff-border);
@@ -1343,9 +1355,17 @@
 				    </div>
 				  </div>
 				
-				  <div id="emojiChartWrap" class="emoji-bar" aria-label="Emoji distribution" style="min-height:280px;">
-				    <canvas id="emojiPolar"></canvas>
+				  <div id="emojiChartWrap" class="emoji-bar" aria-label="Emoji distribution" style="min-height:280px; position:relative;">
+					  <canvas id="emojiPolar"></canvas>
+					
+					  <!-- Emoji anchors mapped to dataset indices (Chart.js order: 😡, 😠, 😐, 😊, 😍) -->
+					  <span class="chart-emoji" data-index="4" aria-label="very happy" title="Very happy"  style="position:absolute; top:-8px;  left:50%; transform:translate(-50%,-50%);">😍</span>
+					  <span class="chart-emoji" data-index="3" aria-label="happy"       title="Happy"       style="position:absolute; top:28%;  right:-8px; transform:translate(50%,-50%);">😊</span>
+					  <span class="chart-emoji" data-index="2" aria-label="neutral"     title="Neutral"     style="position:absolute; bottom:-8px; left:50%; transform:translate(-50%,50%);">😐</span>
+					  <span class="chart-emoji" data-index="1" aria-label="sad"         title="Sad"         style="position:absolute; top:28%;  left:-8px;  transform:translate(-50%,-50%);">😠</span>
+					  <span class="chart-emoji" data-index="0" aria-label="very sad"    title="Very sad"    style="position:absolute; top:50%;  left:50%; transform:translate(-50%, -50%) translateY(120px);">😡</span>
 				  </div>
+
 				</div> <!-- ✅ close .mood-hero -->
 
 
@@ -2743,14 +2763,20 @@
 		      plugins: {
 		        legend: { display: false },
 		        tooltip: {
-		          callbacks: {
-		            label: (ctx) => {
-		              const v = ctx.raw ?? 0;
-		              const pct = ((v / total) * 100).toFixed(1);
-		              return `${ctx.label}: ${v} (${pct}%)`;
-		            }
-		          }
-		        }
+				  bodyFont:   { size: 14 },
+				  titleFont:  { size: 14 },
+				  footerFont: { size: 14 },
+				  padding: 10,
+				  cornerRadius: 8,
+				  callbacks: {
+				    label: (ctx) => {
+				      const v = ctx.raw ?? 0;
+				      const pct = ((v / total) * 100).toFixed(1);
+				      return `${ctx.label}: ${v} (${pct}%)`;
+				    }
+				  }
+				}
+
 		      }
 		    }
 		  };
@@ -2762,6 +2788,33 @@
 		  } else {
 		    _emojiPolarChart = new Chart(canvas, cfg);
 		  }
+		// Make the surrounding emoji show the same tooltip as the slice
+		(function wireEmojiTooltipsChartJs() {
+		  const chart = _emojiPolarChart;
+		  if (!chart) return;
+		  const anchors = document.querySelectorAll('#emojiChartWrap .chart-emoji[data-index]');
+		  anchors.forEach((el) => {
+		    const idx = Number(el.dataset.index);
+		    const active = [{ datasetIndex: 0, index: idx }];
+		
+		    const show = () => {
+		      chart.setActiveElements(active);
+		      chart.tooltip.setActiveElements(active, { x: 0, y: 0 });
+		      chart.update();
+		    };
+		    const hide = () => {
+		      chart.setActiveElements([]);
+		      chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+		      chart.update();
+		    };
+		
+		    el.addEventListener('mouseenter', show);
+		    el.addEventListener('mouseleave', hide);
+		    el.addEventListener('click', () => { show(); setTimeout(hide, 1400); });
+		    el.addEventListener('touchstart', (e) => { e.preventDefault(); show(); setTimeout(hide, 1400); }, { passive: false });
+		  });
+		})();
+
 		}
 
 
