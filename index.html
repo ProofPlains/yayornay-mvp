@@ -219,8 +219,8 @@
         .emoji-btn[data-sentiment="very-happy"]::after { content: "😍"; }
         .emoji-btn[data-sentiment="happy"]::after { content: "😊"; }
         .emoji-btn[data-sentiment="neutral"]::after { content: "😐"; }
-        .emoji-btn[data-sentiment="sad"]::after { content: "😞"; }
-        .emoji-btn[data-sentiment="very-sad"]::after { content: "😠"; }
+        .emoji-btn[data-sentiment="sad"]::after { content: "😠"; }
+        .emoji-btn[data-sentiment="very-sad"]::after { content: "😡"; }
 
         .submit-btn {
             background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2));
@@ -2603,8 +2603,8 @@
 		  if (score >= 85) return '😍';
 		  if (score >= 65) return '😊';
 		  if (score >= 45) return '😐';
-		  if (score >= 25) return '😞';
-		  return '😠';
+		  if (score >= 25) return '😠';
+		  return '😡';
 		}
 		function pct(n,total){ return total > 0 ? Math.round((n/total)*100)+'%' : '0%'; }
 
@@ -2617,7 +2617,7 @@
 		  if (!wrap || !canvas || typeof Chart === 'undefined') return;
 		
 		  // Order: very-sad, sad, neutral, happy, very-happy
-		  const labels = ['😠','😞','😐','😊','😍'];
+		  const labels = ['😡','😠','😐','😊','😍'];
 		  const data = [
 		    counts['very-sad']  || 0,
 		    counts['sad']       || 0,
@@ -2629,8 +2629,8 @@
 		
 		  // Grape-friendly fills (soft alphas)
 		  const fills = [
-			  '#ff0000', // very-sad 😠
-			  '#ffb000', // sad 😞
+			  '#ff0000', // very-sad 😡
+			  '#ffb000', // sad 😠
 			  '#faff00', // neutral 😐
 			  '#196d0f', // happy 😊
 			  '#1cff00'  // very-happy 😍
@@ -2659,7 +2659,7 @@
 		          pointLabels: {
 		            display: true,
 		            centerPointLabels: true,
-		            font: { size: 30 }
+		            font: { size: 40 }
 		          },
 		          grid: { color: 'rgba(255,255,255,0.10)' },
 		          angleLines: { color: 'rgba(255,255,255,0.08)' },
@@ -3624,7 +3624,7 @@
 		  const pageItems = src.slice(start, end);
 		
 		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
-		  const emojiMap = { 'very-happy':'😍','happy':'😊','neutral':'😐','sad':'😞','very-sad':'😠' };
+		  const emojiMap = { 'very-happy':'😍','happy':'😊','neutral':'😐','sad':'😠','very-sad':'😡' };
 		
 		  pageItems.forEach((item) => {
 		    const row = document.createElement('div');
