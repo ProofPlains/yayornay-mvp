@@ -1384,6 +1384,20 @@
 
             <section id="qr" class="content-section">
                 <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">QR Code Generator</h2>
+				<!-- Onboarding banner: shown until first QR sign download -->
+				<div id="qrOnboardingBanner"
+				     style="display:none; margin: 0 0 16px 0; padding:14px 16px; border-radius:12px;
+				            background: color-mix(in oklab, var(--ff-surface) 96%, black);
+				            border:1px solid var(--ff-border); color: var(--ff-text);">
+				  <div style="font-weight:700; margin-bottom:6px;">You’re almost live 🎉</div>
+				  <div style="opacity:.9">
+				    Print your QR sign and place it where customers can see it to start receiving feedback.
+				  </div>
+				  <div style="margin-top:8px; font-size:13px; opacity:.9;">
+				    1) Generate → 2) Download/print → 3) Place at point-of-sale, entrance or tables.
+				  </div>
+				</div>
+
                 <div style="margin-bottom: 20px;">
                     <label>Generate QR Code for: </label>
                     <select id="qrLocationSelect" onchange="generateQR()">
@@ -3263,8 +3277,9 @@
                     updateLocationsList();
                     break;
                 case 'qr':
-                    generateQR();
-                    break;
+				  generateQR();
+				  updateQrOnboardingBanner(); // show until first Download Sign event
+				  break;
 				case 'settings':
 				    loadSettings();
 					break;
@@ -3809,6 +3824,9 @@
 		  a.click();
 		  a.remove();
 		  logEvent('qr_downloaded');
+		  // hide the onboarding banner right away
+		  const banner = document.getElementById('qrOnboardingBanner');
+		  if (banner) banner.style.display = 'none';
 		}
 		
 		// Wire the button after DOM is ready
@@ -3972,6 +3990,32 @@
 		
 		// expose for inline onclick
 		window.onLearnMoreClick = onLearnMoreClick;
+
+		async function hasDownloadedQrSign() {
+		  try {
+		    const bizId = await getCurrentBusinessId();
+		    if (!bizId) return false;
+		    const { data, error } = await supabase
+		      .from('analytics_events')
+		      .select('id')
+		      .eq('business_id', bizId)
+		      .eq('event_type', 'qr_downloaded')
+		      .limit(1)
+		      .maybeSingle();
+		    if (error) { console.warn('check qr_downloaded failed:', error.message); return false; }
+		    return !!data;
+		  } catch (e) {
+		    console.warn('hasDownloadedQrSign error:', e?.message || e);
+		    return false;
+		  }
+		}
+
+		async function updateQrOnboardingBanner() {
+		  const el = document.getElementById('qrOnboardingBanner');
+		  if (!el) return;
+		  const alreadyDownloaded = await hasDownloadedQrSign();
+		  el.style.display = alreadyDownloaded ? 'none' : 'block';
+		}
 
 		
 	</script>
