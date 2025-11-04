@@ -3855,38 +3855,56 @@
 		    return;
 		  }
 		
-		  // Prefer a Blob URL over a long data: URL (Android print services are picky)
+		  // Use Blob URL for Android reliability
 		  let printSrc = img.src;
 		  let revokeUrlAfter = false;
 		  if (printSrc.startsWith('data:')) {
-		    const blob = dataURLToBlob(printSrc);
+		    const parts = printSrc.split(',');
+		    const mime = parts[0].match(/:(.*?);/)[1];
+		    const bstr = atob(parts[1]);
+		    const len = bstr.length;
+		    const u8 = new Uint8Array(len);
+		    for (let i = 0; i < len; i++) u8[i] = bstr.charCodeAt(i);
+		    const blob = new Blob([u8], { type: mime });
 		    printSrc = URL.createObjectURL(blob);
 		    revokeUrlAfter = true;
 		  }
 		
-		  // Build a hidden iframe and print from there (more reliable than window.open on mobile)
+		  // Create hidden iframe for print
 		  const iframe = document.createElement('iframe');
-		  iframe.style.position = 'fixed';
-		  iframe.style.right = '0';
-		  iframe.style.bottom = '0';
-		  iframe.style.width = '0';
-		  iframe.style.height = '0';
-		  iframe.style.border = '0';
+		  Object.assign(iframe.style, {
+		    position: 'fixed',
+		    right: '0',
+		    bottom: '0',
+		    width: '0',
+		    height: '0',
+		    border: '0'
+		  });
 		  document.body.appendChild(iframe);
 		
 		  iframe.onload = function () {
-		    try {
-		      iframe.contentWindow?.focus();
-		      iframe.contentWindow?.print();
-		    } finally {
-		      // cleanup after a short delay
-		      setTimeout(() => {
-		        if (revokeUrlAfter) URL.revokeObjectURL(printSrc);
-		        iframe.remove();
-		      }, 800);
+		    const doc = iframe.contentDocument || iframe.contentWindow.document;
+		    const imgEl = doc.querySelector('img');
+		    if (!imgEl.complete) {
+		      imgEl.onload = triggerPrint;
+		    } else {
+		      triggerPrint();
+		    }
+		
+		    function triggerPrint() {
+		      try {
+		        iframe.contentWindow.focus();
+		        iframe.contentWindow.print();
+		      } finally {
+		        setTimeout(() => {
+		          if (revokeUrlAfter) URL.revokeObjectURL(printSrc);
+		          iframe.remove();
+		        }, 800);
+		      }
 		    }
 		  };
 		
+		  // Write the sign HTML directly to the iframe
 		  iframe.srcdoc = `
 		    <!DOCTYPE html>
 		    <html>
@@ -3894,22 +3912,33 @@
 		        <meta charset="utf-8" />
 		        <title>FlashFeedback QR Sign</title>
 		        <style>
-		          @page { size: A4 portrait; margin: 10mm; } /* safer than zero margins on mobile */
+		          @page { size: A4 portrait; margin: 10mm; }
 		          html, body { height: 100%; }
-		          body { margin: 0; display: flex; align-items: center; justify-content: center; }
-		          img { max-width: 100%; max-height: 100%; display: block; }
+		          body {
+		            margin: 0;
+		            display: flex;
+		            align-items: center;
+		            justify-content: center;
+		            background: white;
+		          }
+		          img {
+		            max-width: 100%;
+		            max-height: 100%;
+		            display: block;
+		          }
 		        </style>
 		      </head>
 		      <body>
-		        <img src="${printSrc}" alt="FlashFeedback QR Sign" />
+		        <img src="${printSrc}" alt="FlashFeedback QR Sign">
 		      </body>
 		    </html>
 		  `;
 		
-		  // Log the same event as Download and hide the onboarding banner
+		  // Log same event and hide onboarding banner
 		  logEvent('qr_downloaded');
 		  document.getElementById('qrOnboardingBanner')?.style.setProperty('display', 'none', 'important');
 		}
+
 
 		
 		// Wire the button after DOM is ready
