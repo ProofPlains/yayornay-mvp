@@ -3847,7 +3847,7 @@
 		  return new Blob([u8], { type: mime });
 		}
 		
-		// --- robust mobile-friendly print (iframe is full-viewport but hidden) ---
+		// Print only the generated sign using a print-only CSS overlay
 		function printQrSignAndLog() {
 		  const img = document.querySelector('#signImageContainer img');
 		  if (!img || !img.src) {
@@ -3855,98 +3855,83 @@
 		    return;
 		  }
 		
-		  // Prefer a Blob URL over long data: URLs (Android print services are picky)
+		  // If the sign is a data: URL, make a Blob URL (more reliable on Android)
 		  let printSrc = img.src;
 		  let revokeUrlAfter = false;
 		  if (printSrc.startsWith('data:')) {
-		    const parts = printSrc.split(',');
-		    const mime = parts[0].match(/:(.*?);/)[1];
-		    const bstr = atob(parts[1]); const len = bstr.length;
-		    const u8 = new Uint8Array(len);
-		    for (let i = 0; i < len; i++) u8[i] = bstr.charCodeAt(i);
-		    const blob = new Blob([u8], { type: mime });
+		    const [head, data] = printSrc.split(',');
+		    const mime = head.match(/:(.*?);/)[1];
+		    const bin = atob(data);
+		    const buf = new Uint8Array(bin.length);
+		    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+		    const blob = new Blob([buf], { type: mime });
 		    printSrc = URL.createObjectURL(blob);
 		    revokeUrlAfter = true;
 		  }
 		
-		  // Full-viewport (so Chrome Android treats it as printable), but invisible
-		  const iframe = document.createElement('iframe');
-		  Object.assign(iframe.style, {
-		    position: 'fixed',
-		    inset: '0',
-		    width: '100vw',
-		    height: '100vh',
-		    visibility: 'hidden',        // not display:none
-		    pointerEvents: 'none',
-		    border: '0',
-		    background: 'white'
-		  });
-		  document.body.appendChild(iframe);
-		
-		  iframe.onload = function () {
-		    const doc = iframe.contentDocument || iframe.contentWindow.document;
-		    const imgEl = doc.querySelector('img');
-		
-		    // Wait until the image is fully loaded/rendered before printing
-		    if (!imgEl.complete) {
-		      imgEl.onload = triggerPrint;
-		      imgEl.onerror = triggerPrint; // still try to print the doc if load fails
-		    } else {
-		      // give layout a tick on some Android builds
-		      requestAnimationFrame(triggerPrint);
-		    }
-		
-		    function triggerPrint() {
-		      try {
-		        // Chrome Android sometimes needs a small delay after load to pick the iframe
-		        setTimeout(() => {
-		          iframe.contentWindow?.focus();
-		          iframe.contentWindow?.print();
-		        }, 50);
-		      } finally {
-		        // Clean up when printing finishes (or after a fallback delay)
-		        iframe.contentWindow.onafterprint = cleanup;
-		        setTimeout(cleanup, 1500);
-		      }
-		    }
-		
-		    function cleanup() {
-		      try { if (revokeUrlAfter) URL.revokeObjectURL(printSrc); } catch {}
-		      try { iframe.remove(); } catch {}
-		    }
-		  };
-		
-		  // Write only the SIGN document into the iframe
-		  iframe.srcdoc = `
-		    <!DOCTYPE html>
-		    <html>
-		      <head>
-		        <meta charset="utf-8" />
-		        <title>FlashFeedback QR Sign</title>
-		        <style>
-		          /* Force A4 portrait by default */
-		          @page { size: A4 portrait; margin: 10mm; }
-		          html, body { height: 100%; }
-		          body {
-		            margin: 0;
-		            display: flex;
-		            align-items: center;
-		            justify-content: center;
-		            background: white;
-		          }
-		          img { max-width: 100%; max-height: 100%; display: block; }
-		        </style>
-		      </head>
-		      <body>
-		        <img src="${printSrc}" alt="FlashFeedback QR Sign">
-		      </body>
-		    </html>
+		  // 1) Populate the hidden container with ONLY the sign
+		  const stage = document.getElementById('ffPrintOnly');
+		  stage.innerHTML = `
+		    <div class="ffPrintWrap">
+		      <img src="${printSrc}" alt="FlashFeedback QR Sign">
+		    </div>
 		  `;
 		
-		  // Log same event and hide the onboarding banner
+		  // 2) Inject print-only CSS that hides everything except #ffPrintOnly
+		  let style = document.getElementById('ffPrintCSS');
+		  if (!style) {
+		    style = document.createElement('style');
+		    style.id = 'ffPrintCSS';
+		    document.head.appendChild(style);
+		  }
+		  style.textContent = `
+		    @page { size: A4 portrait; margin: 10mm; }
+		    @media print {
+		      /* Hide everything by default */
+		      body * { visibility: hidden !important; }
+		      /* Show our print area only */
+		      #ffPrintOnly, #ffPrintOnly * { visibility: visible !important; }
+		      #ffPrintOnly { display: block !important; position: fixed; inset: 0; }
+		    }
+		    /* Layout for the print area */
+		    #ffPrintOnly {
+		      display: none; /* stays hidden on screen */
+		      background: white;
+		    }
+		    #ffPrintOnly .ffPrintWrap {
+		      width: 100%;
+		      height: 100vh;
+		      display: flex;
+		      align-items: center;
+		      justify-content: center;
+		      padding: 0;
+		    }
+		    #ffPrintOnly img {
+		      max-width: 100%;
+		      max-height: 100%;
+		      display: block;
+		    }
+		  `;
+		
+		  // 3) Trigger print from the main window (Android-safe)
+		  const cleanup = () => {
+		    try { stage.innerHTML = ''; } catch {}
+		    if (revokeUrlAfter) { try { URL.revokeObjectURL(printSrc); } catch {} }
+		  };
+		  window.onafterprint = () => { cleanup(); window.onafterprint = null; };
+		
+		  // Small delay ensures CSS is applied before print dialog opens
+		  setTimeout(() => {
+		    window.print();
+		    // Fallback cleanup in case onafterprint doesn't fire on some devices
+		    setTimeout(cleanup, 2000);
+		  }, 50);
+		
+		  // 4) Analytics + onboarding hide (same as Download)
 		  logEvent('qr_downloaded');
 		  document.getElementById('qrOnboardingBanner')?.style.setProperty('display', 'none', 'important');
 		}
+
 
 
 
@@ -4239,6 +4224,9 @@
 	    backdrop.addEventListener('click', closeAllSheets);
 	  })();
 	</script>
+	
+	<!-- Print-only staging area -->
+	<div id="ffPrintOnly" style="display:none"></div>
 
 	
 </body>
