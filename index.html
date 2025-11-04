@@ -3847,7 +3847,7 @@
 		  return new Blob([u8], { type: mime });
 		}
 		
-		// --- robust mobile-friendly print ---
+		// --- robust mobile-friendly print (iframe is full-viewport but hidden) ---
 		function printQrSignAndLog() {
 		  const img = document.querySelector('#signImageContainer img');
 		  if (!img || !img.src) {
@@ -3855,14 +3855,13 @@
 		    return;
 		  }
 		
-		  // Use Blob URL for Android reliability
+		  // Prefer a Blob URL over long data: URLs (Android print services are picky)
 		  let printSrc = img.src;
 		  let revokeUrlAfter = false;
 		  if (printSrc.startsWith('data:')) {
 		    const parts = printSrc.split(',');
 		    const mime = parts[0].match(/:(.*?);/)[1];
-		    const bstr = atob(parts[1]);
-		    const len = bstr.length;
+		    const bstr = atob(parts[1]); const len = bstr.length;
 		    const u8 = new Uint8Array(len);
 		    for (let i = 0; i < len; i++) u8[i] = bstr.charCodeAt(i);
 		    const blob = new Blob([u8], { type: mime });
@@ -3870,41 +3869,54 @@
 		    revokeUrlAfter = true;
 		  }
 		
-		  // Create hidden iframe for print
+		  // Full-viewport (so Chrome Android treats it as printable), but invisible
 		  const iframe = document.createElement('iframe');
 		  Object.assign(iframe.style, {
 		    position: 'fixed',
-		    right: '0',
-		    bottom: '0',
-		    width: '0',
-		    height: '0',
-		    border: '0'
+		    inset: '0',
+		    width: '100vw',
+		    height: '100vh',
+		    visibility: 'hidden',        // not display:none
+		    pointerEvents: 'none',
+		    border: '0',
+		    background: 'white'
 		  });
 		  document.body.appendChild(iframe);
 		
 		  iframe.onload = function () {
 		    const doc = iframe.contentDocument || iframe.contentWindow.document;
 		    const imgEl = doc.querySelector('img');
+		
+		    // Wait until the image is fully loaded/rendered before printing
 		    if (!imgEl.complete) {
 		      imgEl.onload = triggerPrint;
+		      imgEl.onerror = triggerPrint; // still try to print the doc if load fails
 		    } else {
-		      triggerPrint();
+		      // give layout a tick on some Android builds
+		      requestAnimationFrame(triggerPrint);
 		    }
 		
 		    function triggerPrint() {
 		      try {
-		        iframe.contentWindow.focus();
-		        iframe.contentWindow.print();
-		      } finally {
+		        // Chrome Android sometimes needs a small delay after load to pick the iframe
 		        setTimeout(() => {
-		          if (revokeUrlAfter) URL.revokeObjectURL(printSrc);
-		          iframe.remove();
-		        }, 800);
+		          iframe.contentWindow?.focus();
+		          iframe.contentWindow?.print();
+		        }, 50);
+		      } finally {
+		        // Clean up when printing finishes (or after a fallback delay)
+		        iframe.contentWindow.onafterprint = cleanup;
+		        setTimeout(cleanup, 1500);
 		      }
+		    }
+		
+		    function cleanup() {
+		      try { if (revokeUrlAfter) URL.revokeObjectURL(printSrc); } catch {}
+		      try { iframe.remove(); } catch {}
 		    }
 		  };
 		
-		  // Write the sign HTML directly to the iframe
+		  // Write only the SIGN document into the iframe
 		  iframe.srcdoc = `
 		    <!DOCTYPE html>
 		    <html>
@@ -3912,6 +3924,7 @@
 		        <meta charset="utf-8" />
 		        <title>FlashFeedback QR Sign</title>
 		        <style>
+		          /* Force A4 portrait by default */
 		          @page { size: A4 portrait; margin: 10mm; }
 		          html, body { height: 100%; }
 		          body {
@@ -3921,11 +3934,7 @@
 		            justify-content: center;
 		            background: white;
 		          }
-		          img {
-		            max-width: 100%;
-		            max-height: 100%;
-		            display: block;
-		          }
+		          img { max-width: 100%; max-height: 100%; display: block; }
 		        </style>
 		      </head>
 		      <body>
@@ -3934,10 +3943,11 @@
 		    </html>
 		  `;
 		
-		  // Log same event and hide onboarding banner
+		  // Log same event and hide the onboarding banner
 		  logEvent('qr_downloaded');
 		  document.getElementById('qrOnboardingBanner')?.style.setProperty('display', 'none', 'important');
 		}
+
 
 
 		
