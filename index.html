@@ -1410,13 +1410,16 @@
                     <p>Generate a complete sign with call-to-action text</p>
                     <button class="btn" onclick="generateSign()">Generate Customer Sign</button>
                     <div id="generatedSign" style="display: none; margin-top: 20px; text-align: center;">
-                        <h4>Your Customer Sign is Ready!</h4>
-                        <button id="ffDownloadQrBtn" class="btn" style="margin-top:12px;">
-						  Download Sign (PNG)
-						</button>
-                        <div id="signImageContainer"></div>
-						
-                    </div>
+					  <h4>Your Customer Sign is Ready!</h4>
+					
+					  <div style="margin-top:12px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+					    <button id="ffDownloadQrBtn" class="btn">Download Sign (PNG)</button>
+					    <button id="ffPrintQrBtn" class="btn">Print Sign</button>
+					  </div>
+					
+					  <div id="signImageContainer"></div>
+					</div>
+
                 </div>
             </section>
 
@@ -3831,11 +3834,64 @@
 		  const banner = document.getElementById('qrOnboardingBanner');
 		  if (banner) banner.style.display = 'none';
 		}
+
+		// print handler logs the same event as download and also hides the banner
+		 function printQrSignAndLog() {
+		    const img = document.querySelector('#signImageContainer img');
+		    if (!img || !img.src) {
+		      alert('Please generate the sign first.');
+		      return;
+		    }
+		
+		    // Open a clean print window with just the sign image
+		    const w = window.open('', '_blank');
+		    if (!w) {
+		      alert('Please allow pop-ups to print the sign.');
+		      return;
+		    }
+		
+		    w.document.open();
+		    w.document.write(`
+		      <!DOCTYPE html>
+		      <html>
+		      <head>
+		        <meta charset="utf-8" />
+		        <title>FlashFeedback QR Sign</title>
+		        <style>
+		          @media print { @page { size: auto; margin: 0; } body { margin:0; } }
+		          body { display:flex; align-items:center; justify-content:center; height:100vh; }
+		          img { max-width: 100%; max-height: 100vh; }
+		        </style>
+		      </head>
+		      <body>
+		        <img src="${img.src}" alt="FlashFeedback QR Sign"/>
+		        <script>
+		          window.onload = function () {
+		            setTimeout(function () {
+		              window.print();
+		              window.close();
+		            }, 50);
+		          };
+		        <\/script>
+		      </body>
+		      </html>
+		    `);
+		    w.document.close();
+		
+		    // Log the same event as Download
+		    logEvent('qr_downloaded');
+		
+		    // Hide the onboarding banner immediately (same behaviour as download)
+		    const banner = document.getElementById('qrOnboardingBanner');
+		    if (banner) banner.style.display = 'none';
+		  }
 		
 		// Wire the button after DOM is ready
 		document.addEventListener('DOMContentLoaded', () => {
 		  document.getElementById('ffDownloadQrBtn')?.addEventListener('click', downloadQrSignAndLog);
+		  document.getElementById('ffPrintQrBtn')?.addEventListener('click', printQrSignAndLog);
 		});
+
 
 		
 		// --- Forgot/Reset Password flow ---
