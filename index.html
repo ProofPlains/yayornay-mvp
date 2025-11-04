@@ -2691,16 +2691,17 @@
 		  const wrap = document.getElementById('emojiChartWrap');
 		  const canvas = document.getElementById('emojiPolar');
 		  if (!wrap || !canvas || typeof Chart === 'undefined') return;
-		
-		  // Order: very-sad, sad, neutral, happy, very-happy
-		  const labels = ['😡','😠','😐','😊','😍'];
+
+		// Order: very-happy, very-sad, sad, neutral, happy
+		  const labels = ['😍','😡','😠','😐','😊'];
 		  const data = [
-		    counts['very-sad']  || 0,
+		    counts['very-happy']|| 0,
+			counts['very-sad']  || 0,
 		    counts['sad']       || 0,
 		    counts['neutral']   || 0,
-		    counts['happy']     || 0,
-		    counts['very-happy']|| 0
+		    counts['happy']     || 0
 		  ];
+			
 		  const total = Math.max(1, data.reduce((a,b)=>a+b,0));
 		
 		  // Grape-friendly fills (soft alphas)
