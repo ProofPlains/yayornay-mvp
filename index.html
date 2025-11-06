@@ -3847,8 +3847,7 @@
 		  return new Blob([u8], { type: mime });
 		}
 		
-		// Print only the generated sign using a print-only CSS overlay
-		
+		// Print the generated sign from a minimal popup (more reliable on Android)
 		function printQrSignAndLog() {
 		  const img = document.querySelector('#signImageContainer img');
 		  if (!img || !img.src) {
@@ -3856,97 +3855,81 @@
 		    return;
 		  }
 		
-		  // On Android, printing from a Blob URL is more reliable than a data URL
+		  // Convert data URL to Blob URL (Android printing is happier with blob urls)
 		  let printSrc = img.src;
-		  let revokeUrlAfter = false;
+		  let revokeAfter = false;
 		  if (printSrc.startsWith('data:')) {
-		    const [head, data] = printSrc.split(',');
-		    const mime = head.match(/:(.*?);/)[1];
-		    const bin = atob(data);
-		    const buf = new Uint8Array(bin.length);
-		    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-		    const blob = new Blob([buf], { type: mime });
-		    printSrc = URL.createObjectURL(blob);
-		    revokeUrlAfter = true;
+		    try {
+		      const [head, data] = printSrc.split(',');
+		      const mime = head.match(/:(.*?);/)[1];
+		      const bin  = atob(data);
+		      const u8   = new Uint8Array(bin.length);
+		      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+		      const blob = new Blob([u8], { type: mime });
+		      printSrc = URL.createObjectURL(blob);
+		      revokeAfter = true;
+		    } catch {}
 		  }
 		
-		  // Populate the hidden print-only container with just the sign
-		  const stage = document.getElementById('ffPrintOnly');
-		  stage.innerHTML = `
-		    <div class="ffPrintWrap">
-		      <img id="ffPrintImg" src="${printSrc}" alt="FlashFeedback QR Sign">
-		    </div>
-		  `;
-		
-		  // Inject print-only CSS that hides everything except #ffPrintOnly
-		  let style = document.getElementById('ffPrintCSS');
-		  if (!style) {
-		    style = document.createElement('style');
-		    style.id = 'ffPrintCSS';
-		    document.head.appendChild(style);
+		  // Minimal, self-contained print document
+		  const w = window.open('', '_blank', 'noopener,noreferrer');
+		  if (!w) {
+		    alert('Please allow pop-ups to print the sign.');
+		    return;
 		  }
-		  style.textContent = `
-		    @page { size: A4 portrait; margin: 10mm; }
-		    @media print {
-		      html, body { height: auto; }
-		      /* Hide everything by default */
-		      body * { display: none !important; }
-		      /* Show only our print node */
-		      #ffPrintOnly, #ffPrintOnly * { display: block !important; }
-		      /* Make sure it participates in layout normally */
-		      #ffPrintOnly { position: static !important; }
-		    }
-		    /* On-screen defaults */
-		    #ffPrintOnly { display: none; background: #fff; }
-		    #ffPrintOnly .ffPrintWrap {
-		      width: 100%;
-		      min-height: 100vh;
-		      display: grid;
-		      place-items: center;
-		      padding: 0;
-		    }
-		    #ffPrintOnly img {
-		      max-width: 100%;
-		      max-height: calc(100vh - 20mm);
-		      height: auto;
-		      width: auto;
-		    }
-		  `;
+		
+		  w.document.open();
+		  w.document.write(`<!doctype html>
+		<html>
+		<head>
+		<meta charset="utf-8">
+		<title>Print Sign</title>
+		<style>
+		  /* A4 portrait with sensible margins */
+		  @page { size: A4 portrait; margin: 12mm; }
+		  html, body { height: 100%; }
+		  body {
+		    margin: 0;
+		    display: grid;
+		    place-items: center;
+		  }
+		  /* Keep white background for printers that honor page color */
+		  body { background: #fff; }
+		  img {
+		    max-width: 100%;
+		    height: auto;
+		    /* Keep within A4 printable area (≈ 210mm wide - margins) */
+		    max-height: 265mm; /* leave a bit of headroom */
+		  }
+		</style>
+		</head>
+		<body>
+		  <img id="__ff_sign" src="${printSrc}" alt="FlashFeedback QR Sign">
+		</body>
+		</html>`);
+		  w.document.close();
 		
 		  const doPrint = () => {
-		    const cleanup = () => {
-		      try { stage.innerHTML = ''; } catch {}
-		      if (revokeUrlAfter) { try { URL.revokeObjectURL(printSrc); } catch {} }
-		    };
-		    window.onafterprint = () => { cleanup(); window.onafterprint = null; };
-		    // tiny delay to ensure CSS has applied
-		    setTimeout(() => {
-		      window.print();
-		      // fallback cleanup in case onafterprint doesn't fire on some devices
-		      setTimeout(cleanup, 2000);
-		    }, 50);
+		    try { w.focus(); } catch {}
+		    try { w.print(); } catch {}
+		    // Close the helper window after a short delay
+		    setTimeout(() => { try { w.close(); } catch {} }, 1200);
+		    if (revokeAfter) { try { URL.revokeObjectURL(printSrc); } catch {} }
 		  };
 		
-		  // Ensure the image is fully decoded before opening the print dialog (prevents blank pages on Android)
-		  const printImg = stage.querySelector('#ffPrintImg');
-		  if (printImg.complete) {
-		    // Some browsers mark complete before decode; use decode() if available
-		    if (printImg.decode) { printImg.decode().then(doPrint).catch(doPrint); }
-		    else { doPrint(); }
-		  } else {
-		    printImg.onload = () => { if (printImg.decode) { printImg.decode().then(doPrint).catch(doPrint); } else { doPrint(); } };
-		    printImg.onerror = doPrint; // graceful fallback
+		  const wImg = w.document.getElementById('__ff_sign');
+		  if (!wImg) { doPrint(); }
+		  else if ('decode' in wImg) { wImg.decode().then(doPrint).catch(doPrint); }
+		  else {
+		    wImg.onload = doPrint;
+		    wImg.onerror = doPrint;
 		  }
 		
 		  // Log the same event as Download + hide the onboarding banner for first-time users
-		  logEvent('qr_downloaded');
-		  document.getElementById('qrOnboardingBanner')?.style.setProperty('display', 'none', 'important');
+		  try { logEvent('qr_downloaded'); } catch {}
+		  const banner = document.getElementById('qrOnboardingBanner');
+		  if (banner) banner.style.setProperty('display', 'none', 'important');
 		}
-		
-
-
-
-
 
 		
 		// Wire the button after DOM is ready
