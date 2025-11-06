@@ -10,6 +10,8 @@
     <link rel="icon" type="image/png" href="https://proofplains.github.io/yayornay-mvp/Favicon.png">
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
 	<style>
 		:root{ 
 		  /* Colors (light fallback) */
@@ -3854,6 +3856,69 @@
 		}
 
 		
+		  // Generate an A4 PDF from the generated sign and open it for printing
+		  async function printQrSignAsPDFAndLog() {
+		    const img = document.querySelector('#signImageContainer img');
+		    if (!img || !img.src) {
+		      alert('Please generate the sign first.');
+		      return;
+		    }
+		
+		    // Ensure image is decoded before drawing (prevents blank PDFs)
+		    if (img.decode) {
+		      try { await img.decode(); } catch(e) { /* continue anyway */ }
+		    }
+		
+		    // jsPDF setup for A4 portrait in millimeters
+		    const { jsPDF } = window.jspdf || {};
+		    if (!jsPDF) {
+		      alert('PDF engine failed to load. Please refresh and try again.');
+		      return;
+		    }
+		    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+		    const pageW = 210, pageH = 297;
+		    const margin = 10;                          // 10mm all around
+		    const maxW = pageW - margin * 2;            // 190mm
+		    const maxH = pageH - margin * 2;            // 277mm
+		
+		    // Work out scaled size to fit within margins while preserving aspect
+		    const tmp = new Image();
+		    tmp.src = img.src;
+		    let w = maxW, h = maxH;
+		    // If we can read natural sizes, compute exact scale; else fall back
+		    const iw = tmp.naturalWidth || img.naturalWidth || 1000;
+		    const ih = tmp.naturalHeight || img.naturalHeight || 1414;
+		    const imgRatio = iw / ih;
+		    const boxRatio = maxW / maxH;
+		
+		    if (imgRatio > boxRatio) {
+		      // image is “wider” — limit by width
+		      w = maxW;
+		      h = w / imgRatio;
+		    } else {
+		      // image is “taller” — limit by height
+		      h = maxH;
+		      w = h * imgRatio;
+		    }
+		
+		    const x = (pageW - w) / 2;
+		    const y = (pageH - h) / 2;
+		
+		    // Add image to the PDF (png/jpg both fine)
+		    doc.addImage(img.src, 'PNG', x, y, w, h, undefined, 'FAST');
+		
+		    // Open the PDF in a new tab (Android Chrome shows print icon there)
+		    const pdfUrl = doc.output('bloburl');
+		    window.open(pdfUrl, '_blank');
+		
+		    // Same analytics + onboarding suppression as Download
+		    try { logEvent('qr_downloaded'); } catch {}
+		    document.getElementById('qrOnboardingBanner')
+		      ?.style.setProperty('display', 'none', 'important');
+		  }
+
+
+		
 		// --- helper: convert data: URL to Blob (mobile-safe printing) ---
 		function dataURLToBlob(dataURL) {
 		  const parts = dataURL.split(',');
@@ -3926,7 +3991,7 @@
 		// Wire the button after DOM is ready
 		document.addEventListener('DOMContentLoaded', () => {
 		  document.getElementById('ffDownloadQrBtn')?.addEventListener('click', downloadQrSignAndLog);
-		  document.getElementById('ffPrintQrBtn')?.addEventListener('click', printQrSignAndLog);
+		  document.getElementById('ffPrintQrBtn')?.addEventListener('click', printQrSignAsPDFAndLog);
 		});
 
 
