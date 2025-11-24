@@ -1809,10 +1809,15 @@
         function showSignup() {
             hideAllScreens();
             hideAdminControls();
+
+            // 🔧 Clear any demo QR sign so the new account starts clean
+            resetQrSignUI();
+
             document.getElementById('signupScreen').style.display = 'block';
             currentView = 'signup';
             clearFormErrors();
         }
+
 
         function showLogin() {
             hideAllScreens();
@@ -2348,8 +2353,23 @@
 		}
 
 
+		// Clear any QR sign preview (used when moving from demo → real account)
+        function resetQrSignUI() {
+          const signWrapper = document.getElementById('generatedSign');
+          const signImageContainer = document.getElementById('signImageContainer');
+          const qrContainer = document.getElementById('qrContainer');
+
+          if (signWrapper) signWrapper.style.display = 'none';
+          if (signImageContainer) signImageContainer.innerHTML = '';
+          if (qrContainer) qrContainer.innerHTML = '';
+        }
+		
         function showAdminDashboard() {
             hideAllScreens();
+
+			// 🔧 Ensure no demo QR sign leaks into this real account session
+            resetQrSignUI();
+			
             var adminView = document.getElementById('adminView');
             adminView.style.display = 'flex';
             
