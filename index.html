@@ -649,17 +649,25 @@
         }
 
         .btn {
-		    background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2));
-		    color: var(--ff-text-on-brand);
-		    border: none;
-		    padding: 10px 20px;
-		    border-radius: var(--ff-radius);
+                    background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2));
+                    color: var(--ff-text-on-brand);
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: var(--ff-radius);
             cursor: pointer;
             font-size: 14px;
             transition: all 0.3s ease;
         }
 
-        .btn:hover { background: #3182ce; }
+        .btn:hover {
+                    background: linear-gradient(
+                        135deg,
+                        color-mix(in oklab, var(--ff-brand-1) 85%, #0b001f 15%),
+                        color-mix(in oklab, var(--ff-brand-2) 85%, #0b001f 15%)
+                    );
+                    box-shadow: 0 10px 25px color-mix(in oklab, var(--ff-brand-2) 22%, transparent);
+                    transform: translateY(-1px);
+                }
 
         @media (max-width: 480px) {
             .emoji-btn { width: 50px; height: 50px; font-size: 24px; border-width: 2px; }
