@@ -406,6 +406,13 @@
             color: white;
         }
 
+        .drawer-logo.brand-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: flex-start;
+        }
+
         .drawer-subtitle {
             font-size: 14px;
             opacity: 0.8;
@@ -1201,7 +1208,10 @@
         <nav class="nav-drawer" id="navDrawer">
             <button class="drawer-close-btn" onclick="closeNavDrawer()">✕</button>
             <div class="drawer-header">
-                <div class="drawer-logo brand-title">FlashFeedback</div>
+                <div class="drawer-logo brand-header">
+                  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+                  <span class="brand-title">FLASHFEEDBACK</span>
+                </div>
             </div>
             
             <ul class="drawer-menu">
@@ -2074,11 +2084,20 @@
 
 		// Show customer branding
 		function renderBranding() {
-		  // Keep product branding (not white-labeled)
-		  const drawerLogo = document.querySelector('.drawer-logo');
-		  const topbarTitle = document.querySelector('.topbar-title');
-		  if (drawerLogo) drawerLogo.textContent = 'FlashFeedback';
-		  if (topbarTitle) topbarTitle.textContent = 'FlashFeedback';
+                  // Keep product branding (not white-labeled)
+                  const drawerLogo = document.querySelector('.drawer-logo');
+                  const topbarTitle = document.querySelector('.topbar-title');
+                  const brandMarkup = `
+                    <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+                    <span class="brand-title">FLASHFEEDBACK</span>
+                  `;
+
+                  if (drawerLogo) {
+                    drawerLogo.classList.add('brand-header');
+                    drawerLogo.innerHTML = brandMarkup;
+                  }
+
+                  if (topbarTitle) topbarTitle.textContent = 'FLASHFEEDBACK';
 		
 		  // Ensure avatar exists on the right of the top bar and reflects current logoUrl
 		  ensureTopbarAvatar();
