@@ -4202,12 +4202,21 @@
 	</script>
 	
 	<!-- ===== Footer with links ===== -->
-	<footer class="ff-footer">
-	  © 2025 FlashFeedback —
-	  <a href="#" data-sheet-open="privacy">Privacy Policy</a> ·
-	  <a href="#" data-sheet-open="terms">Terms of Service</a> ·
-	  <a href="mailto:contact@flashfeedback.co.uk">Contact</a>
-	</footer>
+        <footer class="ff-footer">
+          © <span id="footerYear"></span> FlashFeedback —
+          <a href="#" data-sheet-open="privacy">Privacy Policy</a> ·
+          <a href="#" data-sheet-open="terms">Terms of Service</a> ·
+          <a href="mailto:contact@flashfeedback.co.uk">Contact</a>
+        </footer>
+
+        <script>
+          (function updateFooterYear() {
+            const footerYearEl = document.getElementById('footerYear');
+            if (!footerYearEl) return;
+            const currentYear = new Date().getFullYear();
+            footerYearEl.textContent = currentYear;
+          })();
+        </script>
 	
 	<!-- Backdrop (shared) -->
 	<div class="sheet-backdrop" id="sheetBackdrop" aria-hidden="true"></div>
