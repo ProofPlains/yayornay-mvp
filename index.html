@@ -317,6 +317,246 @@
 		    min-width: 200px;
 		}
 
+		/* === Landing page refresh === */
+		.ff-landing {
+		  display: flex;
+		  flex-direction: column;
+		  gap: 32px;
+		}
+
+		.ff-nav {
+		  display: flex;
+		  align-items: center;
+		  justify-content: space-between;
+		  gap: 16px;
+		  padding: 8px 0 18px;
+		  border-bottom: 1px solid rgba(167, 139, 250, 0.2);
+		}
+
+		.ff-nav .brand-header {
+		  justify-content: flex-start;
+		}
+
+		.ff-nav-actions {
+		  display: flex;
+		  align-items: center;
+		  gap: 12px;
+		  flex-wrap: wrap;
+		  justify-content: flex-end;
+		}
+
+		.ff-nav-actions .btn-primary,
+		.ff-nav-actions .btn-secondary {
+		  padding: 10px 18px;
+		  font-size: 14px;
+		}
+
+		.ff-nav-actions .link-button {
+		  font-size: 14px;
+		  text-decoration: none;
+		}
+
+		.ff-hero {
+		  display: grid;
+		  grid-template-columns: 1fr;
+		  gap: 28px;
+		}
+
+		.ff-hero h1 {
+		  font-size: clamp(32px, 5vw, 44px);
+		  letter-spacing: 0.02em;
+		  text-transform: uppercase;
+		}
+
+		.ff-hero p {
+		  font-size: 16px;
+		}
+
+		.ff-hero-cta {
+		  display: flex;
+		  flex-wrap: wrap;
+		  gap: 12px;
+		  align-items: center;
+		  margin-top: 18px;
+		}
+
+		.ff-hero-cta .btn-primary,
+		.ff-hero-cta .btn-secondary {
+		  padding: 14px 24px;
+		}
+
+		.ff-microcopy {
+		  font-size: 13px;
+		  color: var(--ff-text-muted);
+		  margin-top: 10px;
+		}
+
+		.ff-reassurance {
+		  margin-top: 16px;
+		  font-weight: 600;
+		  color: color-mix(in oklab, var(--ff-text) 75%, var(--ff-brand-1));
+		}
+
+		.ff-preview {
+		  display: grid;
+		  gap: 14px;
+		}
+
+		.preview-card {
+		  background: #0d1117;
+		  border: 1px solid rgba(167, 139, 250, 0.35);
+		  border-radius: 16px;
+		  padding: 16px;
+		  box-shadow: 0 10px 24px rgba(8, 5, 16, 0.35);
+		}
+
+		.preview-card h3 {
+		  font-size: 14px;
+		  text-transform: uppercase;
+		  letter-spacing: 0.08em;
+		  color: #cbb6ff;
+		  margin-bottom: 10px;
+		}
+
+		.qr-placeholder {
+		  width: 120px;
+		  height: 120px;
+		  border-radius: 16px;
+		  background: linear-gradient(135deg, rgba(167, 139, 250, 0.35), rgba(124, 58, 237, 0.35));
+		  display: grid;
+		  place-items: center;
+		  border: 1px dashed rgba(236, 232, 220, 0.4);
+		  font-weight: 600;
+		  color: var(--ff-text-on-brand);
+		}
+
+		.emoji-row {
+		  display: flex;
+		  gap: 10px;
+		  font-size: 28px;
+		}
+
+		.preview-list {
+		  display: grid;
+		  gap: 10px;
+		  font-size: 14px;
+		  color: var(--ff-text-muted);
+		}
+
+		.preview-list span {
+		  display: flex;
+		  align-items: center;
+		  gap: 8px;
+		  color: var(--ff-text);
+		}
+
+		.ff-section {
+		  display: grid;
+		  gap: 18px;
+		  padding: 28px 0;
+		  border-top: 1px solid rgba(167, 139, 250, 0.18);
+		}
+
+		.ff-section h2 {
+		  font-size: clamp(22px, 4vw, 30px);
+		  text-transform: uppercase;
+		  letter-spacing: 0.04em;
+		}
+
+		.ff-section p,
+		.ff-section li {
+		  font-size: 15px;
+		}
+
+		.ff-grid-3 {
+		  display: grid;
+		  gap: 16px;
+		}
+
+		.ff-tile {
+		  background: #0d1117;
+		  border: 1px solid rgba(167, 139, 250, 0.3);
+		  border-radius: 16px;
+		  padding: 18px;
+		}
+
+		.ff-tile h3 {
+		  font-size: 16px;
+		  margin-bottom: 8px;
+		  color: var(--ff-text);
+		}
+
+		.ff-steps {
+		  display: grid;
+		  gap: 16px;
+		}
+
+		.ff-step {
+		  background: #0d1117;
+		  border-radius: 16px;
+		  border: 1px solid rgba(167, 139, 250, 0.25);
+		  padding: 18px;
+		}
+
+		.ff-step span {
+		  font-size: 12px;
+		  letter-spacing: 0.2em;
+		  text-transform: uppercase;
+		  color: #cbb6ff;
+		}
+
+		.ff-checklist {
+		  display: grid;
+		  gap: 10px;
+		  list-style: none;
+		  padding: 0;
+		  margin: 0;
+		}
+
+		.ff-checklist li {
+		  display: flex;
+		  gap: 10px;
+		  align-items: center;
+		  background: #0d1117;
+		  border-radius: 12px;
+		  padding: 12px 14px;
+		  border: 1px solid rgba(167, 139, 250, 0.2);
+		}
+
+		.ff-chips {
+		  display: flex;
+		  flex-wrap: wrap;
+		  gap: 10px;
+		}
+
+		.ff-chip {
+		  padding: 10px 14px;
+		  border-radius: 999px;
+		  background: rgba(167, 139, 250, 0.12);
+		  border: 1px solid rgba(167, 139, 250, 0.35);
+		  font-size: 13px;
+		}
+
+		.ff-section .cta-buttons {
+		  justify-content: flex-start;
+		  margin-top: 8px;
+		}
+
+		@media (min-width: 768px) {
+		  .ff-hero {
+		    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+		    align-items: center;
+		  }
+
+		  .ff-grid-3 {
+		    grid-template-columns: repeat(3, minmax(0, 1fr));
+		  }
+
+		  .ff-steps {
+		    grid-template-columns: repeat(3, minmax(0, 1fr));
+		  }
+		}
+
 		
         .admin-topbar {
 		    background: linear-gradient(135deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%);
@@ -1011,51 +1251,128 @@
 <body>
     <!-- Welcome Screen -->
     <div id="welcomeScreen" class="welcome-container">
-        <div class="logo brand-header">
-		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
-		  <span class="brand-title">FLASHFEEDBACK</span>
+		<div class="ff-landing">
+			<nav class="ff-nav">
+				<div class="brand-header">
+					<img class="brand-logo" src="Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+					<span class="brand-title">FLASHFEEDBACK</span>
+				</div>
+				<div class="ff-nav-actions">
+					<button class="btn-secondary" onclick="showDemo()">Try Demo First</button>
+					<button class="btn-primary" onclick="showSignup()">Get Started Free</button>
+					<button class="link-button" onclick="showLogin()">Log in</button>
+				</div>
+			</nav>
+
+			<section class="ff-hero">
+				<div>
+					<h1>CATCH PROBLEMS BEFORE THEY BECOME BAD REVIEWS.</h1>
+					<p>Most unhappy customers don’t complain — they just don’t come back. FlashFeedback makes it easy to collect private, instant feedback with a QR code.</p>
+					<p>You’ll get private, fast feedback through a QR code and see it in one place.</p>
+					<div class="ff-hero-cta">
+						<button class="btn-primary" onclick="showSignup()">Get Started Free</button>
+						<button class="btn-secondary" onclick="showDemo()">Try Demo First</button>
+					</div>
+					<div class="ff-microcopy">Setup in minutes.</div>
+					<div class="ff-reassurance">One QR code. One tap. No awkward conversations.</div>
+				</div>
+				<div class="ff-preview">
+					<div class="preview-card">
+						<h3>QR feedback card</h3>
+						<div class="qr-placeholder">QR</div>
+					</div>
+					<div class="preview-card">
+						<h3>Customer taps an emoji</h3>
+						<div class="emoji-row">😍 😊 😐 😠 😡</div>
+					</div>
+					<div class="preview-card">
+						<h3>Owner sees feedback</h3>
+						<div class="preview-list">
+							<span>😊 Quick service</span>
+							<span>😐 Wait time noted</span>
+							<span>😡 Follow up today</span>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="ff-section">
+				<h2>THE FEEDBACK YOU DON’T HEAR IS THE RISK.</h2>
+				<ul class="ff-checklist">
+					<li>Some customers avoid complaining face-to-face.</li>
+					<li>Small issues can quietly cost repeat business.</li>
+					<li>Private feedback helps you fix things before they go public.</li>
+				</ul>
+			</section>
+
+			<section class="ff-section">
+				<h2>ONE QR CODE. THREE SECONDS.</h2>
+				<div class="ff-steps">
+					<div class="ff-step">
+						<span>Scan</span>
+						<h3>Customers scan your QR code.</h3>
+					</div>
+					<div class="ff-step">
+						<span>Tap</span>
+						<h3>They tap an emoji in seconds.</h3>
+					</div>
+					<div class="ff-step">
+						<span>You see it</span>
+						<h3>You see responses in your dashboard.</h3>
+					</div>
+				</div>
+				<p>Customers tap an emoji. You see responses in your dashboard.</p>
+			</section>
+
+			<section class="ff-section">
+				<h2>A SIMPLE WAY TO PROTECT YOUR REPUTATION.</h2>
+				<div class="ff-grid-3">
+					<div class="ff-tile">
+						<h3>QR feedback sign/link</h3>
+						<p>Share one code anywhere customers can see it.</p>
+					</div>
+					<div class="ff-tile">
+						<h3>Emoji-first customer experience</h3>
+						<p>Fast, friendly feedback without long forms.</p>
+					</div>
+					<div class="ff-tile">
+						<h3>Owner dashboard to view feedback in one place</h3>
+						<p>See recent responses in a single private view.</p>
+					</div>
+				</div>
+			</section>
+
+			<section class="ff-section">
+				<h2>LIVE FAST. ZERO FUSS.</h2>
+				<ul class="ff-checklist">
+					<li>Create your account</li>
+					<li>Create your first location</li>
+					<li>Get your QR code</li>
+					<li>Start collecting private feedback</li>
+				</ul>
+				<div class="cta-buttons">
+					<button class="btn-primary" onclick="showSignup()">Get Started Free</button>
+					<button class="btn-secondary" onclick="showDemo()">Try Demo First</button>
+				</div>
+				<div class="ff-microcopy">Setup in minutes.</div>
+			</section>
+
+			<section class="ff-section">
+				<h2>PRIVATE FEEDBACK — NOT PUBLIC REVIEWS.</h2>
+				<div class="ff-chips">
+					<div class="ff-chip">Private by default</div>
+					<div class="ff-chip">No customer account needed</div>
+					<div class="ff-chip">Works on any phone</div>
+					<div class="ff-chip">Fast setup</div>
+				</div>
+			</section>
 		</div>
-
-        <div class="tagline">Instant feedback, zero fuss.</div>
-		<p style="margin-top:8px; opacity:.9;">
-		Turn real-world customer moments into simple, actionable insights — all from a single QR code.
-		</p>
-
-        
-        <div class="features">
-            <div class="feature">
-                <div class="feature-icon">📱</div>
-                <h3>Scan. Tap. Done.</h3>
-				<p>Customers leave emoji feedback in seconds.</p>
-
-            </div>
-            <div class="feature">
-                <div class="feature-icon">📊</div>
-                <h3>See how you’re doing.</h3>
-				<p>Track happiness trends as they happen.</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🏪</div>
-                <h3>One dashboard, all your spots.</h3>
-				<p>Perfect for cafés, salons, or chains.</p>
-            </div>
-        </div>
-
-        <div class="cta-buttons">
-            <button class="btn-primary" title="It only takes a minute to create your first QR." onclick="showSignup()">Get Started Free →</button>
-            <button class="btn-secondary" title="Explore what you and your customers would see — no sign-up needed." onclick="showDemo()">Try Demo First</button>
-
-        </div>
-
-        <div style="text-align: center; margin-top: 20px;">
-            <button class="link-button" onclick="showLogin()">Already have an account? Log in</button>
-        </div>
     </div>
 
     <!-- Sign Up Form -->
     <div id="signupScreen" class="signup-container" style="display: none;">
         <div class="logo brand-header">
-		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <img class="brand-logo" src="Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
 		  <span class="brand-title">FLASHFEEDBACK</span>
 		</div>
 
@@ -1138,7 +1455,7 @@
     <!-- Login Form -->
     <div id="loginScreen" class="login-container" style="display: none;">
         <div class="logo brand-header">
-		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <img class="brand-logo" src="Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
 		  <span class="brand-title">FLASHFEEDBACK</span>
 		</div>
 
@@ -1173,7 +1490,7 @@
 	<!-- Forgot Password (request link) -->
 	<div id="forgotPasswordScreen" class="login-container" style="display:none;">
 	  <div class="logo brand-header">
-		  <img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <img class="brand-logo" src="Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
 		  <span class="brand-title">FLASHFEEDBACK</span>
 		</div>
 
@@ -1200,7 +1517,7 @@
 	<!-- Reset Password (deep link) -->
 	<div id="resetPasswordScreen" class="login-container" style="display:none;">
 	  <div class="logo brand-header">
-		<img class="brand-logo" src="https://proofplains.github.io/yayornay-mvp/Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		<img class="brand-logo" src="Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
 		<span class="brand-title">FLASHFEEDBACK</span>
 	  </div>
 
@@ -1345,7 +1662,7 @@
         <!-- Top App Bar -->
         <header class="admin-topbar">
             <button class="topbar-hamburger" onclick="openNavDrawer()" aria-label="Open menu">
-			  <img class="hamburger-img" src="https://proofplains.github.io/yayornay-mvp/Bolt%20Off-White%20Transparent%202.png" alt="">
+			  <img class="hamburger-img" src="Bolt%20Off-White%20Transparent%202.png" alt="">
 			</button>
             <h1 class="topbar-title brand-title">FlashFeedback</h1>
         </header>
@@ -4215,6 +4532,7 @@
           <a href="#" data-sheet-open="privacy">Privacy Policy</a> ·
           <a href="#" data-sheet-open="terms">Terms of Service</a> ·
           <a href="mailto:contact@flashfeedback.co.uk">Contact</a>
+		  <div>Designed for quick, private feedback — not surveys.</div>
         </footer>
 
         <script>
