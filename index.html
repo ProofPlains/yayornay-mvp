@@ -1333,17 +1333,17 @@
 			<section class="ff-section">
 				<h2>PRIVATE DASHBOARD TO SEE WHAT YOUR CUSTOMERS ARE SAYING.</h2>
 			<!-- Emoji-centric hero -->
-				<div class="mood-hero" id="moodHero">
+				<div class="mood-hero" id="moodHeroLanding">
 				  <div class="mood-card" aria-label="Overall customer mood">
-				    <div class="mood-emoji" id="moodEmoji" title="Calculated from emoji feedback">🙂</div>
+				    <div class="mood-emoji" id="moodEmojiLanding" title="Calculated from emoji feedback">🙂</div>
 				    <div>
-				      <div class="mood-score"><span id="moodScore">—</span>/100</div>
+				      <div class="mood-score"><span id="moodScoreLanding">—</span>/100</div>
 				      <div class="mood-sub">Overall customer mood (all feedback)</div>
 				    </div>
 				  </div>
 				
-				  <div id="emojiChartWrap" class="emoji-bar" aria-label="Emoji distribution" style="min-height:280px;">
-				    <canvas id="emojiPolar"></canvas>
+				  <div id="emojiChartWrapLanding" class="emoji-bar" aria-label="Emoji distribution" style="min-height:280px;">
+				    <canvas id="emojiPolarLanding"></canvas>
 				  </div>
 				</div> <!-- ✅ close .mood-hero -->
 			</section>
@@ -2121,6 +2121,37 @@
 
 
 
+		function getDemoFeedback() {
+		  return [
+		    { sentiment: 'very-happy', timestamp: new Date(Date.now() - 3600000).toISOString(), location: 'demo', comments: 'Great service and amazing food!' },
+		    { sentiment: 'happy', timestamp: new Date(Date.now() - 7200000).toISOString(), location: 'demo', comments: null },
+		    { sentiment: 'happy', timestamp: new Date(Date.now() - 7500000).toISOString(), location: 'demo', comments: null },
+		    { sentiment: 'neutral', timestamp: new Date(Date.now() - 10800000).toISOString(), location: 'demo', comments: 'Food was okay, service could be faster.' },
+		    { sentiment: 'sad', timestamp: new Date(Date.now() - 14400000).toISOString(), location: 'demo', comments: null },
+		    { sentiment: 'very-sad', timestamp: new Date(Date.now() - 14500000).toISOString(), location: 'demo', comments: null }
+		  ];
+		}
+
+		function populateLandingEmojiHero() {
+		  const feedback = getDemoFeedback();
+		  const counts = { 'very-happy': 0, 'happy': 0, 'neutral': 0, 'sad': 0, 'very-sad': 0 };
+		  feedback.forEach(function(item) {
+		    counts[item.sentiment] = (counts[item.sentiment] || 0) + 1;
+		  });
+
+		  const score = computeMoodScoreFromCounts(counts);
+		  const scoreEl = document.getElementById('moodScoreLanding');
+		  const emojiEl = document.getElementById('moodEmojiLanding');
+		  if (scoreEl) scoreEl.textContent = (score == null ? '—' : String(score));
+		  if (emojiEl) emojiEl.textContent = pickEmojiByScore(score);
+
+		  renderEmojiPolar(counts, {
+		    wrapId: 'emojiChartWrapLanding',
+		    canvasId: 'emojiPolarLanding',
+		    chartKey: 'landing'
+		  });
+		}
+
         function showWelcome() {
 		  // Ensure drawer is closed and page can scroll
 		  try { closeNavDrawer(); } catch {}
@@ -2132,6 +2163,7 @@
 		  document.getElementById('welcomeScreen').style.display = 'block';
 		  hideLoader?.();
 		  currentView = 'welcome';
+		  populateLandingEmojiHero();
 		}
 
 
@@ -2170,14 +2202,7 @@
                 locations: {
                     'demo': { 
                         name: 'Demo', 
-                        feedback: [
-                            { sentiment: 'very-happy', timestamp: new Date(Date.now() - 3600000).toISOString(), location: 'demo', comments: 'Great service and amazing food!' },
-                            { sentiment: 'happy', timestamp: new Date(Date.now() - 7200000).toISOString(), location: 'demo', comments: null },
-							{ sentiment: 'happy', timestamp: new Date(Date.now() - 7500000).toISOString(), location: 'demo', comments: null },
-                            { sentiment: 'neutral', timestamp: new Date(Date.now() - 10800000).toISOString(), location: 'demo', comments: 'Food was okay, service could be faster.' },
-                            { sentiment: 'sad', timestamp: new Date(Date.now() - 14400000).toISOString(), location: 'demo', comments: null },
-							{ sentiment: 'very-sad', timestamp: new Date(Date.now() - 14500000).toISOString(), location: 'demo', comments: null }
-                        ]
+                        feedback: getDemoFeedback()
                     }
                 }
             };
@@ -3057,11 +3082,14 @@
 		function pct(n,total){ return total > 0 ? Math.round((n/total)*100)+'%' : '0%'; }
 
 		// --- Polar area chart for emoji distribution ---
-		let _emojiPolarChart;
+		const emojiPolarCharts = {};
 		
-		function renderEmojiPolar(counts) {
-		  const wrap = document.getElementById('emojiChartWrap');
-		  const canvas = document.getElementById('emojiPolar');
+		function renderEmojiPolar(counts, options = {}) {
+		  const wrapId = options.wrapId || 'emojiChartWrap';
+		  const canvasId = options.canvasId || 'emojiPolar';
+		  const chartKey = options.chartKey || canvasId;
+		  const wrap = document.getElementById(wrapId);
+		  const canvas = document.getElementById(canvasId);
 		  if (!wrap || !canvas || typeof Chart === 'undefined') return;
 
 		// Order: very-happy, very-sad, sad, neutral, happy
@@ -3130,12 +3158,12 @@
 		    }
 		  };
 		
-		  if (_emojiPolarChart) {
-		    _emojiPolarChart.data = cfg.data;
-		    _emojiPolarChart.options = cfg.options;
-		    _emojiPolarChart.update();
+		  if (emojiPolarCharts[chartKey]) {
+		    emojiPolarCharts[chartKey].data = cfg.data;
+		    emojiPolarCharts[chartKey].options = cfg.options;
+		    emojiPolarCharts[chartKey].update();
 		  } else {
-		    _emojiPolarChart = new Chart(canvas, cfg);
+		    emojiPolarCharts[chartKey] = new Chart(canvas, cfg);
 		  }
 		}
 
