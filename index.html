@@ -2135,12 +2135,12 @@
 		    }
 		  };
 
-		  // 100 records, weighted mood score = 40/100 -> overall 60.
-		  addItems('very-happy', 20, 6, 'Amazing service and friendly staff!');
-		  addItems('happy', 20, 7, 'Quick turnaround and great experience.');
-		  addItems('neutral', 45, 9, 'Everything was fine, nothing special.');
-		  addItems('sad', 10, 8, 'Service was a bit slow today.');
-		  addItems('very-sad', 5, 5, 'Had a frustrating wait time.');
+		  // 100 records, reputation-protector skew (mostly positive, light neutral/negative).
+		  addItems('very-happy', 40, 6, 'Amazing service and friendly staff!');
+		  addItems('happy', 30, 7, 'Quick turnaround and great experience.');
+		  addItems('neutral', 20, 9, 'Everything was fine, nothing special.');
+		  addItems('sad', 7, 8, 'Service was a bit slow today.');
+		  addItems('very-sad', 3, 5, 'Had a frustrating wait time.');
 
 		  return feedback;
 		}
