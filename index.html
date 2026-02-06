@@ -81,6 +81,8 @@
 		  align-items: center;
 		  justify-content: center;
 		  gap: 0px; /* was 12px: tighter spacing between bolt and wordmark */
+		  max-width: 100%;
+		  flex-wrap: nowrap;
 		}
 		
 		.brand-logo {
@@ -88,6 +90,7 @@
 		  width: auto;         /* keep aspect ratio */
 		  object-fit: contain;
 		  display: block;
+		  max-width: 100%;
 		}
 
 
@@ -95,7 +98,7 @@
 		/* Brand title helper */
 		.brand-title{
 		  font-family: var(--ff-font-brand);
-		  font-size: xxx-large;
+		  font-size: clamp(28px, 7vw, 48px);
 		  text-transform: uppercase;
 		  font-style: italic;   /* you wanted italic */
 		  font-weight: 800;     /* and bold */
@@ -126,7 +129,7 @@
 
 
         .container { max-width: 400px; }
-        .welcome-container { padding: 20px; text-align: center; }
+        .welcome-container { padding: 20px; text-align: center; max-width: 1400px; width: 100%; }
         .signup-container, .login-container { max-width: 500px; padding: 40px; }
 
         .header {
@@ -2135,12 +2138,12 @@
 		    }
 		  };
 
-		  // 100 records, reputation-protector skew (mostly positive, light neutral/negative).
-		  addItems('very-happy', 40, 6, 'Amazing service and friendly staff!');
+		  // 100 records, reputation-protector skew (positive, reduced neutral, more negatives).
+		  addItems('very-happy', 38, 6, 'Amazing service and friendly staff!');
 		  addItems('happy', 30, 7, 'Quick turnaround and great experience.');
-		  addItems('neutral', 20, 9, 'Everything was fine, nothing special.');
-		  addItems('sad', 7, 8, 'Service was a bit slow today.');
-		  addItems('very-sad', 3, 5, 'Had a frustrating wait time.');
+		  addItems('neutral', 15, 9, 'Everything was fine, nothing special.');
+		  addItems('sad', 12, 8, 'Service was a bit slow today.');
+		  addItems('very-sad', 5, 5, 'Had a frustrating wait time.');
 
 		  return feedback;
 		}
