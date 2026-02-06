@@ -1274,8 +1274,8 @@
 			<section class="ff-hero">
 				<div>
 					<h1>CATCH PROBLEMS BEFORE THEY BECOME BAD REVIEWS.</h1>
-					<p>Most unhappy customers don’t complain — they just don’t come back. FlashFeedback makes it easy to collect private, instant feedback with a QR code.</p>
-					<p>You’ll get private, fast feedback through a QR code and see it in one place.</p>
+					<p>Most unhappy customers don’t complain — they just don’t come back. <br>
+						FlashFeedback makes it easy to collect private, instant feedback with a QR code.</p>
 					<div class="ff-hero-cta">
 						<button class="btn-primary" onclick="showSignup()">Get Started Free</button>
 						<button class="btn-secondary" onclick="showDemo()">Try Demo First</button>
@@ -1289,7 +1289,7 @@
 						<img class="qr-placeholder" SRC="QR%20to%20Home.png">
 					</div>
 					<div class="preview-card">
-						<h3>2. Customer taps an emoji</h3>
+						<h3>2. They tap an emoji in seconds</h3>
 						<div class="emoji-row">😍 😊 😐 😠 😡</div>
 					</div>
 					<div class="preview-card">
@@ -1313,29 +1313,10 @@
 			</section>
 
 			<section class="ff-section">
-				<h2>ONE QR CODE. THREE SECONDS.</h2>
-				<div class="ff-steps">
-					<div class="ff-step">
-						<span>Scan</span>
-						<h3>Customers scan your QR code.</h3>
-					</div>
-					<div class="ff-step">
-						<span>Tap</span>
-						<h3>They tap an emoji in seconds.</h3>
-					</div>
-					<div class="ff-step">
-						<span>You see it</span>
-						<h3>You see responses in your dashboard.</h3>
-					</div>
-				</div>
-				
-			</section>
-
-			<section class="ff-section">
 				<h2>A SIMPLE WAY TO PROTECT YOUR REPUTATION.</h2>
 				<div class="ff-grid-3">
 					<div class="ff-tile">
-						<h3>QR feedback sign/link</h3>
+						<h3>QR feedback sign</h3>
 						<p>Share one code anywhere customers can see it.</p>
 					</div>
 					<div class="ff-tile">
@@ -1347,6 +1328,24 @@
 						<p>See recent responses in a single private view.</p>
 					</div>
 				</div>
+			</section>
+
+			<section class="ff-section">
+				<h2>PRIVATE DASHBOARD TO SEE WHAT YOUR CUSTOMERS ARE SAYING.</h2>
+			<!-- Emoji-centric hero -->
+				<div class="mood-hero" id="moodHero">
+				  <div class="mood-card" aria-label="Overall customer mood">
+				    <div class="mood-emoji" id="moodEmoji" title="Calculated from emoji feedback">🙂</div>
+				    <div>
+				      <div class="mood-score"><span id="moodScore">—</span>/100</div>
+				      <div class="mood-sub">Overall customer mood (all feedback)</div>
+				    </div>
+				  </div>
+				
+				  <div id="emojiChartWrap" class="emoji-bar" aria-label="Emoji distribution" style="min-height:280px;">
+				    <canvas id="emojiPolar"></canvas>
+				  </div>
+				</div> <!-- ✅ close .mood-hero -->
 			</section>
 
 			<section class="ff-section">
