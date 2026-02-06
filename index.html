@@ -2122,14 +2122,27 @@
 
 
 		function getDemoFeedback() {
-		  return [
-		    { sentiment: 'very-happy', timestamp: new Date(Date.now() - 3600000).toISOString(), location: 'demo', comments: 'Great service and amazing food!' },
-		    { sentiment: 'happy', timestamp: new Date(Date.now() - 7200000).toISOString(), location: 'demo', comments: null },
-		    { sentiment: 'happy', timestamp: new Date(Date.now() - 7500000).toISOString(), location: 'demo', comments: null },
-		    { sentiment: 'neutral', timestamp: new Date(Date.now() - 10800000).toISOString(), location: 'demo', comments: 'Food was okay, service could be faster.' },
-		    { sentiment: 'sad', timestamp: new Date(Date.now() - 14400000).toISOString(), location: 'demo', comments: null },
-		    { sentiment: 'very-sad', timestamp: new Date(Date.now() - 14500000).toISOString(), location: 'demo', comments: null }
-		  ];
+		  const now = Date.now();
+		  const feedback = [];
+		  const addItems = (sentiment, count, commentEvery, commentText) => {
+		    for (let i = 0; i < count; i += 1) {
+		      feedback.push({
+		        sentiment,
+		        timestamp: new Date(now - (feedback.length + 1) * 3600000).toISOString(),
+		        location: 'demo',
+		        comments: commentEvery && i % commentEvery === 0 ? commentText : null
+		      });
+		    }
+		  };
+
+		  // 100 records, weighted mood score = 40/100 -> overall 60.
+		  addItems('very-happy', 20, 6, 'Amazing service and friendly staff!');
+		  addItems('happy', 20, 7, 'Quick turnaround and great experience.');
+		  addItems('neutral', 45, 9, 'Everything was fine, nothing special.');
+		  addItems('sad', 10, 8, 'Service was a bit slow today.');
+		  addItems('very-sad', 5, 5, 'Had a frustrating wait time.');
+
+		  return feedback;
 		}
 
 		function populateLandingEmojiHero() {
