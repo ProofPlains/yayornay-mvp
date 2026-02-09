@@ -1024,6 +1024,25 @@
 		.form-group input::placeholder, .optional-feedback textarea::placeholder {
 		  color: color-mix(in oklab, var(--ff-text) 55%, transparent) !important;
 		}
+
+		.settings-toggle {
+		  display: flex;
+		  align-items: center;
+		  gap: 10px;
+		  font-size: 14px;
+		  cursor: pointer;
+		}
+
+		.settings-toggle input {
+		  width: 16px;
+		  height: 16px;
+		}
+
+		.settings-helper {
+		  margin-top: 6px;
+		  font-size: 13px;
+		  color: var(--ff-text-muted);
+		}
 		
 		.btn[disabled], .btn:disabled, .submit-btn[disabled], .submit-btn:disabled,
 		.btn-primary[disabled], .btn-primary:disabled {
@@ -1550,6 +1569,28 @@
 	  </div>
 	</div>
 
+	<!-- Unsubscribe from feedback alerts -->
+	<div id="unsubscribeAlertsScreen" class="login-container" style="display:none;">
+	  <div class="brand-header">
+		<img class="brand-logo" src="Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		<span class="brand-title">FLASHFEEDBACK</span>
+	  </div>
+
+	  <div class="form-title">
+	    <h2>You’re unsubscribed</h2>
+		<p style="opacity:.9;">You have been unsubscribed from new feedback alerts.</p>
+	  </div>
+
+	  <div style="background: color-mix(in oklab, var(--ff-surface) 94%, black); border:1px solid var(--ff-border); border-radius:12px; padding:14px; margin-top:12px;">
+	    <p style="margin:0; color: var(--ff-text);">You can reactivate alerts anytime from your account settings.</p>
+	    <p id="unsubscribeStatus" style="margin:10px 0 0; color:#4b5563;"></p>
+	  </div>
+
+	  <div style="text-align:center; margin-top:20px;">
+	    <button class="link-button" onclick="showLogin()">Go to login</button>
+	  </div>
+	</div>
+
 
 	
     <!-- Customer Feedback View -->
@@ -1806,6 +1847,19 @@
 				    <button class="btn" onclick="handleChangePassword()">Update password</button>
 				    <span id="settingsPwdStatus" style="margin-left:10px;color:#4b5563;"></span>
 				  </div>
+
+				  <!-- Notifications -->
+				  <div style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:20px;margin-bottom:20px;">
+				    <h3 style="margin-bottom:12px;">Email alerts</h3>
+				    <label class="settings-toggle">
+				      <input id="settingsEmailAlertsToggle" type="checkbox" onchange="handleEmailAlertsToggle(event)" />
+				      <span>Send me email alerts when new feedback arrives</span>
+				    </label>
+				    <div class="settings-helper">We’ll email you right away with a link back to your dashboard.</div>
+				    <div style="margin-top:8px;">
+				      <span id="settingsEmailAlertsStatus" style="color:#4b5563;"></span>
+				    </div>
+				  </div>
 				
 				  <!-- Business -->
 				  <div style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:20px;margin-bottom:20px;">
@@ -2048,6 +2102,8 @@
 		document.addEventListener('DOMContentLoaded', async () => {
 		  const urlParams = new URLSearchParams(window.location.search);
 		  const locationId = urlParams.get('location');
+		  const unsubscribeType = urlParams.get('unsubscribe');
+		  const unsubscribeBusinessId = urlParams.get('business');
 		
 		  // 👇 NEW: detect Supabase recovery deeplink in the URL hash or query
 		  const isRecovery =
@@ -2061,6 +2117,13 @@
 		    // 1) Public QR view takes precedence
 		    if (locationId) {
 		      await showCustomerViewForLocation(locationId);
+		      booted = true;
+		      return;
+		    }
+
+		    // 1b) Unsubscribe links should render a confirmation page immediately
+		    if (unsubscribeType === 'feedback') {
+		      await showUnsubscribeAlerts(unsubscribeBusinessId);
 		      booted = true;
 		      return;
 		    }
@@ -2237,7 +2300,8 @@
 		    'customerView',
 		    'adminView',
 		    'forgotPasswordScreen',   // 👈 add
-		    'resetPasswordScreen'     // 👈 add
+		    'resetPasswordScreen',    // 👈 add
+		    'unsubscribeAlertsScreen'
 		  ];
 		  screens.forEach(function(screen) {
 		    document.getElementById(screen).style.display = 'none';
@@ -2394,7 +2458,8 @@
 				  owner_name: ownerName,
 				  timezone: 'Europe/London',
 				  industry: industry || null,
-				  business_type: businessType || null
+				  business_type: businessType || null,
+				  email_alerts_enabled: true
 				})
 			  .select()
 			  .single();
@@ -2427,6 +2492,7 @@
 			  businessName,
 			  ownerName,
 			  email,
+			  emailAlertsEnabled: true,
 			  locations: buildLocationsShape([loc], [])
 			};
 			currentLocation = loc.id;
@@ -2487,7 +2553,7 @@
 		  if (!business) {
 		    const { data: newBiz, error: nbErr } = await supabase
 		      .from('businesses')
-		      .insert({ name: 'My Business', owner_id: user.id })
+		      .insert({ name: 'My Business', owner_id: user.id, email_alerts_enabled: true })
 		      .select()
 		      .single();
 		    if (nbErr) throw nbErr;
@@ -2540,6 +2606,7 @@
 			  businessName: business.name,
 			  ownerName: business.owner_name || '',
 			  email: user.email || '',
+			  emailAlertsEnabled: business.email_alerts_enabled !== false,
 			  timezone: business.timezone || 'Europe/London',
 			  defaultLocationId: business.default_location_id || null,
 			  logoUrl: business.logo_url || '',
@@ -2869,11 +2936,14 @@
 		  };
 		
 		  showLoader();
+		  let locationContext = null;
 		  try {
 		    // 1) On public QR view, hydrate display name (but skip for demo)
 		    let businessId = currentUser?.businessId || null;
 		    if (!businessId && isUuid(currentLocation)) {
 		      const locRow = await getLocationById(currentLocation);
+		      locationContext = locRow;
+		      businessId = locRow?.business_id || businessId;
 		
 		      // If inactive, show message and stop cleanly
 		      if (locRow && locRow.is_active === false) {
@@ -2906,6 +2976,16 @@
 		        }, { returning: 'minimal' });
 		
 		      if (error) throw error;
+		
+		      const alertBusinessId = currentUser?.businessId || businessId || locationContext?.business_id;
+		      const alertLocationName = locationContext?.name || currentUser?.locations?.[currentLocation]?.name || null;
+		      sendFeedbackAlertEmail({
+		        businessId: alertBusinessId,
+		        locationId: currentLocation,
+		        locationName: alertLocationName,
+		        sentiment: selectedSentiment,
+		        comments: safeComments
+		      });
 		
 		      // Mirror in-memory state for instant UI if logged in
 		      const ts = localItem.timestamp;
@@ -2959,6 +3039,45 @@
 		
 		  if (currentView === 'customer-demo') {
 		    setTimeout(showDemoAdmin, 2000);
+		  }
+		}
+
+		function getDashboardUrl() {
+		  return `${window.location.origin}${window.location.pathname}`;
+		}
+
+		async function sendFeedbackAlertEmail({ businessId, locationId, locationName, sentiment, comments }) {
+		  if (!businessId || !locationId) return;
+		  if (currentUser?.businessId === businessId && currentUser?.emailAlertsEnabled === false) return;
+
+		  const dashboardUrl = getDashboardUrl();
+		  const unsubscribeUrl = `${dashboardUrl}?unsubscribe=feedback&business=${encodeURIComponent(businessId)}`;
+		  const subject = 'New feedback received';
+		  try {
+		    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-feedback-alert`, {
+		      method: 'POST',
+		      headers: {
+		        'Content-Type': 'application/json',
+		        'apikey': SUPABASE_ANON_KEY,
+		        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+		      },
+		      body: JSON.stringify({
+		        business_id: businessId,
+		        location_id: locationId,
+		        location_name: locationName || null,
+		        sentiment,
+		        comments,
+		        subject,
+		        dashboard_url: dashboardUrl,
+		        unsubscribe_url: unsubscribeUrl
+		      })
+		    });
+
+		    if (!res.ok) {
+		      console.warn('feedback alert email failed:', res.status, await res.text());
+		    }
+		  } catch (e) {
+		    console.warn('feedback alert email exception:', e?.message || e);
 		  }
 		}
 
@@ -3772,10 +3891,12 @@
 		  showForgotPassword,
 		  handleRequestReset,
 		  showResetPassword,
+		  showUnsubscribeAlerts,
 		  handleSubmitNewPassword,
 		  loadSettings,
 		  saveProfileSettings,
 		  saveBusinessSettings,
+		  handleEmailAlertsToggle,
 		  handleChangePassword,
 		  signOutEverywhere,
 		  openAccountMenu,
@@ -3789,7 +3910,7 @@
 		  // Pull fresh business row (ensures we reflect external changes too)
 		  const { data: biz, error } = await supabase
 		    .from('businesses')
-		    .select('id,name,owner_name,timezone,default_location_id,logo_url,industry,business_type')
+		    .select('id,name,owner_name,timezone,default_location_id,logo_url,industry,business_type,email_alerts_enabled')
 		    .eq('id', currentUser.businessId)
 		    .single();
 		  if (error) {
@@ -3805,6 +3926,7 @@
 		  currentUser.logoUrl         = biz.logo_url || '';
 		  currentUser.industry = biz.industry || '';
 		  currentUser.businessType = biz.business_type || '';
+		  currentUser.emailAlertsEnabled = biz.email_alerts_enabled !== false;
 		
 		  // Populate controls
 		  document.getElementById('settingsOwnerName').value = currentUser.ownerName || '';
@@ -3814,6 +3936,8 @@
 		  document.getElementById('settingsLogoUrl').value = currentUser.logoUrl || '';
 		  document.getElementById('settingsIndustry').value = biz.industry || '';
 		  document.getElementById('settingsBusinessType').value = biz.business_type || '';
+		  const emailToggle = document.getElementById('settingsEmailAlertsToggle');
+		  if (emailToggle) emailToggle.checked = currentUser.emailAlertsEnabled !== false;
 
 		
 		  // Locations dropdown in Settings
@@ -3877,6 +4001,34 @@
 		  updateFeedback(); // recalcs dashboard (timestamp TZ will reflect on next renders)
 		  status.textContent = 'Saved ✓';
 		  setTimeout(() => status.textContent = '', 1500);
+		}
+
+		async function handleEmailAlertsToggle(event) {
+		  const enabled = !!event?.target?.checked;
+		  const status = document.getElementById('settingsEmailAlertsStatus');
+		  if (!currentUser?.businessId) {
+		    if (status) status.textContent = 'Please log in to update alerts.';
+		    return;
+		  }
+
+		  if (status) status.textContent = 'Saving...';
+		  const { error } = await supabase
+		    .from('businesses')
+		    .update({ email_alerts_enabled: enabled })
+		    .eq('id', currentUser.businessId);
+
+		  if (error) {
+		    console.error(error);
+		    if (status) status.textContent = 'Error saving alerts';
+		    if (event?.target) event.target.checked = !enabled;
+		    return;
+		  }
+
+		  currentUser.emailAlertsEnabled = enabled;
+		  if (status) {
+		    status.textContent = enabled ? 'Email alerts enabled ✓' : 'Email alerts disabled ✓';
+		    setTimeout(() => { status.textContent = ''; }, 2000);
+		  }
 		}
 		
 		async function handleChangePassword() {
@@ -4442,6 +4594,38 @@
 		  const e = document.getElementById('resetError');
 		  if (e) { e.style.display = 'none'; e.textContent = ''; }
 		  currentView = 'reset';
+		}
+
+		async function showUnsubscribeAlerts(businessId) {
+		  hideAllScreens();
+		  hideAdminControls?.();
+		  const screen = document.getElementById('unsubscribeAlertsScreen');
+		  if (screen) screen.style.display = 'block';
+		  currentView = 'unsubscribe';
+
+		  const statusEl = document.getElementById('unsubscribeStatus');
+		  if (statusEl) statusEl.textContent = businessId ? 'Updating your alert preferences…' : '';
+
+		  if (!businessId) return;
+
+		  try {
+		    const { error } = await supabase
+		      .from('businesses')
+		      .update({ email_alerts_enabled: false })
+		      .eq('id', businessId);
+		    if (error) throw error;
+		    if (currentUser?.businessId === businessId) {
+		      currentUser.emailAlertsEnabled = false;
+		      const toggle = document.getElementById('settingsEmailAlertsToggle');
+		      if (toggle) toggle.checked = false;
+		    }
+		    if (statusEl) statusEl.textContent = 'Alert emails have been turned off.';
+		  } catch (e) {
+		    console.warn('unsubscribe failed:', e?.message || e);
+		    if (statusEl) {
+		      statusEl.textContent = 'We could not confirm the unsubscribe right now. Please sign in to check your settings.';
+		    }
+		  }
 		}
 		
 		async function handleSubmitNewPassword(event) {
