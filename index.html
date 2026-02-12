@@ -1569,7 +1569,7 @@
 	  </div>
 	</div>
 
-	<!-- unsubscribe from feedback alerts -->
+	<!-- Unsubscribe from feedback alerts -->
 	<div id="unsubscribeAlertsScreen" class="login-container" style="display:none;">
 	  <div class="brand-header">
 		<img class="brand-logo" src="Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
@@ -3054,68 +3054,14 @@
 		  const unsubscribeUrl = `${dashboardUrl}?unsubscribe=feedback&business=${encodeURIComponent(businessId)}`;
 		  const subject = 'New feedback received';
 		  const textBody = `You received new feedback. View it here: ${dashboardUrl}\n\nUnsubscribe: ${unsubscribeUrl}`;
-		  const htmlBody =
-		    payload.html ??
-		    `
-		      <!DOCTYPE html>
-		      <html lang="en">
-		        <head>
-		          <meta charset="UTF-8" />
-		          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		          <title>New feedback received</title>
-		        </head>
-		        <body style="margin:0; padding:0; background-color:#f3f4f6;">
-		          <div style="display:none; max-height:0; overflow:hidden; color:transparent; opacity:0;">
-		            ${previewText}
-		          </div>
-		          <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-		            <tr>
-		              <td align="center" style="padding:32px 16px;">
-		                <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:560px; background:#ffffff; border-radius:16px; box-shadow:0 10px 30px rgba(15, 23, 42, 0.08);">
-		                  <tr>
-		                    <td style="padding:28px 32px 12px;">
-		                      <div style="font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:14px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#7c3aed;">
-		                        Flash Feedback
-		                      </div>
-		                      <h1 style="margin:12px 0 8px; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:26px; line-height:1.25; color:#0f172a;">
-		                        You received new feedback
-		                      </h1>
-		                      <p style="margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:16px; line-height:1.6; color:#475569;">
-		                        A customer just shared feedback for your business. Jump into your dashboard to review it.
-		                      </p>
-		                    </td>
-		                  </tr>
-		                  <tr>
-		                    <td style="padding:20px 32px 32px;">
-		                      <a href="${dashboardUrl}" style="display:inline-block; padding:12px 20px; background:#7c3aed; color:#ffffff; text-decoration:none; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:15px; font-weight:600; border-radius:999px;">
-		                        View feedback
-		                      </a>
-		                      <p style="margin:16px 0 0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:13px; color:#94a3b8;">
-		                        If the button doesn’t work, copy this link into your browser:<br />
-		                        <a href="${dashboardUrl}" style="color:#7c3aed; word-break:break-all;">${dashboardUrl}</a>
-		                      </p>
-		                    </td>
-		                  </tr>
-		                  <tr>
-		                    <td style="padding:0 32px 24px; border-top:1px solid #e2e8f0;">
-		                      <p style="margin:16px 0 4px; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:12px; color:#94a3b8;">
-		                        You’re receiving this because email alerts are enabled on your Flash Feedback account.
-		                      </p>
-		                      <a href="${unsubscribeUrl}" style="font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:12px; color:#64748b; text-decoration:underline;">
-		                        Unsubscribe from feedback alerts
-		                      </a>
-		                    </td>
-		                  </tr>
-		                </table>
-		                <p style="margin:20px 0 0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:12px; color:#94a3b8;">
-		                  © ${new Date().getFullYear()} Flash Feedback
-		                </p>
-		              </td>
-		            </tr>
-		          </table>
-		        </body>
-		      </html>
-		    `;
+		  const htmlBody = `
+		    <div style="font-family:Inter,system-ui,sans-serif; font-size:16px; color:#0b1020;">
+		      <p>You received new feedback. View it <a href="${dashboardUrl}" style="color:#7c3aed;">here</a>.</p>
+		      <p style="margin-top:16px;">
+		        <a href="${unsubscribeUrl}" style="color:#6b7280; font-size:13px;">Unsubscribe from feedback alerts</a>
+		      </p>
+		    </div>
+		  `;
 
 		  try {
 		    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-feedback-alert`, {
