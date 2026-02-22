@@ -65,7 +65,7 @@ serve(async (req) => {
     return new Response("Email provider not configured", { status: 500 });
   }
 
-  const subject = payload.subject ?? "New feedback received";
+  const subject = payload.subject ?? "FlashFeedback: New feedback received";
   const textBody =
     payload.text ??
     `You received new feedback. View it here: ${payload.dashboard_url ?? ""}`.trim();

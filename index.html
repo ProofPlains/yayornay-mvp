@@ -3052,7 +3052,7 @@
 
 		  const dashboardUrl = getDashboardUrl();
 		  const unsubscribeUrl = `${dashboardUrl}?unsubscribe=feedback&business=${encodeURIComponent(businessId)}`;
-		  const subject = 'New feedback received';
+		  const subject = 'FlashFeedback: New feedback received';
 		  const textBody = `You received new feedback. View it here: ${dashboardUrl}\n\nUnsubscribe: ${unsubscribeUrl}`;
 		  const htmlBody = `
 		    <div style="font-family:Inter,system-ui,sans-serif; font-size:16px; color:#0b1020;">
