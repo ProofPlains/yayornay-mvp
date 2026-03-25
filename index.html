@@ -3734,13 +3734,13 @@
 		  ctx.textBaseline = 'middle';
 
                     setFont(ctx, 210, true, false, '"M PLUS Rounded 1c", "Arial Rounded MT Bold", Arial, sans-serif');
-          ctx.fillText('HOW WAS YOUR', centerX, 300);
-          ctx.fillText('EXPERIENCE?', centerX, 530);
+          ctx.fillText('HOW WAS YOUR', centerX, 270);
+          ctx.fillText('EXPERIENCE?', centerX, 500);
 
-          drawDownArrow(ctx, centerX, 710, 160, 36, '#000000');
+          drawDownArrow(ctx, centerX, 630, 120, 170, 28, '#000000');
 
           setFont(ctx, 116, true, false, '"M PLUS Rounded 1c", "Arial Rounded MT Bold", Arial, sans-serif');
-          ctx.fillText('SCAN WITH YOUR PHONE', centerX, 930);
+          ctx.fillText('SCAN WITH YOUR PHONE', centerX, 850);
 
 		  const qrSize = 1380;
 		  const qrX = (W - qrSize) / 2;
@@ -3776,16 +3776,17 @@
 			context.font = `${italic ? 'italic ' : ''}${bold ? '700 ' : ''}${Math.round(sizePx)}px ${family}`;
 		  }
 
-          function drawDownArrow(context, x, y, width, thickness, color) {
+          function drawDownArrow(context, x, y, headHeight, tailLength, thickness, color) {
             context.fillStyle = color;
+            var headTop = y + tailLength;
             context.beginPath();
-            context.moveTo(x, y + width);
-            context.lineTo(x - width / 2, y + width / 3);
-            context.lineTo(x - thickness / 2, y + width / 3);
-            context.lineTo(x - thickness / 2, y);
+            context.moveTo(x - thickness / 2, y);
             context.lineTo(x + thickness / 2, y);
-            context.lineTo(x + thickness / 2, y + width / 3);
-            context.lineTo(x + width / 2, y + width / 3);
+            context.lineTo(x + thickness / 2, headTop);
+            context.lineTo(x + headHeight / 2, headTop);
+            context.lineTo(x, headTop + headHeight);
+            context.lineTo(x - headHeight / 2, headTop);
+            context.lineTo(x - thickness / 2, headTop);
             context.closePath();
             context.fill();
           }
