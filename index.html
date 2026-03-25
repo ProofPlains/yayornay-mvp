@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlashFeedback - Instant Customer Feedback with QR Codes</title>
     <link rel="icon" type="image/png" href="https://flashfeedback.co.uk/Favicon.png">
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+	<script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
@@ -107,7 +107,7 @@
 		}
 		.hamburger-img{ width:24px; height:24px; display:inline-block; object-fit:contain; }
 
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Quicksand:wght@700&display=swap');
         
         * {
             margin: 0;
@@ -2097,6 +2097,7 @@
         var currentLocation = 'main';
         var currentUser = null;
         var userDatabase = {};
+        var ffQrCode = null;
 
         // Initialize app (session-aware + safe fallback)
 		document.addEventListener('DOMContentLoaded', async () => {
@@ -3617,6 +3618,57 @@
 		  }
 		}
 
+        function createFlashFeedbackQrOptions(qrValue) {
+            return {
+                type: 'canvas',
+                shape: 'square',
+                width: 1000,
+                height: 1000,
+                data: qrValue,
+                margin: 0,
+                qrOptions: {
+                    typeNumber: 0,
+                    mode: 'Byte',
+                    errorCorrectionLevel: 'Q'
+                },
+                image: 'https://raw.githubusercontent.com/ProofPlains/yayornay-mvp/35d407ad83bb914bb63760c6c65b0d2252a679a3/Punchy%20Purple%20Bolt%20Transparent.png',
+                imageOptions: {
+                    saveAsBlob: true,
+                    hideBackgroundDots: true,
+                    imageSize: 0.5,
+                    margin: 0,
+                    crossOrigin: 'anonymous'
+                },
+                dotsOptions: {
+                    type: 'extra-rounded',
+                    color: '#000000',
+                },
+                cornersSquareOptions: {
+                    type: 'dot',
+                    color: '#7a22ff'
+                },
+                cornersDotOptions: {
+                    type: 'dot',
+                    color: '#000000'
+                },
+                backgroundOptions: {
+                    color: '#ffffff'
+                }
+            };
+        }
+
+        async function getStyledQrPngDataURL() {
+            if (!ffQrCode || typeof ffQrCode.getRawData !== 'function') return null;
+            var qrBlob = await ffQrCode.getRawData('png');
+            if (!qrBlob) return null;
+            return await new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function() { resolve(reader.result); };
+                reader.onerror = reject;
+                reader.readAsDataURL(qrBlob);
+            });
+        }
+
         function generateQR() {
             var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
             var qrSelect = document.getElementById('qrLocationSelect');
@@ -3626,166 +3678,118 @@
             if (!container) return;
             
             container.innerHTML = '';
-            
-            var canvas = document.createElement('canvas');
-            var qr = new QRious({
-                element: canvas,
-                value: window.location.origin + window.location.pathname + '?location=' + selectedLocation,
-                size: 200,
-                background: 'white',
-                foreground: 'black'
-            });
-            
-            container.appendChild(canvas);
+
+            var qrValue = window.location.origin + window.location.pathname + '?location=' + selectedLocation;
+            var qrOptions = createFlashFeedbackQrOptions(qrValue);
+
+            if (!ffQrCode) {
+                ffQrCode = new QRCodeStyling(qrOptions);
+            } else {
+                ffQrCode.update(qrOptions);
+            }
+            ffQrCode.append(container);
+
+            if (container.firstElementChild) {
+                container.firstElementChild.style.width = '220px';
+                container.firstElementChild.style.height = '220px';
+                container.firstElementChild.style.margin = '0 auto';
+            }
         }
 
-        function generateSign() {
+        async function generateSign() {
 		  // --- Data lookups ---
 		  var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
 		  var qrSelect = document.getElementById('qrLocationSelect');
 		  var selectedLocation = qrSelect?.value || Object.keys(locations)[0] || currentLocation;
-		
-		  var locationName = locations[selectedLocation]?.name || 'Unknown Location';
-		  var bizName =
-		    (currentUser && currentUser.businessName) ||
-		    (window.demoAccount && window.demoAccount.businessName) ||
-		    '';
-		  var combinedName = [bizName, locationName].filter(Boolean).join(' – ');
-		
-		  var qrCanvas = document.querySelector('#qrContainer canvas');
-		  if (!qrCanvas) {
-		    alert('Please generate a QR code first');
-		    return;
-		  }
-		
-		  // --- A4 @ 150 DPI (portrait): 8.27" x 11.69" => 1241 x 1754 px ---
+
+          if (!ffQrCode) {
+            generateQR();
+          }
+
+          var qrDataUrl = await getStyledQrPngDataURL();
+          if (!qrDataUrl) {
+            alert('Please generate a QR code first');
+            return;
+          }
+
+          var qrImage = new Image();
+          qrImage.src = qrDataUrl;
+          if (qrImage.decode) {
+            try { await qrImage.decode(); } catch (_) {}
+          }
+
+		  // --- 2:3 portrait sticker canvas for 2" x 3" output ---
 		  var signCanvas = document.createElement('canvas');
 		  var ctx = signCanvas.getContext('2d', { alpha: false });
-		
-		  const W = signCanvas.width = 1241;   // width  px
-		  const H = signCanvas.height = 1754;  // height px
-		
-		  // Scale helpers (original artwork was tuned around 1275x1650)
-		  const baseW = 1275, baseH = 1650;
-		  const sx = W / baseW;
-		  const sy = H / baseH;
-		  const sf = Math.min(sx, sy); // use the smaller of the two for font sizes / radii
-		
-		  // Internal "non-borderless" safety margin (~8mm)
-		  const margin = Math.round(0.31 * 150); // 0.31" ≈ 8 mm at 150 DPI => ~47 px
-		  const innerX = margin;
-		  const innerY = margin;
-		  const innerW = W - margin * 2;
-		  const innerH = H - margin * 2;
-		
-		  // --- Background (pure white, no bleed) ---
+
+		  const W = signCanvas.width = 2000;
+		  const H = signCanvas.height = 3000;
+		  const centerX = W / 2;
+
 		  ctx.fillStyle = '#ffffff';
 		  ctx.fillRect(0, 0, W, H);
-		
-		  // (Optional subtle card to keep layout consistent, still white)
-		  ctx.fillStyle = '#ffffff';
-		  roundRect(ctx, innerX, innerY, innerW, innerH, 32 * sf);
-		  ctx.fill();
-		
-		  // --- Smiley (black) ---
-		  const logoY = innerY + (180 * sy);
-		  const smileyX = W / 2;
-		
-		  ctx.strokeStyle = '#000000';
-		  ctx.lineWidth = 12 * sf;
-		  ctx.beginPath();
-		  ctx.arc(smileyX, logoY, 60 * sf, 0, 2 * Math.PI);
-		  ctx.stroke();
-		
-		  ctx.fillStyle = '#000000';
-		  ctx.beginPath();
-		  ctx.arc(smileyX - 20 * sx, logoY - 15 * sy, 8 * sf, 0, 2 * Math.PI);
-		  ctx.fill();
-		  ctx.beginPath();
-		  ctx.arc(smileyX + 20 * sx, logoY - 15 * sy, 8 * sf, 0, 2 * Math.PI);
-		  ctx.fill();
-		
-		  ctx.strokeStyle = '#000000';
-		  ctx.lineWidth = 10 * sf;
-		  ctx.lineCap = 'round';
-		  ctx.beginPath();
-		  ctx.arc(smileyX, logoY - 5 * sy, 40 * sf, 0.15 * Math.PI, 0.85 * Math.PI);
-		  ctx.stroke();
-		
-		  // --- Headline ---
-		  ctx.fillStyle = '#000000';
+
+          ctx.fillStyle = '#000000';
 		  ctx.textAlign = 'center';
 		  ctx.textBaseline = 'middle';
-		
-		  const questionY = logoY + (180 * sy);
-		  setFont(ctx, 110 * sf, true);
-		  ctx.fillText('HOW WAS YOUR', W / 2, questionY);
-		  ctx.fillText('EXPERIENCE?', W / 2, questionY + (130 * sy));
-		
-		  // --- QR code ---
-		  const qrSize = 350 * sf;
-		  const qrX = (W / 2) - (qrSize / 2);
-		  const qrY = questionY + (280 * sy);
-		  ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
-		
-		  // --- Business – Location (auto-fit to width) ---
-		  ctx.fillStyle = '#000000';
-		  ctx.textAlign = 'center';
-		
-		  const maxTextWidth = innerW - (120 * sx); // keep good side margins
-		  let fontSize = 48 * sf;
-		  const minFont = 28 * sf;
-		
-		  while (fontSize >= minFont) {
-		    setFont(ctx, fontSize, true);
-		    if (ctx.measureText(combinedName).width <= maxTextWidth) break;
-		    fontSize -= 2;
-		  }
-		  ctx.fillText(combinedName, W / 2, qrY + qrSize + (60 * sy));
-		
-		  // --- "SCAN TO RATE" button (black fill, white label) ---
-		  const buttonY = qrY + qrSize + (140 * sy);
-		  const buttonW = 500 * sx;
-		  const buttonH = 100 * sy;
-		  const buttonX = (W / 2) - (buttonW / 2);
-		
-		  ctx.fillStyle = '#000000';
-		  roundRect(ctx, buttonX, buttonY, buttonW, buttonH, 50 * sf);
-		  ctx.fill();
-		
-		  ctx.fillStyle = '#ffffff';
-		  setFont(ctx, 52 * sf, true);
-		  ctx.fillText('SCAN TO RATE', W / 2, buttonY + (buttonH / 2));
-		
+
+                    setFont(ctx, 150, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+          ctx.fillText('HOW WAS YOUR', centerX, 220);
+          ctx.fillText('EXPERIENCE?', centerX, 450);
+
+          drawDownArrow(ctx, centerX, 570, 90, 80, 24, '#000000');
+
+          setFont(ctx, 93, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+          ctx.fillText('SCAN WITH YOUR PHONE', centerX, 800);
+
+		  const qrSize = 1380;
+		  const qrX = (W - qrSize) / 2;
+		  const qrY = 1000;
+		  ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+
+          setFont(ctx, 140, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+          ctx.fillStyle = '#000000';
+          ctx.fillText('TAKES 5 SECONDS', centerX, 2680);
+
+          setFont(ctx, 106, true, true, 'Anton, Impact, sans-serif');
+          ctx.fillStyle = '#7a22ff';
+          ctx.fillText('FLASHFEEDBACK', centerX, 2870);
+
 		  // --- Preview image (PNG) ---
 		  const img = document.createElement('img');
-		  img.src = signCanvas.toDataURL('image/png'); // A4-sized bitmap
+		  img.src = signCanvas.toDataURL('image/png');
 		  img.className = 'sign-preview';
 		  img.style.maxWidth = '100%';
 		  img.style.border = '1px solid #ddd';
 		  img.style.borderRadius = '10px';
 		  img.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
-		
+
 		  const signContainer = document.getElementById('generatedSign');
 		  const imageContainer = document.getElementById('signImageContainer');
 		  imageContainer.innerHTML = '';
 		  imageContainer.appendChild(img);
 		  signContainer.style.display = 'block';
 		  signContainer.scrollIntoView({ behavior: 'smooth' });
-		
+
 		  // --- Helpers ---
-		  function setFont(context, sizePx, bold = false) {
-		    context.font = `${bold ? 'bold ' : ''}${Math.round(sizePx)}px Arial`;
+		  function setFont(context, sizePx, bold, italic, family) {
+			context.font = `${italic ? 'italic ' : ''}${bold ? '700 ' : ''}${Math.round(sizePx)}px ${family}`;
 		  }
-		  function roundRect(context, x, y, w, h, r) {
-		    context.beginPath();
-		    context.moveTo(x + r, y);
-		    context.arcTo(x + w, y, x + w, y + h, r);
-		    context.arcTo(x + w, y + h, x, y + h, r);
-		    context.arcTo(x, y + h, x, y, r);
-		    context.arcTo(x, y, x + w, y, r);
-		    context.closePath();
-		  }
+
+          function drawDownArrow(context, x, y, headHeight, tailLength, thickness, color) {
+            context.fillStyle = color;
+            var headTop = y + tailLength;
+            context.beginPath();
+            context.moveTo(x - thickness / 2, y);
+            context.lineTo(x + thickness / 2, y);
+            context.lineTo(x + thickness / 2, headTop);
+            context.lineTo(x + headHeight / 2, headTop);
+            context.lineTo(x, headTop + headHeight);
+            context.lineTo(x - headHeight / 2, headTop);
+            context.lineTo(x - thickness / 2, headTop);
+            context.closePath();
+            context.fill();
+          }
 		}
 
 
