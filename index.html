@@ -107,7 +107,7 @@
 		}
 		.hamburger-img{ width:24px; height:24px; display:inline-block; object-fit:contain; }
 
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=M+PLUS+Rounded+1c:wght@700;800;900&family=Teko:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Quicksand:wght@700&display=swap');
         
         * {
             margin: 0;
@@ -3631,7 +3631,7 @@
                     mode: 'Byte',
                     errorCorrectionLevel: 'Q'
                 },
-                image: 'https://raw.githubusercontent.com/ProofPlains/yayornay-mvp/8e03c5288065a4a04c78b1421d8e7dbf3da2b9a0/Grape%20Bolt%20Transparent.png',
+                image: 'https://raw.githubusercontent.com/ProofPlains/yayornay-mvp/35d407ad83bb914bb63760c6c65b0d2252a679a3/Punchy%20Purple%20Bolt%20Transparent.png',
                 imageOptions: {
                     saveAsBlob: true,
                     hideBackgroundDots: true,
@@ -3645,7 +3645,7 @@
                 },
                 cornersSquareOptions: {
                     type: 'dot',
-                    color: '#a78bfa'
+                    color: '#7a22ff'
                 },
                 cornersDotOptions: {
                     type: 'dot',
@@ -3733,13 +3733,13 @@
 		  ctx.textAlign = 'center';
 		  ctx.textBaseline = 'middle';
 
-                    setFont(ctx, 210, true, false, '"M PLUS Rounded 1c", "Arial Rounded MT Bold", Arial, sans-serif');
+                    setFont(ctx, 210, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
           ctx.fillText('HOW WAS YOUR', centerX, 220);
           ctx.fillText('EXPERIENCE?', centerX, 450);
 
           drawDownArrow(ctx, centerX, 570, 90, 80, 24, '#000000');
 
-          setFont(ctx, 116, true, false, '"M PLUS Rounded 1c", "Arial Rounded MT Bold", Arial, sans-serif');
+          setFont(ctx, 116, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
           ctx.fillText('SCAN WITH YOUR PHONE', centerX, 800);
 
 		  const qrSize = 1380;
@@ -3747,12 +3747,12 @@
 		  const qrY = 1000;
 		  ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
 
-          setFont(ctx, 156, true, false, '"M PLUS Rounded 1c", "Arial Rounded MT Bold", Arial, sans-serif');
+          setFont(ctx, 140, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
           ctx.fillStyle = '#000000';
           ctx.fillText('TAKES 5 SECONDS', centerX, 2680);
 
-          setFont(ctx, 138, true, true, '"Teko", Impact, sans-serif');
-          ctx.fillStyle = '#a78bfa';
+          setFont(ctx, 106, true, true, 'Anton, Impact, sans-serif');
+          ctx.fillStyle = '#7a22ff';
           ctx.fillText('FLASHFEEDBACK', centerX, 2870);
 
 		  // --- Preview image (PNG) ---
