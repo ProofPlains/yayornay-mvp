@@ -3742,18 +3742,18 @@
           setFont(ctx, 116, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
           ctx.fillText('SCAN WITH YOUR PHONE', centerX, 800);
 
-		  const qrSize = 1380;
+		  const qrSize = 1320;
 		  const qrX = (W - qrSize) / 2;
-		  const qrY = 1000;
+		  const qrY = 1015;
 		  ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
 
-          setFont(ctx, 140, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+          setFont(ctx, 150, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
           ctx.fillStyle = '#000000';
           ctx.fillText('TAKES 5 SECONDS', centerX, 2680);
 
-          setFont(ctx, 106, true, true, 'Anton, Impact, sans-serif');
+          setFont(ctx, 118, true, true, 'Anton, Impact, sans-serif');
           ctx.fillStyle = '#d100ff';
-          ctx.fillText('FLASHFEEDBACK', centerX, 2870);
+          ctx.fillText('FLASHFEEDBACK', centerX, 2855);
 
 		  // --- Preview image (PNG) ---
 		  const img = document.createElement('img');
