@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { requireInternalAdmin } from "../_shared/admin-auth.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,34 +17,76 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
-type BusinessRow = {
-  id: string;
-  name: string | null;
-  owner_id: string | null;
-  owner_name: string | null;
-  created_at: string | null;
-  industry: string | null;
-  business_type: string | null;
-  timezone: string | null;
-  email_alerts_enabled: boolean | null;
-};
+function getAuthorizationHeader(req: Request): string | null {
+  const authorization = req.headers.get("Authorization");
+  return authorization?.startsWith("Bearer ") ? authorization : null;
+}
 
-type LocationRow = {
-  id: string;
-  business_id: string | null;
-  name: string | null;
-  is_active: boolean | null;
-  created_at: string | null;
-};
+async function requireInternalAdmin(req: Request) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-type FeedbackRow = {
-  id: string;
-  business_id: string | null;
-  location_id: string | null;
-  sentiment: string | null;
-  comments: string | null;
-  submitted_at: string | null;
-};
+  if (!supabaseUrl || (!anonKey && !serviceRoleKey)) {
+    return {
+      ok: false,
+      status: 500,
+      role: null,
+      error: "Supabase environment is not configured",
+    };
+  }
+
+  const authorization = getAuthorizationHeader(req);
+  if (!authorization) {
+    return {
+      ok: false,
+      status: 401,
+      role: null,
+      error: "Missing bearer token",
+    };
+  }
+
+  const userClient = createClient(supabaseUrl, anonKey || serviceRoleKey, {
+    auth: { persistSession: false },
+    global: { headers: { Authorization: authorization } },
+  });
+
+  const { data: isAdmin, error: isAdminError } = await userClient.rpc("is_internal_admin");
+  if (isAdminError) {
+    console.error("is_internal_admin RPC failed", isAdminError);
+    return {
+      ok: false,
+      status: 500,
+      role: null,
+      error: "Unable to verify admin access",
+    };
+  }
+
+  if (isAdmin !== true) {
+    return {
+      ok: false,
+      status: 403,
+      role: null,
+      error: "Internal admin access required",
+    };
+  }
+
+  const { data: role, error: roleError } = await userClient.rpc("current_internal_admin_role");
+  if (roleError) {
+    console.error("current_internal_admin_role RPC failed", roleError);
+    return {
+      ok: false,
+      status: 500,
+      role: null,
+      error: "Unable to resolve admin role",
+    };
+  }
+
+  return {
+    ok: true,
+    role: typeof role === "string" ? role : null,
+  };
+}
 
 function latestDate(existing: string | null, candidate: string | null) {
   if (!candidate) return existing;
@@ -112,11 +153,11 @@ serve(async (req) => {
     if (locationsResult.error) throw locationsResult.error;
     if (feedbackResult.error) throw feedbackResult.error;
 
-    const businesses = (businessesResult.data || []) as BusinessRow[];
-    const locations = (locationsResult.data || []) as LocationRow[];
-    const feedback = (feedbackResult.data || []) as FeedbackRow[];
+    const businesses = businessesResult.data || [];
+    const locations = locationsResult.data || [];
+    const feedback = feedbackResult.data || [];
 
-    const locationsByBusiness = new Map<string, LocationRow[]>();
+    const locationsByBusiness = new Map<string, any[]>();
     const locationToBusiness = new Map<string, string>();
     for (const location of locations) {
       if (!location.business_id) continue;
@@ -126,8 +167,8 @@ serve(async (req) => {
       locationsByBusiness.set(location.business_id, current);
     }
 
-    const feedbackByBusiness = new Map<string, FeedbackRow[]>();
-    const feedbackByLocation = new Map<string, FeedbackRow[]>();
+    const feedbackByBusiness = new Map<string, any[]>();
+    const feedbackByLocation = new Map<string, any[]>();
     for (const item of feedback) {
       const businessId = item.business_id || (item.location_id ? locationToBusiness.get(item.location_id) : null);
       if (!businessId) continue;
