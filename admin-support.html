@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlashFeedback Support Console</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #15121c;
+      --surface: #211b2d;
+      --surface-2: #2b2438;
+      --border: rgba(255,255,255,.14);
+      --text: #f5f1e8;
+      --muted: #b7adca;
+      --brand: #b88aff;
+      --good: #bbf7d0;
+      --bad: #fecaca;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(21,18,28,.96);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 22px; }
+    main { max-width: 1180px; margin: 0 auto; padding: 26px; }
+    button, input, select {
+      font: inherit;
+    }
+
+    .btn {
+      min-height: 42px;
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .btn:hover { border-color: var(--brand); }
+    .intro {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+    .intro h2 { font-size: 28px; margin-bottom: 6px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) 220px;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 0 12px;
+    }
+
+    .status {
+      min-height: 22px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .status.error { color: var(--bad); }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      background: rgba(255,255,255,.04);
+    }
+    tr:last-child td { border-bottom: 0; }
+    .link-button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--brand);
+      font: inherit;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge.enabled { color: var(--good); border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.12); }
+    .badge.disabled { color: var(--bad); border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.12); }
+    .empty {
+      display: none;
+      padding: 16px;
+      margin-top: 14px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 10;
+    }
+    .overlay.open { display: block; }
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: min(520px, 92vw);
+      height: 100vh;
+      transform: translateX(100%);
+      transition: transform .22s ease;
+      z-index: 11;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      box-shadow: -20px 0 50px rgba(0,0,0,.35);
+      overflow-y: auto;
+      padding: 22px;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .close {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .section {
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+    .section h3 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      margin-bottom: 10px;
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field, .list-item {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+    }
+    .field span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+    .list { display: grid; gap: 8px; }
+
+    @media (max-width: 720px) {
+      header, .intro { display: grid; }
+      .toolbar, .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FlashFeedback Support</h1>
+    <button class="btn" type="button" id="refreshBtn">Refresh</button>
+  </header>
+
+  <main>
+    <div class="intro">
+      <div>
+        <h2>Support Console</h2>
+        <p class="muted">Read-only account health overview for internal superusers.</p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input id="searchInput" type="search" placeholder="Search business, owner, industry, or type">
+      <select id="alertsFilter">
+        <option value="all">All alert states</option>
+        <option value="enabled">Alerts enabled</option>
+        <option value="disabled">Alerts disabled</option>
+      </select>
+    </div>
+
+    <div id="status" class="status">Checking superuser access...</div>
+    <div class="table-wrap">
+      <table aria-label="Business support overview">
+        <thead>
+          <tr>
+            <th>Business</th>
+            <th>Owner</th>
+            <th>Industry</th>
+            <th>Alerts</th>
+            <th>Locations</th>
+            <th>Feedback</th>
+            <th>Latest</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody id="businessRows"></tbody>
+      </table>
+    </div>
+    <div id="empty" class="empty">No businesses match the current filters.</div>
+  </main>
+
+  <div id="overlay" class="overlay"></div>
+  <aside id="drawer" class="drawer" aria-label="Business support details"></aside>
+
+  <script>
+    const SUPABASE_URL = 'https://evediwsocfbalzbzdden.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsImtpZCI6Ilp6RVQwU0FCbEhSZG91Z1EiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2V2ZWRpd3NvY2ZiYWx6YnpkZGVuLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJyZWYiOiJldmVkaXdzb2NmYmFsemJ6ZGRlbiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzQ4ODk4NDcyLCJleHAiOjIwNjQ0NzQ0NzJ9.h4mdSjKz_DSn8LL59cEudnu0R5AVBPuFghJrIQdNLqw';
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let overview = null;
+
+    const statusEl = document.getElementById('status');
+    const rowsEl = document.getElementById('businessRows');
+    const emptyEl = document.getElementById('empty');
+    const searchEl = document.getElementById('searchInput');
+    const alertsEl = document.getElementById('alertsFilter');
+    const drawerEl = document.getElementById('drawer');
+    const overlayEl = document.getElementById('overlay');
+
+    function setStatus(message, tone = '') {
+      statusEl.textContent = message || '';
+      statusEl.classList.toggle('error', tone === 'error');
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '-';
+      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    async function getAccessToken() {
+      const { data } = await client.auth.getSession();
+      return data?.session?.access_token || '';
+    }
+
+    async function assertSuperuser() {
+      const token = await getAccessToken();
+      if (!token) throw new Error('Open this page after signing in to FlashFeedback as a superuser.');
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-auth-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || body?.isAdmin !== true || body?.role !== 'superuser') {
+        throw new Error('This console is only available to internal superusers.');
+      }
+      return token;
+    }
+
+    function searchText(business) {
+      return [business.name, business.ownerName, business.ownerUserId, business.industry, business.businessType]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+    }
+
+    async function loadOverview() {
+      rowsEl.innerHTML = '';
+      emptyEl.style.display = 'none';
+      try {
+        setStatus('Checking superuser access...');
+        const token = await assertSuperuser();
+        setStatus('Loading support overview...');
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-support-overview`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body?.error || 'Could not load support overview.');
+        overview = body;
+        render();
+      } catch (err) {
+        overview = null;
+        setStatus(err?.message || 'Could not load support overview.', 'error');
+        render();
+      }
+    }
+
+    function render() {
+      const businesses = Array.isArray(overview?.businesses) ? overview.businesses : [];
+      const query = searchEl.value.trim().toLowerCase();
+      const alertsFilter = alertsEl.value;
+      const filtered = businesses.filter((business) => {
+        const alertsEnabled = business.emailAlertsEnabled !== false;
+        return (!query || searchText(business).includes(query)) &&
+          (alertsFilter === 'all' ||
+            (alertsFilter === 'enabled' && alertsEnabled) ||
+            (alertsFilter === 'disabled' && !alertsEnabled));
+      });
+
+      rowsEl.innerHTML = filtered.map((business) => {
+        const alertsEnabled = business.emailAlertsEnabled !== false;
+        return `
+          <tr>
+            <td>
+              <button class="link-button" type="button" data-business-id="${escapeHtml(business.id)}">${escapeHtml(business.name || 'Untitled business')}</button>
+              <div class="muted">${escapeHtml(business.businessType || 'No business type')}</div>
+            </td>
+            <td>
+              <div>${escapeHtml(business.ownerName || 'No owner name')}</div>
+              <div class="muted">${escapeHtml(business.ownerUserId || '')}</div>
+            </td>
+            <td>${escapeHtml(business.industry || '-')}</td>
+            <td><span class="badge ${alertsEnabled ? 'enabled' : 'disabled'}">${alertsEnabled ? 'Enabled' : 'Disabled'}</span></td>
+            <td>${Number(business.locationCount || 0)}</td>
+            <td>${Number(business.feedbackCount || 0)}</td>
+            <td>${escapeHtml(formatDate(business.latestFeedbackAt))}</td>
+            <td>${escapeHtml(formatDate(business.createdAt))}</td>
+          </tr>
+        `;
+      }).join('');
+
+      if (overview) setStatus(`${filtered.length} of ${businesses.length} businesses shown. Last refreshed ${formatDate(overview.generatedAt)}.`);
+      emptyEl.style.display = filtered.length === 0 ? 'block' : 'none';
+    }
+
+    function openDetail(id) {
+      const business = (overview?.businesses || []).find((item) => item.id === id);
+      if (!business) return;
+      const locations = Array.isArray(business.locations) ? business.locations : [];
+      const recentFeedback = Array.isArray(business.recentFeedback) ? business.recentFeedback : [];
+
+      drawerEl.innerHTML = `
+        <div class="drawer-header">
+          <div>
+            <h2>${escapeHtml(business.name || 'Untitled business')}</h2>
+            <p class="muted">${escapeHtml(business.industry || 'No industry')} ${business.businessType ? '- ' + escapeHtml(business.businessType) : ''}</p>
+          </div>
+          <button class="close" type="button" id="closeDrawer" aria-label="Close">x</button>
+        </div>
+        <div class="section">
+          <h3>Account</h3>
+          <div class="grid">
+            <div class="field"><span>Owner</span>${escapeHtml(business.ownerName || 'No owner name')}</div>
+            <div class="field"><span>Owner user id</span>${escapeHtml(business.ownerUserId || '-')}</div>
+            <div class="field"><span>Timezone</span>${escapeHtml(business.timezone || '-')}</div>
+            <div class="field"><span>Email alerts</span>${business.emailAlertsEnabled !== false ? 'Enabled' : 'Disabled'}</div>
+            <div class="field"><span>Created</span>${escapeHtml(formatDate(business.createdAt))}</div>
+            <div class="field"><span>Latest feedback</span>${escapeHtml(formatDate(business.latestFeedbackAt))}</div>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Locations (${locations.length})</h3>
+          <div class="list">
+            ${locations.length ? locations.map((location) => `
+              <div class="list-item">
+                <strong>${escapeHtml(location.name || 'Untitled location')}</strong>
+                <div class="muted">${location.isActive === false ? 'Inactive' : 'Active'} - ${Number(location.feedbackCount || 0)} feedback - latest ${escapeHtml(formatDate(location.latestFeedbackAt))}</div>
+              </div>
+            `).join('') : '<div class="muted">No locations found.</div>'}
+          </div>
+        </div>
+        <div class="section">
+          <h3>Recent Feedback</h3>
+          <div class="list">
+            ${recentFeedback.length ? recentFeedback.map((feedback) => `
+              <div class="list-item">
+                <strong>${escapeHtml(feedback.sentiment || 'Feedback')}</strong>
+                <div class="muted">${escapeHtml(feedback.locationName || 'Unknown location')} - ${escapeHtml(formatDate(feedback.submittedAt))}${feedback.hasComment ? ' - includes comment' : ''}</div>
+              </div>
+            `).join('') : '<div class="muted">No feedback found.</div>'}
+          </div>
+        </div>
+      `;
+      overlayEl.classList.add('open');
+      drawerEl.classList.add('open');
+      document.getElementById('closeDrawer').addEventListener('click', closeDetail);
+    }
+
+    function closeDetail() {
+      overlayEl.classList.remove('open');
+      drawerEl.classList.remove('open');
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', loadOverview);
+    searchEl.addEventListener('input', render);
+    alertsEl.addEventListener('change', render);
+    rowsEl.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-business-id]');
+      if (button) openDetail(button.dataset.businessId);
+    });
+    overlayEl.addEventListener('click', closeDetail);
+    loadOverview();
+  </script>
+</body>
+</html>
