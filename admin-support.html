@@ -45,9 +45,10 @@
     h1, h2, h3, p { margin: 0; }
     h1 { font-size: 22px; }
     main { max-width: 1180px; margin: 0 auto; padding: 26px; }
-    button, input, select {
-      font: inherit;
-    }
+    button, input, select { font: inherit; }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .hidden { display: none !important; }
 
     .btn {
       min-height: 42px;
@@ -85,6 +86,38 @@
       color: var(--text);
       padding: 0 12px;
     }
+
+    .login-gate {
+      min-height: calc(100vh - 84px);
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+    .login-card {
+      width: min(440px, 100%);
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 18px 44px rgba(0,0,0,.28);
+    }
+    .login-card h2 { font-size: 28px; margin-bottom: 6px; }
+    .login-card p { color: var(--muted); margin-bottom: 18px; }
+    .login-form { display: grid; gap: 12px; }
+    .login-form label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .login-error {
+      display: none;
+      color: var(--bad);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .login-error.visible { display: block; }
 
     .status {
       min-height: 22px;
@@ -254,16 +287,39 @@
       header, .intro { display: grid; }
       .toolbar, .grid { grid-template-columns: 1fr; }
       .list-item-header, .qr-sign-toolbar { display: grid; }
+      .header-actions { justify-content: start; }
     }
   </style>
 </head>
 <body>
   <header>
     <h1>FlashFeedback Support</h1>
-    <button class="btn" type="button" id="refreshBtn">Refresh</button>
+    <div class="header-actions">
+      <button class="btn hidden" type="button" id="refreshBtn">Refresh</button>
+      <button class="btn hidden" type="button" id="logoutBtn">Log out</button>
+    </div>
   </header>
 
-  <main>
+  <section id="loginGate" class="login-gate hidden" aria-label="Support console login">
+    <div class="login-card">
+      <h2>Support Console</h2>
+      <p>Log in with a FlashFeedback superuser account to continue.</p>
+      <form id="loginForm" class="login-form">
+        <label>
+          Email address
+          <input id="loginEmail" type="email" autocomplete="email" required>
+        </label>
+        <label>
+          Password
+          <input id="loginPassword" type="password" autocomplete="current-password" required>
+        </label>
+        <div id="loginError" class="login-error" role="alert"></div>
+        <button class="btn" type="submit">Log in</button>
+      </form>
+    </div>
+  </section>
+
+  <main id="consoleShell" class="hidden">
     <div class="intro">
       <div>
         <h2>Support Console</h2>
@@ -310,6 +366,12 @@
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let overview = null;
 
+    const loginGateEl = document.getElementById('loginGate');
+    const consoleShellEl = document.getElementById('consoleShell');
+    const loginFormEl = document.getElementById('loginForm');
+    const loginErrorEl = document.getElementById('loginError');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
     const statusEl = document.getElementById('status');
     const rowsEl = document.getElementById('businessRows');
     const emptyEl = document.getElementById('empty');
@@ -321,6 +383,62 @@
     function setStatus(message, tone = '') {
       statusEl.textContent = message || '';
       statusEl.classList.toggle('error', tone === 'error');
+    }
+
+    function setLoginError(message) {
+      loginErrorEl.textContent = message || '';
+      loginErrorEl.classList.toggle('visible', Boolean(message));
+    }
+
+    function showLoginGate(message = '') {
+      overview = null;
+      rowsEl.innerHTML = '';
+      emptyEl.style.display = 'none';
+      consoleShellEl.classList.add('hidden');
+      refreshBtn.classList.add('hidden');
+      logoutBtn.classList.add('hidden');
+      loginGateEl.classList.remove('hidden');
+      setLoginError(message);
+    }
+
+    function showConsole() {
+      loginGateEl.classList.add('hidden');
+      consoleShellEl.classList.remove('hidden');
+      refreshBtn.classList.remove('hidden');
+      logoutBtn.classList.remove('hidden');
+      setLoginError('');
+    }
+
+    function makeNoSessionError() {
+      const error = new Error('Please log in to continue to the support console.');
+      error.code = 'NO_SESSION';
+      return error;
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      setLoginError('');
+      const submitButton = loginFormEl.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.textContent = 'Logging in...';
+      try {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const { error } = await client.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        await loadOverview();
+      } catch (err) {
+        setLoginError(err?.message || 'Could not log in. Please check your details and try again.');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Log in';
+      }
+    }
+
+    async function handleLogout() {
+      await client.auth.signOut();
+      closeDetail();
+      showLoginGate('You have been logged out.');
     }
 
     function escapeHtml(value) {
@@ -520,11 +638,15 @@
 
     async function assertSuperuser() {
       const token = await getAccessToken();
-      if (!token) throw new Error('Open this page after signing in to FlashFeedback as a superuser.');
+      if (!token) throw makeNoSessionError();
       const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-auth-status`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const body = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        await client.auth.signOut();
+        throw makeNoSessionError();
+      }
       if (!res.ok || body?.isAdmin !== true || body?.role !== 'superuser') {
         throw new Error('This console is only available to internal superusers.');
       }
@@ -542,6 +664,7 @@
       rowsEl.innerHTML = '';
       emptyEl.style.display = 'none';
       try {
+        showConsole();
         setStatus('Checking superuser access...');
         const token = await assertSuperuser();
         setStatus('Loading support overview...');
@@ -554,6 +677,11 @@
         render();
       } catch (err) {
         overview = null;
+        if (err?.code === 'NO_SESSION') {
+          showLoginGate();
+          return;
+        }
+        showConsole();
         setStatus(err?.message || 'Could not load support overview.', 'error');
         render();
       }
@@ -670,7 +798,9 @@
       drawerEl.classList.remove('open');
     }
 
-    document.getElementById('refreshBtn').addEventListener('click', loadOverview);
+    loginFormEl.addEventListener('submit', handleLogin);
+    logoutBtn.addEventListener('click', handleLogout);
+    refreshBtn.addEventListener('click', loadOverview);
     searchEl.addEventListener('input', render);
     alertsEl.addEventListener('change', render);
     rowsEl.addEventListener('click', (event) => {
