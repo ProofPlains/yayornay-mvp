@@ -3297,7 +3297,7 @@
 		      throw new Error(`${message} (${res.status}) ${errorText || ''}`.trim());
 		    }
 
-		    if (status) status.textContent = 'Order request sent. We will be in touch shortly.';
+		    if (status) status.textContent = 'Order request sent.';
 		    event.target.reset();
 		    document.getElementById('qrOrderQuantity').value = '1';
 		    document.getElementById('qrOrderCountry').value = 'United Kingdom';
