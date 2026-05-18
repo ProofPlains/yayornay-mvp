@@ -761,24 +761,16 @@
         `;
       }).join('');
 
-      if (overview) setStatus(`${filtered.length} of ${businesses.length} businesses shown. Last refreshed ${formatDate(overview.generatedAt)}.`);
+      if (overview) setStatus(`${filtered.length} of ${businesses.length} businesses matched. Last refreshed ${formatDate(overview.generatedAt)}.`);
       emptyEl.style.display = filtered.length === 0 ? 'block' : 'none';
-      prevPageBtn.addEventListener('click', () => {
-        currentPage -= 1;
-        render();
-      });
-      nextPageBtn.addEventListener('click', () => {
-        currentPage += 1;
-        render();
-      });
-      searchEl.addEventListener('input', () => {
-        currentPage = 1;
-        render();
-      });
-      alertsEl.addEventListener('change', () => {
-        currentPage = 1;
-        render();
-      });
+      
+      paginationEl.classList.toggle('open', filtered.length > 0);
+      const firstShown = filtered.length ? startIndex + 1 : 0;
+      const lastShown = Math.min(startIndex + pageBusinesses.length, filtered.length);
+      paginationSummaryEl.textContent = `Showing ${firstShown}-${lastShown} of ${filtered.length} businesses.`;
+      paginationPageEl.textContent = `Page ${currentPage} of ${pageCount}`;
+      prevPageBtn.disabled = currentPage <= 1;
+      nextPageBtn.disabled = currentPage >= pageCount;
     }
 
     function openDetail(id) {
@@ -857,8 +849,22 @@
     loginFormEl.addEventListener('submit', handleLogin);
     logoutBtn.addEventListener('click', handleLogout);
     refreshBtn.addEventListener('click', loadOverview);
-    searchEl.addEventListener('input', render);
-    alertsEl.addEventListener('change', render);
+    prevPageBtn.addEventListener('click', () => {
+      currentPage -= 1;
+      render();
+    });
+    nextPageBtn.addEventListener('click', () => {
+      currentPage += 1;
+      render();
+    });
+    searchEl.addEventListener('input', () => {
+      currentPage = 1;
+      render();
+    });
+    alertsEl.addEventListener('change', () => {
+      currentPage = 1;
+      render();
+    });
     rowsEl.addEventListener('click', (event) => {
       const button = event.target.closest('[data-business-id]');
       if (button) openDetail(button.dataset.businessId);
