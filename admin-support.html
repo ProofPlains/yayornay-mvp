@@ -183,6 +183,26 @@
       color: var(--muted);
       text-align: center;
     }
+    .pagination {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pagination.open { display: flex; }
+    .pagination-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .pagination button:disabled {
+      cursor: not-allowed;
+      opacity: .45;
+    }
     .overlay {
       display: none;
       position: fixed;
@@ -355,6 +375,14 @@
       </table>
     </div>
     <div id="empty" class="empty">No businesses match the current filters.</div>
+    <div id="pagination" class="pagination" aria-label="Business table pagination">
+      <div id="paginationSummary">Showing 0 of 0 businesses.</div>
+      <div class="pagination-actions">
+        <button class="btn" type="button" id="prevPageBtn">Prev</button>
+        <span id="paginationPage">Page 1 of 1</span>
+        <button class="btn" type="button" id="nextPageBtn">Next</button>
+      </div>
+    </div>
   </main>
 
   <div id="overlay" class="overlay"></div>
@@ -375,6 +403,13 @@
     const statusEl = document.getElementById('status');
     const rowsEl = document.getElementById('businessRows');
     const emptyEl = document.getElementById('empty');
+    const paginationEl = document.getElementById('pagination');
+    const paginationSummaryEl = document.getElementById('paginationSummary');
+    const paginationPageEl = document.getElementById('paginationPage');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const rowsPerPage = 10;
+    let currentPage = 1;
     const searchEl = document.getElementById('searchInput');
     const alertsEl = document.getElementById('alertsFilter');
     const drawerEl = document.getElementById('drawer');
@@ -699,7 +734,12 @@
             (alertsFilter === 'disabled' && !alertsEnabled));
       });
 
-      rowsEl.innerHTML = filtered.map((business) => {
+      const pageCount = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+      currentPage = Math.min(Math.max(currentPage, 1), pageCount);
+      const startIndex = (currentPage - 1) * rowsPerPage;
+      const pageBusinesses = filtered.slice(startIndex, startIndex + rowsPerPage);
+      
+      rowsEl.innerHTML = pageBusinesses.map((business) => {
         const alertsEnabled = business.emailAlertsEnabled !== false;
         return `
           <tr>
@@ -723,6 +763,22 @@
 
       if (overview) setStatus(`${filtered.length} of ${businesses.length} businesses shown. Last refreshed ${formatDate(overview.generatedAt)}.`);
       emptyEl.style.display = filtered.length === 0 ? 'block' : 'none';
+      prevPageBtn.addEventListener('click', () => {
+        currentPage -= 1;
+        render();
+      });
+      nextPageBtn.addEventListener('click', () => {
+        currentPage += 1;
+        render();
+      });
+      searchEl.addEventListener('input', () => {
+        currentPage = 1;
+        render();
+      });
+      alertsEl.addEventListener('change', () => {
+        currentPage = 1;
+        render();
+      });
     }
 
     function openDetail(id) {
