@@ -1808,8 +1808,55 @@
 					  <div style="margin-top:12px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
 					    <button id="ffDownloadQrBtn" class="btn">Download Sign (PNG)</button>
 					    <button id="ffPrintQrBtn" class="btn">Print Sign</button>
+					    <button id="ffOrderQrBtn" class="btn">Order Delivered Signs</button>
 					  </div>
 					
+					  <form id="qrOrderForm" style="display:none; margin:18px auto 0; max-width:520px; text-align:left; background:var(--ff-surface); border:1px solid var(--ff-border); border-radius:12px; padding:16px;">
+					    <h4 style="margin:0 0 12px 0;">Delivery details</h4>
+					    <div class="form-group">
+					      <label for="qrOrderQuantity">Number of signs</label>
+					      <input id="qrOrderQuantity" type="number" min="1" max="100" value="1" required>
+					    </div>
+					    <div class="form-group">
+					      <label for="qrOrderName">Delivery contact</label>
+					      <input id="qrOrderName" type="text" autocomplete="name" required>
+					    </div>
+					    <div class="form-group">
+					      <label for="qrOrderAddress1">Address line 1</label>
+					      <input id="qrOrderAddress1" type="text" autocomplete="address-line1" required>
+					    </div>
+					    <div class="form-group">
+					      <label for="qrOrderAddress2">Address line 2 (optional)</label>
+					      <input id="qrOrderAddress2" type="text" autocomplete="address-line2">
+					    </div>
+					    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+					      <div class="form-group">
+					        <label for="qrOrderCity">Town / city</label>
+					        <input id="qrOrderCity" type="text" autocomplete="address-level2" required>
+					      </div>
+					      <div class="form-group">
+					        <label for="qrOrderPostcode">Postcode</label>
+					        <input id="qrOrderPostcode" type="text" autocomplete="postal-code" required>
+					      </div>
+					    </div>
+					    <div class="form-group">
+					      <label for="qrOrderCountry">Country</label>
+					      <select id="qrOrderCountry" autocomplete="country-name" required>
+					        <option value="United Kingdom">United Kingdom</option>
+					        <option value="South Africa">South Africa</option>
+					      </select>
+					    </div>
+					    <div class="form-group">
+					      <label for="qrOrderNotes">Notes (optional)</label>
+					      <textarea id="qrOrderNotes" rows="3" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
+					    </div>
+					    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+					      <button id="qrOrderSubmit" class="btn" type="submit">Send Order Request</button>
+					      <button id="qrOrderCancel" class="btn" type="button">Cancel</button>
+					      <span id="qrOrderStatus" style="color:#4b5563;"></span>
+					    </div>
+					  </form>
+
 					  <div id="signImageContainer"></div>
 					</div>
 
@@ -2103,6 +2150,7 @@
 		document.addEventListener('DOMContentLoaded', async () => {
 		  const urlParams = new URLSearchParams(window.location.search);
 		  const locationId = urlParams.get('location');
+		  const qrSignLocationId = urlParams.get('qr-sign-location') || (urlParams.get('qr-sign') === '1' ? locationId : null);
 		  const unsubscribeType = urlParams.get('unsubscribe');
 		  const unsubscribeBusinessId = urlParams.get('business');
 		
@@ -2115,14 +2163,21 @@
 		  let booted = false;
 		
 		  try {
-		    // 1) Public QR view takes precedence
+		    // 1) Public QR sign view takes precedence when requested
+		    if (qrSignLocationId) {
+		      await showPublicQrSignForLocation(qrSignLocationId);
+		      booted = true;
+		      return;
+		    }
+
+		    // 1b) Public QR feedback view
 		    if (locationId) {
 		      await showCustomerViewForLocation(locationId);
 		      booted = true;
 		      return;
 		    }
 
-		    // 1b) Unsubscribe links should render a confirmation page immediately
+		    // 1c) Unsubscribe links should render a confirmation page immediately
 		    if (unsubscribeType === 'feedback') {
 		      await showUnsubscribeAlerts(unsubscribeBusinessId);
 		      booted = true;
@@ -3044,7 +3099,45 @@
 		}
 
 		function getDashboardUrl() {
+		  return getAppBaseUrl();
+		}
+
+		function getAppBaseUrl() {
+		  if (window.location.protocol === 'file:') {
+		    return 'https://flashfeedback.co.uk/';
+		  }
 		  return `${window.location.origin}${window.location.pathname}`;
+		}
+
+		function getCustomerFeedbackUrl(locationId) {
+		  const url = new URL(getAppBaseUrl());
+		  url.searchParams.set('location', locationId);
+		  return url.toString();
+		}
+
+		function getQrSignUrl(locationId) {
+		  const adminSupportBase = window.location.protocol === 'file:'
+		    ? new URL('admin-support.html', window.location.href)
+		    : new URL('admin-support.html', getAppBaseUrl());
+		  const url = new URL(adminSupportBase);
+		  if (currentUser?.businessId) {
+		    url.searchParams.set('qr-business-id', currentUser.businessId);
+		  }
+		  url.searchParams.set('qr-location-id', locationId);
+		  return url.toString();
+		}
+
+		function storeLocalQrSignRequest(locationId) {
+		  if (window.location.protocol !== 'file:' || !locationId) return;
+		  try {
+		    localStorage.setItem('ffPendingQrSignRequest', JSON.stringify({
+		      businessId: currentUser?.businessId || null,
+		      locationId,
+		      createdAt: Date.now()
+		    }));
+		  } catch (e) {
+		    console.warn('Could not store local QR sign request:', e?.message || e);
+		  }
 		}
 
 		async function sendFeedbackAlertEmail({ businessId, locationId, locationName, sentiment, comments }) {
@@ -3091,6 +3184,137 @@
 		    }
 		  } catch (e) {
 		    console.warn('feedback alert email exception:', e?.message || e);
+		  }
+		}
+
+		function getSelectedQrOrderLocation() {
+		  var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+		  var qrSelect = document.getElementById('qrLocationSelect');
+		  var selectedLocation = qrSelect?.value || Object.keys(locations || {})[0] || currentLocation;
+		  return {
+		    locationId: selectedLocation,
+		    locationName: locations?.[selectedLocation]?.name || 'Unknown location'
+		  };
+		}
+
+		function showQrOrderForm() {
+		  if (!currentUser) {
+		    alert('Please log in to order delivered QR signs.');
+		    return;
+		  }
+
+		  const form = document.getElementById('qrOrderForm');
+		  if (!form) return;
+
+		  const nameInput = document.getElementById('qrOrderName');
+		  if (nameInput && !nameInput.value) {
+		    nameInput.value = currentUser.ownerName || currentUser.businessName || '';
+		  }
+
+		  const status = document.getElementById('qrOrderStatus');
+		  if (status) status.textContent = '';
+
+		  form.style.display = 'block';
+		  form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+
+		function hideQrOrderForm() {
+		  const form = document.getElementById('qrOrderForm');
+		  const status = document.getElementById('qrOrderStatus');
+		  if (form) form.style.display = 'none';
+		  if (status) status.textContent = '';
+		}
+
+		async function submitQrOrder(event) {
+		  event.preventDefault();
+
+		  if (!currentUser?.businessId) {
+		    alert('Please log in to order delivered QR signs.');
+		    return;
+		  }
+
+		  const submitBtn = document.getElementById('qrOrderSubmit');
+		  const status = document.getElementById('qrOrderStatus');
+		  const quantity = Number(document.getElementById('qrOrderQuantity')?.value || 0);
+		  const contactName = (document.getElementById('qrOrderName')?.value || '').trim();
+		  const addressLine1 = (document.getElementById('qrOrderAddress1')?.value || '').trim();
+		  const addressLine2 = (document.getElementById('qrOrderAddress2')?.value || '').trim();
+		  const city = (document.getElementById('qrOrderCity')?.value || '').trim();
+		  const postcode = (document.getElementById('qrOrderPostcode')?.value || '').trim();
+		  const country = (document.getElementById('qrOrderCountry')?.value || '').trim();
+		  const notes = (document.getElementById('qrOrderNotes')?.value || '').trim();
+		  const { locationId, locationName } = getSelectedQrOrderLocation();
+		  storeLocalQrSignRequest(locationId);
+		  const signUrl = getQrSignUrl(locationId);
+
+		  if (!quantity || quantity < 1 || quantity > 100 || !contactName || !addressLine1 || !city || !postcode || !country) {
+		    if (status) status.textContent = 'Please complete the delivery details.';
+		    return;
+		  }
+
+		  if (submitBtn) submitBtn.disabled = true;
+		  if (status) status.textContent = 'Sending order...';
+
+		  try {
+		    const { data: sessionData } = await supabase.auth.getSession();
+		    const accessToken = sessionData?.session?.access_token || SUPABASE_ANON_KEY;
+		    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-qr-order`, {
+		      method: 'POST',
+		      headers: {
+		        'Content-Type': 'application/json',
+		        'apikey': SUPABASE_ANON_KEY,
+		        'Authorization': 'Bearer ' + accessToken
+		      },
+		      body: JSON.stringify({
+		        business_id: currentUser.businessId,
+		        business_name: currentUser.businessName || null,
+		        owner_name: currentUser.ownerName || null,
+		        owner_email: currentUser.email || null,
+		        location_id: locationId,
+		        location_name: locationName,
+		        sign_url: signUrl,
+		        quantity,
+		        delivery_contact: contactName,
+		        address_line_1: addressLine1,
+		        address_line_2: addressLine2 || null,
+		        city,
+		        postcode,
+		        country,
+		        notes: notes || null
+		      })
+		    });
+
+		    if (!res.ok) {
+		      const errorText = await res.text();
+		      const message =
+		        res.status === 404
+		          ? 'QR order service is not deployed yet.'
+		          : res.status === 401 || res.status === 403
+		            ? 'Please log in again before sending the order.'
+		            : res.status === 500
+		              ? 'QR order email is not configured yet.'
+		              : 'Could not send the order request.';
+		      throw new Error(`${message} (${res.status}) ${errorText || ''}`.trim());
+		    }
+
+		    if (status) status.textContent = 'Order request sent. We will be in touch shortly.';
+		    event.target.reset();
+		    document.getElementById('qrOrderQuantity').value = '1';
+		    document.getElementById('qrOrderCountry').value = 'United Kingdom';
+		    try { logEvent('qr_order_requested'); } catch {}
+		  } catch (e) {
+		    console.warn('qr order failed:', e?.message || e);
+		    const rawMessage = String(e?.message || '');
+		    const friendlyMessage = rawMessage.includes('QR order service is not deployed yet')
+		      ? 'QR order service is not deployed yet. Please email contact@flashfeedback.co.uk for now.'
+		      : rawMessage.includes('Please log in again')
+		        ? 'Please log in again before sending the order.'
+		        : rawMessage.includes('QR order email is not configured yet')
+		          ? 'QR order email is not configured yet. Please email contact@flashfeedback.co.uk for now.'
+		          : 'Could not send the order. Please try again or email contact@flashfeedback.co.uk.';
+		    if (status) status.textContent = friendlyMessage;
+		  } finally {
+		    if (submitBtn) submitBtn.disabled = false;
 		  }
 		}
 
@@ -3657,6 +3881,146 @@
             };
         }
 
+        async function createQrSignImageDataUrl(locationId) {
+            const qrValue = getCustomerFeedbackUrl(locationId);
+            const qrCode = new QRCodeStyling(createFlashFeedbackQrOptions(qrValue));
+            const qrBlob = await qrCode.getRawData('png');
+            if (!qrBlob) throw new Error('Could not generate QR code.');
+
+            const qrDataUrl = await new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function() { resolve(reader.result); };
+                reader.onerror = reject;
+                reader.readAsDataURL(qrBlob);
+            });
+
+            const qrImage = new Image();
+            qrImage.crossOrigin = 'anonymous';
+            qrImage.src = qrDataUrl;
+            if (qrImage.decode) {
+                try { await qrImage.decode(); } catch (_) {}
+            }
+
+            var signCanvas = document.createElement('canvas');
+            var ctx = signCanvas.getContext('2d', { alpha: false });
+            const W = signCanvas.width = 2000;
+            const H = signCanvas.height = 3000;
+            const centerX = W / 2;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            setFont(ctx, 210, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+            ctx.fillText('HOW WAS YOUR', centerX, 220);
+            ctx.fillText('EXPERIENCE?', centerX, 450);
+            drawDownArrow(ctx, centerX, 570, 90, 80, 24, '#000000');
+
+            setFont(ctx, 116, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+            ctx.fillText('SCAN WITH YOUR PHONE', centerX, 800);
+
+            const qrSize = 1320;
+            const qrX = (W - qrSize) / 2;
+            const qrY = 1015;
+            ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+
+            setFont(ctx, 150, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+            ctx.fillStyle = '#000000';
+            ctx.fillText('TAKES 5 SECONDS', centerX, 2680);
+
+            setFont(ctx, 118, true, true, 'Anton, Impact, sans-serif');
+            ctx.fillStyle = '#d100ff';
+            ctx.fillText('FLASHFEEDBACK', centerX, 2855);
+
+            return signCanvas.toDataURL('image/png');
+
+            function setFont(context, sizePx, bold, italic, family) {
+                context.font = `${italic ? 'italic ' : ''}${bold ? '700 ' : ''}${Math.round(sizePx)}px ${family}`;
+            }
+
+            function drawDownArrow(context, x, y, headHeight, tailLength, thickness, color) {
+                context.fillStyle = color;
+                const headTop = y + tailLength;
+                context.beginPath();
+                context.moveTo(x - thickness / 2, y);
+                context.lineTo(x + thickness / 2, y);
+                context.lineTo(x + thickness / 2, headTop);
+                context.lineTo(x + headHeight / 2, headTop);
+                context.lineTo(x, headTop + headHeight);
+                context.lineTo(x - headHeight / 2, headTop);
+                context.lineTo(x - thickness / 2, headTop);
+                context.closePath();
+                context.fill();
+            }
+        }
+
+        async function showPublicQrSignForLocation(locationId) {
+            hideAllScreens();
+            hideAdminControls?.();
+            document.body.style.background = '#151b23';
+
+            let locationName = 'Location';
+            try {
+                const location = await getLocationById(locationId);
+                locationName = location?.name || locationName;
+            } catch (_) {}
+            const safeLocationName = String(locationName).replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+
+            const shell = document.createElement('main');
+            shell.id = 'publicQrSignView';
+            shell.style.cssText = 'min-height:100vh; padding:24px; display:flex; flex-direction:column; align-items:center; gap:16px; background:#151b23; color:#e6edf3;';
+            shell.innerHTML = `
+                <div style="width:min(420px, 100%); display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                    <div>
+                        <h1 style="font-size:22px; margin:0;">QR sign</h1>
+                        <div style="color:#9aa7b2;">${safeLocationName}</div>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                        <button id="publicQrSignDownload" class="btn" type="button">Download</button>
+                        <button id="publicQrSignPrint" class="btn" type="button">Print</button>
+                    </div>
+                </div>
+                <div id="publicQrSignStatus" style="color:#9aa7b2;">Generating sign...</div>
+                <img id="publicQrSignImage" alt="FlashFeedback QR sign" style="display:none; width:min(420px, 100%); height:auto; border-radius:10px; box-shadow:0 8px 30px rgba(0,0,0,.35); background:#fff;">
+            `;
+            document.body.appendChild(shell);
+
+            try {
+                const dataUrl = await createQrSignImageDataUrl(locationId);
+                const img = document.getElementById('publicQrSignImage');
+                const status = document.getElementById('publicQrSignStatus');
+                img.src = dataUrl;
+                img.style.display = 'block';
+                if (status) status.style.display = 'none';
+
+                document.getElementById('publicQrSignDownload')?.addEventListener('click', () => {
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = 'FlashFeedback-QR-Sign.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                });
+                document.getElementById('publicQrSignPrint')?.addEventListener('click', () => {
+                    const stage = document.getElementById('ffPrintOnly');
+                    if (!stage) return;
+                    stage.innerHTML = `<img id="ffPrintImg" alt="FlashFeedback QR Sign" src="${dataUrl}">`;
+                    setTimeout(() => window.print(), 50);
+                });
+            } catch (e) {
+                const status = document.getElementById('publicQrSignStatus');
+                if (status) status.textContent = e?.message || 'Could not generate QR sign.';
+            }
+        }
+
         async function getStyledQrPngDataURL() {
             if (!ffQrCode || typeof ffQrCode.getRawData !== 'function') return null;
             var qrBlob = await ffQrCode.getRawData('png');
@@ -3679,7 +4043,7 @@
             
             container.innerHTML = '';
 
-            var qrValue = window.location.origin + window.location.pathname + '?location=' + selectedLocation;
+            var qrValue = getCustomerFeedbackUrl(selectedLocation);
             var qrOptions = createFlashFeedbackQrOptions(qrValue);
 
             if (!ffQrCode) {
@@ -4553,6 +4917,9 @@
 		document.addEventListener('DOMContentLoaded', () => {
 		  document.getElementById('ffDownloadQrBtn')?.addEventListener('click', downloadQrSignAndLog);
 		  document.getElementById('ffPrintQrBtn')?.addEventListener('click', printQrSignAsPDFAndLog);
+		  document.getElementById('ffOrderQrBtn')?.addEventListener('click', showQrOrderForm);
+		  document.getElementById('qrOrderCancel')?.addEventListener('click', hideQrOrderForm);
+		  document.getElementById('qrOrderForm')?.addEventListener('submit', submitQrOrder);
 		});
 
 
