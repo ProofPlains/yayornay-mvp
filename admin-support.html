@@ -393,6 +393,19 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2ZWRpd3NvY2ZiYWx6YnpkZGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzQ1NzcsImV4cCI6MjA3MzYxMDU3N30.Y6TGgEuk97iFuuZmfWvOkwXx88y7397rzUhwbDG0p9Q';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let overview = null;
+    const supportParams = new URLSearchParams(window.location.search);
+    let storedQrRequest = null;
+    try {
+      storedQrRequest = JSON.parse(localStorage.getItem('ffPendingQrSignRequest') || 'null');
+      if (storedQrRequest?.createdAt && Date.now() - storedQrRequest.createdAt > 30 * 60 * 1000) {
+        storedQrRequest = null;
+      }
+    } catch (_) {
+      storedQrRequest = null;
+    }
+    const requestedQrBusinessId = supportParams.get('qr-business-id') || supportParams.get('business') || storedQrRequest?.businessId || null;
+    const requestedQrLocationId = supportParams.get('qr-location-id') || supportParams.get('location') || supportParams.get('qr-sign-location') || storedQrRequest?.locationId || null;
+    let requestedQrSignGenerated = false;
 
     const loginGateEl = document.getElementById('loginGate');
     const consoleShellEl = document.getElementById('consoleShell');
@@ -418,6 +431,15 @@
     function setStatus(message, tone = '') {
       statusEl.textContent = message || '';
       statusEl.classList.toggle('error', tone === 'error');
+    }
+
+    function setQrRequestStatus(message, tone = '') {
+      if (!requestedQrLocationId) return;
+      setStatus(message, tone);
+      console.log('[QR order deep link]', message, {
+        requestedQrBusinessId,
+        requestedQrLocationId,
+      });
     }
 
     function setLoginError(message) {
@@ -700,9 +722,17 @@
       emptyEl.style.display = 'none';
       try {
         showConsole();
-        setStatus('Checking superuser access...');
+        if (requestedQrLocationId) {
+          setQrRequestStatus('QR sign request detected. Checking superuser access...');
+        } else {
+          setStatus('Checking superuser access...');
+        }
         const token = await assertSuperuser();
-        setStatus('Loading support overview...');
+        if (requestedQrLocationId) {
+          setQrRequestStatus('QR sign request detected. Loading support overview...');
+        } else {
+          setStatus('Loading support overview...');
+        }
         const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-support-overview`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -710,6 +740,8 @@
         if (!res.ok) throw new Error(body?.error || 'Could not load support overview.');
         overview = body;
         render();
+        await openRequestedQrSign();
+        setTimeout(() => { openRequestedQrSign(); }, 250);
       } catch (err) {
         overview = null;
         if (err?.code === 'NO_SESSION') {
@@ -771,6 +803,55 @@
       paginationPageEl.textContent = `Page ${currentPage} of ${pageCount}`;
       prevPageBtn.disabled = currentPage <= 1;
       nextPageBtn.disabled = currentPage >= pageCount;
+    }
+
+    async function openRequestedQrSign() {
+      if (requestedQrSignGenerated || !requestedQrLocationId) return;
+
+      const businesses = overview?.businesses || [];
+      if (!businesses.length) {
+        setQrRequestStatus('QR sign request detected, but no businesses have loaded yet.');
+        return;
+      }
+
+      let business = requestedQrBusinessId
+        ? businesses.find((item) => item.id === requestedQrBusinessId)
+        : null;
+      let location = business
+        ? (business.locations || []).find((item) => item.id === requestedQrLocationId)
+        : null;
+
+      if (!business || !location) {
+        for (const candidateBusiness of businesses) {
+          const candidateLocation = (candidateBusiness.locations || []).find((item) => item.id === requestedQrLocationId);
+          if (candidateLocation) {
+            business = candidateBusiness;
+            location = candidateLocation;
+            break;
+          }
+        }
+      }
+
+      if (!business) {
+        setQrRequestStatus('QR order sign request loaded, but the business was not found in the support overview.', 'error');
+        return;
+      }
+
+      if (!location) {
+        setQrRequestStatus('QR order sign request loaded, but the location was not found in the support overview.', 'error');
+        return;
+      }
+
+      requestedQrSignGenerated = true;
+      setQrRequestStatus(`Generating QR sign for ${location.name || 'requested location'}...`);
+      searchEl.value = '';
+      alertsEl.value = 'all';
+      currentPage = 1;
+      render();
+      openDetail(business.id);
+      await generateAdminQrSign(business.id, location.id);
+      try { localStorage.removeItem('ffPendingQrSignRequest'); } catch (_) {}
+      setQrRequestStatus(`QR sign generated for ${business.name || 'business'} - ${location.name || 'location'}.`);
     }
 
     function openDetail(id) {
