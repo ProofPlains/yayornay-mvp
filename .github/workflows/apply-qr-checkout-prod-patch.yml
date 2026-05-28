@@ -234,3 +234,5 @@ jobs:
           git add index.html .github/workflows/apply-qr-checkout-prod-patch.yml
           git commit -m "Deploy paid QR checkout UI"
           git push
+
+# Triggered after initial workflow creation.
