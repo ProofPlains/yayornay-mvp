@@ -3612,13 +3612,36 @@
 		  showSection('qr');
 		  const form = document.getElementById('qrOrderForm');
 		  const status = document.getElementById('qrOrderStatus');
+		  const qrSection = document.getElementById('qr');
+		  const isSuccess = orderStatus === 'success';
+		  const message = isSuccess
+		    ? 'Payment received. Your QR sign order has been sent.'
+		    : 'Payment was cancelled. No order was placed.';
 		  if (form) form.style.display = 'block';
 		  updateQrOrderTotal();
 
 		  if (status) {
-		    status.textContent = orderStatus === 'success'
-		      ? 'Payment received. Your QR sign order has been sent.'
-		      : 'Payment was cancelled. No order was placed.';
+		    status.textContent = message;
+		  }
+
+		  if (qrSection) {
+		    document.getElementById('qrOrderReturnBanner')?.remove();
+		    const banner = document.createElement('div');
+		    banner.id = 'qrOrderReturnBanner';
+		    banner.setAttribute('role', 'status');
+		    banner.style.cssText = [
+		      'margin:0 0 16px 0',
+		      'padding:14px 16px',
+		      'border-radius:10px',
+		      'font-weight:700',
+		      'line-height:1.35',
+		      `color:${isSuccess ? '#065f46' : '#92400e'}`,
+		      `background:${isSuccess ? '#d1fae5' : '#fef3c7'}`,
+		      `border:1px solid ${isSuccess ? '#10b981' : '#f59e0b'}`
+		    ].join(';');
+		    banner.textContent = message;
+		    qrSection.insertBefore(banner, qrSection.firstChild);
+		    banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		  }
 
 		  urlParams.delete('qr_order');
