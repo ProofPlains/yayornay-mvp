@@ -1,0 +1,236 @@
+name: Apply paid QR checkout production patch
+
+on:
+  push:
+    paths:
+      - .github/workflows/apply-qr-checkout-prod-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          original = text
+
+          text = text.replace(
+              '<select id="qrOrderCountry" autocomplete="country-name" required>',
+              '<select id="qrOrderCountry" autocomplete="country-name" required onchange="updateQrOrderTotal()">'
+          )
+
+          text = text.replace(
+              '''\t\t\t\t\t      </select>\n\t\t\t\t\t    </div>\n\t\t\t\t\t    <div class="form-group">\n\t\t\t\t\t      <label for="qrOrderNotes">Notes (optional)</label>''',
+              '''\t\t\t\t\t      </select>\n\t\t\t\t\t    </div>\n\t\t\t\t\t    <div id="qrOrderPriceSummary" style="margin:0 0 14px 0; padding:12px; border:1px solid var(--ff-border); border-radius:8px; background:color-mix(in oklab, var(--ff-surface) 94%, black); color:var(--ff-text);">\n\t\t\t\t\t      Total: £4.50\n\t\t\t\t\t    </div>\n\t\t\t\t\t    <div class="form-group">\n\t\t\t\t\t      <label for="qrOrderNotes">Notes (optional)</label>'''
+          )
+
+          text = text.replace('>Send Order Request</button>', '>Pay and Order Signs</button>')
+
+          pricing_helpers = r'''
+		const QR_ORDER_PRICING = {
+		  'United Kingdom': { currency: 'GBP', locale: 'en-GB', signAmount: 100, deliveryAmount: 350 },
+		  'South Africa': { currency: 'ZAR', locale: 'en-ZA', signAmount: 2000, deliveryAmount: 5000 }
+		};
+
+		function formatQrOrderMoney(amount, pricing) {
+		  return new Intl.NumberFormat(pricing.locale, {
+		    style: 'currency',
+		    currency: pricing.currency
+		  }).format(amount / 100);
+		}
+
+		function updateQrOrderTotal() {
+		  const quantityInput = document.getElementById('qrOrderQuantity');
+		  const country = document.getElementById('qrOrderCountry')?.value || 'United Kingdom';
+		  const summary = document.getElementById('qrOrderPriceSummary');
+		  const pricing = QR_ORDER_PRICING[country] || QR_ORDER_PRICING['United Kingdom'];
+		  const quantity = Math.max(1, Math.min(100, Number(quantityInput?.value || 1)));
+		  const signsTotal = pricing.signAmount * quantity;
+		  const total = signsTotal + pricing.deliveryAmount;
+
+		  if (summary) {
+		    summary.textContent = `${quantity} sign${quantity === 1 ? '' : 's'}: ${formatQrOrderMoney(signsTotal, pricing)} + delivery ${formatQrOrderMoney(pricing.deliveryAmount, pricing)} = ${formatQrOrderMoney(total, pricing)}`;
+		  }
+		}
+'''
+          if 'const QR_ORDER_PRICING' not in text:
+              text = text.replace('\n\t\tfunction showQrOrderForm() {', pricing_helpers + '\n\t\tfunction showQrOrderForm() {')
+
+          text = text.replace(
+              "\t\t  if (status) status.textContent = '';\n\n\t\t  form.style.display = 'block';",
+              "\t\t  if (status) status.textContent = '';\n\n\t\t  updateQrOrderTotal();\n\t\t  form.style.display = 'block';"
+          )
+
+          return_message = r'''
+		function showQrOrderReturnMessage() {
+		  const urlParams = new URLSearchParams(window.location.search);
+		  const orderStatus = urlParams.get('qr_order');
+		  if (!orderStatus) return;
+
+		  showSection('qr');
+		  const form = document.getElementById('qrOrderForm');
+		  const status = document.getElementById('qrOrderStatus');
+		  if (form) form.style.display = 'block';
+		  updateQrOrderTotal();
+
+		  if (status) {
+		    status.textContent = orderStatus === 'success'
+		      ? 'Payment received. Your QR sign order has been sent.'
+		      : 'Payment was cancelled. No order was placed.';
+		  }
+
+		  urlParams.delete('qr_order');
+		  urlParams.delete('session_id');
+		  const cleanQuery = urlParams.toString();
+		  history.replaceState({}, document.title, `${window.location.pathname}${cleanQuery ? '?' + cleanQuery : ''}`);
+		}
+'''
+          if 'function showQrOrderReturnMessage' not in text:
+              text = text.replace('\n\t\tasync function submitQrOrder(event) {', return_message + '\n\t\tasync function submitQrOrder(event) {')
+
+          new_submit = r'''async function submitQrOrder(event) {
+		  event.preventDefault();
+
+		  if (!currentUser?.businessId) {
+		    alert('Please log in to order delivered QR signs.');
+		    return;
+		  }
+
+		  const submitBtn = document.getElementById('qrOrderSubmit');
+		  const status = document.getElementById('qrOrderStatus');
+		  const quantity = Number(document.getElementById('qrOrderQuantity')?.value || 0);
+		  const contactName = (document.getElementById('qrOrderName')?.value || '').trim();
+		  const addressLine1 = (document.getElementById('qrOrderAddress1')?.value || '').trim();
+		  const addressLine2 = (document.getElementById('qrOrderAddress2')?.value || '').trim();
+		  const city = (document.getElementById('qrOrderCity')?.value || '').trim();
+		  const postcode = (document.getElementById('qrOrderPostcode')?.value || '').trim();
+		  const country = (document.getElementById('qrOrderCountry')?.value || '').trim();
+		  const notes = (document.getElementById('qrOrderNotes')?.value || '').trim();
+		  const { locationId, locationName } = getSelectedQrOrderLocation();
+		  storeLocalQrSignRequest(locationId);
+		  const signUrl = getQrSignUrl(locationId);
+
+		  if (!quantity || quantity < 1 || quantity > 100 || !contactName || !addressLine1 || !city || !postcode || !country) {
+		    if (status) status.textContent = 'Please complete the delivery details.';
+		    return;
+		  }
+
+		  if (submitBtn) submitBtn.disabled = true;
+		  if (status) status.textContent = 'Opening secure checkout...';
+
+		  try {
+		    const { data: sessionData } = await supabase.auth.getSession();
+		    const accessToken = sessionData?.session?.access_token;
+		    if (!accessToken) {
+		      throw new Error('Please log in again before sending the order.');
+		    }
+
+		    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-qr-checkout`, {
+		      method: 'POST',
+		      headers: {
+		        'Content-Type': 'application/json',
+		        'apikey': SUPABASE_ANON_KEY,
+		        'Authorization': 'Bearer ' + accessToken
+		      },
+		      body: JSON.stringify({
+		        business_id: currentUser.businessId,
+		        business_name: currentUser.businessName || null,
+		        owner_name: currentUser.ownerName || null,
+		        owner_email: currentUser.email || null,
+		        location_id: locationId,
+		        location_name: locationName,
+		        sign_url: signUrl,
+		        quantity,
+		        delivery_contact: contactName,
+		        address_line_1: addressLine1,
+		        address_line_2: addressLine2 || null,
+		        city,
+		        postcode,
+		        country,
+		        notes: notes || null,
+		        return_url: `${window.location.origin}${window.location.pathname}`
+		      })
+		    });
+
+		    if (!res.ok) {
+		      const errorText = await res.text();
+		      const message =
+		        res.status === 404
+		          ? 'QR checkout service is not deployed yet.'
+		          : res.status === 401 || res.status === 403
+		            ? 'Please log in again before ordering.'
+		            : res.status === 500
+		              ? 'QR checkout is not configured yet.'
+		              : 'Could not open checkout.';
+		      throw new Error(`${message} (${res.status}) ${errorText || ''}`.trim());
+		    }
+
+		    const data = await res.json();
+		    if (!data?.url) throw new Error('Checkout did not return a payment link.');
+		    try { logEvent('qr_checkout_started'); } catch {}
+		    window.location.href = data.url;
+		  } catch (e) {
+		    console.warn('qr order failed:', e?.message || e);
+		    const rawMessage = String(e?.message || '');
+		    const friendlyMessage = rawMessage.includes('QR checkout service is not deployed yet')
+		      ? 'QR checkout service is not deployed yet. Please email contact@flashfeedback.co.uk for now.'
+		      : rawMessage.includes('Please log in again')
+		        ? 'Please log in again before ordering.'
+		        : rawMessage.includes('QR checkout is not configured yet')
+		          ? 'QR checkout is not configured yet. Please email contact@flashfeedback.co.uk for now.'
+		          : 'Could not open checkout. Please try again or email contact@flashfeedback.co.uk.';
+		    if (status) status.textContent = friendlyMessage;
+		  } finally {
+		    if (submitBtn) submitBtn.disabled = false;
+		  }
+		}'''
+          text = re.sub(r"async function submitQrOrder\(event\) \{.*?\n\t\t\}\n\n\n\t\t\n\t\tfunction showDemoAdmin\(\)", new_submit + "\n\n\n\t\t\n\t\tfunction showDemoAdmin()", text, flags=re.S)
+
+          text = text.replace(
+              'await hydrateAndShowDashboard(session.user);\n\t\t      booted = true;',
+              'await hydrateAndShowDashboard(session.user);\n\t\t      showQrOrderReturnMessage();\n\t\t      booted = true;'
+          )
+
+          text = text.replace(
+              'openSettingsFromAccount\n\t\t});',
+              'openSettingsFromAccount,\n\t\t  updateQrOrderTotal\n\t\t});'
+          )
+
+          text = text.replace(
+              "document.getElementById('qrOrderForm')?.addEventListener('submit', submitQrOrder);\n\t\t});",
+              "document.getElementById('qrOrderForm')?.addEventListener('submit', submitQrOrder);\n\t\t  document.getElementById('qrOrderQuantity')?.addEventListener('input', updateQrOrderTotal);\n\t\t  document.getElementById('qrOrderCountry')?.addEventListener('change', updateQrOrderTotal);\n\t\t  updateQrOrderTotal();\n\t\t});"
+          )
+
+          if text == original:
+              raise SystemExit('No changes applied to index.html')
+
+          required = [
+              'create-qr-checkout',
+              'Pay and Order Signs',
+              'qrOrderPriceSummary',
+              'qr_checkout_started',
+              'showQrOrderReturnMessage',
+          ]
+          missing = [item for item in required if item not in text]
+          if missing:
+              raise SystemExit(f'Missing expected checkout markers: {missing}')
+
+          path.write_text(text, encoding='utf-8', newline='')
+          PY
+      - name: Commit patched site and remove temporary workflow
+        run: |
+          rm .github/workflows/apply-qr-checkout-prod-patch.yml
+          git config user.name "Codex"
+          git config user.email "codex@openai.com"
+          git add index.html .github/workflows/apply-qr-checkout-prod-patch.yml
+          git commit -m "Deploy paid QR checkout UI"
+          git push
