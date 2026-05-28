@@ -1016,13 +1016,101 @@
 		
 		.header { color: var(--ff-text-on-brand) !important; }
 		
-		.form-group input, .optional-feedback textarea {
+		.form-group input, .form-group select, .optional-feedback textarea {
 		  background: color-mix(in oklab, var(--ff-surface) 94%, black) !important;
 		  border-color: var(--ff-border) !important;
 		  color: var(--ff-text) !important;
 		}
 		.form-group input::placeholder, .optional-feedback textarea::placeholder {
 		  color: color-mix(in oklab, var(--ff-text) 55%, transparent) !important;
+		}
+
+		.visually-hidden {
+		  position: absolute !important;
+		  width: 1px !important;
+		  height: 1px !important;
+		  padding: 0 !important;
+		  margin: -1px !important;
+		  overflow: hidden !important;
+		  clip: rect(0, 0, 0, 0) !important;
+		  white-space: nowrap !important;
+		  border: 0 !important;
+		}
+
+		.timezone-combobox {
+		  position: relative;
+		  width: 100%;
+		}
+
+		#settingsTimezoneSearch {
+		  width: 100%;
+		  max-width: 100%;
+		  box-sizing: border-box;
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black) !important;
+		  color: var(--ff-text) !important;
+		  border-color: var(--ff-border) !important;
+		  caret-color: var(--ff-text);
+		}
+
+		#settingsTimezoneSearch:focus {
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black) !important;
+		  color: var(--ff-text) !important;
+		  border-color: color-mix(in oklab, var(--ff-brand-1) 60%, var(--ff-border)) !important;
+		  outline: none;
+		}
+
+		.timezone-results {
+		  display: none;
+		  position: absolute;
+		  left: 0;
+		  right: 0;
+		  top: calc(100% + 6px);
+		  z-index: 50;
+		  max-height: min(280px, 45vh);
+		  overflow-y: auto;
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		  border: 1px solid var(--ff-border);
+		  border-radius: 8px;
+		  box-shadow: var(--ff-shadow);
+		}
+
+		.timezone-results.is-open {
+		  display: block;
+		}
+
+		.timezone-result {
+		  width: 100%;
+		  display: flex;
+		  flex-direction: column;
+		  gap: 2px;
+		  padding: 10px 12px;
+		  border: 0;
+		  border-bottom: 1px solid color-mix(in oklab, var(--ff-border) 70%, transparent);
+		  background: transparent;
+		  color: var(--ff-text);
+		  text-align: left;
+		  cursor: pointer;
+		}
+
+		.timezone-result:hover,
+		.timezone-result.is-active {
+		  background: color-mix(in oklab, var(--ff-brand-1) 22%, var(--ff-surface));
+		}
+
+		.timezone-result:last-child {
+		  border-bottom: 0;
+		}
+
+		.timezone-result-main {
+		  font-size: 14px;
+		  line-height: 1.35;
+		  overflow-wrap: anywhere;
+		}
+
+		.timezone-result-meta {
+		  font-size: 12px;
+		  color: var(--ff-text-muted);
+		  overflow-wrap: anywhere;
 		}
 
 		.settings-toggle {
@@ -1841,17 +1929,20 @@
 					    </div>
 					    <div class="form-group">
 					      <label for="qrOrderCountry">Country</label>
-					      <select id="qrOrderCountry" autocomplete="country-name" required>
+					      <select id="qrOrderCountry" autocomplete="country-name" required onchange="updateQrOrderTotal()">
 					        <option value="United Kingdom">United Kingdom</option>
 					        <option value="South Africa">South Africa</option>
 					      </select>
+					    </div>
+					    <div id="qrOrderPriceSummary" style="margin:0 0 14px 0; padding:12px; border:1px solid var(--ff-border); border-radius:8px; background:color-mix(in oklab, var(--ff-surface) 94%, black); color:var(--ff-text);">
+					      Total: £4.50
 					    </div>
 					    <div class="form-group">
 					      <label for="qrOrderNotes">Notes (optional)</label>
 					      <textarea id="qrOrderNotes" rows="3" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
 					    </div>
 					    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-					      <button id="qrOrderSubmit" class="btn" type="submit">Send Order Request</button>
+					      <button id="qrOrderSubmit" class="btn" type="submit">Pay and Order Signs</button>
 					      <button id="qrOrderCancel" class="btn" type="button">Cancel</button>
 					      <span id="qrOrderStatus" style="color:#4b5563;"></span>
 					    </div>
@@ -1920,12 +2011,17 @@
 				      <select id="settingsDefaultLocationSelect"></select>
 				    </div>
 				    <div class="form-group">
-				      <label for="settingsTimezoneSelect">Timezone</label>
-				      <select id="settingsTimezoneSelect">
+				      <label for="settingsTimezoneSearch">Timezone</label>
+				      <div class="timezone-combobox">
+				        <input id="settingsTimezoneSearch" type="search" autocomplete="off" placeholder="Search by city, country, region, or GMT offset" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="settingsTimezoneResults">
+				        <div id="settingsTimezoneResults" class="timezone-results" role="listbox" aria-label="Timezone search results"></div>
+				      </div>
+				      <select id="settingsTimezoneSelect" class="visually-hidden" aria-hidden="true" tabindex="-1">
 				        <option value="Europe/London">Europe/London</option>
 				        <option value="UTC">UTC</option>
 				        <option value="Europe/Dublin">Europe/Dublin</option>
 				        <option value="Europe/Paris">Europe/Paris</option>
+				        <option value="Africa/Johannesburg">South Africa (GMT+2)</option>
 				        <option value="America/New_York">America/New_York</option>
 				        <option value="Asia/Tokyo">Asia/Tokyo</option>
 				      </select>
@@ -2145,9 +2241,264 @@
         var currentUser = null;
         var userDatabase = {};
         var ffQrCode = null;
+        var timezoneOptionsCache = [];
+        var timezoneResultActiveIndex = -1;
+
+		function getTimezoneOffsetLabel(timeZone) {
+		  try {
+		    const parts = new Intl.DateTimeFormat('en-GB', {
+		      timeZone,
+		      timeZoneName: 'longOffset'
+		    }).formatToParts(new Date());
+		    return parts.find(part => part.type === 'timeZoneName')?.value || '';
+		  } catch {
+		    return '';
+		  }
+		}
+
+		function getSupportedTimezones() {
+		  const fallbackTimezones = [
+		    'UTC',
+		    'Europe/London',
+		    'Europe/Dublin',
+		    'Europe/Paris',
+		    'Africa/Johannesburg',
+		    'America/New_York',
+		    'Asia/Tokyo'
+		  ];
+		  let browserTimezones = [];
+		  try {
+		    browserTimezones = Intl.supportedValuesOf
+		      ? Intl.supportedValuesOf('timeZone')
+		      : [];
+		  } catch {
+		    browserTimezones = [];
+		  }
+		  return Array.from(new Set(['UTC', ...browserTimezones, ...fallbackTimezones])).sort();
+		}
+
+		function getTimezoneRegion(timeZone) {
+		  if (timeZone === 'UTC') return 'UTC';
+		  return timeZone.split('/')[0] || 'Other';
+		}
+
+		function getTimezoneCity(timeZone) {
+		  if (timeZone === 'UTC') return 'UTC';
+		  const parts = timeZone.split('/');
+		  return (parts[parts.length - 1] || timeZone).replace(/_/g, ' ');
+		}
+
+		function getTimezoneDisplayName(timeZone) {
+		  const city = getTimezoneCity(timeZone);
+		  if (timeZone === 'Africa/Johannesburg') return 'Johannesburg, South Africa';
+		  if (timeZone === 'UTC') return 'UTC';
+		  return city;
+		}
+
+		function getTimezoneOptionLabel(timeZone) {
+		  const offset = getTimezoneOffsetLabel(timeZone);
+		  const displayName = getTimezoneDisplayName(timeZone);
+		  const idSuffix = timeZone === 'UTC' ? '' : ` - ${timeZone}`;
+		  return offset ? `(${offset}) ${displayName}${idSuffix}` : `${displayName}${idSuffix}`;
+		}
+
+		function getTimezoneOptionData(timeZone) {
+		  const offset = getTimezoneOffsetLabel(timeZone);
+		  const displayName = getTimezoneDisplayName(timeZone);
+		  return {
+		    value: timeZone,
+		    label: getTimezoneOptionLabel(timeZone),
+		    region: getTimezoneRegion(timeZone),
+		    displayName,
+		    offset,
+		    searchText: `${displayName} ${offset} ${timeZone} ${getTimezoneRegion(timeZone)}`.toLowerCase()
+		  };
+		}
+
+		function syncTimezoneSearchInput(selectedTimezone = 'Europe/London') {
+		  const searchInput = document.getElementById('settingsTimezoneSearch');
+		  if (!searchInput) return;
+		  const match = timezoneOptionsCache.find(option => option.value === selectedTimezone);
+		  searchInput.value = match?.label || '';
+		}
+
+		function resolveTimezoneSearchValue(inputValue) {
+		  const query = (inputValue || '').trim().toLowerCase();
+		  if (!query) return null;
+
+		  const exactMatch = timezoneOptionsCache.find(option =>
+		    option.label.toLowerCase() === query ||
+		    option.value.toLowerCase() === query
+		  );
+		  if (exactMatch) return exactMatch.value;
+
+		  const partialMatches = timezoneOptionsCache.filter(option =>
+		    option.label.toLowerCase().includes(query) ||
+		    option.value.toLowerCase().includes(query)
+		  );
+		  return partialMatches.length === 1 ? partialMatches[0].value : null;
+		}
+
+		function updateSelectedTimezoneFromSearch() {
+		  const select = document.getElementById('settingsTimezoneSelect');
+		  const searchInput = document.getElementById('settingsTimezoneSearch');
+		  if (!select || !searchInput) return;
+
+		  const resolvedTimezone = resolveTimezoneSearchValue(searchInput.value);
+		  if (resolvedTimezone) select.value = resolvedTimezone;
+		}
+
+		function getTimezoneSearchMatches(query) {
+		  const search = (query || '').trim().toLowerCase();
+		  if (!search) return [];
+		  return timezoneOptionsCache
+		    .filter(option => option.searchText.includes(search) || option.label.toLowerCase().includes(search))
+		    .slice(0, 12);
+		}
+
+		function hideTimezoneResults() {
+		  const results = document.getElementById('settingsTimezoneResults');
+		  const searchInput = document.getElementById('settingsTimezoneSearch');
+		  timezoneResultActiveIndex = -1;
+		  results?.classList.remove('is-open');
+		  if (results) results.replaceChildren();
+		  searchInput?.setAttribute('aria-expanded', 'false');
+		}
+
+		function renderTimezoneResults() {
+		  const results = document.getElementById('settingsTimezoneResults');
+		  const searchInput = document.getElementById('settingsTimezoneSearch');
+		  if (!results || !searchInput) return;
+
+		  const matches = getTimezoneSearchMatches(searchInput.value);
+		  timezoneResultActiveIndex = matches.length ? Math.min(Math.max(timezoneResultActiveIndex, 0), matches.length - 1) : -1;
+		  results.replaceChildren(...matches.map((option, index) => {
+		    const button = document.createElement('button');
+		    button.type = 'button';
+		    button.className = `timezone-result${index === timezoneResultActiveIndex ? ' is-active' : ''}`;
+		    button.setAttribute('role', 'option');
+		    button.setAttribute('aria-selected', index === timezoneResultActiveIndex ? 'true' : 'false');
+		    const main = document.createElement('span');
+		    main.className = 'timezone-result-main';
+		    main.textContent = option.offset ? `(${option.offset}) ${option.displayName}` : option.displayName;
+		    const meta = document.createElement('span');
+		    meta.className = 'timezone-result-meta';
+		    meta.textContent = option.value;
+		    button.append(main, meta);
+		    button.addEventListener('mousedown', event => event.preventDefault());
+		    button.addEventListener('click', () => selectTimezoneOption(option.value));
+		    return button;
+		  }));
+		  results.classList.toggle('is-open', matches.length > 0);
+		  searchInput.setAttribute('aria-expanded', matches.length > 0 ? 'true' : 'false');
+		}
+
+		function selectTimezoneOption(timeZone) {
+		  const select = document.getElementById('settingsTimezoneSelect');
+		  if (select) select.value = timeZone;
+		  syncTimezoneSearchInput(timeZone);
+		  hideTimezoneResults();
+		}
+
+		function handleTimezoneSearchInput() {
+		  timezoneResultActiveIndex = -1;
+		  updateSelectedTimezoneFromSearch();
+		  renderTimezoneResults();
+		}
+
+		function handleTimezoneSearchFocus() {
+		  const select = document.getElementById('settingsTimezoneSelect');
+		  const selectedLabel = timezoneOptionsCache.find(option => option.value === select?.value)?.label || '';
+		  if (document.getElementById('settingsTimezoneSearch')?.value !== selectedLabel) {
+		    renderTimezoneResults();
+		  }
+		}
+
+		function handleTimezoneSearchKeydown(event) {
+		  const matches = getTimezoneSearchMatches(event.currentTarget.value);
+		  if (!matches.length) return;
+
+		  if (event.key === 'ArrowDown') {
+		    event.preventDefault();
+		    timezoneResultActiveIndex = Math.min(timezoneResultActiveIndex + 1, matches.length - 1);
+		    renderTimezoneResults();
+		  } else if (event.key === 'ArrowUp') {
+		    event.preventDefault();
+		    timezoneResultActiveIndex = Math.max(timezoneResultActiveIndex - 1, 0);
+		    renderTimezoneResults();
+		  } else if (event.key === 'Enter' && timezoneResultActiveIndex >= 0) {
+		    event.preventDefault();
+		    selectTimezoneOption(matches[timezoneResultActiveIndex].value);
+		  } else if (event.key === 'Escape') {
+		    hideTimezoneResults();
+		  }
+		}
+
+		function handleTimezoneSearchBlur() {
+		  updateSelectedTimezoneFromSearch();
+		  setTimeout(hideTimezoneResults, 120);
+		}
+
+		function getSelectedTimezoneValue() {
+		  const select = document.getElementById('settingsTimezoneSelect');
+		  const searchInput = document.getElementById('settingsTimezoneSearch');
+		  const resolvedTimezone = resolveTimezoneSearchValue(searchInput?.value || '');
+		  if (resolvedTimezone && select) {
+		    select.value = resolvedTimezone;
+		    syncTimezoneSearchInput(resolvedTimezone);
+		    return resolvedTimezone;
+		  }
+		  return null;
+		}
+
+		function populateTimezoneSelect(selectedTimezone = 'Europe/London') {
+		  const select = document.getElementById('settingsTimezoneSelect');
+		  const searchInput = document.getElementById('settingsTimezoneSearch');
+		  if (!select) return;
+
+		  const timezones = getSupportedTimezones();
+		  const selected = timezones.includes(selectedTimezone) ? selectedTimezone : 'Europe/London';
+		  const regionOrder = ['UTC', 'Africa', 'America', 'Antarctica', 'Arctic', 'Asia', 'Atlantic', 'Australia', 'Europe', 'Indian', 'Pacific', 'Other'];
+		  timezoneOptionsCache = timezones
+		    .map(getTimezoneOptionData)
+		    .sort((a, b) => a.region.localeCompare(b.region) || a.displayName.localeCompare(b.displayName));
+		  const groupedTimezones = timezones.reduce((groups, timeZone) => {
+		    const region = getTimezoneRegion(timeZone);
+		    const groupName = regionOrder.includes(region) ? region : 'Other';
+		    if (!groups[groupName]) groups[groupName] = [];
+		    groups[groupName].push(timeZone);
+		    return groups;
+		  }, {});
+		  const groups = regionOrder
+		    .filter(region => groupedTimezones[region]?.length)
+		    .map(region => {
+		      const group = document.createElement('optgroup');
+		      group.label = region;
+		      groupedTimezones[region]
+		        .sort((a, b) => getTimezoneDisplayName(a).localeCompare(getTimezoneDisplayName(b)))
+		        .forEach(timeZone => group.appendChild(new Option(getTimezoneOptionLabel(timeZone), timeZone)));
+		      return group;
+		    });
+		  select.replaceChildren(...groups);
+		  select.value = selected;
+		  syncTimezoneSearchInput(selected);
+		  hideTimezoneResults();
+		  searchInput?.removeEventListener('input', handleTimezoneSearchInput);
+		  searchInput?.removeEventListener('focus', handleTimezoneSearchFocus);
+		  searchInput?.removeEventListener('keydown', handleTimezoneSearchKeydown);
+		  searchInput?.removeEventListener('change', updateSelectedTimezoneFromSearch);
+		  searchInput?.removeEventListener('blur', handleTimezoneSearchBlur);
+		  searchInput?.addEventListener('input', handleTimezoneSearchInput);
+		  searchInput?.addEventListener('focus', handleTimezoneSearchFocus);
+		  searchInput?.addEventListener('keydown', handleTimezoneSearchKeydown);
+		  searchInput?.addEventListener('change', updateSelectedTimezoneFromSearch);
+		  searchInput?.addEventListener('blur', handleTimezoneSearchBlur);
+		}
 
         // Initialize app (session-aware + safe fallback)
 		document.addEventListener('DOMContentLoaded', async () => {
+		  populateTimezoneSelect();
+
 		  const urlParams = new URLSearchParams(window.location.search);
 		  const locationId = urlParams.get('location');
 		  const qrSignLocationId = urlParams.get('qr-sign-location') || (urlParams.get('qr-sign') === '1' ? locationId : null);
@@ -2228,6 +2579,7 @@
 		    const { data: { session } } = await supabase.auth.getSession();
 		    if (session?.user) {
 		      await hydrateAndShowDashboard(session.user);
+		      showQrOrderReturnMessage();
 		      booted = true;
 		      return;
 		    }
@@ -3197,6 +3549,32 @@
 		  };
 		}
 
+		const QR_ORDER_PRICING = {
+		  'United Kingdom': { currency: 'GBP', locale: 'en-GB', signAmount: 100, deliveryAmount: 350 },
+		  'South Africa': { currency: 'ZAR', locale: 'en-ZA', signAmount: 2000, deliveryAmount: 5000 }
+		};
+
+		function formatQrOrderMoney(amount, pricing) {
+		  return new Intl.NumberFormat(pricing.locale, {
+		    style: 'currency',
+		    currency: pricing.currency
+		  }).format(amount / 100);
+		}
+
+		function updateQrOrderTotal() {
+		  const quantityInput = document.getElementById('qrOrderQuantity');
+		  const country = document.getElementById('qrOrderCountry')?.value || 'United Kingdom';
+		  const summary = document.getElementById('qrOrderPriceSummary');
+		  const pricing = QR_ORDER_PRICING[country] || QR_ORDER_PRICING['United Kingdom'];
+		  const quantity = Math.max(1, Math.min(100, Number(quantityInput?.value || 1)));
+		  const signsTotal = pricing.signAmount * quantity;
+		  const total = signsTotal + pricing.deliveryAmount;
+
+		  if (summary) {
+		    summary.textContent = `${quantity} sign${quantity === 1 ? '' : 's'}: ${formatQrOrderMoney(signsTotal, pricing)} + delivery ${formatQrOrderMoney(pricing.deliveryAmount, pricing)} = ${formatQrOrderMoney(total, pricing)}`;
+		  }
+		}
+
 		function showQrOrderForm() {
 		  if (!currentUser) {
 		    alert('Please log in to order delivered QR signs.');
@@ -3214,6 +3592,7 @@
 		  const status = document.getElementById('qrOrderStatus');
 		  if (status) status.textContent = '';
 
+		  updateQrOrderTotal();
 		  form.style.display = 'block';
 		  form.scrollIntoView({ behavior: 'smooth', block: 'center' });
 		}
@@ -3223,6 +3602,29 @@
 		  const status = document.getElementById('qrOrderStatus');
 		  if (form) form.style.display = 'none';
 		  if (status) status.textContent = '';
+		}
+
+		function showQrOrderReturnMessage() {
+		  const urlParams = new URLSearchParams(window.location.search);
+		  const orderStatus = urlParams.get('qr_order');
+		  if (!orderStatus) return;
+
+		  showSection('qr');
+		  const form = document.getElementById('qrOrderForm');
+		  const status = document.getElementById('qrOrderStatus');
+		  if (form) form.style.display = 'block';
+		  updateQrOrderTotal();
+
+		  if (status) {
+		    status.textContent = orderStatus === 'success'
+		      ? 'Payment received. Your QR sign order has been sent.'
+		      : 'Payment was cancelled. No order was placed.';
+		  }
+
+		  urlParams.delete('qr_order');
+		  urlParams.delete('session_id');
+		  const cleanQuery = urlParams.toString();
+		  history.replaceState({}, document.title, `${window.location.pathname}${cleanQuery ? '?' + cleanQuery : ''}`);
 		}
 
 		async function submitQrOrder(event) {
@@ -3253,12 +3655,16 @@
 		  }
 
 		  if (submitBtn) submitBtn.disabled = true;
-		  if (status) status.textContent = 'Sending order...';
+		  if (status) status.textContent = 'Opening secure checkout...';
 
 		  try {
 		    const { data: sessionData } = await supabase.auth.getSession();
-		    const accessToken = sessionData?.session?.access_token || SUPABASE_ANON_KEY;
-		    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-qr-order`, {
+		    const accessToken = sessionData?.session?.access_token;
+		    if (!accessToken) {
+		      throw new Error('Please log in again before sending the order.');
+		    }
+
+		    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-qr-checkout`, {
 		      method: 'POST',
 		      headers: {
 		        'Content-Type': 'application/json',
@@ -3280,7 +3686,8 @@
 		        city,
 		        postcode,
 		        country,
-		        notes: notes || null
+		        notes: notes || null,
+		        return_url: `${window.location.origin}${window.location.pathname}`
 		      })
 		    });
 
@@ -3288,30 +3695,29 @@
 		      const errorText = await res.text();
 		      const message =
 		        res.status === 404
-		          ? 'QR order service is not deployed yet.'
+		          ? 'QR checkout service is not deployed yet.'
 		          : res.status === 401 || res.status === 403
-		            ? 'Please log in again before sending the order.'
+		            ? 'Please log in again before ordering.'
 		            : res.status === 500
-		              ? 'QR order email is not configured yet.'
-		              : 'Could not send the order request.';
+		              ? 'QR checkout is not configured yet.'
+		              : 'Could not open checkout.';
 		      throw new Error(`${message} (${res.status}) ${errorText || ''}`.trim());
 		    }
 
-		    if (status) status.textContent = 'Order request sent.';
-		    event.target.reset();
-		    document.getElementById('qrOrderQuantity').value = '1';
-		    document.getElementById('qrOrderCountry').value = 'United Kingdom';
-		    try { logEvent('qr_order_requested'); } catch {}
+		    const data = await res.json();
+		    if (!data?.url) throw new Error('Checkout did not return a payment link.');
+		    try { logEvent('qr_checkout_started'); } catch {}
+		    window.location.href = data.url;
 		  } catch (e) {
 		    console.warn('qr order failed:', e?.message || e);
 		    const rawMessage = String(e?.message || '');
-		    const friendlyMessage = rawMessage.includes('QR order service is not deployed yet')
-		      ? 'QR order service is not deployed yet. Please email contact@flashfeedback.co.uk for now.'
+		    const friendlyMessage = rawMessage.includes('QR checkout service is not deployed yet')
+		      ? 'QR checkout service is not deployed yet. Please email contact@flashfeedback.co.uk for now.'
 		      : rawMessage.includes('Please log in again')
-		        ? 'Please log in again before sending the order.'
-		        : rawMessage.includes('QR order email is not configured yet')
-		          ? 'QR order email is not configured yet. Please email contact@flashfeedback.co.uk for now.'
-		          : 'Could not send the order. Please try again or email contact@flashfeedback.co.uk.';
+		        ? 'Please log in again before ordering.'
+		        : rawMessage.includes('QR checkout is not configured yet')
+		          ? 'QR checkout is not configured yet. Please email contact@flashfeedback.co.uk for now.'
+		          : 'Could not open checkout. Please try again or email contact@flashfeedback.co.uk.';
 		    if (status) status.textContent = friendlyMessage;
 		  } finally {
 		    if (submitBtn) submitBtn.disabled = false;
@@ -4281,7 +4687,8 @@
 		  signOutEverywhere,
 		  openAccountMenu,
 		  closeAccountMenu,
-		  openSettingsFromAccount
+		  openSettingsFromAccount,
+		  updateQrOrderTotal
 		});
 
 		async function loadSettings() {
@@ -4312,7 +4719,7 @@
 		  document.getElementById('settingsOwnerName').value = currentUser.ownerName || '';
 		  document.getElementById('settingsEmail').textContent = currentUser.email || '';
 		  document.getElementById('settingsBusinessName').value = currentUser.businessName || '';
-		  document.getElementById('settingsTimezoneSelect').value = currentUser.timezone || 'Europe/London';
+		  populateTimezoneSelect(currentUser.timezone || 'Europe/London');
 		  document.getElementById('settingsLogoUrl').value = currentUser.logoUrl || '';
 		  document.getElementById('settingsIndustry').value = biz.industry || '';
 		  document.getElementById('settingsBusinessType').value = biz.business_type || '';
@@ -4350,12 +4757,16 @@
 		
 		async function saveBusinessSettings() {
 		  const name = document.getElementById('settingsBusinessName')?.value.trim() || '';
-		  const tz   = document.getElementById('settingsTimezoneSelect')?.value || 'Europe/London';
+		  const tz   = getSelectedTimezoneValue();
 		  const def  = document.getElementById('settingsDefaultLocationSelect')?.value || null;
 		  const industry = document.getElementById('settingsIndustry')?.value || '';
   		  const businessType = document.getElementById('settingsBusinessType')?.value?.trim() || '';
 		  const logo = document.getElementById('settingsLogoUrl')?.value.trim() || null;
 		  const status = document.getElementById('settingsBusinessStatus');
+		  if (!tz) {
+		    status.textContent = 'Choose a timezone from the list';
+		    return;
+		  }
 		  status.textContent = 'Saving...';
 		
 		  const patch = { name, timezone: tz, logo_url: logo || null, industry: industry || null, business_type: businessType || null };
@@ -4920,6 +5331,9 @@
 		  document.getElementById('ffOrderQrBtn')?.addEventListener('click', showQrOrderForm);
 		  document.getElementById('qrOrderCancel')?.addEventListener('click', hideQrOrderForm);
 		  document.getElementById('qrOrderForm')?.addEventListener('submit', submitQrOrder);
+		  document.getElementById('qrOrderQuantity')?.addEventListener('input', updateQrOrderTotal);
+		  document.getElementById('qrOrderCountry')?.addEventListener('change', updateQrOrderTotal);
+		  updateQrOrderTotal();
 		});
 
 
