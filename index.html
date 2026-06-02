@@ -1016,7 +1016,7 @@
 		
 		.header { color: var(--ff-text-on-brand) !important; }
 		
-		.form-group input, .form-group select, .optional-feedback textarea {
+		.form-group input, .form-group select, .form-group textarea, .optional-feedback textarea {
 		  background: color-mix(in oklab, var(--ff-surface) 94%, black) !important;
 		  border-color: var(--ff-border) !important;
 		  color: var(--ff-text) !important;
@@ -1111,6 +1111,179 @@
 		  font-size: 12px;
 		  color: var(--ff-text-muted);
 		  overflow-wrap: anywhere;
+		}
+
+		.qr-generator-controls {
+		  display: grid;
+		  grid-template-columns: 1fr;
+		  gap: 10px;
+		  margin-bottom: 16px;
+		  max-width: 560px;
+		}
+
+		.qr-generator-controls label {
+		  font-weight: 700;
+		  color: var(--ff-text-muted);
+		}
+
+		.qr-generator-row {
+		  display: grid;
+		  grid-template-columns: minmax(0, 1fr) auto;
+		  gap: 10px;
+		  align-items: stretch;
+		}
+
+		.qr-generator-row select {
+		  min-width: 0;
+		  width: 100%;
+		}
+
+		.qr-sign-panel {
+		  background: #212121;
+		  padding: 20px;
+		  border-radius: 12px;
+		  text-align: center;
+		  margin-top: 16px;
+		  border: 1px solid rgba(45, 55, 72, 0.06);
+		}
+
+		#qrContainer {
+		  display: none;
+		}
+
+		#signImageContainer {
+		  display: flex;
+		  justify-content: center;
+		  margin-top: 4px;
+		}
+
+		#signImageContainer img.sign-preview {
+		  width: min(260px, 72vw);
+		  max-width: 100%;
+		  height: auto;
+		}
+
+		.qr-sign-actions {
+		  margin-top: 14px;
+		  display: flex;
+		  gap: 8px;
+		  justify-content: center;
+		  flex-wrap: wrap;
+		}
+
+		.qr-quantity-stepper {
+		  display: grid;
+		  grid-template-columns: 56px minmax(0, 1fr) 56px;
+		  gap: 8px;
+		  align-items: stretch;
+		}
+
+		.qr-quantity-stepper .btn {
+		  min-height: 56px;
+		  padding: 0;
+		  font-size: 28px;
+		  line-height: 1;
+		  display: inline-flex;
+		  align-items: center;
+		  justify-content: center;
+		}
+
+		.qr-quantity-stepper input[type="number"] {
+		  min-height: 56px;
+		  text-align: center;
+		  -moz-appearance: textfield;
+		}
+
+		.qr-quantity-stepper input[type="number"]::-webkit-outer-spin-button,
+		.qr-quantity-stepper input[type="number"]::-webkit-inner-spin-button {
+		  -webkit-appearance: none;
+		  margin: 0;
+		}
+
+		.qr-price-breakdown {
+		  display: grid;
+		  gap: 8px;
+		}
+
+		.qr-price-row {
+		  display: grid;
+		  grid-template-columns: minmax(0, 1fr) auto;
+		  gap: 12px;
+		  align-items: baseline;
+		}
+
+		.qr-price-label {
+		  color: var(--ff-text-muted);
+		  overflow-wrap: anywhere;
+		}
+
+		.qr-price-value {
+		  color: var(--ff-text);
+		  font-weight: 700;
+		  text-align: right;
+		  white-space: nowrap;
+		}
+
+		.qr-price-total {
+		  margin-top: 4px;
+		  padding-top: 8px;
+		  border-top: 1px solid var(--ff-border);
+		}
+
+		.qr-price-total .qr-price-label,
+		.qr-price-total .qr-price-value {
+		  color: var(--ff-text);
+		  font-size: 1.06em;
+		  font-weight: 800;
+		}
+
+		.qr-order-form {
+		  box-sizing: border-box;
+		  width: min(100%, 640px);
+		}
+
+		.qr-order-address-grid {
+		  display: grid;
+		  grid-template-columns: repeat(2, minmax(0, 1fr));
+		  gap: 12px;
+		}
+
+		@media (max-width: 560px) {
+		  .qr-sign-panel {
+		    padding: 16px 10px;
+		  }
+
+		  .qr-order-form {
+		    padding: 14px 12px !important;
+		  }
+
+		  .qr-order-address-grid {
+		    grid-template-columns: 1fr;
+		  }
+		}
+
+		@media (min-width: 720px) {
+		  .qr-sign-panel {
+		    padding: 24px;
+		  }
+
+		  #generatedSign {
+		    max-width: 640px;
+		    margin-left: auto;
+		    margin-right: auto;
+		  }
+
+		  #signImageContainer {
+		    justify-content: center;
+		  }
+
+		  #signImageContainer img.sign-preview {
+		    width: 280px;
+		  }
+
+		  .qr-sign-actions {
+		    justify-content: center;
+		  }
 		}
 
 		.settings-toggle {
@@ -1864,7 +2037,7 @@
             </section>
 
             <section id="qr" class="content-section">
-                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">QR Code Generator</h2>
+                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">QR Codes</h2>
 				<!-- Onboarding banner: shown until first QR sign download -->
 				<div id="qrOnboardingBanner"
 				     style="display:none; margin: 0 0 16px 0; padding:14px 16px; border-radius:12px;
@@ -1879,31 +2052,35 @@
 				  </div>
 				</div>
 
-                <div style="margin-bottom: 20px;">
-                    <label>Generate QR Code for: </label>
-                    <select id="qrLocationSelect" onchange="generateQR()">
-                    </select>
+                <div class="qr-generator-controls">
+                    <label for="qrLocationSelect">Generate QR Code for:</label>
+                    <div class="qr-generator-row">
+                        <select id="qrLocationSelect" onchange="resetQrSignUI()">
+                        </select>
+                        <button class="btn" onclick="generateSign()">Generate</button>
+                    </div>
                 </div>
                 
-                <div style="background: #212121; padding: 30px; border-radius: 15px; text-align: center; margin-top: 20px; border: 1px solid rgba(45, 55, 72, 0.06);">
-                    <h3>QR Code Sign Generator</h3>
+                <div class="qr-sign-panel">
                     <div id="qrContainer"></div>
-                    <p>Generate a complete sign with call-to-action text</p>
-                    <button class="btn" onclick="generateSign()">Generate Customer Sign</button>
-                    <div id="generatedSign" style="display: none; margin-top: 20px; text-align: center;">
-					  <h4>Your Customer Sign is Ready!</h4>
-					
-					  <div style="margin-top:12px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-					    <button id="ffDownloadQrBtn" class="btn">Download Sign (PNG)</button>
-					    <button id="ffPrintQrBtn" class="btn">Print Sign</button>
-					    <button id="ffOrderQrBtn" class="btn">Order Delivered Signs</button>
+                    <div id="generatedSign" style="display: none; margin-top: 14px;">
+					  <div id="signImageContainer"></div>
+
+					  <div class="qr-sign-actions">
+					    <button id="ffDownloadQrBtn" class="btn">Download</button>
+					    <button id="ffPrintQrBtn" class="btn">Print</button>
+					    <button id="ffOrderQrBtn" class="btn">Order Stickers</button>
 					  </div>
 					
-					  <form id="qrOrderForm" style="display:none; margin:18px auto 0; max-width:520px; text-align:left; background:var(--ff-surface); border:1px solid var(--ff-border); border-radius:12px; padding:16px;">
+					  <form id="qrOrderForm" class="qr-order-form" style="display:none; margin:18px auto 0; text-align:left; background:var(--ff-surface); border:1px solid var(--ff-border); border-radius:12px; padding:16px;">
 					    <h4 style="margin:0 0 12px 0;">Delivery details</h4>
 					    <div class="form-group">
-					      <label for="qrOrderQuantity">Number of signs</label>
-					      <input id="qrOrderQuantity" type="number" min="1" max="100" value="1" required>
+					      <label for="qrOrderQuantity">Number of stickers</label>
+					      <div class="qr-quantity-stepper">
+					        <button class="btn" type="button" aria-label="Reduce number of stickers" onclick="adjustQrOrderQuantity(-1)">-</button>
+					        <input id="qrOrderQuantity" type="number" min="1" max="100" value="1" inputmode="numeric" required>
+					        <button class="btn" type="button" aria-label="Increase number of stickers" onclick="adjustQrOrderQuantity(1)">+</button>
+					      </div>
 					    </div>
 					    <div class="form-group">
 					      <label for="qrOrderName">Delivery contact</label>
@@ -1917,7 +2094,7 @@
 					      <label for="qrOrderAddress2">Address line 2 (optional)</label>
 					      <input id="qrOrderAddress2" type="text" autocomplete="address-line2">
 					    </div>
-					    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+					    <div class="qr-order-address-grid">
 					      <div class="form-group">
 					        <label for="qrOrderCity">Town / city</label>
 					        <input id="qrOrderCity" type="text" autocomplete="address-level2" required>
@@ -1934,7 +2111,7 @@
 					        <option value="South Africa">South Africa</option>
 					      </select>
 					    </div>
-					    <div id="qrOrderPriceSummary" style="margin:0 0 14px 0; padding:12px; border:1px solid var(--ff-border); border-radius:8px; background:color-mix(in oklab, var(--ff-surface) 94%, black); color:var(--ff-text);">
+					    <div id="qrOrderPriceSummary" class="qr-price-breakdown" style="margin:0 0 14px 0; padding:12px; border:1px solid var(--ff-border); border-radius:8px; background:color-mix(in oklab, var(--ff-surface) 94%, black); color:var(--ff-text);">
 					      Total: £4.50
 					    </div>
 					    <div class="form-group">
@@ -1942,13 +2119,11 @@
 					      <textarea id="qrOrderNotes" rows="3" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
 					    </div>
 					    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-					      <button id="qrOrderSubmit" class="btn" type="submit">Pay and Order Signs</button>
+					      <button id="qrOrderSubmit" class="btn" type="submit">Pay and order Stickers</button>
 					      <button id="qrOrderCancel" class="btn" type="button">Cancel</button>
 					      <span id="qrOrderStatus" style="color:#4b5563;"></span>
 					    </div>
 					  </form>
-
-					  <div id="signImageContainer"></div>
 					</div>
 
                 </div>
@@ -2924,12 +3099,7 @@
 			    sel.value = window.currentLocation;
 			  }
 			
-			  // build the QR automatically; users can hit Download right away
-			  if (typeof generateQR === 'function') { generateQR(); }
-			  if (typeof generateSign === 'function') { 
-			    // optional: if you want the full sign ready instantly
-			    generateSign();
-			  }
+			  resetQrSignUI();
 			} catch (e) {
 			  console.warn('onboarding→QR jump failed:', e?.message || e);
 			}
@@ -3207,6 +3377,7 @@
           if (signWrapper) signWrapper.style.display = 'none';
           if (signImageContainer) signImageContainer.innerHTML = '';
           if (qrContainer) qrContainer.innerHTML = '';
+          ffQrCode = null;
         }
 		
         function showAdminDashboard() {
@@ -3567,12 +3738,37 @@
 		  const summary = document.getElementById('qrOrderPriceSummary');
 		  const pricing = QR_ORDER_PRICING[country] || QR_ORDER_PRICING['United Kingdom'];
 		  const quantity = Math.max(1, Math.min(100, Number(quantityInput?.value || 1)));
-		  const signsTotal = pricing.signAmount * quantity;
-		  const total = signsTotal + pricing.deliveryAmount;
+		  if (quantityInput && String(quantityInput.value) !== String(quantity)) {
+		    quantityInput.value = String(quantity);
+		  }
+		  const stickersTotal = pricing.signAmount * quantity;
+		  const total = stickersTotal + pricing.deliveryAmount;
 
 		  if (summary) {
-		    summary.textContent = `${quantity} sign${quantity === 1 ? '' : 's'}: ${formatQrOrderMoney(signsTotal, pricing)} + delivery ${formatQrOrderMoney(pricing.deliveryAmount, pricing)} = ${formatQrOrderMoney(total, pricing)}`;
+		    summary.innerHTML = `
+		      <div class="qr-price-row">
+		        <span class="qr-price-label">${quantity} sticker${quantity === 1 ? '' : 's'}</span>
+		        <span class="qr-price-value">${formatQrOrderMoney(stickersTotal, pricing)}</span>
+		      </div>
+		      <div class="qr-price-row">
+		        <span class="qr-price-label">Delivery</span>
+		        <span class="qr-price-value">${formatQrOrderMoney(pricing.deliveryAmount, pricing)}</span>
+		      </div>
+		      <div class="qr-price-row qr-price-total">
+		        <span class="qr-price-label">Total</span>
+		        <span class="qr-price-value">${formatQrOrderMoney(total, pricing)}</span>
+		      </div>
+		    `;
 		  }
+		}
+
+		function adjustQrOrderQuantity(change) {
+		  const quantityInput = document.getElementById('qrOrderQuantity');
+		  if (!quantityInput) return;
+		  const current = Number(quantityInput.value || 1);
+		  const next = Math.max(1, Math.min(100, current + change));
+		  quantityInput.value = String(next);
+		  updateQrOrderTotal();
 		}
 
 		function showQrOrderForm() {
@@ -4088,7 +4284,7 @@
 		    input.value = '';
 		    updateLocationSelects();
 		    updateLocationsList();
-		    generateQR(); // keeps QR tab in sync if it’s open
+		    resetQrSignUI();
 		  } catch (e) {
 		    console.error(e);
 		    alert(e?.message || 'Failed to add location.');
@@ -4495,9 +4691,7 @@
 		  var qrSelect = document.getElementById('qrLocationSelect');
 		  var selectedLocation = qrSelect?.value || Object.keys(locations)[0] || currentLocation;
 
-          if (!ffQrCode) {
-            generateQR();
-          }
+          generateQR();
 
           var qrDataUrl = await getStyledQrPngDataURL();
           if (!qrDataUrl) {
@@ -4552,7 +4746,6 @@
 		  const img = document.createElement('img');
 		  img.src = signCanvas.toDataURL('image/png');
 		  img.className = 'sign-preview';
-		  img.style.maxWidth = '100%';
 		  img.style.border = '1px solid #ddd';
 		  img.style.borderRadius = '10px';
 		  img.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
@@ -4562,7 +4755,7 @@
 		  imageContainer.innerHTML = '';
 		  imageContainer.appendChild(img);
 		  signContainer.style.display = 'block';
-		  signContainer.scrollIntoView({ behavior: 'smooth' });
+		  signContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
 		  // --- Helpers ---
 		  function setFont(context, sizePx, bold, italic, family) {
@@ -4624,8 +4817,7 @@
                     updateLocationsList();
                     break;
                 case 'qr':
-				  generateQR();
-				  updateQrOnboardingBanner(); // show until first Download Sign event
+				  updateQrOnboardingBanner(); // show until first QR download event
 				  break;
 				case 'settings':
 				    loadSettings();
@@ -4711,7 +4903,8 @@
 		  openAccountMenu,
 		  closeAccountMenu,
 		  openSettingsFromAccount,
-		  updateQrOrderTotal
+		  updateQrOrderTotal,
+		  adjustQrOrderQuantity
 		});
 
 		async function loadSettings() {
