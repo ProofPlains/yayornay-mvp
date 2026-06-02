@@ -2118,7 +2118,7 @@
                 <div class="qr-generator-controls">
                     <label class="qr-step-label" for="qrLocationSelect"><strong>Step 1:</strong> Generate QR Code for:</label>
                     <div class="qr-generator-row">
-                        <select id="qrLocationSelect" onchange="resetQrSignUI()">
+                        <select id="qrLocationSelect" onchange="handleQrLocationChange()">
                         </select>
                         <button class="btn" onclick="generateSign()">Generate</button>
                     </div>
@@ -3437,15 +3437,30 @@
 
 
 		// Clear any QR sign preview (used when moving from demo → real account)
-        function resetQrSignUI() {
+        function resetQrSignUI(options = {}) {
           const signWrapper = document.getElementById('generatedSign');
           const signImageContainer = document.getElementById('signImageContainer');
           const qrContainer = document.getElementById('qrContainer');
+          const orderForm = document.getElementById('qrOrderForm');
+          const orderStatus = document.getElementById('qrOrderStatus');
 
           if (signWrapper) signWrapper.style.display = 'none';
           if (signImageContainer) signImageContainer.innerHTML = '';
           if (qrContainer) qrContainer.innerHTML = '';
+          if (orderForm) {
+            orderForm.style.display = 'none';
+            orderForm.reset();
+          }
+          if (orderStatus) orderStatus.textContent = '';
           ffQrCode = null;
+
+          if (options.scrollToQrStart) {
+            document.getElementById('qr')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+
+        function handleQrLocationChange() {
+          resetQrSignUI({ scrollToQrStart: true });
         }
 		
         function showAdminDashboard() {
@@ -5610,6 +5625,7 @@
 		
 		// Wire the button after DOM is ready
 		document.addEventListener('DOMContentLoaded', () => {
+		  document.getElementById('qrLocationSelect')?.addEventListener('change', handleQrLocationChange);
 		  document.getElementById('ffDownloadQrBtn')?.addEventListener('click', downloadQrSignAndLog);
 		  document.getElementById('ffPrintQrBtn')?.addEventListener('click', printQrSignAsPDFAndLog);
 		  document.getElementById('ffOrderQrBtn')?.addEventListener('click', showQrOrderForm);
