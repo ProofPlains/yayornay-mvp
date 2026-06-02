@@ -898,6 +898,32 @@
             padding: 0;
         }
 
+        .feedback-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .feedback-page-header h2 {
+            margin: 0;
+            font-size: 28px;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .feedback-page-header .link-button {
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .feedback-page-header .link-button:hover {
+            text-decoration: underline;
+        }
+
         .btn {
                     background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2));
                     color: var(--ff-text-on-brand);
@@ -1126,6 +1152,18 @@
 		  color: var(--ff-text-muted);
 		}
 
+		.qr-step-label {
+		  margin: 0;
+		  color: var(--ff-text-muted);
+		  font-size: 17px;
+		  font-weight: 800;
+		  line-height: 1.3;
+		}
+
+		.qr-step-label strong {
+		  color: var(--ff-text);
+		}
+
 		.qr-generator-row {
 		  display: grid;
 		  grid-template-columns: minmax(0, 1fr) auto;
@@ -1169,6 +1207,29 @@
 		  gap: 8px;
 		  justify-content: center;
 		  flex-wrap: wrap;
+		  align-items: center;
+		}
+
+		.qr-sign-action-step {
+		  display: grid;
+		  gap: 10px;
+		  justify-items: center;
+		  margin-top: 16px;
+		}
+
+		.qr-action-or {
+		  color: var(--ff-text-muted);
+		  font-size: 14px;
+		  font-weight: 700;
+		  text-transform: lowercase;
+		}
+
+		.qr-placement-note {
+		  margin: 12px auto 0;
+		  max-width: 720px;
+		  color: var(--ff-text-muted);
+		  font-size: 14px;
+		  line-height: 1.45;
 		}
 
 		.qr-quantity-stepper {
@@ -1239,6 +1300,7 @@
 
 		.qr-order-form {
 		  box-sizing: border-box;
+		  scroll-margin-top: 18px;
 		  width: min(100%, 640px);
 		}
 
@@ -1979,7 +2041,11 @@
         <!-- Main Content Area -->
         <main class="admin-content">
             <section id="Feedback" class="content-section active">
-                               
+                <div class="feedback-page-header">
+                    <h2>Feedback</h2>
+                    <button class="link-button" type="button" onclick="showSection('qr')" title="Go to QR Codes">Need QR Codes?</button>
+                </div>
+
 				<div style="margin-bottom: 20px;">
                     <label>Select Location: </label>
                     <select id="FeedbackLocationSelect" onchange="updateFeedback()">
@@ -2045,15 +2111,12 @@
 				            border:1px solid var(--ff-border); color: var(--ff-text);">
 				  <div style="font-weight:700; margin-bottom:6px;">You’re almost live 🎉</div>
 				  <div style="opacity:.9">
-				    Print your QR sign and place it where customers can see it to start receiving feedback.
-				  </div>
-				  <div style="margin-top:8px; font-size:13px; opacity:.9;">
-				    1) Download/print → 2) Place at point-of-sale, entrance or tables. 
+				    Get your QR codes and place them where customers can see them. Then start receiving feedback!
 				  </div>
 				</div>
 
                 <div class="qr-generator-controls">
-                    <label for="qrLocationSelect">Generate QR Code for:</label>
+                    <label class="qr-step-label" for="qrLocationSelect"><strong>Step 1:</strong> Generate QR Code for:</label>
                     <div class="qr-generator-row">
                         <select id="qrLocationSelect" onchange="resetQrSignUI()">
                         </select>
@@ -2066,10 +2129,15 @@
                     <div id="generatedSign" style="display: none; margin-top: 14px;">
 					  <div id="signImageContainer"></div>
 
-					  <div class="qr-sign-actions">
-					    <button id="ffDownloadQrBtn" class="btn">Download</button>
-					    <button id="ffPrintQrBtn" class="btn">Print</button>
-					    <button id="ffOrderQrBtn" class="btn">Order Stickers</button>
+					  <div class="qr-sign-action-step">
+					    <div class="qr-step-label"><strong>Step 2:</strong> Get your QR Codes:</div>
+					    <div class="qr-sign-actions">
+					      <button id="ffDownloadQrBtn" class="btn">Download</button>
+					      <button id="ffPrintQrBtn" class="btn">Print</button>
+					      <span class="qr-action-or">or</span>
+					      <button id="ffOrderQrBtn" class="btn">Order Stickers</button>
+					    </div>
+					    <div class="qr-placement-note"><strong>Step 3:</strong> Place them at point-of-sale, on tables, inside bill folders, and wherever else your customers can see them.</div>
 					  </div>
 					
 					  <form id="qrOrderForm" class="qr-order-form" style="display:none; margin:18px auto 0; text-align:left; background:var(--ff-surface); border:1px solid var(--ff-border); border-radius:12px; padding:16px;">
@@ -3790,7 +3858,7 @@
 
 		  updateQrOrderTotal();
 		  form.style.display = 'block';
-		  form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}
 
 		function hideQrOrderForm() {
