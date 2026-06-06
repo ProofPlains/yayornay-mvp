@@ -364,6 +364,7 @@
             <th>Business</th>
             <th>Owner</th>
             <th>Industry</th>
+            <th>Plan</th>
             <th>Alerts</th>
             <th>Locations</th>
             <th>Feedback</th>
@@ -710,8 +711,23 @@
       return token;
     }
 
+    function planLabel(tier) {
+      if (tier === 'growth') return 'Growth Tier';
+      if (tier === 'pro') return 'Pro';
+      return 'Free';
+    }
+
+    function subscriptionStatusLabel(status, comped, testMode) {
+      if (comped) return 'Comped';
+      if (testMode) return status === 'active' ? 'Test subscription' : `Test - ${status || 'none'}`;
+      if (status === 'active') return 'Active';
+      if (status === 'past_due') return 'Past due';
+      if (status === 'canceled') return 'Canceled';
+      return 'None';
+    }
+
     function searchText(business) {
-      return [business.name, business.ownerName, business.ownerUserId, business.industry, business.businessType]
+      return [business.name, business.ownerName, business.ownerUserId, business.industry, business.businessType, planLabel(business.pricingTier), business.subscriptionStatus, business.subscriptionTestMode ? 'test subscription' : '']
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
@@ -784,6 +800,10 @@
               <div class="muted">${escapeHtml(business.ownerUserId || '')}</div>
             </td>
             <td>${escapeHtml(business.industry || '-')}</td>
+            <td>
+              <span class="badge enabled">${escapeHtml(planLabel(business.pricingTier))}</span>
+              <div class="muted">${escapeHtml(subscriptionStatusLabel(business.subscriptionStatus, business.subscriptionComped, business.subscriptionTestMode))}</div>
+            </td>
             <td><span class="badge ${alertsEnabled ? 'enabled' : 'disabled'}">${alertsEnabled ? 'Enabled' : 'Disabled'}</span></td>
             <td>${Number(business.locationCount || 0)}</td>
             <td>${Number(business.feedbackCount || 0)}</td>
@@ -873,6 +893,8 @@
           <div class="grid">
             <div class="field"><span>Owner</span>${escapeHtml(business.ownerName || 'No owner name')}</div>
             <div class="field"><span>Owner user id</span>${escapeHtml(business.ownerUserId || '-')}</div>
+            <div class="field"><span>Plan</span>${escapeHtml(planLabel(business.pricingTier))}</div>
+            <div class="field"><span>Subscription</span>${escapeHtml(subscriptionStatusLabel(business.subscriptionStatus, business.subscriptionComped, business.subscriptionTestMode))}</div>
             <div class="field"><span>Timezone</span>${escapeHtml(business.timezone || '-')}</div>
             <div class="field"><span>Email alerts</span>${business.emailAlertsEnabled !== false ? 'Enabled' : 'Disabled'}</div>
             <div class="field"><span>Created</span>${escapeHtml(formatDate(business.createdAt))}</div>
