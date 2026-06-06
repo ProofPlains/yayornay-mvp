@@ -1366,6 +1366,181 @@
 		  font-size: 13px;
 		  color: var(--ff-text-muted);
 		}
+
+		.plan-options {
+		  display: grid;
+		  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+		  gap: 12px;
+		  margin-top: 14px;
+		}
+		.plan-option {
+		  display: grid;
+		  gap: 10px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 12px;
+		  padding: 16px;
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		  cursor: pointer;
+		  min-height: 164px;
+		  position: relative;
+		  transition: border-color .16s ease, transform .16s ease, background .16s ease;
+		}
+		.plan-option:hover,
+		.plan-option.is-selected {
+		  border-color: color-mix(in oklab, var(--ff-brand-1) 72%, var(--ff-border));
+		  background: color-mix(in oklab, var(--ff-brand-1) 12%, var(--ff-surface));
+		  transform: translateY(-1px);
+		}
+		.plan-option input {
+		  position: absolute;
+		  top: 16px;
+		  right: 16px;
+		  width: 16px;
+		  height: 16px;
+		}
+		.plan-option strong,
+		.plan-option-title {
+		  display: block;
+		  padding-right: 28px;
+		  font-size: 20px;
+		  line-height: 1.2;
+		  color: var(--ff-text);
+		}
+		.plan-option-price {
+		  display: block;
+		  font-size: 14px;
+		  color: var(--ff-text);
+		  font-weight: 700;
+		}
+		.plan-option span,
+		.plan-option-note {
+		  display: block;
+		  font-size: 13px;
+		  line-height: 1.4;
+		  color: var(--ff-text-muted);
+		}
+		.plan-feature-list {
+		  display: grid;
+		  gap: 6px;
+		  margin: 0;
+		  padding: 0;
+		  list-style: none;
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  line-height: 1.35;
+		}
+		.plan-feature-list li::before {
+		  content: "✓";
+		  color: var(--ff-brand-1);
+		  font-weight: 800;
+		  margin-right: 6px;
+		}
+		.plan-panel {
+		  display: grid;
+		  gap: 12px;
+		}
+		.plan-summary {
+		  display: grid;
+		  grid-template-columns: minmax(0, 1fr);
+		  gap: 8px;
+		  align-items: start;
+		}
+		.plan-badge {
+		  display: inline-flex;
+		  align-items: center;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 999px;
+		  padding: 4px 10px;
+		  font-size: 13px;
+		  font-weight: 700;
+		  color: var(--ff-text);
+		  background: color-mix(in oklab, var(--ff-surface) 92%, black);
+		}
+		.plan-usage-grid {
+		  display: grid;
+		  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		  gap: 8px;
+		}
+		.plan-usage-item {
+		  border: 1px solid var(--ff-border);
+		  border-radius: 8px;
+		  padding: 10px 12px;
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		}
+		.plan-usage-item span {
+		  display: block;
+		  color: var(--ff-text-muted);
+		  font-size: 12px;
+		  margin-bottom: 3px;
+		}
+		.plan-usage-item strong {
+		  display: block;
+		  color: var(--ff-text);
+		  font-size: 15px;
+		  line-height: 1.25;
+		}
+		.plan-actions {
+		  display: flex;
+		  flex-wrap: wrap;
+		  gap: 8px;
+		}
+		.pricing-modal {
+		  display: none;
+		  position: fixed;
+		  inset: 0;
+		  z-index: 10000;
+		  padding: 18px;
+		  background: rgba(0, 0, 0, .62);
+		  overflow-y: auto;
+		}
+		.pricing-modal.open {
+		  display: block;
+		}
+		.pricing-modal-card {
+		  width: min(920px, 100%);
+		  margin: 32px auto;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 16px;
+		  background: #181818;
+		  box-shadow: 0 24px 80px rgba(0,0,0,.45);
+		  padding: 22px;
+		  color: var(--ff-text);
+		}
+		.pricing-modal-header {
+		  display: flex;
+		  justify-content: space-between;
+		  align-items: flex-start;
+		  gap: 16px;
+		  margin-bottom: 12px;
+		}
+		.pricing-modal-header h3 {
+		  margin: 0;
+		  font-size: clamp(22px, 3vw, 32px);
+		  line-height: 1.1;
+		}
+		.pricing-modal-header p {
+		  margin: 8px 0 0;
+		  color: var(--ff-text-muted);
+		  max-width: 620px;
+		}
+		.pricing-modal-close {
+		  border: 1px solid var(--ff-border);
+		  border-radius: 999px;
+		  width: 36px;
+		  height: 36px;
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		  color: var(--ff-text);
+		  cursor: pointer;
+		  font-size: 22px;
+		  line-height: 1;
+		}
+		.pricing-modal-actions {
+		  display: flex;
+		  justify-content: flex-end;
+		  gap: 10px;
+		  flex-wrap: wrap;
+		  margin-top: 16px;
+		}
 		
 		.btn[disabled], .btn:disabled, .submit-btn[disabled], .submit-btn:disabled,
 		.btn-primary[disabled], .btn-primary:disabled {
@@ -1791,6 +1966,7 @@
                 <label for="confirmPassword">Confirm Password</label>
                 <input type="password" id="confirmPassword" required minlength="6">
             </div>
+			<input type="hidden" id="signupPricingTier" name="signupPricingTier" value="free">
             <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Create Account</button>
         </form>
 
@@ -1800,6 +1976,19 @@
             <button class="link-button" onclick="showLogin()">Already have an account?</button>
         </div>
     </div>
+
+	<!-- Paid plan checkout redirect -->
+	<div id="checkoutRedirectScreen" class="login-container" style="display:none; text-align:center;">
+	  <div class="brand-header">
+	    <img class="brand-logo" src="Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+	    <span class="brand-title">FLASHFEEDBACK</span>
+	  </div>
+	  <div class="form-title">
+	    <h2>Opening secure checkout</h2>
+	    <p id="checkoutRedirectMessage">Taking you to Stripe to finish setting up your plan.</p>
+	  </div>
+	  <div class="loader" style="position:relative; inset:auto; margin:28px auto;" aria-hidden="true"></div>
+	</div>
 
     <!-- Login Form -->
     <div id="loginScreen" class="login-container" style="display: none;">
@@ -2229,6 +2418,12 @@
 				    <span id="settingsPwdStatus" style="margin-left:10px;color:#4b5563;"></span>
 				  </div>
 
+				  <!-- Plan -->
+				  <div style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:20px;margin-bottom:20px;">
+				    <h3 style="margin-bottom:12px;">Plan</h3>
+				    <div id="settingsPlanPanel" class="plan-panel"></div>
+				  </div>
+
 				  <!-- Notifications -->
 				  <div style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:20px;margin-bottom:20px;">
 				    <h3 style="margin-bottom:12px;">Email alerts</h3>
@@ -2355,6 +2550,24 @@
 	</aside>
 
 
+	<div id="pricingModal" class="pricing-modal" role="dialog" aria-modal="true" aria-labelledby="pricingModalTitle" aria-hidden="true">
+	  <div class="pricing-modal-card">
+	    <div class="pricing-modal-header">
+	      <div>
+	        <h3 id="pricingModalTitle">Choose your plan</h3>
+	        <p id="pricingModalIntro">Pick the plan that matches how many locations you want to manage.</p>
+	      </div>
+	      <button class="pricing-modal-close" type="button" onclick="closePricingModal()" aria-label="Close">×</button>
+	    </div>
+	    <div id="pricingModalOptions" class="plan-options" role="radiogroup" aria-label="Pricing plans"></div>
+	    <div class="pricing-modal-actions">
+	      <button class="btn" type="button" onclick="closePricingModal()">Cancel</button>
+	      <button id="pricingModalContinue" class="btn-primary" type="button" onclick="confirmPricingModal()">Continue</button>
+	    </div>
+	  </div>
+	</div>
+
+
 	
     <script type="module">
         // --- Supabase client setup ---
@@ -2366,6 +2579,238 @@
 			// This object lets your frontend talk to Supabase Auth + DB
 			const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 			window.supabase = supabase; // expose the client for console/debug use
+
+			const PRICING_TIERS = {
+			  free: { key: 'free', label: 'Free', priceLabel: 'Free', locationLimit: 1, checkout: false, summary: '1 location to get started.', features: ['1 location', 'Private feedback dashboard', 'QR code generation'] },
+			  growth: {
+			    key: 'growth',
+			    label: 'Growth Tier',
+			    priceLabel: 'Paid plan',
+			    locationLimit: 5,
+			    checkout: true,
+			    summary: 'Up to 5 locations.',
+			    features: ['Up to 5 locations', 'Private feedback dashboard', 'QR code generation'],
+			    sandboxPriceId: 'price_1TaajGFIxmPNhgh2Purgftxq',
+			    productionPriceId: 'price_1TabHTFNq4Xp479bhvLoemuU'
+			  },
+			  pro: {
+			    key: 'pro',
+			    label: 'Pro',
+			    priceLabel: 'Paid plan',
+			    locationLimit: Infinity,
+			    checkout: true,
+			    summary: 'Unlimited locations.',
+			    features: ['Unlimited locations', 'Private feedback dashboard', 'QR code generation'],
+			    sandboxPriceId: 'price_1TaaliFIxmPNhgh2psSx6s23',
+			    productionPriceId: 'price_1TabHQFNq4Xp479bH5NeGLYu'
+			  }
+			};
+			let pricingModalContext = 'signup';
+			let pricingModalSelectedTier = 'free';
+			let signupPlanConfirmed = false;
+
+			function getPricingTier(key) {
+			  return PRICING_TIERS[key] || PRICING_TIERS.free;
+			}
+
+			function getCurrentPricingTier() {
+			  return getPricingTier(currentUser?.pricingTier || 'free');
+			}
+
+			function getLocationCount() {
+			  return Object.keys(currentUser?.locations || {}).length;
+			}
+
+			function formatLocationLimit(limit) {
+			  return limit === Infinity ? 'Unlimited locations' : `${limit} location${limit === 1 ? '' : 's'}`;
+			}
+
+			function isTierAtLocationLimit(tierKey, count) {
+			  const limit = getPricingTier(tierKey).locationLimit;
+			  return limit !== Infinity && count >= limit;
+			}
+
+			function subscriptionStatusLabel(status) {
+			  const labels = {
+			    none: 'No paid subscription',
+			    active: 'Active subscription',
+			    past_due: 'Payment past due',
+			    canceled: 'Subscription canceled',
+			    comped: 'Complimentary plan'
+			  };
+			  return labels[status] || labels.none;
+			}
+
+			function renderPricingModalOptions() {
+			  const container = document.getElementById('pricingModalOptions');
+			  if (!container) return;
+			  container.innerHTML = Object.values(PRICING_TIERS).map((tier) => {
+			    const checked = tier.key === pricingModalSelectedTier ? 'checked' : '';
+			    const selectedClass = tier.key === pricingModalSelectedTier ? ' is-selected' : '';
+			    const features = (tier.features || []).map((feature) => `<li>${feature}</li>`).join('');
+			    return `
+			      <label class="plan-option${selectedClass}">
+			        <input type="radio" name="pricingModalTier" value="${tier.key}" ${checked} onchange="selectPricingModalTier('${tier.key}')">
+			        <strong class="plan-option-title">${tier.label}</strong>
+			        <span class="plan-option-price">${tier.priceLabel}</span>
+			        <span class="plan-option-note">${tier.summary}</span>
+			        <ul class="plan-feature-list">${features}</ul>
+			      </label>
+			    `;
+			  }).join('');
+			}
+
+			function selectPricingModalTier(tierKey) {
+			  pricingModalSelectedTier = getPricingTier(tierKey).key;
+			  renderPricingModalOptions();
+			}
+
+			function setSignupSelectedPlan(tierKey) {
+			  const tier = getPricingTier(tierKey);
+			  const input = document.getElementById('signupPricingTier');
+			  if (input) input.value = tier.key;
+			}
+
+			function openPricingModal(context = 'signup') {
+			  pricingModalContext = context;
+			  const modal = document.getElementById('pricingModal');
+			  const title = document.getElementById('pricingModalTitle');
+			  const intro = document.getElementById('pricingModalIntro');
+			  const continueBtn = document.getElementById('pricingModalContinue');
+			  const currentTier = context.startsWith('signup')
+			    ? (document.getElementById('signupPricingTier')?.value || 'free')
+			    : (currentUser?.pricingTier || 'free');
+			  pricingModalSelectedTier = getPricingTier(currentTier).key;
+			  if (context === 'limit') {
+			    pricingModalSelectedTier = currentTier === 'free' ? 'growth' : currentTier === 'growth' ? 'pro' : 'pro';
+			  }
+
+			  if (title) title.textContent = context === 'limit' ? 'Upgrade to add more locations' : 'Choose your plan';
+			  if (intro) {
+			    intro.textContent = context === 'limit'
+			      ? 'Your current plan has reached its location limit. Choose a plan with more room to keep growing.'
+			      : 'Pick the plan that matches how many locations you want to manage.';
+			  }
+			  if (continueBtn) continueBtn.textContent = context === 'limit' ? 'Continue' : context === 'signup-submit' ? 'Create account' : 'Use selected plan';
+			  renderPricingModalOptions();
+			  modal?.classList.add('open');
+			  modal?.setAttribute('aria-hidden', 'false');
+			}
+
+			function closePricingModal() {
+			  const modal = document.getElementById('pricingModal');
+			  modal?.classList.remove('open');
+			  modal?.setAttribute('aria-hidden', 'true');
+			}
+
+			async function confirmPricingModal() {
+			  const selected = getPricingTier(pricingModalSelectedTier);
+			  if (pricingModalContext.startsWith('signup')) {
+			    setSignupSelectedPlan(selected.key);
+			    closePricingModal();
+			    if (pricingModalContext === 'signup-submit') {
+			      signupPlanConfirmed = true;
+			      document.getElementById('signupForm')?.requestSubmit();
+			    }
+			    return;
+			  }
+
+			  closePricingModal();
+			  if (selected.key !== currentUser?.pricingTier && selected.checkout) {
+			    await startSubscriptionCheckout(selected.key);
+			  }
+			}
+
+			function getPlanReturnUrl() {
+			  if (window.location.protocol === 'file:') return null;
+			  return window.location.href.split('#')[0].split('?')[0];
+			}
+
+			function showCheckoutRedirectState(tierKey) {
+			  const tier = getPricingTier(tierKey);
+			  hideAllScreens();
+			  hideAdminControls();
+			  const screen = document.getElementById('checkoutRedirectScreen');
+			  const message = document.getElementById('checkoutRedirectMessage');
+			  if (message) message.textContent = `Taking you to Stripe to finish setting up ${tier.label}.`;
+			  if (screen) screen.style.display = 'block';
+			  currentView = 'checkout-redirect';
+			}
+
+			async function startSubscriptionCheckout(tierKey, expectedUserId = currentUser?.userId) {
+			  const tier = getPricingTier(tierKey);
+			  if (!currentUser?.businessId || !tier.checkout) return false;
+			  const returnUrl = getPlanReturnUrl();
+			  if (!returnUrl) {
+			    alert('Paid checkout needs to be tested from the live site or a localhost URL, not by opening the HTML file directly.');
+			    return false;
+			  }
+
+			  const { data: { session } } = await supabase.auth.getSession();
+			  const token = session?.access_token;
+			  if (!token || !session?.user?.id || session.user.id !== expectedUserId) {
+			    console.error('Checkout blocked because the authenticated session did not match the account being upgraded.');
+			    return false;
+			  }
+
+			  const res = await fetch(`${SUPABASE_URL}/functions/v1/create-subscription-checkout`, {
+			    method: 'POST',
+			    headers: {
+			      'Content-Type': 'application/json',
+			      'apikey': SUPABASE_ANON_KEY,
+			      'Authorization': 'Bearer ' + token
+			    },
+			    body: JSON.stringify({
+			      business_id: currentUser.businessId,
+			      tier: tier.key,
+			      return_url: returnUrl
+			    })
+			  });
+
+			  const body = await res.json().catch(() => ({}));
+			  if (!res.ok || !body.url) {
+			    window.showToast ? window.showToast(body.error || 'Could not start checkout.', 'error') : alert(body.error || 'Could not start checkout.');
+			    return false;
+			  }
+
+			  window.location.href = body.url;
+			  return true;
+			}
+
+			function renderPlanPanel() {
+			  const panel = document.getElementById('settingsPlanPanel');
+			  if (!panel || !currentUser) return;
+
+			  const tier = getCurrentPricingTier();
+			  const count = getLocationCount();
+			  const status = currentUser.subscriptionStatus || 'none';
+			  const isComped = currentUser.subscriptionComped === true;
+			  const isTestMode = currentUser.subscriptionTestMode === true;
+			  const paidTier = tier.key !== 'free';
+			  const statusText = isComped ? subscriptionStatusLabel('comped') : subscriptionStatusLabel(status);
+			  const usageText = `${count} location${count === 1 ? '' : 's'} used`;
+			  const allowanceText = tier.locationLimit === Infinity
+			    ? 'Unlimited locations'
+			    : `${tier.locationLimit} location${tier.locationLimit === 1 ? '' : 's'} included`;
+			  const upgradeButtons = Object.values(PRICING_TIERS)
+			    .filter((candidate) => candidate.checkout && candidate.key !== tier.key)
+			    .map((candidate) => `<button class="btn" type="button" onclick="startSubscriptionCheckout('${candidate.key}')">${tier.key === 'free' ? 'Upgrade to' : 'Switch to'} ${candidate.label}</button>`)
+			    .join('');
+
+			  panel.innerHTML = `
+			    <div class="plan-summary">
+			      <span class="plan-badge">${tier.label}</span>
+			      <div class="plan-usage-grid">
+			        <div class="plan-usage-item"><span>Allowance</span><strong>${allowanceText}</strong></div>
+			        <div class="plan-usage-item"><span>Current usage</span><strong>${usageText}</strong></div>
+			      </div>
+			    </div>
+			    <div class="settings-helper">${paidTier ? statusText : 'Upgrade anytime when you need more locations.'}</div>
+			    ${isComped ? '<div class="settings-helper">This account has a complimentary paid plan.</div>' : ''}
+			    ${isTestMode ? '<div class="settings-helper">This account is using a Stripe test subscription. No real payment was collected.</div>' : ''}
+			    <div class="plan-actions">${upgradeButtons || '<span class="settings-helper">You are already on the highest plan.</span>'}</div>
+			  `;
+			}
 
 			// ---- Analytics helpers (events table already exists server-side) ----
 			let __ffBusinessId = null;
@@ -2947,6 +3392,7 @@
 		  var screens = [
 		    'welcomeScreen',
 		    'signupScreen',
+		    'checkoutRedirectScreen',
 		    'loginScreen',
 		    'customerView',
 		    'adminView',
@@ -3077,6 +3523,7 @@
 		  const locationName = (document.getElementById('signupLocationName')?.value || '').trim() || 'Location 01';
 		  const industry     = (document.getElementById('signupIndustry')?.value || '').trim();
 		  const businessType = (document.getElementById('signupBusinessType')?.value || '').trim();
+		  const selectedPricingTier = document.getElementById('signupPricingTier')?.value || 'free';
 
 
 		  // Basic client-side checks
@@ -3093,11 +3540,30 @@
 			showError('signupError', 'Please enter a valid email address'); return;
 		  }
 
+		  if (!signupPlanConfirmed) {
+		    openPricingModal('signup-submit');
+		    return;
+		  }
+		  signupPlanConfirmed = false;
+
+		  // Clear any previous browser session before creating a different account.
+		  try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+
 		  // 1) Create auth user in Supabase
 		  const { data: signup, error: authErr } = await supabase.auth.signUp({ email, password });
 		  if (authErr) { showError('signupError', authErr.message); return; }
 		  const user = signup.user;
 		  if (!user) { showError('signupError', 'Please check your email to confirm your account.'); return; }
+
+		  let signupSession = signup.session;
+		  if (!signupSession || signupSession.user?.id !== user.id) {
+		    const { data: login, error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+		    if (loginErr || login.session?.user?.id !== user.id) {
+		      showError('signupError', 'Please confirm your email, then log in to finish setting up your account.');
+		      return;
+		    }
+		    signupSession = login.session;
+		  }
 
 		  try {
 			// 2) Create business owned by this user
@@ -3110,7 +3576,10 @@
 				  timezone: 'Europe/London',
 				  industry: industry || null,
 				  business_type: businessType || null,
-				  email_alerts_enabled: true
+				  email_alerts_enabled: true,
+				  pricing_tier: 'free',
+				  subscription_status: 'none',
+				  subscription_comped: false
 				})
 			  .select()
 			  .single();
@@ -3144,6 +3613,10 @@
 			  ownerName,
 			  email,
 			  emailAlertsEnabled: true,
+			  pricingTier: 'free',
+			  subscriptionStatus: 'none',
+			  subscriptionComped: false,
+			  subscriptionTestMode: false,
 			  locations: buildLocationsShape([loc], [])
 			};
 			currentLocation = loc.id;
@@ -3153,7 +3626,18 @@
 			currentUser.timezone = 'Europe/London';
 			currentUser.defaultLocationId = loc.id;
 
-			// 6) Open your existing admin UI
+			if (getPricingTier(selectedPricingTier).checkout) {
+			  showCheckoutRedirectState(selectedPricingTier);
+			  const checkoutStarted = await startSubscriptionCheckout(selectedPricingTier, user.id);
+			  if (!checkoutStarted) {
+			    showAdminDashboard();
+			    showSection('settings');
+			    alert('Your account was created on the Free plan, but checkout could not be opened. You can retry the upgrade from Settings.');
+			  }
+			  return;
+			}
+
+			// 6) Open the existing admin UI for Free signups.
 			showAdminDashboard();
 
 			// === Onboarding: land on QR generator immediately and pre-populate ===
@@ -3177,7 +3661,7 @@
 			renderBranding();
 			updateAvatarImage();
 			updateAccountMenuHeader();  
-			  
+
 		  } catch (e) {
 			console.error(e);
 			showError('signupError', e.message || 'Error creating your account.');
@@ -3199,7 +3683,7 @@
 		  if (!business) {
 		    const { data: newBiz, error: nbErr } = await supabase
 		      .from('businesses')
-		      .insert({ name: 'My Business', owner_id: user.id, email_alerts_enabled: true })
+		      .insert({ name: 'My Business', owner_id: user.id, email_alerts_enabled: true, pricing_tier: 'free', subscription_status: 'none', subscription_comped: false })
 		      .select()
 		      .single();
 		    if (nbErr) throw nbErr;
@@ -3256,6 +3740,10 @@
 			  timezone: business.timezone || 'Europe/London',
 			  defaultLocationId: business.default_location_id || null,
 			  logoUrl: business.logo_url || '',
+			  pricingTier: business.pricing_tier || 'free',
+			  subscriptionStatus: business.subscription_status || 'none',
+			  subscriptionComped: business.subscription_comped === true,
+			  subscriptionTestMode: business.subscription_test_mode === true,
 			  locations: buildLocationsShape(locRows, fbRows)
 			};
 			renderBranding();		  
@@ -4343,6 +4831,14 @@
 		  const input = document.getElementById('newLocationInput');
 		  const name = (input?.value || '').trim();
 		  if (!name) return;
+
+		  const tier = getCurrentPricingTier();
+		  const locationCount = getLocationCount();
+		  if (isTierAtLocationLimit(tier.key, locationCount)) {
+		    renderPlanPanel();
+		    openPricingModal('limit');
+		    return;
+		  }
 		
 		  try {
 		    // Create the location in Supabase and return the full row
@@ -4367,6 +4863,7 @@
 		    input.value = '';
 		    updateLocationSelects();
 		    updateLocationsList();
+		    renderPlanPanel();
 		    resetQrSignUI();
 		  } catch (e) {
 		    console.error(e);
@@ -4987,7 +5484,13 @@
 		  closeAccountMenu,
 		  openSettingsFromAccount,
 		  updateQrOrderTotal,
-		  adjustQrOrderQuantity
+		  adjustQrOrderQuantity,
+		  startSubscriptionCheckout,
+		  renderPlanPanel,
+		  openPricingModal,
+		  closePricingModal,
+		  confirmPricingModal,
+		  selectPricingModalTier
 		});
 
 		async function loadSettings() {
@@ -4996,7 +5499,7 @@
 		  // Pull fresh business row (ensures we reflect external changes too)
 		  const { data: biz, error } = await supabase
 		    .from('businesses')
-		    .select('id,name,owner_name,timezone,default_location_id,logo_url,industry,business_type,email_alerts_enabled')
+		    .select('id,name,owner_name,timezone,default_location_id,logo_url,industry,business_type,email_alerts_enabled,pricing_tier,subscription_status,subscription_comped,subscription_test_mode')
 		    .eq('id', currentUser.businessId)
 		    .single();
 		  if (error) {
@@ -5013,6 +5516,10 @@
 		  currentUser.industry = biz.industry || '';
 		  currentUser.businessType = biz.business_type || '';
 		  currentUser.emailAlertsEnabled = biz.email_alerts_enabled !== false;
+		  currentUser.pricingTier = biz.pricing_tier || 'free';
+		  currentUser.subscriptionStatus = biz.subscription_status || 'none';
+		  currentUser.subscriptionComped = biz.subscription_comped === true;
+		  currentUser.subscriptionTestMode = biz.subscription_test_mode === true;
 		
 		  // Populate controls
 		  document.getElementById('settingsOwnerName').value = currentUser.ownerName || '';
@@ -5032,6 +5539,7 @@
 		  if (sel && currentUser.defaultLocationId) {
 		    try { sel.value = currentUser.defaultLocationId; } catch {}
 		  }
+		  renderPlanPanel();
 		}
 
 		async function saveProfileSettings() {
@@ -5278,13 +5786,18 @@
 		// Wire modal close (once DOM is ready)
 		document.addEventListener('DOMContentLoaded', () => {
 		  const modal = document.getElementById('commentModal');
+		  const pricingModal = document.getElementById('pricingModal');
 		  const closeBtn = document.getElementById('commentModalClose');
 		  closeBtn?.addEventListener('click', closeCommentModal);
 		  modal?.addEventListener('click', (e) => {
 		    if (e.target === modal) closeCommentModal(); // click outside card
 		  });
+		  pricingModal?.addEventListener('click', (e) => {
+		    if (e.target === pricingModal) closePricingModal();
+		  });
 		  document.addEventListener('keydown', (e) => {
 		    if (e.key === 'Escape' && modal?.style.display === 'block') closeCommentModal();
+		    if (e.key === 'Escape' && pricingModal?.classList.contains('open')) closePricingModal();
 		  });
 			
 		  // Wire character counter for the public comment box
