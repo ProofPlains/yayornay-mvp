@@ -2680,6 +2680,12 @@
 			let pricingModalSelectedLocations = new Set();
 			let pricingModalPendingAction = null;
 			let subscriptionPricesLoaded = false;
+			let pendingUpgradePayment = null;
+			try {
+			  pendingUpgradePayment = JSON.parse(sessionStorage.getItem('ffPendingUpgradePayment') || 'null');
+			} catch (_) {
+			  pendingUpgradePayment = null;
+			}
 			let signupPlanConfirmed = false;
 
 			function getPricingTier(key) {
@@ -3101,8 +3107,25 @@
 			      await toggleLocationActive(pendingAction.locationId, true, true);
 			    }
 
-			    if (body.invoiceUrl) {
-			      window.location.href = body.invoiceUrl;
+			    if (body.invoiceUrl && body.invoiceStatus !== 'paid') {
+			      pendingUpgradePayment = { url: body.invoiceUrl, tier: tierKey, createdAt: Date.now() };
+			      try {
+			        sessionStorage.setItem('ffPendingUpgradePayment', JSON.stringify(pendingUpgradePayment));
+			      } catch (_) {}
+			      renderPlanPanel();
+			      window.showToast
+			        ? window.showToast('Your upgrade needs one more payment step.', 'success')
+			        : alert('Your upgrade needs one more payment step.');
+			      return true;
+			    }
+
+			    if (body.action === 'upgraded' || body.invoiceStatus === 'paid') {
+			      pendingUpgradePayment = null;
+			      try { sessionStorage.removeItem('ffPendingUpgradePayment'); } catch (_) {}
+			      window.showToast
+			        ? window.showToast('Payment received. Updating your plan...', 'success')
+			        : alert('Payment received. Updating your plan...');
+			      await refreshPlanAfterStripeChange(tierKey);
 			      return true;
 			    }
 
@@ -3126,6 +3149,27 @@
 			  }
 			}
 
+			async function refreshPlanAfterStripeChange(targetTier, attempts = 8) {
+			  for (let attempt = 0; attempt < attempts; attempt += 1) {
+			    await loadSettings();
+			    if (!targetTier || currentUser?.pricingTier === targetTier) {
+			      pendingUpgradePayment = null;
+			      try { sessionStorage.removeItem('ffPendingUpgradePayment'); } catch (_) {}
+			      renderPlanPanel();
+			      return true;
+			    }
+			    await new Promise((resolve) => setTimeout(resolve, 1500));
+			  }
+			  renderPlanPanel();
+			  return false;
+			}
+
+			function openPendingUpgradePayment() {
+			  if (!pendingUpgradePayment?.url) return;
+			  window.open(pendingUpgradePayment.url, '_blank', 'noopener,noreferrer');
+			  setTimeout(() => refreshPlanAfterStripeChange(pendingUpgradePayment?.tier, 6), 2000);
+			}
+
 			function renderPlanPanel() {
 			  const panel = document.getElementById('settingsPlanPanel');
 			  if (!panel || !currentUser) return;
@@ -3146,6 +3190,14 @@
 			  const pendingMessage = pendingTier
 			    ? `<div class="pending-plan-note">Your plan will change to <strong>${pendingTier.label}</strong>${pendingDate ? ` on ${pendingDate}` : ' at your next renewal'}. Until then, your current plan and limits remain active.</div>`
 			    : '';
+			  const paymentMessage = pendingUpgradePayment?.url
+			    ? `<div class="pending-plan-note">
+			        Your upgrade is waiting for payment confirmation.
+			        <div class="plan-actions" style="margin-top:8px;">
+			          <button class="btn" type="button" onclick="openPendingUpgradePayment()">Complete Payment in Stripe</button>
+			        </div>
+			      </div>`
+			    : '';
 
 			  panel.innerHTML = `
 			    <div class="plan-summary">
@@ -3159,6 +3211,7 @@
 			    ${isComped ? '<div class="settings-helper">This account has a complimentary paid plan.</div>' : ''}
 			    ${isTestMode ? '<div class="settings-helper">This account is using a Stripe test subscription. No real payment was collected.</div>' : ''}
 			    ${pendingMessage}
+			    ${paymentMessage}
 			    <div class="plan-actions">
 			      <button class="btn" type="button" onclick="openPricingModal('settings')">${isComped ? 'View Plan' : 'Upgrade / Change Plan'}</button>
 			    </div>
@@ -5898,7 +5951,8 @@
 		  confirmPricingModal,
 		  selectPricingModalTier,
 		  togglePricingLocationSelection,
-		  changeSubscriptionPlan
+		  changeSubscriptionPlan,
+		  openPendingUpgradePayment
 		});
 
 		async function loadSettings() {
@@ -5931,6 +5985,10 @@
 		  currentUser.pendingPricingTier = biz.pending_pricing_tier || null;
 		  currentUser.planChangeEffectiveAt = biz.plan_change_effective_at || null;
 		  currentUser.stripeSubscriptionScheduleId = biz.stripe_subscription_schedule_id || null;
+		  if (pendingUpgradePayment?.tier && currentUser.pricingTier === pendingUpgradePayment.tier) {
+		    pendingUpgradePayment = null;
+		    try { sessionStorage.removeItem('ffPendingUpgradePayment'); } catch (_) {}
+		  }
 
 		  const { data: freshLocations, error: locationsError } = await supabase
 		    .from('locations')
@@ -6231,6 +6289,12 @@
 		  const commentsEl = document.getElementById('additionalComments');
 		  commentsEl?.addEventListener('input', updateCommentCounter);
 		  updateCommentCounter(); // initialise on load
+		});
+
+		window.addEventListener('focus', () => {
+		  if (pendingUpgradePayment?.tier && currentUser?.businessId) {
+		    refreshPlanAfterStripeChange(pendingUpgradePayment.tier, 4);
+		  }
 		});
 
 		// --- Ensure viewport is at the very top (mobile-safe) ---
