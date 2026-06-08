@@ -224,6 +224,7 @@
       border-left: 1px solid var(--border);
       box-shadow: -20px 0 50px rgba(0,0,0,.35);
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 22px;
     }
     .drawer.open { transform: translateX(0); }
@@ -253,12 +254,15 @@
       letter-spacing: 0;
       margin-bottom: 10px;
     }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .field, .list-item {
+      min-width: 0;
       padding: 10px;
       border: 1px solid var(--border);
       border-radius: 8px;
       background: rgba(255,255,255,.04);
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .list-item-header {
       display: flex;
@@ -279,6 +283,7 @@
     }
     .simulation-panel {
       display: grid;
+      min-width: 0;
       gap: 10px;
       padding: 12px;
       border: 1px solid var(--border);
@@ -290,13 +295,40 @@
       flex-wrap: wrap;
       gap: 8px;
     }
+    .simulation-guide {
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .simulation-guide strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .simulation-guide ol {
+      display: grid;
+      gap: 6px;
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
     .simulation-status {
       min-height: 20px;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.4;
+      overflow-wrap: anywhere;
     }
     .simulation-status.error { color: var(--bad); }
+    .simulation-status.success {
+      padding: 10px 12px;
+      border: 1px solid rgba(34,197,94,.45);
+      border-radius: 8px;
+      background: rgba(34,197,94,.12);
+      color: var(--good);
+      font-weight: 700;
+    }
     .qr-sign-panel {
       display: none;
       margin-top: 14px;
@@ -427,6 +459,7 @@
     const requestedQrBusinessId = supportParams.get('qr-business-id') || supportParams.get('business') || storedQrRequest?.businessId || null;
     const requestedQrLocationId = supportParams.get('qr-location-id') || supportParams.get('location') || supportParams.get('qr-sign-location') || storedQrRequest?.locationId || null;
     let requestedQrSignGenerated = false;
+    const billingSimulationNotices = new Map();
 
     const loginGateEl = document.getElementById('loginGate');
     const consoleShellEl = document.getElementById('consoleShell');
@@ -753,6 +786,7 @@
         finish: 'Finish this simulation, delete its Stripe sandbox objects, and reset the business to Free?'
       };
       if (!window.confirm(labels[action] || 'Run this billing simulation action?')) return;
+      billingSimulationNotices.delete(businessId);
 
       const status = document.getElementById('billingSimulationStatus');
       const originalText = button?.textContent || '';
@@ -787,8 +821,37 @@
               ? 'Simulation finished and the business was reset.'
               : 'Pro simulation started.';
         }
-        if (action === 'advance') await new Promise((resolve) => setTimeout(resolve, 4000));
-        await loadOverview();
+        if (action === 'advance') {
+          const before = (overview?.businesses || []).find((item) => item.id === businessId);
+          const expectedTier = before?.pendingPricingTier || null;
+          let completedBusiness = null;
+          for (let attempt = 0; attempt < 8; attempt += 1) {
+            await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 4000 : 2000));
+            await loadOverview();
+            completedBusiness = (overview?.businesses || []).find((item) => item.id === businessId);
+            const pendingCleared = !completedBusiness?.pendingPricingTier;
+            const tierApplied = !expectedTier || completedBusiness?.pricingTier === expectedTier;
+            if (completedBusiness && pendingCleared && tierApplied) break;
+          }
+
+          const renewalCompleted = completedBusiness &&
+            !completedBusiness.pendingPricingTier &&
+            (!expectedTier || completedBusiness.pricingTier === expectedTier);
+          billingSimulationNotices.set(businessId, {
+            tone: renewalCompleted ? 'success' : '',
+            message: renewalCompleted
+              ? `Renewal advanced successfully. ${planLabel(completedBusiness.pricingTier)} is now active and the pending plan change has cleared.`
+              : 'The test clock advanced successfully. Stripe is still processing the renewal; refresh shortly to confirm the new plan.'
+          });
+        } else {
+          billingSimulationNotices.set(businessId, {
+            tone: 'success',
+            message: action === 'finish'
+              ? 'Simulation finished successfully and the business was reset to Free.'
+              : 'Pro simulation started successfully.'
+          });
+          await loadOverview();
+        }
         openDetail(businessId);
       } catch (err) {
         if (status) {
@@ -962,6 +1025,7 @@
         !hasSimulation;
       const canAdvanceSimulation = hasSimulation &&
         Boolean(business.pendingPricingTier && business.planChangeEffectiveAt);
+      const simulationNotice = billingSimulationNotices.get(business.id) || null;
       const simulationSummary = business.subscriptionComped
         ? 'Complimentary accounts cannot run billing simulations.'
         : hasSimulation
@@ -1020,7 +1084,8 @@
         <div class="section">
           <h3>Billing Simulation</h3>
           <div class="simulation-panel">
-            <div class="simulation-status" id="billingSimulationStatus">${escapeHtml(simulationSummary)}</div>
+            ${simulationNotice ? `<div class="simulation-status ${simulationNotice.tone === 'success' ? 'success' : ''}" id="billingSimulationStatus">${escapeHtml(simulationNotice.message)}</div>` : `<div class="simulation-status" id="billingSimulationStatus">${escapeHtml(simulationSummary)}</div>`}
+            ${simulationNotice ? `<div class="muted">${escapeHtml(simulationSummary)}</div>` : ''}
             ${hasSimulation ? `
               <div class="grid">
                 <div class="field"><span>Test clock</span>${escapeHtml(business.stripeTestClockId)}</div>
@@ -1031,6 +1096,17 @@
               ${canStartSimulation ? `<button class="small-btn" type="button" data-simulation-action="start" data-simulation-business-id="${escapeHtml(business.id)}">Start Pro Simulation</button>` : ''}
               ${hasSimulation ? `<button class="small-btn" type="button" data-simulation-action="advance" data-simulation-business-id="${escapeHtml(business.id)}" ${canAdvanceSimulation ? '' : 'disabled'}>Advance to Renewal</button>` : ''}
               ${hasSimulation ? `<button class="small-btn" type="button" data-simulation-action="finish" data-simulation-business-id="${escapeHtml(business.id)}">Finish Simulation</button>` : ''}
+            </div>
+            <div class="simulation-guide">
+              <strong>How to test a scheduled renewal</strong>
+              <ol>
+                <li>Use a disposable Free business with no existing Stripe billing details.</li>
+                <li>Click <strong>Start Pro Simulation</strong> to create its sandbox Pro subscription.</li>
+                <li>Sign in to that business, add more locations than the target plan permits, and schedule a downgrade from Settings.</li>
+                <li>Return here, refresh the console, reopen the business, and click <strong>Advance to Renewal</strong>.</li>
+                <li>Wait for the green confirmation, then verify the new plan is active and the selected locations are inactive.</li>
+                <li>Click <strong>Finish Simulation</strong> to delete the sandbox clock and reset the business to Free.</li>
+              </ol>
             </div>
           </div>
         </div>
