@@ -277,6 +277,26 @@
       white-space: nowrap;
       font-size: 13px;
     }
+    .simulation-panel {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(184,138,255,.08);
+    }
+    .simulation-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .simulation-status {
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .simulation-status.error { color: var(--bad); }
     .qr-sign-panel {
       display: none;
       margin-top: 14px;
@@ -726,6 +746,62 @@
       return 'None';
     }
 
+    async function runBillingSimulation(action, businessId, button) {
+      const labels = {
+        start: 'Start a sandbox Pro subscription for this business?',
+        advance: 'Advance this sandbox subscription beyond its scheduled renewal?',
+        finish: 'Finish this simulation, delete its Stripe sandbox objects, and reset the business to Free?'
+      };
+      if (!window.confirm(labels[action] || 'Run this billing simulation action?')) return;
+
+      const status = document.getElementById('billingSimulationStatus');
+      const originalText = button?.textContent || '';
+      if (button) {
+        button.disabled = true;
+        button.textContent = action === 'advance' ? 'Advancing...' : action === 'finish' ? 'Finishing...' : 'Starting...';
+      }
+      if (status) {
+        status.textContent = action === 'advance'
+          ? 'Stripe is advancing the test clock and processing renewal events...'
+          : 'Working...';
+        status.classList.remove('error');
+      }
+
+      try {
+        const token = await assertSuperuser();
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-billing-simulation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ action, business_id: businessId })
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body?.error || 'Billing simulation failed.');
+
+        if (status) {
+          status.textContent = action === 'advance'
+            ? 'Clock advanced. Waiting briefly for Stripe webhooks...'
+            : action === 'finish'
+              ? 'Simulation finished and the business was reset.'
+              : 'Pro simulation started.';
+        }
+        if (action === 'advance') await new Promise((resolve) => setTimeout(resolve, 4000));
+        await loadOverview();
+        openDetail(businessId);
+      } catch (err) {
+        if (status) {
+          status.textContent = err?.message || 'Billing simulation failed.';
+          status.classList.add('error');
+        }
+        if (button) {
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      }
+    }
+
     function searchText(business) {
       return [business.name, business.ownerName, business.ownerUserId, business.industry, business.businessType, planLabel(business.pricingTier), business.subscriptionStatus, business.subscriptionTestMode ? 'test subscription' : '']
         .filter(Boolean)
@@ -879,6 +955,20 @@
       if (!business) return;
       const locations = Array.isArray(business.locations) ? business.locations : [];
       const recentFeedback = Array.isArray(business.recentFeedback) ? business.recentFeedback : [];
+      const hasSimulation = Boolean(business.stripeTestClockId);
+      const canStartSimulation = !business.subscriptionComped &&
+        !business.stripeSubscriptionId &&
+        !business.stripeCustomerId &&
+        !hasSimulation;
+      const canAdvanceSimulation = hasSimulation &&
+        Boolean(business.pendingPricingTier && business.planChangeEffectiveAt);
+      const simulationSummary = business.subscriptionComped
+        ? 'Complimentary accounts cannot run billing simulations.'
+        : hasSimulation
+          ? `Sandbox clock active${business.pendingPricingTier ? ` - ${planLabel(business.pendingPricingTier)} scheduled for ${formatDate(business.planChangeEffectiveAt)}` : ' - schedule a downgrade in the customer account before advancing.'}`
+          : business.stripeSubscriptionId || business.stripeCustomerId
+            ? 'This business already has Stripe billing data and cannot be used for a simulation.'
+            : 'Creates a disposable Stripe sandbox customer and Pro subscription for accelerated renewal testing.';
 
       drawerEl.innerHTML = `
         <div class="drawer-header">
@@ -928,6 +1018,23 @@
           </div>
         </div>
         <div class="section">
+          <h3>Billing Simulation</h3>
+          <div class="simulation-panel">
+            <div class="simulation-status" id="billingSimulationStatus">${escapeHtml(simulationSummary)}</div>
+            ${hasSimulation ? `
+              <div class="grid">
+                <div class="field"><span>Test clock</span>${escapeHtml(business.stripeTestClockId)}</div>
+                <div class="field"><span>Stripe subscription</span>${escapeHtml(business.stripeSubscriptionId || '-')}</div>
+              </div>
+            ` : ''}
+            <div class="simulation-actions">
+              ${canStartSimulation ? `<button class="small-btn" type="button" data-simulation-action="start" data-simulation-business-id="${escapeHtml(business.id)}">Start Pro Simulation</button>` : ''}
+              ${hasSimulation ? `<button class="small-btn" type="button" data-simulation-action="advance" data-simulation-business-id="${escapeHtml(business.id)}" ${canAdvanceSimulation ? '' : 'disabled'}>Advance to Renewal</button>` : ''}
+              ${hasSimulation ? `<button class="small-btn" type="button" data-simulation-action="finish" data-simulation-business-id="${escapeHtml(business.id)}">Finish Simulation</button>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="section">
           <h3>Recent Feedback</h3>
           <div class="list">
             ${recentFeedback.length ? recentFeedback.map((feedback) => `
@@ -973,6 +1080,15 @@
       if (button) openDetail(button.dataset.businessId);
     });
     drawerEl.addEventListener('click', (event) => {
+      const simulationButton = event.target.closest('[data-simulation-action]');
+      if (simulationButton) {
+        runBillingSimulation(
+          simulationButton.dataset.simulationAction,
+          simulationButton.dataset.simulationBusinessId,
+          simulationButton
+        );
+        return;
+      }
       const button = event.target.closest('[data-qr-location-id]');
       if (!button) return;
       generateAdminQrSign(button.dataset.qrBusinessId, button.dataset.qrLocationId);
