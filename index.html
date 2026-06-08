@@ -1391,6 +1391,23 @@
 		  background: color-mix(in oklab, var(--ff-brand-1) 12%, var(--ff-surface));
 		  transform: translateY(-1px);
 		}
+		.plan-option.is-current {
+		  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ff-brand-1) 55%, transparent);
+		}
+		.plan-option.is-disabled {
+		  cursor: default;
+		  transform: none;
+		}
+		.plan-option-status {
+		  display: inline-flex !important;
+		  width: fit-content;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-1) 55%, var(--ff-border));
+		  border-radius: 999px;
+		  padding: 3px 8px;
+		  color: var(--ff-text) !important;
+		  font-size: 11px !important;
+		  font-weight: 800;
+		}
 		.plan-option input {
 		  position: absolute;
 		  top: 16px;
@@ -1540,6 +1557,54 @@
 		  gap: 10px;
 		  flex-wrap: wrap;
 		  margin-top: 16px;
+		}
+		.pricing-location-picker {
+		  display: none;
+		  margin-top: 18px;
+		  border-top: 1px solid var(--ff-border);
+		  padding-top: 18px;
+		}
+		.pricing-location-picker.open {
+		  display: block;
+		}
+		.pricing-location-picker h4 {
+		  margin: 0 0 6px;
+		  font-size: 17px;
+		}
+		.pricing-location-picker p {
+		  margin: 0 0 12px;
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  line-height: 1.45;
+		}
+		.pricing-location-list {
+		  display: grid;
+		  gap: 8px;
+		}
+		.pricing-location-row {
+		  display: flex;
+		  justify-content: space-between;
+		  align-items: center;
+		  gap: 12px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 8px;
+		  padding: 10px 12px;
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		}
+		.pricing-location-row button {
+		  white-space: nowrap;
+		}
+		.pricing-location-row.is-selected {
+		  border-color: color-mix(in oklab, var(--ff-brand-1) 72%, var(--ff-border));
+		  background: color-mix(in oklab, var(--ff-brand-1) 10%, var(--ff-surface));
+		}
+		.pending-plan-note {
+		  border-left: 3px solid var(--ff-brand-1);
+		  padding: 8px 10px;
+		  background: color-mix(in oklab, var(--ff-brand-1) 9%, var(--ff-surface));
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  line-height: 1.4;
 		}
 		
 		.btn[disabled], .btn:disabled, .submit-btn[disabled], .submit-btn:disabled,
@@ -2560,6 +2625,11 @@
 	      <button class="pricing-modal-close" type="button" onclick="closePricingModal()" aria-label="Close">×</button>
 	    </div>
 	    <div id="pricingModalOptions" class="plan-options" role="radiogroup" aria-label="Pricing plans"></div>
+	    <div id="pricingLocationPicker" class="pricing-location-picker">
+	      <h4 id="pricingLocationPickerTitle">Choose locations to deactivate</h4>
+	      <p id="pricingLocationPickerIntro"></p>
+	      <div id="pricingLocationList" class="pricing-location-list"></div>
+	    </div>
 	    <div class="pricing-modal-actions">
 	      <button class="btn" type="button" onclick="closePricingModal()">Cancel</button>
 	      <button id="pricingModalContinue" class="btn-primary" type="button" onclick="confirmPricingModal()">Continue</button>
@@ -2607,6 +2677,9 @@
 			};
 			let pricingModalContext = 'signup';
 			let pricingModalSelectedTier = 'free';
+			let pricingModalSelectedLocations = new Set();
+			let pricingModalPendingAction = null;
+			let subscriptionPricesLoaded = false;
 			let signupPlanConfirmed = false;
 
 			function getPricingTier(key) {
@@ -2617,8 +2690,8 @@
 			  return getPricingTier(currentUser?.pricingTier || 'free');
 			}
 
-			function getLocationCount() {
-			  return Object.keys(currentUser?.locations || {}).length;
+			function getActiveLocationCount() {
+			  return Object.values(currentUser?.locations || {}).filter((location) => location.is_active !== false).length;
 			}
 
 			function formatLocationLimit(limit) {
@@ -2641,28 +2714,184 @@
 			  return labels[status] || labels.none;
 			}
 
+			function escapePricingHtml(value) {
+			  return String(value ?? '')
+			    .replaceAll('&', '&amp;')
+			    .replaceAll('<', '&lt;')
+			    .replaceAll('>', '&gt;')
+			    .replaceAll('"', '&quot;')
+			    .replaceAll("'", '&#039;');
+			}
+
+			function formatPlanDate(value) {
+			  if (!value) return '';
+			  try {
+			    return new Intl.DateTimeFormat('en-GB', {
+			      day: 'numeric',
+			      month: 'long',
+			      year: 'numeric'
+			    }).format(new Date(value));
+			  } catch {
+			    return '';
+			  }
+			}
+
+			function formatStripePlanPrice(price) {
+			  if (!price || !Number.isFinite(price.unitAmount)) return 'Price unavailable';
+			  const amount = new Intl.NumberFormat('en-GB', {
+			    style: 'currency',
+			    currency: String(price.currency || 'gbp').toUpperCase()
+			  }).format(price.unitAmount / 100);
+			  const interval = price.intervalCount > 1
+			    ? `${price.intervalCount} ${price.interval}s`
+			    : price.interval;
+			  return interval ? `${amount} / ${interval}` : amount;
+			}
+
+			async function loadSubscriptionPrices() {
+			  if (subscriptionPricesLoaded) return;
+			  subscriptionPricesLoaded = true;
+			  try {
+			    const response = await fetch(`${SUPABASE_URL}/functions/v1/get-subscription-prices`, {
+			      headers: {
+			        'apikey': SUPABASE_ANON_KEY,
+			        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+			      }
+			    });
+			    const body = await response.json().catch(() => ({}));
+			    if (!response.ok || !body.prices) throw new Error(body.error || 'Could not load prices');
+			    for (const tierKey of ['growth', 'pro']) {
+			      if (body.prices[tierKey]) {
+			        PRICING_TIERS[tierKey].stripePrice = body.prices[tierKey];
+			        PRICING_TIERS[tierKey].priceLabel = formatStripePlanPrice(body.prices[tierKey]);
+			      }
+			    }
+			    renderPricingModalOptions();
+			  } catch (error) {
+			    console.warn('Subscription prices unavailable', error);
+			  }
+			}
+
+			function getPendingActionDelta() {
+			  return pricingModalPendingAction ? 1 : 0;
+			}
+
+			function getRequiredDeactivationCount(tierKey) {
+			  const limit = getPricingTier(tierKey).locationLimit;
+			  if (limit === Infinity) return 0;
+			  return Math.max(0, getActiveLocationCount() + getPendingActionDelta() - limit);
+			}
+
+			function getEligibleDeactivationLocations() {
+			  const activatingId = pricingModalPendingAction?.type === 'activate'
+			    ? pricingModalPendingAction.locationId
+			    : null;
+			  return Object.entries(currentUser?.locations || {})
+			    .filter(([id, location]) => location.is_active !== false || id === activatingId)
+			    .map(([id, location]) => ({ id, ...location }));
+			}
+
 			function renderPricingModalOptions() {
 			  const container = document.getElementById('pricingModalOptions');
 			  if (!container) return;
+			  const currentTierKey = pricingModalContext.startsWith('signup') ? null : (currentUser?.pricingTier || 'free');
+			  const pendingTierKey = pricingModalContext.startsWith('signup') ? null : currentUser?.pendingPricingTier;
+			  const isComped = !pricingModalContext.startsWith('signup') && currentUser?.subscriptionComped === true;
 			  container.innerHTML = Object.values(PRICING_TIERS).map((tier) => {
 			    const checked = tier.key === pricingModalSelectedTier ? 'checked' : '';
 			    const selectedClass = tier.key === pricingModalSelectedTier ? ' is-selected' : '';
+			    const currentClass = tier.key === currentTierKey ? ' is-current' : '';
+			    const disabledClass = isComped ? ' is-disabled' : '';
 			    const features = (tier.features || []).map((feature) => `<li>${feature}</li>`).join('');
+			    const status = tier.key === currentTierKey
+			      ? '<span class="plan-option-status">Current plan</span>'
+			      : tier.key === pendingTierKey
+			        ? `<span class="plan-option-status">Starts ${escapePricingHtml(formatPlanDate(currentUser?.planChangeEffectiveAt))}</span>`
+			        : '';
 			    return `
-			      <label class="plan-option${selectedClass}">
-			        <input type="radio" name="pricingModalTier" value="${tier.key}" ${checked} onchange="selectPricingModalTier('${tier.key}')">
+			      <label class="plan-option${selectedClass}${currentClass}${disabledClass}">
+			        <input type="radio" name="pricingModalTier" value="${tier.key}" ${checked} ${isComped ? 'disabled' : ''} onchange="selectPricingModalTier('${tier.key}')">
 			        <strong class="plan-option-title">${tier.label}</strong>
+			        ${status}
 			        <span class="plan-option-price">${tier.priceLabel}</span>
 			        <span class="plan-option-note">${tier.summary}</span>
 			        <ul class="plan-feature-list">${features}</ul>
 			      </label>
 			    `;
 			  }).join('');
+			  renderPricingLocationPicker();
 			}
 
 			function selectPricingModalTier(tierKey) {
 			  pricingModalSelectedTier = getPricingTier(tierKey).key;
+			  const pendingMatches = currentUser?.pendingPricingTier === pricingModalSelectedTier;
+			  pricingModalSelectedLocations = new Set(
+			    pendingMatches
+			      ? Object.entries(currentUser?.locations || {})
+			          .filter(([, location]) => location.pending_deactivation_at)
+			          .map(([id]) => id)
+			      : []
+			  );
 			  renderPricingModalOptions();
+			}
+
+			function togglePricingLocationSelection(locationId) {
+			  if (pricingModalSelectedLocations.has(locationId)) {
+			    pricingModalSelectedLocations.delete(locationId);
+			  } else {
+			    const required = getRequiredDeactivationCount(pricingModalSelectedTier);
+			    if (pricingModalSelectedLocations.size >= required) return;
+			    pricingModalSelectedLocations.add(locationId);
+			  }
+			  renderPricingLocationPicker();
+			}
+
+			function renderPricingLocationPicker() {
+			  const picker = document.getElementById('pricingLocationPicker');
+			  const intro = document.getElementById('pricingLocationPickerIntro');
+			  const list = document.getElementById('pricingLocationList');
+			  const continueBtn = document.getElementById('pricingModalContinue');
+			  if (!picker || !intro || !list) return;
+
+			  const required = pricingModalContext.startsWith('signup') || currentUser?.subscriptionComped
+			    ? 0
+			    : getRequiredDeactivationCount(pricingModalSelectedTier);
+			  if (continueBtn && !pricingModalContext.startsWith('signup') && !currentUser?.subscriptionComped) {
+			    continueBtn.textContent = currentUser?.pendingPricingTier && pricingModalSelectedTier === currentUser?.pricingTier
+			      ? 'Cancel scheduled change'
+			      : pricingModalSelectedTier === currentUser?.pricingTier
+			        ? 'Done'
+			        : getPricingTier(pricingModalSelectedTier).locationLimit < getCurrentPricingTier().locationLimit
+			          ? 'Schedule plan change'
+			          : 'Continue';
+			  }
+			  if (!required) {
+			    picker.classList.remove('open');
+			    list.innerHTML = '';
+			    if (continueBtn) continueBtn.disabled = false;
+			    return;
+			  }
+
+			  for (const id of [...pricingModalSelectedLocations]) {
+			    if (!getEligibleDeactivationLocations().some((location) => location.id === id)) {
+			      pricingModalSelectedLocations.delete(id);
+			    }
+			  }
+			  const effectiveDate = formatPlanDate(currentUser?.planChangeEffectiveAt) || 'your next renewal date';
+			  intro.textContent = `Select exactly ${required} location${required === 1 ? '' : 's'}. They will remain active until ${effectiveDate}, when the new plan begins.`;
+			  list.innerHTML = getEligibleDeactivationLocations().map((location) => {
+			    const selected = pricingModalSelectedLocations.has(location.id);
+			    return `
+			      <div class="pricing-location-row${selected ? ' is-selected' : ''}">
+			        <span>${escapePricingHtml(location.name)}</span>
+			        <button class="btn" type="button" onclick="togglePricingLocationSelection('${location.id}')">
+			          ${selected ? 'Keep active' : 'Deactivate at renewal'}
+			        </button>
+			      </div>
+			    `;
+			  }).join('');
+			  picker.classList.add('open');
+			  if (continueBtn) continueBtn.disabled = pricingModalSelectedLocations.size !== required;
 			}
 
 			function setSignupSelectedPlan(tierKey) {
@@ -2680,19 +2909,42 @@
 			  const currentTier = context.startsWith('signup')
 			    ? (document.getElementById('signupPricingTier')?.value || 'free')
 			    : (currentUser?.pricingTier || 'free');
-			  pricingModalSelectedTier = getPricingTier(currentTier).key;
+			  pricingModalSelectedTier = context === 'pending-location-action'
+			    ? getPricingTier(currentUser?.pendingPricingTier || currentTier).key
+			    : getPricingTier(currentTier).key;
 			  if (context === 'limit') {
 			    pricingModalSelectedTier = currentTier === 'free' ? 'growth' : currentTier === 'growth' ? 'pro' : 'pro';
 			  }
+			  pricingModalSelectedLocations = new Set(
+			    currentUser?.pendingPricingTier === pricingModalSelectedTier
+			      ? Object.entries(currentUser?.locations || {})
+			          .filter(([, location]) => location.pending_deactivation_at)
+			          .map(([id]) => id)
+			      : []
+			  );
 
-			  if (title) title.textContent = context === 'limit' ? 'Upgrade to add more locations' : 'Choose your plan';
+			  if (title) title.textContent = context === 'limit'
+			    ? 'Upgrade to add more locations'
+			    : context === 'pending-location-action'
+			      ? 'Keep your scheduled plan change valid'
+			      : context.startsWith('signup')
+			        ? 'Choose your plan'
+			        : 'Upgrade / Change Plan';
 			  if (intro) {
-			    intro.textContent = context === 'limit'
+			    intro.textContent = currentUser?.subscriptionComped && !context.startsWith('signup')
+			      ? 'This complimentary plan is managed by FlashFeedback support.'
+			      : context === 'limit'
 			      ? 'Your current plan has reached its location limit. Choose a plan with more room to keep growing.'
+			      : context === 'pending-location-action'
+			        ? 'Choose one more location to deactivate at renewal before continuing.'
 			      : 'Pick the plan that matches how many locations you want to manage.';
 			  }
-			  if (continueBtn) continueBtn.textContent = context === 'limit' ? 'Continue' : context === 'signup-submit' ? 'Create account' : 'Use selected plan';
+			  if (continueBtn) {
+			    continueBtn.style.display = currentUser?.subscriptionComped && !context.startsWith('signup') ? 'none' : '';
+			    continueBtn.textContent = context === 'signup-submit' ? 'Create account' : 'Continue';
+			  }
 			  renderPricingModalOptions();
+			  loadSubscriptionPrices();
 			  modal?.classList.add('open');
 			  modal?.setAttribute('aria-hidden', 'false');
 			}
@@ -2701,6 +2953,7 @@
 			  const modal = document.getElementById('pricingModal');
 			  modal?.classList.remove('open');
 			  modal?.setAttribute('aria-hidden', 'true');
+			  pricingModalPendingAction = null;
 			}
 
 			async function confirmPricingModal() {
@@ -2715,10 +2968,29 @@
 			    return;
 			  }
 
-			  closePricingModal();
-			  if (selected.key !== currentUser?.pricingTier && selected.checkout) {
-			    await startSubscriptionCheckout(selected.key);
+			  if (currentUser?.subscriptionComped) {
+			    closePricingModal();
+			    return;
 			  }
+
+			  if (selected.key === currentUser?.pricingTier && !currentUser?.pendingPricingTier) {
+			    closePricingModal();
+			    return;
+			  }
+
+			  const required = getRequiredDeactivationCount(selected.key);
+			  if (pricingModalSelectedLocations.size !== required) {
+			    renderPricingLocationPicker();
+			    return;
+			  }
+
+			  if (currentUser?.pricingTier === 'free' && selected.checkout) {
+			    closePricingModal();
+			    await startSubscriptionCheckout(selected.key);
+			    return;
+			  }
+
+			  await changeSubscriptionPlan(selected.key);
 			}
 
 			function getPlanReturnUrl() {
@@ -2777,12 +3049,89 @@
 			  return true;
 			}
 
+			async function changeSubscriptionPlan(tierKey) {
+			  if (!currentUser?.businessId) return false;
+			  const pendingAction = pricingModalPendingAction;
+			  const continueBtn = document.getElementById('pricingModalContinue');
+			  if (continueBtn) continueBtn.disabled = true;
+
+			  try {
+			    const { data: { session } } = await supabase.auth.getSession();
+			    if (!session?.access_token) throw new Error('Please sign in again to change your plan.');
+
+			    const response = await fetch(`${SUPABASE_URL}/functions/v1/change-subscription-plan`, {
+			      method: 'POST',
+			      headers: {
+			        'Content-Type': 'application/json',
+			        'apikey': SUPABASE_ANON_KEY,
+			        'Authorization': `Bearer ${session.access_token}`
+			      },
+			      body: JSON.stringify({
+			        business_id: currentUser.businessId,
+			        tier: tierKey,
+			        deactivate_location_ids: [...pricingModalSelectedLocations],
+			        reserved_active_delta: pendingAction ? 1 : 0,
+			        activating_location_id: pendingAction?.type === 'activate' ? pendingAction.locationId : null
+			      })
+			    });
+			    const body = await response.json().catch(() => ({}));
+			    if (!response.ok) throw new Error(body.error || 'Could not change your plan.');
+
+			    if (body.action === 'downgrade_scheduled') {
+			      currentUser.pendingPricingTier = body.pendingTier;
+			      currentUser.planChangeEffectiveAt = body.effectiveAt;
+			      currentUser.stripeSubscriptionScheduleId = body.stripeSubscriptionScheduleId || null;
+			      const scheduled = new Set(body.scheduledLocationIds || []);
+			      Object.entries(currentUser.locations || {}).forEach(([id, location]) => {
+			        location.pending_deactivation_at = scheduled.has(id) ? body.effectiveAt : null;
+			      });
+			    } else if (body.action === 'pending_change_canceled') {
+			      currentUser.pendingPricingTier = null;
+			      currentUser.planChangeEffectiveAt = null;
+			      currentUser.stripeSubscriptionScheduleId = null;
+			      Object.values(currentUser.locations || {}).forEach((location) => {
+			        location.pending_deactivation_at = null;
+			      });
+			    }
+
+			    closePricingModal();
+			    if (pendingAction?.type === 'add') {
+			      await addLocation(pendingAction.name, true);
+			    } else if (pendingAction?.type === 'activate') {
+			      await toggleLocationActive(pendingAction.locationId, true, true);
+			    }
+
+			    if (body.invoiceUrl) {
+			      window.location.href = body.invoiceUrl;
+			      return true;
+			    }
+
+			    renderPlanPanel();
+			    updateLocationsList();
+			    const message = body.action === 'downgrade_scheduled'
+			      ? `Your plan will change on ${formatPlanDate(body.effectiveAt)}.`
+			      : body.action === 'pending_change_canceled'
+			        ? 'Your scheduled plan change has been canceled.'
+			        : body.action === 'upgrade_payment_pending'
+			          ? 'Complete the Stripe payment to activate your upgrade.'
+			          : 'Your plan change is being processed.';
+			    window.showToast ? window.showToast(message, 'success') : alert(message);
+			    return true;
+			  } catch (error) {
+			    console.error('Plan change failed', error);
+			    window.showToast ? window.showToast(error.message || 'Could not change your plan.', 'error') : alert(error.message || 'Could not change your plan.');
+			    return false;
+			  } finally {
+			    if (continueBtn) continueBtn.disabled = false;
+			  }
+			}
+
 			function renderPlanPanel() {
 			  const panel = document.getElementById('settingsPlanPanel');
 			  if (!panel || !currentUser) return;
 
 			  const tier = getCurrentPricingTier();
-			  const count = getLocationCount();
+			  const count = getActiveLocationCount();
 			  const status = currentUser.subscriptionStatus || 'none';
 			  const isComped = currentUser.subscriptionComped === true;
 			  const isTestMode = currentUser.subscriptionTestMode === true;
@@ -2792,10 +3141,11 @@
 			  const allowanceText = tier.locationLimit === Infinity
 			    ? 'Unlimited locations'
 			    : `${tier.locationLimit} location${tier.locationLimit === 1 ? '' : 's'} included`;
-			  const upgradeButtons = Object.values(PRICING_TIERS)
-			    .filter((candidate) => candidate.checkout && candidate.key !== tier.key)
-			    .map((candidate) => `<button class="btn" type="button" onclick="startSubscriptionCheckout('${candidate.key}')">${tier.key === 'free' ? 'Upgrade to' : 'Switch to'} ${candidate.label}</button>`)
-			    .join('');
+			  const pendingTier = currentUser.pendingPricingTier ? getPricingTier(currentUser.pendingPricingTier) : null;
+			  const pendingDate = formatPlanDate(currentUser.planChangeEffectiveAt);
+			  const pendingMessage = pendingTier
+			    ? `<div class="pending-plan-note">Your plan will change to <strong>${pendingTier.label}</strong>${pendingDate ? ` on ${pendingDate}` : ' at your next renewal'}. Until then, your current plan and limits remain active.</div>`
+			    : '';
 
 			  panel.innerHTML = `
 			    <div class="plan-summary">
@@ -2808,7 +3158,10 @@
 			    <div class="settings-helper">${paidTier ? statusText : 'Upgrade anytime when you need more locations.'}</div>
 			    ${isComped ? '<div class="settings-helper">This account has a complimentary paid plan.</div>' : ''}
 			    ${isTestMode ? '<div class="settings-helper">This account is using a Stripe test subscription. No real payment was collected.</div>' : ''}
-			    <div class="plan-actions">${upgradeButtons || '<span class="settings-helper">You are already on the highest plan.</span>'}</div>
+			    ${pendingMessage}
+			    <div class="plan-actions">
+			      <button class="btn" type="button" onclick="openPricingModal('settings')">${isComped ? 'View Plan' : 'Upgrade / Change Plan'}</button>
+			    </div>
 			  `;
 			}
 
@@ -2876,6 +3229,7 @@
 		    map[loc.id] = {
 		      name: loc.name,
 		      is_active: (loc.is_active === false ? false : true),
+		      pending_deactivation_at: loc.pending_deactivation_at || null,
 		      feedback: []
 		    };
 		  }
@@ -3617,6 +3971,9 @@
 			  subscriptionStatus: 'none',
 			  subscriptionComped: false,
 			  subscriptionTestMode: false,
+			  pendingPricingTier: null,
+			  planChangeEffectiveAt: null,
+			  stripeSubscriptionScheduleId: null,
 			  locations: buildLocationsShape([loc], [])
 			};
 			currentLocation = loc.id;
@@ -3744,6 +4101,9 @@
 			  subscriptionStatus: business.subscription_status || 'none',
 			  subscriptionComped: business.subscription_comped === true,
 			  subscriptionTestMode: business.subscription_test_mode === true,
+			  pendingPricingTier: business.pending_pricing_tier || null,
+			  planChangeEffectiveAt: business.plan_change_effective_at || null,
+			  stripeSubscriptionScheduleId: business.stripe_subscription_schedule_id || null,
 			  locations: buildLocationsShape(locRows, fbRows)
 			};
 			renderBranding();		  
@@ -4825,18 +5185,28 @@
 		}
 
 
-        async function addLocation() {
+        async function addLocation(nameOverride = null, bypassPendingCheck = false) {
 		  if (!currentUser) return;
 		
 		  const input = document.getElementById('newLocationInput');
-		  const name = (input?.value || '').trim();
+		  const name = String(nameOverride ?? input?.value ?? '').trim();
 		  if (!name) return;
 
 		  const tier = getCurrentPricingTier();
-		  const locationCount = getLocationCount();
+		  const locationCount = getActiveLocationCount();
 		  if (isTierAtLocationLimit(tier.key, locationCount)) {
 		    renderPlanPanel();
 		    openPricingModal('limit');
+		    return;
+		  }
+
+		  const pendingTier = currentUser.pendingPricingTier
+		    ? getPricingTier(currentUser.pendingPricingTier)
+		    : null;
+		  if (!bypassPendingCheck && pendingTier && pendingTier.locationLimit !== Infinity &&
+		      locationCount + 1 > pendingTier.locationLimit) {
+		    pricingModalPendingAction = { type: 'add', name };
+		    openPricingModal('pending-location-action');
 		    return;
 		  }
 		
@@ -4855,6 +5225,7 @@
 			currentUser.locations[newLoc.id] = {
 			  name: newLoc.name,
 			  is_active: (newLoc.is_active === false ? false : true),
+			  pending_deactivation_at: newLoc.pending_deactivation_at || null,
 			  feedback: []
 			};
 
@@ -4905,8 +5276,27 @@
 		  return false; // prevent link navigation
 		}
 							
-		async function toggleLocationActive(id, makeActive) {
+		async function toggleLocationActive(id, makeActive, bypassPendingCheck = false) {
 		  const next = !!makeActive;
+
+		  if (next && !bypassPendingCheck) {
+		    const tier = getCurrentPricingTier();
+		    const activeCount = getActiveLocationCount();
+		    if (isTierAtLocationLimit(tier.key, activeCount)) {
+		      renderPlanPanel();
+		      openPricingModal('limit');
+		      return false;
+		    }
+		    const pendingTier = currentUser?.pendingPricingTier
+		      ? getPricingTier(currentUser.pendingPricingTier)
+		      : null;
+		    if (pendingTier && pendingTier.locationLimit !== Infinity &&
+		        activeCount + 1 > pendingTier.locationLimit) {
+		      pricingModalPendingAction = { type: 'activate', locationId: id };
+		      openPricingModal('pending-location-action');
+		      return false;
+		    }
+		  }
 		
 		  // --- Update the in-memory state used by the app (write to both names just in case) ---
 		  try {
@@ -4923,11 +5313,14 @@
 		
 		  // --- Persist to DB; if it fails, roll back UI + memory for this row only ---
 		  try {
+		    const updatePatch = next
+		      ? { is_active: true }
+		      : { is_active: false, pending_deactivation_at: null };
 		    const { data, error } = await supabase
 		      .from('locations')
-		      .update({ is_active: next })
+		      .update(updatePatch)
 		      .eq('id', id)
-		      .select('id, is_active')
+		      .select('id, is_active, pending_deactivation_at')
 		      .single();
 		
 		    if (error) throw error;
@@ -4939,10 +5332,13 @@
 		    }
 		    if (typeof currentUser !== 'undefined' && currentUser?.locations?.[id]) {
 		      currentUser.locations[id].is_active = confirmed;
+		      currentUser.locations[id].pending_deactivation_at = data?.pending_deactivation_at || null;
 		    }
 		
 		    // Update the one row again from the confirmed value (no list rebuild)
 		    applyLocationRowState(id, confirmed);
+		    renderPlanPanel();
+		    updateLocationsList();
 		
 		    try { showToast?.(confirmed ? 'Location activated.' : 'Location deactivated.', 'success'); } catch {}
 		  } catch (e) {
@@ -4986,7 +5382,12 @@
 		      div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
 		
 		      // name + (optional) Inactive badge
-		      var nameHTML = '<span class="location-name">' + location.name + '</span>';
+		      var pendingDate = location.pending_deactivation_at ? formatPlanDate(location.pending_deactivation_at) : '';
+		      var nameHTML = '<span class="location-name">' + location.name +
+		        (pendingDate
+		          ? ' <span class="badge" style="margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.55); border-radius:6px; font-size:12px; opacity:.95;">Deactivates ' + pendingDate + '</span>'
+		          : '') +
+		        '</span>';
 		      if (!isActive) {
 		        nameHTML = '<span class="location-name">' + location.name +
 		          ' <span class="badge" style="margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;">Inactive</span>' +
@@ -5024,7 +5425,12 @@
 		      div.setAttribute('data-location-id', id);
 		
 		      // name + (optional) Inactive badge
-		      var nameHTML = '<span class="location-name">' + location.name + '</span>';
+		      var pendingDate = location.pending_deactivation_at ? formatPlanDate(location.pending_deactivation_at) : '';
+		      var nameHTML = '<span class="location-name">' + location.name +
+		        (pendingDate
+		          ? ' <span class="badge" style="margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.55); border-radius:6px; font-size:12px; opacity:.95;">Deactivates ' + pendingDate + '</span>'
+		          : '') +
+		        '</span>';
 		      if (!isActive) {
 		        nameHTML = '<span class="location-name">' + location.name +
 		          ' <span class="badge" style="margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;">Inactive</span>' +
@@ -5490,7 +5896,9 @@
 		  openPricingModal,
 		  closePricingModal,
 		  confirmPricingModal,
-		  selectPricingModalTier
+		  selectPricingModalTier,
+		  togglePricingLocationSelection,
+		  changeSubscriptionPlan
 		});
 
 		async function loadSettings() {
@@ -5499,7 +5907,7 @@
 		  // Pull fresh business row (ensures we reflect external changes too)
 		  const { data: biz, error } = await supabase
 		    .from('businesses')
-		    .select('id,name,owner_name,timezone,default_location_id,logo_url,industry,business_type,email_alerts_enabled,pricing_tier,subscription_status,subscription_comped,subscription_test_mode')
+		    .select('id,name,owner_name,timezone,default_location_id,logo_url,industry,business_type,email_alerts_enabled,pricing_tier,subscription_status,subscription_comped,subscription_test_mode,pending_pricing_tier,plan_change_effective_at,stripe_subscription_schedule_id')
 		    .eq('id', currentUser.businessId)
 		    .single();
 		  if (error) {
@@ -5520,6 +5928,24 @@
 		  currentUser.subscriptionStatus = biz.subscription_status || 'none';
 		  currentUser.subscriptionComped = biz.subscription_comped === true;
 		  currentUser.subscriptionTestMode = biz.subscription_test_mode === true;
+		  currentUser.pendingPricingTier = biz.pending_pricing_tier || null;
+		  currentUser.planChangeEffectiveAt = biz.plan_change_effective_at || null;
+		  currentUser.stripeSubscriptionScheduleId = biz.stripe_subscription_schedule_id || null;
+
+		  const { data: freshLocations, error: locationsError } = await supabase
+		    .from('locations')
+		    .select('id,name,is_active,pending_deactivation_at')
+		    .eq('business_id', currentUser.businessId);
+		  if (!locationsError) {
+		    for (const location of freshLocations || []) {
+		      if (!currentUser.locations[location.id]) {
+		        currentUser.locations[location.id] = { name: location.name, feedback: [] };
+		      }
+		      currentUser.locations[location.id].name = location.name;
+		      currentUser.locations[location.id].is_active = location.is_active !== false;
+		      currentUser.locations[location.id].pending_deactivation_at = location.pending_deactivation_at || null;
+		    }
+		  }
 		
 		  // Populate controls
 		  document.getElementById('settingsOwnerName').value = currentUser.ownerName || '';
@@ -5535,6 +5961,7 @@
 		
 		  // Locations dropdown in Settings
 		  updateLocationSelects();
+		  updateLocationsList();
 		  const sel = document.getElementById('settingsDefaultLocationSelect');
 		  if (sel && currentUser.defaultLocationId) {
 		    try { sel.value = currentUser.defaultLocationId; } catch {}
