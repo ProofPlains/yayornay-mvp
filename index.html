@@ -1367,6 +1367,39 @@
 		  color: var(--ff-text-muted);
 		}
 
+		.history-limit-card {
+		  display: flex;
+		  align-items: center;
+		  justify-content: space-between;
+		  gap: 14px;
+		  flex-wrap: wrap;
+		  margin: 0 0 12px;
+		  padding: 14px 16px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-1) 48%, var(--ff-border));
+		  border-radius: 12px;
+		  background: color-mix(in oklab, var(--ff-brand-1) 11%, var(--ff-surface));
+		}
+
+		.history-limit-copy {
+		  flex: 1 1 280px;
+		  color: var(--ff-text);
+		  line-height: 1.45;
+		}
+
+		.history-limit-copy strong {
+		  display: block;
+		  margin-bottom: 2px;
+		}
+
+		.history-limit-copy span {
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		}
+
+		.history-limit-card .btn {
+		  flex: 0 0 auto;
+		}
+
 		.plan-options {
 		  display: grid;
 		  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -2336,6 +2369,7 @@
 				    </label>
 				  </div>
 				
+				  <div id="feedbackHistoryNotice" class="history-limit-card" style="display:none;"></div>
 				  <div id="recentFeedbackList"></div>
 				  <div id="recentPagination" style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px;">
 				    <button id="recentPrev" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">‹ Prev</button>
@@ -2651,15 +2685,15 @@
 			window.supabase = supabase; // expose the client for console/debug use
 
 			const PRICING_TIERS = {
-			  free: { key: 'free', label: 'Free', priceLabel: 'Free', locationLimit: 1, checkout: false, summary: '1 location to get started.', features: ['1 location', 'Private feedback dashboard', 'QR code generation'] },
+			  free: { key: 'free', label: 'Free', priceLabel: 'Free', locationLimit: 1, checkout: false, summary: '1 location to get started.', features: ['1 location', '30 days of feedback history', 'Private feedback dashboard', 'QR code generation'] },
 			  growth: {
 			    key: 'growth',
-			    label: 'Growth Tier',
+			    label: 'Growth',
 			    priceLabel: 'Paid plan',
 			    locationLimit: 5,
 			    checkout: true,
 			    summary: 'Up to 5 locations.',
-			    features: ['Up to 5 locations', 'Private feedback dashboard', 'QR code generation'],
+			    features: ['Up to 5 locations', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
 			    sandboxPriceId: 'price_1TaajGFIxmPNhgh2Purgftxq',
 			    productionPriceId: 'price_1TabHTFNq4Xp479bhvLoemuU'
 			  },
@@ -2670,7 +2704,7 @@
 			    locationLimit: Infinity,
 			    checkout: true,
 			    summary: 'Unlimited locations.',
-			    features: ['Unlimited locations', 'Private feedback dashboard', 'QR code generation'],
+			    features: ['Unlimited locations', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
 			    sandboxPriceId: 'price_1TaaliFIxmPNhgh2psSx6s23',
 			    productionPriceId: 'price_1TabHQFNq4Xp479bH5NeGLYu'
 			  }
@@ -2740,6 +2774,49 @@
 			  } catch {
 			    return '';
 			  }
+			}
+
+			function defaultFeedbackHistoryEntitlement(tierKey = 'free') {
+			  const isLimited = getPricingTier(tierKey).key === 'free';
+			  return {
+			    tier: getPricingTier(tierKey).key,
+			    isLimited,
+			    limitDays: isLimited ? 30 : null,
+			    hiddenCount: 0
+			  };
+			}
+
+			function normalizeFeedbackHistoryResponse(body, tierKey = 'free') {
+			  const entitlement = body?.entitlement || {};
+			  const fallback = defaultFeedbackHistoryEntitlement(tierKey);
+			  return {
+			    feedback: Array.isArray(body?.feedback) ? body.feedback : [],
+			    entitlement: {
+			      tier: entitlement.tier || fallback.tier,
+			      isLimited: entitlement.isLimited === true,
+			      limitDays: Number.isFinite(Number(entitlement.limitDays)) ? Number(entitlement.limitDays) : fallback.limitDays,
+			      hiddenCount: Math.max(0, Number(entitlement.hiddenCount) || 0)
+			    }
+			  };
+			}
+
+			async function loadFeedbackHistoryForBusiness(businessId, tierKey = currentUser?.pricingTier || 'free') {
+			  if (!businessId) return normalizeFeedbackHistoryResponse({ feedback: [] }, tierKey);
+			  const { data: { session } } = await supabase.auth.getSession();
+			  if (!session?.access_token) throw new Error('Please sign in again to load feedback history.');
+
+			  const response = await fetch(`${SUPABASE_URL}/functions/v1/get-feedback-history`, {
+			    method: 'POST',
+			    headers: {
+			      'Content-Type': 'application/json',
+			      'apikey': SUPABASE_ANON_KEY,
+			      'Authorization': `Bearer ${session.access_token}`
+			    },
+			    body: JSON.stringify({ business_id: businessId })
+			  });
+			  const body = await response.json().catch(() => ({}));
+			  if (!response.ok) throw new Error(body.error || 'Could not load feedback history.');
+			  return normalizeFeedbackHistoryResponse(body, tierKey);
 			}
 
 			function formatStripePlanPrice(price) {
@@ -2920,6 +2997,8 @@
 			    : getPricingTier(currentTier).key;
 			  if (context === 'limit') {
 			    pricingModalSelectedTier = currentTier === 'free' ? 'growth' : currentTier === 'growth' ? 'pro' : 'pro';
+			  } else if (context === 'history-upgrade') {
+			    pricingModalSelectedTier = currentTier === 'free' ? 'growth' : currentTier;
 			  }
 			  pricingModalSelectedLocations = new Set(
 			    currentUser?.pendingPricingTier === pricingModalSelectedTier
@@ -2931,6 +3010,8 @@
 
 			  if (title) title.textContent = context === 'limit'
 			    ? 'Upgrade to add more locations'
+			    : context === 'history-upgrade'
+			      ? 'Unlock full feedback history'
 			    : context === 'pending-location-action'
 			      ? 'Keep your scheduled plan change valid'
 			      : context.startsWith('signup')
@@ -2941,6 +3022,8 @@
 			      ? 'This complimentary plan is managed by FlashFeedback support.'
 			      : context === 'limit'
 			      ? 'Your current plan has reached its location limit. Choose a plan with more room to keep growing.'
+			      : context === 'history-upgrade'
+			        ? 'Growth and Pro include unlimited feedback history, so you can see every response your customers have sent.'
 			      : context === 'pending-location-action'
 			        ? 'Choose one more location to deactivate at renewal before continuing.'
 			      : 'Pick the plan that matches how many locations you want to manage.';
@@ -3155,6 +3238,7 @@
 			    if (!targetTier || currentUser?.pricingTier === targetTier) {
 			      pendingUpgradePayment = null;
 			      try { sessionStorage.removeItem('ffPendingUpgradePayment'); } catch (_) {}
+			      await refreshFeedbackFromServer();
 			      renderPlanPanel();
 			      return true;
 			    }
@@ -3168,6 +3252,30 @@
 			  if (!pendingUpgradePayment?.url) return;
 			  window.open(pendingUpgradePayment.url, '_blank', 'noopener,noreferrer');
 			  setTimeout(() => refreshPlanAfterStripeChange(pendingUpgradePayment?.tier, 6), 2000);
+			}
+
+			async function handleSubscriptionReturn() {
+			  const urlParams = new URLSearchParams(window.location.search);
+			  const status = urlParams.get('subscription');
+			  if (!status || !currentUser?.businessId) return;
+
+			  const targetTier = urlParams.get('tier');
+			  if (status === 'success' && ['growth', 'pro'].includes(targetTier)) {
+			    const updated = await refreshPlanAfterStripeChange(targetTier, 8);
+			    const message = updated
+			      ? 'Your plan is active and your full feedback history is unlocked.'
+			      : 'Payment was received. Your plan is still updating; refresh shortly if older feedback is not visible yet.';
+			    window.showToast ? window.showToast(message, 'success') : alert(message);
+			  } else if (status === 'cancelled') {
+			    const message = 'Checkout was cancelled. Your current plan has not changed.';
+			    window.showToast ? window.showToast(message, 'error') : alert(message);
+			  }
+
+			  urlParams.delete('subscription');
+			  urlParams.delete('tier');
+			  urlParams.delete('session_id');
+			  const cleanQuery = urlParams.toString();
+			  history.replaceState({}, document.title, `${window.location.pathname}${cleanQuery ? '?' + cleanQuery : ''}`);
 			}
 
 			function renderPlanPanel() {
@@ -3185,6 +3293,7 @@
 			  const allowanceText = tier.locationLimit === Infinity
 			    ? 'Unlimited locations'
 			    : `${tier.locationLimit} location${tier.locationLimit === 1 ? '' : 's'} included`;
+			  const historyAllowanceText = tier.key === 'free' ? '30 days' : 'Unlimited';
 			  const pendingTier = currentUser.pendingPricingTier ? getPricingTier(currentUser.pendingPricingTier) : null;
 			  const pendingDate = formatPlanDate(currentUser.planChangeEffectiveAt);
 			  const pendingMessage = pendingTier
@@ -3205,6 +3314,7 @@
 			      <div class="plan-usage-grid">
 			        <div class="plan-usage-item"><span>Allowance</span><strong>${allowanceText}</strong></div>
 			        <div class="plan-usage-item"><span>Current usage</span><strong>${usageText}</strong></div>
+			        <div class="plan-usage-item"><span>Feedback history</span><strong>${historyAllowanceText}</strong></div>
 			      </div>
 			    </div>
 			    <div class="settings-helper">${paidTier ? statusText : 'Upgrade anytime when you need more locations.'}</div>
@@ -3674,6 +3784,7 @@
 		    const { data: { session } } = await supabase.auth.getSession();
 		    if (session?.user) {
 		      await hydrateAndShowDashboard(session.user);
+		      await handleSubscriptionReturn();
 		      showQrOrderReturnMessage();
 		      booted = true;
 		      return;
@@ -4027,6 +4138,9 @@
 			  pendingPricingTier: null,
 			  planChangeEffectiveAt: null,
 			  stripeSubscriptionScheduleId: null,
+			  feedbackHistoryEntitlement: defaultFeedbackHistoryEntitlement('free'),
+			  feedbackHistoryError: null,
+			  feedbackHistoryLoading: false,
 			  locations: buildLocationsShape([loc], [])
 			};
 			currentLocation = loc.id;
@@ -4131,13 +4245,23 @@
 		    locRows = [newLoc];
 		  }
 		
-		  // 4) Load feedback
-		  const { data: fbRows, error: fbErr } = await supabase
-		    .from('feedback')
-		    .select('*')
-		    .eq('business_id', business.id)
-		    .order('submitted_at', { ascending: true });
-		  if (fbErr) throw fbErr;
+		  // 4) Load feedback through the server-enforced history entitlement.
+		  let historyError = null;
+		  let historyResult;
+		  try {
+		    historyResult = await loadFeedbackHistoryForBusiness(
+		      business.id,
+		      business.pricing_tier || 'free'
+		    );
+		  } catch (error) {
+		    console.error('Feedback history load failed', error);
+		    historyError = error?.message || 'Feedback history could not be loaded.';
+		    historyResult = normalizeFeedbackHistoryResponse(
+		      { feedback: [] },
+		      business.pricing_tier || 'free'
+		    );
+		  }
+		  const fbRows = historyResult.feedback;
 		
 		  // 5) Set state
 		  currentUser = {
@@ -4157,6 +4281,9 @@
 			  pendingPricingTier: business.pending_pricing_tier || null,
 			  planChangeEffectiveAt: business.plan_change_effective_at || null,
 			  stripeSubscriptionScheduleId: business.stripe_subscription_schedule_id || null,
+			  feedbackHistoryEntitlement: historyResult.entitlement,
+			  feedbackHistoryError: historyError,
+			  feedbackHistoryLoading: false,
 			  locations: buildLocationsShape(locRows, fbRows)
 			};
 			renderBranding();		  
@@ -4180,8 +4307,6 @@
 		  updateFeedback();
 		}
 
-		  // pull fresh rows (if any changed while you were away)
-		  refreshFeedbackFromServer?.();
 		}
 
 		//loading animation helper
@@ -5149,7 +5274,65 @@
 		}
 
 
+		function renderFeedbackHistoryNotice() {
+		  const card = document.getElementById('feedbackHistoryNotice');
+		  if (!card) return;
+
+		  const historyError = currentUser?.feedbackHistoryError;
+		  if (currentView === 'admin' && currentUser && historyError) {
+		    const isLoading = currentUser.feedbackHistoryLoading === true;
+		    card.innerHTML = `
+		      <div class="history-limit-copy">
+		        <strong>Feedback history could not be loaded.</strong>
+		        <span>Your account is signed in, but your feedback is temporarily unavailable. Please try again.</span>
+		      </div>
+		      <button class="btn" type="button" onclick="retryFeedbackHistory()" ${isLoading ? 'disabled' : ''}>
+		        ${isLoading ? 'Trying again...' : 'Try again'}
+		      </button>
+		    `;
+		    card.style.display = 'flex';
+		    return;
+		  }
+
+		  const entitlement = currentUser?.feedbackHistoryEntitlement;
+		  const shouldShow = currentView === 'admin' && currentUser && entitlement?.isLimited === true;
+		  if (!shouldShow) {
+		    card.style.display = 'none';
+		    card.innerHTML = '';
+		    return;
+		  }
+
+		  const hiddenCount = Math.max(0, Number(entitlement.hiddenCount) || 0);
+		  const limitDays = Math.max(1, Number(entitlement.limitDays) || 30);
+		  const headline = hiddenCount > 0
+		    ? `You're viewing the last ${limitDays} days.`
+		    : `Your Free plan includes ${limitDays} days of feedback history.`;
+		  const detail = hiddenCount > 0
+		    ? `${hiddenCount} older response${hiddenCount === 1 ? '' : 's'} ${hiddenCount === 1 ? 'is' : 'are'} safely stored.`
+		    : 'Upgrade to Growth or Pro whenever you need unlimited history.';
+
+		  card.innerHTML = `
+		    <div class="history-limit-copy">
+		      <strong>${headline}</strong>
+		      <span>${detail}</span>
+		    </div>
+		    <button class="btn" type="button" onclick="openPricingModal('history-upgrade')">Unlock full history</button>
+		  `;
+		  card.style.display = 'flex';
+		}
+
+		async function retryFeedbackHistory() {
+		  if (!currentUser?.businessId || currentUser.feedbackHistoryLoading) return false;
+		  currentUser.feedbackHistoryLoading = true;
+		  renderFeedbackHistoryNotice();
+		  const loaded = await refreshFeedbackFromServer();
+		  currentUser.feedbackHistoryLoading = false;
+		  renderFeedbackHistoryNotice();
+		  return loaded;
+		}
+
         function updateFeedback() {
+			    renderFeedbackHistoryNotice();
                 var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
 			    var selectedLocation = document.getElementById('FeedbackLocationSelect')?.value || 'all';
 			    var allFeedback = [];
@@ -5927,6 +6110,7 @@
 		  toggleLocationActive,
 		  updateLocationsList,
 		  updateFeedback,
+		  retryFeedbackHistory,
 		  logout,
 		  showForgotPassword,
 		  handleRequestReset,
@@ -6150,17 +6334,22 @@
 		// ---- Optional: Refresh feedback from server after login ----
 		async function refreshFeedbackFromServer() {
 		  if (!currentUser?.businessId) return;
-		
-		  const { data: rows, error } = await supabase
-		    .from('feedback')
-		    .select('location_id, sentiment, comments, submitted_at')
-		    .eq('business_id', currentUser.businessId)
-		    .order('submitted_at', { ascending: true });
-		
-		  if (error) {
-		    console.error(error);
-		    return;
+
+		  let historyResult;
+		  try {
+		    historyResult = await loadFeedbackHistoryForBusiness(
+		      currentUser.businessId,
+		      currentUser.pricingTier || 'free'
+		    );
+		  } catch (error) {
+		    console.error('Feedback history refresh failed', error);
+		    currentUser.feedbackHistoryError = error?.message || 'Feedback history could not be loaded.';
+		    renderFeedbackHistoryNotice();
+		    return false;
 		  }
+		  const rows = historyResult.feedback;
+		  currentUser.feedbackHistoryEntitlement = historyResult.entitlement;
+		  currentUser.feedbackHistoryError = null;
 		
 		  // Reset feedback arrays
 		  for (const locId of Object.keys(currentUser.locations || {})) {
@@ -6179,6 +6368,7 @@
 		    }
 		  }
 		  updateFeedback();
+		  return true;
 		}
 		
 		// Update customer + thank-you screens with a human-readable name
