@@ -302,6 +302,1654 @@
       line-height: 1.4;
     }
     .login-error.visible { display: block; }
+    .access-denied {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 26px;
+      color: var(--bad);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .status {
+      min-height: 22px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .status.error { color: var(--bad); }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      background: rgba(255,255,255,.04);
+    }
+    tr:last-child td { border-bottom: 0; }
+    .link-button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--brand);
+      font: inherit;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge.enabled { color: var(--good); border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.12); }
+    .badge.disabled { color: var(--bad); border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.12); }
+    .empty {
+      display: none;
+      padding: 16px;
+      margin-top: 14px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .pagination {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pagination.open { display: flex; }
+    .pagination-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .pagination button:disabled {
+      cursor: not-allowed;
+      opacity: .45;
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 10;
+    }
+    .overlay.open { display: block; }
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: min(520px, 92vw);
+      height: 100vh;
+      transform: translateX(100%);
+      transition: transform .22s ease;
+      z-index: 11;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      box-shadow: -20px 0 50px rgba(0,0,0,.35);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 22px;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .close {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .section {
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+    .section h3 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      margin-bottom: 10px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .field, .list-item {
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .list-item-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .small-btn {
+      min-height: 32px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+    .simulation-panel {
+      display: grid;
+      min-width: 0;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(184,138,255,.08);
+    }
+    .simulation-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .simulation-guide {
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .simulation-guide strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .simulation-guide ol {
+      display: grid;
+      gap: 6px;
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .simulation-status {
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+    .simulation-status.error { color: var(--bad); }
+    .simulation-status.success {
+      padding: 10px 12px;
+      border: 1px solid rgba(34,197,94,.45);
+      border-radius: 8px;
+      background: rgba(34,197,94,.12);
+      color: var(--good);
+      font-weight: 700;
+    }
+    .qr-sign-panel {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+    }
+    .qr-sign-panel.open { display: block; }
+    .qr-sign-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .qr-sign-preview {
+      width: min(260px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 12px 28px rgba(0,0,0,.28);
+    }
+    .field span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+    .list { display: grid; gap: 8px; }
+
+    @media (max-width: 720px) {
+      header, .intro { display: grid; }
+      .toolbar, .grid, .metric-grid, .metrics-hero { grid-template-columns: 1fr; }
+      .list-item-header, .qr-sign-toolbar { display: grid; }
+      .header-actions { justify-content: start; }
+      .metrics-hero-value { text-align: left; }
+      .funnel-arrow { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FlashFeedback Support</h1>
+    <div class="header-actions">
+      <button class="btn hidden" type="button" id="refreshBtn">Refresh</button>
+      <button class="btn hidden" type="button" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+
+  <section id="accessDenied" class="access-denied hidden" role="alert">This console is only available to internal superusers.</section>
+
+  <section id="loginGate" class="login-gate hidden" aria-label="Support console login">
+    <div class="login-card">
+      <h2>Support Console</h2>
+      <p>Log in with a FlashFeedback superuser account to continue.</p>
+      <form id="loginForm" class="login-form">
+        <label>
+          Email address
+          <input id="loginEmail" type="email" autocomplete="email" required>
+        </label>
+        <label>
+          Password
+          <input id="loginPassword" type="password" autocomplete="current-password" required>
+        </label>
+        <div id="loginError" class="login-error" role="alert"></div>
+        <button class="btn" type="submit">Log in</button>
+      </form>
+    </div>
+  </section>
+
+  <main id="consoleShell" class="hidden">
+    <div class="console-tabs" role="tablist" aria-label="Support console sections">
+      <button class="console-tab active" type="button" role="tab" id="metricsTab" aria-selected="true" aria-controls="metricsPanel" data-console-tab="metrics">Metrics Dashboard</button>
+      <button class="console-tab" type="button" role="tab" id="businessTab" aria-selected="false" aria-controls="businessPanel" data-console-tab="business" tabindex="-1">Business Support Overview</button>
+    </div>
+
+    <section id="metricsPanel" class="console-tab-panel active" role="tabpanel" aria-labelledby="metricsTab">
+      <div class="intro">
+        <div>
+          <h2>Metrics Dashboard</h2>
+          <p class="muted">Track whether FlashFeedback is turning business signups into real-world feedback and paid value.</p>
+        </div>
+      </div>
+
+      <section id="metricsDashboard" class="metrics-dashboard" aria-label="Founder metrics dashboard">
+        <div class="metrics-hero" id="weeklyActiveHero"></div>
+
+        <section class="metrics-section" aria-labelledby="funnelMetricsTitle">
+          <div class="metrics-section-heading">
+            <h3 id="funnelMetricsTitle">Activation Funnel</h3>
+            <p>Lifetime unique counts, except weekly activity, which covers the trailing seven days.</p>
+          </div>
+          <div class="funnel-flow" id="metricsFunnelFlow"></div>
+          <div class="metric-grid" id="funnelMetricCards"></div>
+        </section>
+
+        <section class="metrics-section" aria-labelledby="engagementMetricsTitle">
+          <div class="metrics-section-heading">
+            <h3 id="engagementMetricsTitle">Engagement</h3>
+            <p>Whether customers add useful detail and businesses return to see it.</p>
+          </div>
+          <div class="metric-grid" id="engagementMetricCards"></div>
+        </section>
+
+        <section class="metrics-section" aria-labelledby="monetisationMetricsTitle">
+          <div class="metrics-section-heading">
+            <h3 id="monetisationMetricsTitle">Monetisation</h3>
+            <p>Whether businesses see enough value to move from Free to a paid plan.</p>
+          </div>
+          <div class="metric-grid" id="monetisationMetricCards"></div>
+        </section>
+
+        <p class="metrics-note">FlashFeedback creates value when it turns silent customer experiences into private, visible, actionable signals for businesses. These metrics track whether that loop is working: businesses sign up, deploy QR codes, customers submit feedback, businesses view it, and some businesses upgrade because the value is clear.</p>
+      </section>
+    </section>
+
+    <section id="businessPanel" class="console-tab-panel" role="tabpanel" aria-labelledby="businessTab" hidden>
+      <div class="intro">
+        <div>
+          <h2>Business Support Overview</h2>
+          <p class="muted">Read-only account health details for internal superusers.</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input id="searchInput" type="search" placeholder="Search business, owner, industry, or type">
+        <select id="alertsFilter">
+          <option value="all">All alert states</option>
+          <option value="enabled">Alerts enabled</option>
+          <option value="disabled">Alerts disabled</option>
+        </select>
+      </div>
+
+      <div id="status" class="status">Checking superuser access...</div>
+      <div class="table-wrap">
+        <table aria-label="Business support overview">
+          <thead>
+            <tr>
+              <th>Business</th>
+              <th>Owner</th>
+              <th>Industry</th>
+              <th>Plan</th>
+              <th>Alerts</th>
+              <th>Locations</th>
+              <th>Feedback</th>
+              <th>Latest</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="businessRows"></tbody>
+        </table>
+      </div>
+      <div id="empty" class="empty">No businesses match the current filters.</div>
+      <div id="pagination" class="pagination" aria-label="Business table pagination">
+        <div id="paginationSummary">Showing 0 of 0 businesses.</div>
+        <div class="pagination-actions">
+          <button class="btn" type="button" id="prevPageBtn">Prev</button>
+          <span id="paginationPage">Page 1 of 1</span>
+          <button class="btn" type="button" id="nextPageBtn">Next</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="overlay" class="overlay"></div>
+  <aside id="drawer" class="drawer" aria-label="Business support details"></aside>
+
+  <script>
+    const SUPABASE_URL = 'https://evediwsocfbalzbzdden.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2ZWRpd3NvY2ZiYWx6YnpkZGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzQ1NzcsImV4cCI6MjA3MzYxMDU3N30.Y6TGgEuk97iFuuZmfWvOkwXx88y7397rzUhwbDG0p9Q';
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let overview = null;
+    const supportParams = new URLSearchParams(window.location.search);
+    let storedQrRequest = null;
+    try {
+      storedQrRequest = JSON.parse(localStorage.getItem('ffPendingQrSignRequest') || 'null');
+      if (storedQrRequest?.createdAt && Date.now() - storedQrRequest.createdAt > 30 * 60 * 1000) {
+        storedQrRequest = null;
+      }
+    } catch (_) {
+      storedQrRequest = null;
+    }
+    const requestedQrBusinessId = supportParams.get('qr-business-id') || supportParams.get('business') || storedQrRequest?.businessId || null;
+    const requestedQrLocationId = supportParams.get('qr-location-id') || supportParams.get('location') || supportParams.get('qr-sign-location') || storedQrRequest?.locationId || null;
+    let requestedQrSignGenerated = false;
+    const billingSimulationNotices = new Map();
+
+    const loginGateEl = document.getElementById('loginGate');
+    const accessDeniedEl = document.getElementById('accessDenied');
+    const consoleShellEl = document.getElementById('consoleShell');
+    const loginFormEl = document.getElementById('loginForm');
+    const loginErrorEl = document.getElementById('loginError');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const statusEl = document.getElementById('status');
+    const rowsEl = document.getElementById('businessRows');
+    const emptyEl = document.getElementById('empty');
+    const paginationEl = document.getElementById('pagination');
+    const paginationSummaryEl = document.getElementById('paginationSummary');
+    const paginationPageEl = document.getElementById('paginationPage');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const consoleTabEls = Array.from(document.querySelectorAll('[data-console-tab]'));
+    const metricsPanelEl = document.getElementById('metricsPanel');
+    const businessPanelEl = document.getElementById('businessPanel');
+    const weeklyActiveHeroEl = document.getElementById('weeklyActiveHero');
+    const metricsFunnelFlowEl = document.getElementById('metricsFunnelFlow');
+    const funnelMetricCardsEl = document.getElementById('funnelMetricCards');
+    const engagementMetricCardsEl = document.getElementById('engagementMetricCards');
+    const monetisationMetricCardsEl = document.getElementById('monetisationMetricCards');
+    const rowsPerPage = 10;
+    let currentPage = 1;
+    const searchEl = document.getElementById('searchInput');
+    const alertsEl = document.getElementById('alertsFilter');
+    const drawerEl = document.getElementById('drawer');
+    const overlayEl = document.getElementById('overlay');
+
+    function switchConsoleTab(tabName, focusTab = false) {
+      const isBusiness = tabName === 'business';
+      metricsPanelEl.classList.toggle('active', !isBusiness);
+      businessPanelEl.classList.toggle('active', isBusiness);
+      metricsPanelEl.hidden = isBusiness;
+      businessPanelEl.hidden = !isBusiness;
+
+      consoleTabEls.forEach((tab) => {
+        const isActive = tab.dataset.consoleTab === tabName;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', String(isActive));
+        tab.tabIndex = isActive ? 0 : -1;
+        if (isActive && focusTab) tab.focus();
+      });
+    }
+
+    function setStatus(message, tone = '') {
+      statusEl.textContent = message || '';
+      statusEl.classList.toggle('error', tone === 'error');
+    }
+
+    function setQrRequestStatus(message, tone = '') {
+      if (!requestedQrLocationId) return;
+      setStatus(message, tone);
+      console.log('[QR order deep link]', message, {
+        requestedQrBusinessId,
+        requestedQrLocationId,
+      });
+    }
+
+    function setLoginError(message) {
+      loginErrorEl.textContent = message || '';
+      loginErrorEl.classList.toggle('visible', Boolean(message));
+    }
+
+    function showLoginGate(message = '') {
+      overview = null;
+      rowsEl.innerHTML = '';
+      emptyEl.style.display = 'none';
+      accessDeniedEl.classList.add('hidden');
+      consoleShellEl.classList.add('hidden');
+      refreshBtn.classList.add('hidden');
+      logoutBtn.classList.add('hidden');
+      loginGateEl.classList.remove('hidden');
+      setLoginError(message);
+    }
+
+    function showConsole() {
+      accessDeniedEl.classList.add('hidden');
+      loginGateEl.classList.add('hidden');
+      consoleShellEl.classList.remove('hidden');
+      refreshBtn.classList.remove('hidden');
+      logoutBtn.classList.remove('hidden');
+      setLoginError('');
+    }
+
+    function showAccessDenied() {
+      overview = null;
+      rowsEl.innerHTML = '';
+      emptyEl.style.display = 'none';
+      closeDetail();
+      loginGateEl.classList.add('hidden');
+      consoleShellEl.classList.add('hidden');
+      refreshBtn.classList.add('hidden');
+      logoutBtn.classList.remove('hidden');
+      accessDeniedEl.classList.remove('hidden');
+      setLoginError('');
+    }
+
+    function makeNoSessionError() {
+      const error = new Error('Please log in to continue to the support console.');
+      error.code = 'NO_SESSION';
+      return error;
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      setLoginError('');
+      const submitButton = loginFormEl.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.textContent = 'Logging in...';
+      try {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const { error } = await client.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        await loadOverview();
+      } catch (err) {
+        setLoginError(err?.message || 'Could not log in. Please check your details and try again.');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Log in';
+      }
+    }
+
+    async function handleLogout() {
+      await client.auth.signOut();
+      closeDetail();
+      showLoginGate('You have been logged out.');
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '-';
+      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function customerFeedbackUrl(locationId) {
+      const url = new URL('./', window.location.href);
+      url.search = '';
+      url.searchParams.set('location', locationId);
+      return url.toString();
+    }
+
+    function createFlashFeedbackQrOptions(qrValue) {
+      return {
+        type: 'canvas',
+        shape: 'square',
+        width: 1000,
+        height: 1000,
+        data: qrValue,
+        margin: 0,
+        qrOptions: {
+          typeNumber: 0,
+          mode: 'Byte',
+          errorCorrectionLevel: 'Q',
+        },
+        image: 'https://raw.githubusercontent.com/ProofPlains/yayornay-mvp/refs/heads/main/Hot%20Pink%20Transparent.png',
+        imageOptions: {
+          saveAsBlob: true,
+          hideBackgroundDots: true,
+          imageSize: 0.5,
+          margin: 0,
+          crossOrigin: 'anonymous',
+        },
+        dotsOptions: {
+          type: 'extra-rounded',
+          color: '#000000',
+        },
+        cornersSquareOptions: {
+          type: 'dot',
+          color: '#d100ff',
+        },
+        cornersDotOptions: {
+          type: 'dot',
+          color: '#000000',
+        },
+        backgroundOptions: {
+          color: '#ffffff',
+        },
+      };
+    }
+
+    async function blobToDataUrl(blob) {
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function createStyledQrDataUrl(locationId) {
+      if (typeof QRCodeStyling !== 'function') {
+        throw new Error('QR generator failed to load. Please refresh and try again.');
+      }
+      const qrCode = new QRCodeStyling(createFlashFeedbackQrOptions(customerFeedbackUrl(locationId)));
+      const qrBlob = await qrCode.getRawData('png');
+      if (!qrBlob) throw new Error('Could not generate QR code.');
+      return await blobToDataUrl(qrBlob);
+    }
+
+    function setCanvasFont(context, sizePx, bold, italic, family) {
+      context.font = `${italic ? 'italic ' : ''}${bold ? '700 ' : ''}${Math.round(sizePx)}px ${family}`;
+    }
+
+    function drawDownArrow(context, x, y, headHeight, tailLength, thickness, color) {
+      context.fillStyle = color;
+      const headTop = y + tailLength;
+      context.beginPath();
+      context.moveTo(x - thickness / 2, y);
+      context.lineTo(x + thickness / 2, y);
+      context.lineTo(x + thickness / 2, headTop);
+      context.lineTo(x + headHeight / 2, headTop);
+      context.lineTo(x, headTop + headHeight);
+      context.lineTo(x - headHeight / 2, headTop);
+      context.lineTo(x - thickness / 2, headTop);
+      context.closePath();
+      context.fill();
+    }
+
+    async function createQrSignDataUrl(locationId) {
+      const qrDataUrl = await createStyledQrDataUrl(locationId);
+      const qrImage = new Image();
+      qrImage.crossOrigin = 'anonymous';
+      qrImage.src = qrDataUrl;
+      if (qrImage.decode) {
+        try { await qrImage.decode(); } catch (_) {}
+      }
+
+      const signCanvas = document.createElement('canvas');
+      const ctx = signCanvas.getContext('2d', { alpha: false });
+      const width = signCanvas.width = 2000;
+      const height = signCanvas.height = 3000;
+      const centerX = width / 2;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = '#000000';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      setCanvasFont(ctx, 210, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+      ctx.fillText('HOW WAS YOUR', centerX, 220);
+      ctx.fillText('EXPERIENCE?', centerX, 450);
+
+      drawDownArrow(ctx, centerX, 570, 90, 80, 24, '#000000');
+
+      setCanvasFont(ctx, 116, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+      ctx.fillText('SCAN WITH YOUR PHONE', centerX, 800);
+
+      const qrSize = 1320;
+      const qrX = (width - qrSize) / 2;
+      const qrY = 1015;
+      ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+
+      setCanvasFont(ctx, 150, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+      ctx.fillStyle = '#000000';
+      ctx.fillText('TAKES 5 SECONDS', centerX, 2680);
+
+      setCanvasFont(ctx, 118, true, true, 'Anton, Impact, sans-serif');
+      ctx.fillStyle = '#d100ff';
+      ctx.fillText('FLASHFEEDBACK', centerX, 2855);
+
+      return signCanvas.toDataURL('image/png');
+    }
+
+    function downloadDataUrl(dataUrl, filename) {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    async function trackSupportQrEvent(action, businessId, locationId) {
+      try {
+        const token = await assertSuperuser();
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-support-overview`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            action,
+            business_id: businessId,
+            location_id: locationId
+          })
+        });
+        if (!response.ok) throw new Error(`Tracking request failed (${response.status})`);
+      } catch (trackingError) {
+        console.warn('Support QR tracking failed:', trackingError?.message || trackingError);
+      }
+    }
+
+    async function generateAdminQrSign(businessId, locationId) {
+      const business = (overview?.businesses || []).find((item) => item.id === businessId);
+      const location = (business?.locations || []).find((item) => item.id === locationId);
+      if (!business || !location) return;
+
+      const panel = document.getElementById('qrSignPanel');
+      const title = document.getElementById('qrSignTitle');
+      const preview = document.getElementById('qrSignPreview');
+      const download = document.getElementById('qrSignDownload');
+      const urlText = document.getElementById('qrSignUrl');
+      if (!panel || !title || !preview || !download || !urlText) return;
+
+      panel.classList.add('open');
+      title.textContent = `Generating sign for ${location.name || 'Untitled location'}...`;
+      preview.removeAttribute('src');
+      preview.style.display = 'none';
+      download.disabled = true;
+      urlText.textContent = customerFeedbackUrl(locationId);
+
+      try {
+        const dataUrl = await createQrSignDataUrl(locationId);
+        const safeBusiness = String(business.name || 'business').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const safeLocation = String(location.name || 'location').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const filename = `flashfeedback-${safeBusiness || 'business'}-${safeLocation || 'location'}-qr-sign.png`;
+
+        title.textContent = `${location.name || 'Location'} QR sign`;
+        preview.src = dataUrl;
+        preview.style.display = 'block';
+        download.disabled = false;
+        download.onclick = () => {
+          downloadDataUrl(dataUrl, filename);
+          trackSupportQrEvent('track_qr_deployed', businessId, locationId);
+        };
+        trackSupportQrEvent('track_qr_generated', businessId, locationId);
+      } catch (err) {
+        title.textContent = err?.message || 'Could not generate QR sign.';
+      }
+    }
+
+    async function getAccessToken() {
+      const { data } = await client.auth.getSession();
+      return data?.session?.access_token || '';
+    }
+
+    async function assertSuperuser() {
+      const token = await getAccessToken();
+      if (!token) throw makeNoSessionError();
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-auth-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        await client.auth.signOut();
+        throw makeNoSessionError();
+      }
+      if (!res.ok || body?.isAdmin !== true || body?.role !== 'superuser') {
+        const error = new Error('This console is only available to internal superusers.');
+        error.code = 'SUPERUSER_REQUIRED';
+        throw error;
+      }
+      return token;
+    }
+
+    function planLabel(tier) {
+      if (tier === 'growth') return 'Growth Tier';
+      if (tier === 'pro') return 'Pro';
+      return 'Free';
+    }
+
+    function subscriptionStatusLabel(status, comped, testMode) {
+      if (comped) return 'Comped';
+      if (testMode) return status === 'active' ? 'Test subscription' : `Test - ${status || 'none'}`;
+      if (status === 'active') return 'Active';
+      if (status === 'past_due') return 'Past due';
+      if (status === 'canceled') return 'Canceled';
+      return 'None';
+    }
+
+    async function runBillingSimulation(action, businessId, button) {
+      const labels = {
+        start: 'Start a sandbox Pro subscription for this business?',
+        advance: 'Advance this sandbox subscription beyond its scheduled renewal?',
+        finish: 'Finish this simulation, delete its Stripe sandbox objects, and reset the business to Free?'
+      };
+      if (!window.confirm(labels[action] || 'Run this billing simulation action?')) return;
+      billingSimulationNotices.delete(businessId);
+
+      const status = document.getElementById('billingSimulationStatus');
+      const originalText = button?.textContent || '';
+      if (button) {
+        button.disabled = true;
+        button.textContent = action === 'advance' ? 'Advancing...' : action === 'finish' ? 'Finishing...' : 'Starting...';
+      }
+      if (status) {
+        status.textContent = action === 'advance'
+          ? 'Stripe is advancing the test clock and processing renewal events...'
+          : 'Working...';
+        status.classList.remove('error');
+      }
+
+      try {
+        const token = await assertSuperuser();
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-billing-simulation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ action, business_id: businessId })
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body?.error || 'Billing simulation failed.');
+
+        if (status) {
+          status.textContent = action === 'advance'
+            ? 'Clock advanced. Waiting briefly for Stripe webhooks...'
+            : action === 'finish'
+              ? 'Simulation finished and the business was reset.'
+              : 'Pro simulation started.';
+        }
+        if (action === 'advance') {
+          const before = (overview?.businesses || []).find((item) => item.id === businessId);
+          const expectedTier = before?.pendingPricingTier || null;
+          let completedBusiness = null;
+          for (let attempt = 0; attempt < 8; attempt += 1) {
+            await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 4000 : 2000));
+            await loadOverview();
+            completedBusiness = (overview?.businesses || []).find((item) => item.id === businessId);
+            const pendingCleared = !completedBusiness?.pendingPricingTier;
+            const tierApplied = !expectedTier || completedBusiness?.pricingTier === expectedTier;
+            if (completedBusiness && pendingCleared && tierApplied) break;
+          }
+
+          const renewalCompleted = completedBusiness &&
+            !completedBusiness.pendingPricingTier &&
+            (!expectedTier || completedBusiness.pricingTier === expectedTier);
+          billingSimulationNotices.set(businessId, {
+            tone: renewalCompleted ? 'success' : '',
+            message: renewalCompleted
+              ? `Renewal advanced successfully. ${planLabel(completedBusiness.pricingTier)} is now active and the pending plan change has cleared.`
+              : 'The test clock advanced successfully. Stripe is still processing the renewal; refresh shortly to confirm the new plan.'
+          });
+        } else {
+          billingSimulationNotices.set(businessId, {
+            tone: 'success',
+            message: action === 'finish'
+              ? 'Simulation finished successfully and the business was reset to Free.'
+              : 'Pro simulation started successfully.'
+          });
+          await loadOverview();
+        }
+        openDetail(businessId);
+      } catch (err) {
+        if (status) {
+          status.textContent = err?.message || 'Billing simulation failed.';
+          status.classList.add('error');
+        }
+        if (button) {
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      }
+    }
+
+    function searchText(business) {
+      return [business.name, business.ownerName, business.ownerUserId, business.industry, business.businessType, planLabel(business.pricingTier), business.subscriptionStatus, business.subscriptionTestMode ? 'test subscription' : '']
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+    }
+
+    const metricDefinitions = {
+      signups: {
+        name: 'Signups',
+        category: 'Acquisition',
+        definition: 'Businesses that have created an account.',
+        tells: 'Shows whether the proposition is generating interest.'
+      },
+      qrGenerated: {
+        name: 'QR generated',
+        category: 'Activation',
+        definition: 'Unique locations where a QR sign has been successfully generated.',
+        tells: 'Shows whether businesses are moving beyond signup into setup.'
+      },
+      qrDeployed: {
+        name: 'QR deployed',
+        category: 'Activation',
+        definition: 'Unique locations where a QR sign was downloaded, printed, or a paid sticker order was completed.',
+        tells: 'Signals that a business intends to place FlashFeedback in the real world.'
+      },
+      firstFeedbackReceived: {
+        name: 'First feedback received',
+        category: 'Activation / Customer participation',
+        definition: 'Unique locations that have received at least one persisted customer feedback submission.',
+        tells: 'Marks the first real value moment for a location.'
+      },
+      weeklyActiveFeedbackLocations: {
+        name: 'Weekly Active Feedback Locations',
+        category: 'North Star / Retention / Customer participation',
+        definition: 'Unique locations with at least one persisted feedback submission in the trailing seven days.',
+        tells: 'Shows whether FlashFeedback is live, being used by real customers, and creating repeatable value.'
+      },
+      dashboardViewedAfterFeedback: {
+        name: 'Dashboard viewed after feedback',
+        category: 'Business engagement',
+        definition: 'Businesses with a tracked dashboard view after their first feedback was received.',
+        tells: 'Shows whether businesses are returning to see the feedback customers submit.'
+      },
+      commentRate: {
+        name: 'Comment rate',
+        category: 'Customer participation / Feedback quality',
+        definition: 'Percentage of persisted feedback submissions containing a non-empty optional comment.',
+        tells: 'Shows how often customers provide detail that makes feedback more actionable.',
+        format: 'percent'
+      },
+      freeToPaidUpgrade: {
+        name: 'Free to paid upgrade',
+        category: 'Monetisation',
+        definition: 'Businesses known to have moved from Free to a production Growth or Pro subscription.',
+        tells: 'Shows whether the product creates enough perceived value for businesses to pay.'
+      }
+    };
+
+    function metricStatusClass(status) {
+      return String(status || '').toLowerCase().replace(/\s+/g, '-');
+    }
+
+    function metricValue(metricKey, metric) {
+      if (!metric || metric.value === null || metric.value === undefined) return '-';
+      const numericValue = Number(metric.value);
+      if (!Number.isFinite(numericValue)) return '-';
+      if (metricDefinitions[metricKey]?.format === 'percent') return `${numericValue.toFixed(1)}%`;
+      return numericValue.toLocaleString();
+    }
+
+    function metricExtra(metricKey, metric) {
+      if (!metric) return '';
+      if (metricKey === 'commentRate' && Number.isFinite(Number(metric.denominator))) {
+        return `${Number(metric.numerator || 0).toLocaleString()} of ${Number(metric.denominator || 0).toLocaleString()} submissions included a comment.`;
+      }
+      if (metricKey === 'qrDeployed' && Number(metric.legacyBusinessCount || 0) > 0) {
+        return `${Number(metric.legacyBusinessCount).toLocaleString()} additional businesses have legacy deployment events without location detail.`;
+      }
+      return '';
+    }
+
+    function metricCard(metricKey, metric) {
+      const definition = metricDefinitions[metricKey];
+      const status = metric?.status || 'Not enough data yet';
+      const extra = metricExtra(metricKey, metric);
+      return `
+        <article class="metric-card">
+          <div class="metric-eyebrow">${escapeHtml(definition.category)}</div>
+          <div class="metric-card-value">${escapeHtml(metricValue(metricKey, metric))}</div>
+          <h4>${escapeHtml(definition.name)}</h4>
+          <p class="metric-definition">${escapeHtml(definition.definition)}</p>
+          <p class="metric-tells"><strong>What this tells me:</strong> ${escapeHtml(definition.tells)}</p>
+          ${extra ? `<p class="metric-detail">${escapeHtml(extra)}</p>` : ''}
+          <span class="metric-status ${escapeHtml(metricStatusClass(status))}">Tracking/data status: ${escapeHtml(status)}</span>
+        </article>
+      `;
+    }
+
+    function renderMetrics() {
+      const metrics = overview?.metricsSnapshot?.metrics || {};
+      const heroMetric = metrics.weeklyActiveFeedbackLocations;
+      const heroDefinition = metricDefinitions.weeklyActiveFeedbackLocations;
+      const heroStatus = heroMetric?.status || 'Not enough data yet';
+
+      weeklyActiveHeroEl.innerHTML = `
+        <div>
+          <div class="metric-eyebrow">${escapeHtml(heroDefinition.category)}</div>
+          <h3>${escapeHtml(heroDefinition.name)}</h3>
+          <p class="metric-definition">${escapeHtml(heroDefinition.definition)}</p>
+          <p class="metric-tells"><strong>What this tells me:</strong> ${escapeHtml(heroDefinition.tells)}</p>
+          <span class="metric-status ${escapeHtml(metricStatusClass(heroStatus))}">Tracking/data status: ${escapeHtml(heroStatus)}</span>
+        </div>
+        <div class="metrics-hero-value">${escapeHtml(metricValue('weeklyActiveFeedbackLocations', heroMetric))}</div>
+      `;
+
+      const funnelKeys = [
+        'signups',
+        'qrGenerated',
+        'qrDeployed',
+        'firstFeedbackReceived',
+        'weeklyActiveFeedbackLocations'
+      ];
+      metricsFunnelFlowEl.innerHTML = funnelKeys.map((metricKey, index) => `
+        ${index ? '<div class="funnel-arrow" aria-hidden="true">&rarr;</div>' : ''}
+        <div class="funnel-stage">
+          <strong>${escapeHtml(metricValue(metricKey, metrics[metricKey]))}</strong>
+          <span>${escapeHtml(metricDefinitions[metricKey].name)}</span>
+        </div>
+      `).join('');
+
+      funnelMetricCardsEl.innerHTML = [
+        'signups',
+        'qrGenerated',
+        'qrDeployed',
+        'firstFeedbackReceived'
+      ].map((metricKey) => metricCard(metricKey, metrics[metricKey])).join('');
+
+      engagementMetricCardsEl.innerHTML = [
+        'dashboardViewedAfterFeedback',
+        'commentRate'
+      ].map((metricKey) => metricCard(metricKey, metrics[metricKey])).join('');
+
+      monetisationMetricCardsEl.innerHTML = metricCard(
+        'freeToPaidUpgrade',
+        metrics.freeToPaidUpgrade
+      );
+    }
+
+    async function loadOverview() {
+      rowsEl.innerHTML = '';
+      emptyEl.style.display = 'none';
+      try {
+        if (requestedQrLocationId) {
+          setQrRequestStatus('QR sign request detected. Checking superuser access...');
+        } else {
+          setStatus('Checking superuser access...');
+        }
+        const token = await assertSuperuser();
+        if (requestedQrLocationId) {
+          setQrRequestStatus('QR sign request detected. Loading support overview...');
+        } else {
+          setStatus('Loading support overview...');
+        }
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-support-overview`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body?.error || 'Could not load support overview.');
+        overview = body;
+        showConsole();
+        render();
+        await openRequestedQrSign();
+        setTimeout(() => { openRequestedQrSign(); }, 250);
+      } catch (err) {
+        overview = null;
+        if (err?.code === 'NO_SESSION') {
+          showLoginGate();
+          return;
+        }
+        if (err?.code === 'SUPERUSER_REQUIRED') {
+          showAccessDenied();
+          return;
+        }
+        showConsole();
+        setStatus(err?.message || 'Could not load support overview.', 'error');
+        render();
+      }
+    }
+
+    function render() {
+      renderMetrics();
+      const businesses = Array.isArray(overview?.businesses) ? overview.businesses : [];
+      const query = searchEl.value.trim().toLowerCase();
+      const alertsFilter = alertsEl.value;
+      const filtered = businesses.filter((business) => {
+        const alertsEnabled = business.emailAlertsEnabled !== false;
+        return (!query || searchText(business).includes(query)) &&
+          (alertsFilter === 'all' ||
+            (alertsFilter === 'enabled' && alertsEnabled) ||
+            (alertsFilter === 'disabled' && !alertsEnabled));
+      });
+
+      const pageCount = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+      currentPage = Math.min(Math.max(currentPage, 1), pageCount);
+      const startIndex = (currentPage - 1) * rowsPerPage;
+      const pageBusinesses = filtered.slice(startIndex, startIndex + rowsPerPage);
+      
+      rowsEl.innerHTML = pageBusinesses.map((business) => {
+        const alertsEnabled = business.emailAlertsEnabled !== false;
+        return `
+          <tr>
+            <td>
+              <button class="link-button" type="button" data-business-id="${escapeHtml(business.id)}">${escapeHtml(business.name || 'Untitled business')}</button>
+              <div class="muted">${escapeHtml(business.businessType || 'No business type')}</div>
+            </td>
+            <td>
+              <div>${escapeHtml(business.ownerName || 'No owner name')}</div>
+              <div class="muted">${escapeHtml(business.ownerUserId || '')}</div>
+            </td>
+            <td>${escapeHtml(business.industry || '-')}</td>
+            <td>
+              <span class="badge enabled">${escapeHtml(planLabel(business.pricingTier))}</span>
+              <div class="muted">${escapeHtml(subscriptionStatusLabel(business.subscriptionStatus, business.subscriptionComped, business.subscriptionTestMode))}</div>
+            </td>
+            <td><span class="badge ${alertsEnabled ? 'enabled' : 'disabled'}">${alertsEnabled ? 'Enabled' : 'Disabled'}</span></td>
+            <td>${Number(business.locationCount || 0)}</td>
+            <td>${Number(business.feedbackCount || 0)}</td>
+            <td>${escapeHtml(formatDate(business.latestFeedbackAt))}</td>
+            <td>${escapeHtml(formatDate(business.createdAt))}</td>
+          </tr>
+        `;
+      }).join('');
+
+      if (overview) setStatus(`${filtered.length} of ${businesses.length} businesses matched. Last refreshed ${formatDate(overview.generatedAt)}.`);
+      emptyEl.style.display = filtered.length === 0 ? 'block' : 'none';
+      
+      paginationEl.classList.toggle('open', filtered.length > 0);
+      const firstShown = filtered.length ? startIndex + 1 : 0;
+      const lastShown = Math.min(startIndex + pageBusinesses.length, filtered.length);
+      paginationSummaryEl.textContent = `Showing ${firstShown}-${lastShown} of ${filtered.length} businesses.`;
+      paginationPageEl.textContent = `Page ${currentPage} of ${pageCount}`;
+      prevPageBtn.disabled = currentPage <= 1;
+      nextPageBtn.disabled = currentPage >= pageCount;
+    }
+
+    async function openRequestedQrSign() {
+      if (requestedQrSignGenerated || !requestedQrLocationId) return;
+
+      const businesses = overview?.businesses || [];
+      if (!businesses.length) {
+        setQrRequestStatus('QR sign request detected, but no businesses have loaded yet.');
+        return;
+      }
+
+      let business = requestedQrBusinessId
+        ? businesses.find((item) => item.id === requestedQrBusinessId)
+        : null;
+      let location = business
+        ? (business.locations || []).find((item) => item.id === requestedQrLocationId)
+        : null;
+
+      if (!business || !location) {
+        for (const candidateBusiness of businesses) {
+          const candidateLocation = (candidateBusiness.locations || []).find((item) => item.id === requestedQrLocationId);
+          if (candidateLocation) {
+            business = candidateBusiness;
+            location = candidateLocation;
+            break;
+          }
+        }
+      }
+
+      if (!business) {
+        setQrRequestStatus('QR order sign request loaded, but the business was not found in the support overview.', 'error');
+        return;
+      }
+
+      if (!location) {
+        setQrRequestStatus('QR order sign request loaded, but the location was not found in the support overview.', 'error');
+        return;
+      }
+
+      requestedQrSignGenerated = true;
+      switchConsoleTab('business');
+      setQrRequestStatus(`Generating QR sign for ${location.name || 'requested location'}...`);
+      searchEl.value = '';
+      alertsEl.value = 'all';
+      currentPage = 1;
+      render();
+      openDetail(business.id);
+      await generateAdminQrSign(business.id, location.id);
+      try { localStorage.removeItem('ffPendingQrSignRequest'); } catch (_) {}
+      setQrRequestStatus(`QR sign generated for ${business.name || 'business'} - ${location.name || 'location'}.`);
+    }
+
+    function openDetail(id) {
+      const business = (overview?.businesses || []).find((item) => item.id === id);
+      if (!business) return;
+      const locations = Array.isArray(business.locations) ? business.locations : [];
+      const recentFeedback = Array.isArray(business.recentFeedback) ? business.recentFeedback : [];
+      const hasSimulation = Boolean(business.stripeTestClockId);
+      const canStartSimulation = !business.subscriptionComped &&
+        !business.stripeSubscriptionId &&
+        !business.stripeCustomerId &&
+        !hasSimulation;
+      const canAdvanceSimulation = hasSimulation &&
+        Boolean(business.pendingPricingTier && business.planChangeEffectiveAt);
+      const simulationNotice = billingSimulationNotices.get(business.id) || null;
+      const simulationSummary = business.subscriptionComped
+        ? 'Complimentary accounts cannot run billing simulations.'
+        : hasSimulation
+          ? `Sandbox clock active${business.pendingPricingTier ? ` - ${planLabel(business.pendingPricingTier)} scheduled for ${formatDate(business.planChangeEffectiveAt)}` : ' - schedule a downgrade in the customer account before advancing.'}`
+          : business.stripeSubscriptionId || business.stripeCustomerId
+            ? 'This business already has Stripe billing data and cannot be used for a simulation.'
+            : 'Creates a disposable Stripe sandbox customer and Pro subscription for accelerated renewal testing.';
+
+      drawerEl.innerHTML = `
+        <div class="drawer-header">
+          <div>
+            <h2>${escapeHtml(business.name || 'Untitled business')}</h2>
+            <p class="muted">${escapeHtml(business.industry || 'No industry')} ${business.businessType ? '- ' + escapeHtml(business.businessType) : ''}</p>
+          </div>
+          <button class="close" type="button" id="closeDrawer" aria-label="Close">x</button>
+        </div>
+        <div class="section">
+          <h3>Account</h3>
+          <div class="grid">
+            <div class="field"><span>Owner</span>${escapeHtml(business.ownerName || 'No owner name')}</div>
+            <div class="field"><span>Owner user id</span>${escapeHtml(business.ownerUserId || '-')}</div>
+            <div class="field"><span>Plan</span>${escapeHtml(planLabel(business.pricingTier))}</div>
+            <div class="field"><span>Subscription</span>${escapeHtml(subscriptionStatusLabel(business.subscriptionStatus, business.subscriptionComped, business.subscriptionTestMode))}</div>
+            <div class="field"><span>Timezone</span>${escapeHtml(business.timezone || '-')}</div>
+            <div class="field"><span>Email alerts</span>${business.emailAlertsEnabled !== false ? 'Enabled' : 'Disabled'}</div>
+            <div class="field"><span>Created</span>${escapeHtml(formatDate(business.createdAt))}</div>
+            <div class="field"><span>Latest feedback</span>${escapeHtml(formatDate(business.latestFeedbackAt))}</div>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Locations (${locations.length})</h3>
+          <div class="list">
+            ${locations.length ? locations.map((location) => `
+              <div class="list-item">
+                <div class="list-item-header">
+                  <div>
+                    <strong>${escapeHtml(location.name || 'Untitled location')}</strong>
+                    <div class="muted">${location.isActive === false ? 'Inactive' : 'Active'} - ${Number(location.feedbackCount || 0)} feedback - latest ${escapeHtml(formatDate(location.latestFeedbackAt))}</div>
+                  </div>
+                  <button class="small-btn" type="button" data-qr-business-id="${escapeHtml(business.id)}" data-qr-location-id="${escapeHtml(location.id)}">Generate sign</button>
+                </div>
+              </div>
+            `).join('') : '<div class="muted">No locations found.</div>'}
+          </div>
+          <div id="qrSignPanel" class="qr-sign-panel">
+            <div class="qr-sign-toolbar">
+              <div>
+                <strong id="qrSignTitle">QR sign</strong>
+                <div id="qrSignUrl" class="muted"></div>
+              </div>
+              <button class="small-btn" type="button" id="qrSignDownload" disabled>Download PNG</button>
+            </div>
+            <img id="qrSignPreview" class="qr-sign-preview" alt="Generated QR sign preview" style="display:none;">
+          </div>
+        </div>
+        <div class="section">
+          <h3>Billing Simulation</h3>
+          <div class="simulation-panel">
+            ${simulationNotice ? `<div class="simulation-status ${simulationNotice.tone === 'success' ? 'success' : ''}" id="billingSimulationStatus">${escapeHtml(simulationNotice.message)}</div>` : `<div class="simulation-status" id="billingSimulationStatus">${escapeHtml(simulationSummary)}</div>`}
+            ${simulationNotice ? `<div class="muted">${escapeHtml(simulationSummary)}</div>` : ''}
+            ${hasSimulation ? `
+              <div class="grid">
+                <div class="field"><span>Test clock</span>${escapeHtml(business.stripeTestClockId)}</div>
+                <div class="field"><span>Stripe subscription</span>${escapeHtml(business.stripeSubscriptionId || '-')}</div>
+              </div>
+            ` : ''}
+            <div class="simulation-actions">
+              ${canStartSimulation ? `<button class="small-btn" type="button" data-simulation-action="start" data-simulation-business-id="${escapeHtml(business.id)}">Start Pro Simulation</button>` : ''}
+              ${hasSimulation ? `<button class="small-btn" type="button" data-simulation-action="advance" data-simulation-business-id="${escapeHtml(business.id)}" ${canAdvanceSimulation ? '' : 'disabled'}>Advance to Renewal</button>` : ''}
+              ${hasSimulation ? `<button class="small-btn" type="button" data-simulation-action="finish" data-simulation-business-id="${escapeHtml(business.id)}">Finish Simulation</button>` : ''}
+            </div>
+            <div class="simulation-guide">
+              <strong>How to test a scheduled renewal</strong>
+              <ol>
+                <li>Use a disposable Free business with no existing Stripe billing details.</li>
+                <li>Click <strong>Start Pro Simulation</strong> to create its sandbox Pro subscription.</li>
+                <li>Sign in to that business, add more locations than the target plan permits, and schedule a downgrade from Settings.</li>
+                <li>Return here, refresh the console, reopen the business, and click <strong>Advance to Renewal</strong>.</li>
+                <li>Wait for the green confirmation, then verify the new plan is active and the selected locations are inactive.</li>
+                <li>Click <strong>Finish Simulation</strong> to delete the sandbox clock and reset the business to Free.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Recent Feedback</h3>
+          <div class="list">
+            ${recentFeedback.length ? recentFeedback.map((feedback) => `
+              <div class="list-item">
+                <strong>${escapeHtml(feedback.sentiment || 'Feedback')}</strong>
+                <div class="muted">${escapeHtml(feedback.locationName || 'Unknown location')} - ${escapeHtml(formatDate(feedback.submittedAt))}${feedback.hasComment ? ' - includes comment' : ''}</div>
+              </div>
+            `).join('') : '<div class="muted">No feedback found.</div>'}
+          </div>
+        </div>
+      `;
+      overlayEl.classList.add('open');
+      drawerEl.classList.add('open');
+      document.getElementById('closeDrawer').addEventListener('click', closeDetail);
+    }
+
+    function closeDetail() {
+      overlayEl.classList.remove('open');
+      drawerEl.classList.remove('open');
+    }
+
+    loginFormEl.addEventListener('submit', handleLogin);
+    logoutBtn.addEventListener('click', handleLogout);
+    refreshBtn.addEventListener('click', loadOverview);
+    consoleTabEls.forEach((tab, index) => {
+      tab.addEventListener('click', () => switchConsoleTab(tab.dataset.consoleTab));
+      tab.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        let nextIndex = index;
+        if (event.key === 'ArrowLeft') nextIndex = (index - 1 + consoleTabEls.length) % consoleTabEls.length;
+        if (event.key === 'ArrowRight') nextIndex = (index + 1) % consoleTabEls.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = consoleTabEls.length - 1;
+        switchConsoleTab(consoleTabEls[nextIndex].dataset.consoleTab, true);
+      });
+    });
+    prevPageBtn.addEventListener('click', () => {
+      currentPage -= 1;
+      render();
+    });
+    nextPageBtn.addEventListener('click', () => {
+      currentPage += 1;
+      render();
+    });
+    searchEl.addEventListener('input', () => {
+      currentPage = 1;
+      render();
+    });
+    alertsEl.addEventListener('change', () => {
+      currentPage = 1;
+      render();
+    });
+    rowsEl.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-business-id]');
+      if (button) openDetail(button.dataset.businessId);
+    });
+    drawerEl.addEventListener('click', (event) => {
+      const simulationButton = event.target.closest('[data-simulation-action]');
+      if (simulationButton) {
+        runBillingSimulation(
+          simulationButton.dataset.simulationAction,
+          simulationButton.dataset.simulationBusinessId,
+          simulationButton
+        );
+        return;
+      }
+      const button = event.target.closest('[data-qr-location-id]');
+      if (!button) return;
+      generateAdminQrSign(button.dataset.qrBusinessId, button.dataset.qrLocationId);
+    });
+    overlayEl.addEventListener('click', closeDetail);
+    switchConsoleTab('metrics');
+    loadOverview();
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlashFeedback Support Console</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Quicksand:wght@700&display=swap">
+  <script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #15121c;
+      --surface: #211b2d;
+      --surface-2: #2b2438;
+      --border: rgba(255,255,255,.14);
+      --text: #f5f1e8;
+      --muted: #b7adca;
+      --brand: #b88aff;
+      --good: #bbf7d0;
+      --bad: #fecaca;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(21,18,28,.96);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 22px; }
+    main { max-width: 1180px; margin: 0 auto; padding: 26px; }
+    button, input, select { font: inherit; }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .hidden { display: none !important; }
+
+    .btn {
+      min-height: 42px;
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .btn:hover { border-color: var(--brand); }
+    .intro {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+    .intro h2 { font-size: 28px; margin-bottom: 6px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .console-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .console-tab {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+    .console-tab:hover { color: var(--text); border-color: var(--brand); }
+    .console-tab.active {
+      color: var(--text);
+      border-color: var(--brand);
+      background: rgba(184,138,255,.14);
+    }
+    .console-tab-panel { display: none; }
+    .console-tab-panel.active { display: block; }
+    .metrics-dashboard {
+      display: grid;
+      gap: 22px;
+      margin-bottom: 30px;
+    }
+    .metrics-hero,
+    .metric-card,
+    .metrics-note {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .metrics-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top right, rgba(184,138,255,.24), transparent 38%),
+        var(--surface);
+    }
+    .metrics-hero-value {
+      min-width: 160px;
+      font-size: clamp(54px, 9vw, 88px);
+      line-height: .9;
+      font-weight: 800;
+      text-align: right;
+      color: var(--brand);
+    }
+    .metric-eyebrow {
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .metrics-hero h3 {
+      margin-top: 7px;
+      font-size: clamp(24px, 4vw, 36px);
+    }
+    .metric-definition {
+      margin-top: 9px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .metric-tells {
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .metric-tells strong { color: var(--text); }
+    .metric-status {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 25px;
+      margin-top: 12px;
+      padding: 3px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .metric-status.ready {
+      color: var(--good);
+      border-color: rgba(34,197,94,.45);
+      background: rgba(34,197,94,.12);
+    }
+    .metric-status.partial {
+      color: #fde68a;
+      border-color: rgba(245,158,11,.45);
+      background: rgba(245,158,11,.12);
+    }
+    .metric-status.needs-tracking {
+      color: #fecaca;
+      border-color: rgba(239,68,68,.45);
+      background: rgba(239,68,68,.12);
+    }
+    .metrics-section {
+      display: grid;
+      gap: 12px;
+    }
+    .metrics-section-heading h3 { font-size: 20px; }
+    .metrics-section-heading p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .funnel-flow {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .funnel-stage {
+      min-width: 150px;
+      flex: 1 0 150px;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+    }
+    .funnel-stage strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 20px;
+      color: var(--brand);
+    }
+    .funnel-stage span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .funnel-arrow {
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .metric-card {
+      min-width: 0;
+      padding: 18px;
+    }
+    .metric-card-value {
+      margin: 8px 0 6px;
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 800;
+      color: var(--brand);
+    }
+    .metric-card h4 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .metric-detail {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .metrics-note {
+      padding: 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      border-left: 4px solid var(--brand);
+    }
+    .account-overview-heading {
+      margin: 8px 0 14px;
+    }
+    .account-overview-heading h3 { font-size: 20px; }
+    .account-overview-heading p { margin-top: 4px; }
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(240px, 1fr) 220px;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 0 12px;
+    }
+
+    .login-gate {
+      min-height: calc(100vh - 84px);
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+    .login-card {
+      width: min(440px, 100%);
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 18px 44px rgba(0,0,0,.28);
+    }
+    .login-card h2 { font-size: 28px; margin-bottom: 6px; }
+    .login-card p { color: var(--muted); margin-bottom: 18px; }
+    .login-form { display: grid; gap: 12px; }
+    .login-form label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .login-error {
+      display: none;
+      color: var(--bad);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .login-error.visible { display: block; }
 
     .status {
       min-height: 22px;
