@@ -70,6 +70,190 @@
     }
     .intro h2 { font-size: 28px; margin-bottom: 6px; }
     .muted { color: var(--muted); font-size: 13px; }
+    .console-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .console-tab {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+    .console-tab:hover { color: var(--text); border-color: var(--brand); }
+    .console-tab.active {
+      color: var(--text);
+      border-color: var(--brand);
+      background: rgba(184,138,255,.14);
+    }
+    .console-tab-panel { display: none; }
+    .console-tab-panel.active { display: block; }
+    .metrics-dashboard {
+      display: grid;
+      gap: 22px;
+      margin-bottom: 30px;
+    }
+    .metrics-hero,
+    .metric-card,
+    .metrics-note {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .metrics-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top right, rgba(184,138,255,.24), transparent 38%),
+        var(--surface);
+    }
+    .metrics-hero-value {
+      min-width: 160px;
+      font-size: clamp(54px, 9vw, 88px);
+      line-height: .9;
+      font-weight: 800;
+      text-align: right;
+      color: var(--brand);
+    }
+    .metric-eyebrow {
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .metrics-hero h3 {
+      margin-top: 7px;
+      font-size: clamp(24px, 4vw, 36px);
+    }
+    .metric-definition {
+      margin-top: 9px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .metric-tells {
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .metric-tells strong { color: var(--text); }
+    .metric-status {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 25px;
+      margin-top: 12px;
+      padding: 3px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .metric-status.ready {
+      color: var(--good);
+      border-color: rgba(34,197,94,.45);
+      background: rgba(34,197,94,.12);
+    }
+    .metric-status.partial {
+      color: #fde68a;
+      border-color: rgba(245,158,11,.45);
+      background: rgba(245,158,11,.12);
+    }
+    .metric-status.needs-tracking {
+      color: #fecaca;
+      border-color: rgba(239,68,68,.45);
+      background: rgba(239,68,68,.12);
+    }
+    .metrics-section {
+      display: grid;
+      gap: 12px;
+    }
+    .metrics-section-heading h3 { font-size: 20px; }
+    .metrics-section-heading p {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .funnel-flow {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .funnel-stage {
+      min-width: 150px;
+      flex: 1 0 150px;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+    }
+    .funnel-stage strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 20px;
+      color: var(--brand);
+    }
+    .funnel-stage span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .funnel-arrow {
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .metric-card {
+      min-width: 0;
+      padding: 18px;
+    }
+    .metric-card-value {
+      margin: 8px 0 6px;
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 800;
+      color: var(--brand);
+    }
+    .metric-card h4 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .metric-detail {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .metrics-note {
+      padding: 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      border-left: 4px solid var(--brand);
+    }
+    .account-overview-heading {
+      margin: 8px 0 14px;
+    }
+    .account-overview-heading h3 { font-size: 20px; }
+    .account-overview-heading p { margin-top: 4px; }
     .toolbar {
       display: grid;
       grid-template-columns: minmax(240px, 1fr) 220px;
@@ -357,9 +541,11 @@
 
     @media (max-width: 720px) {
       header, .intro { display: grid; }
-      .toolbar, .grid { grid-template-columns: 1fr; }
+      .toolbar, .grid, .metric-grid, .metrics-hero { grid-template-columns: 1fr; }
       .list-item-header, .qr-sign-toolbar { display: grid; }
       .header-actions { justify-content: start; }
+      .metrics-hero-value { text-align: left; }
+      .funnel-arrow { display: none; }
     }
   </style>
 </head>
@@ -392,50 +578,97 @@
   </section>
 
   <main id="consoleShell" class="hidden">
-    <div class="intro">
-      <div>
-        <h2>Support Console</h2>
-        <p class="muted">Read-only account health overview for internal superusers.</p>
-      </div>
+    <div class="console-tabs" role="tablist" aria-label="Support console sections">
+      <button class="console-tab active" type="button" role="tab" id="metricsTab" aria-selected="true" aria-controls="metricsPanel" data-console-tab="metrics">Metrics Dashboard</button>
+      <button class="console-tab" type="button" role="tab" id="businessTab" aria-selected="false" aria-controls="businessPanel" data-console-tab="business" tabindex="-1">Business Support Overview</button>
     </div>
 
-    <div class="toolbar">
-      <input id="searchInput" type="search" placeholder="Search business, owner, industry, or type">
-      <select id="alertsFilter">
-        <option value="all">All alert states</option>
-        <option value="enabled">Alerts enabled</option>
-        <option value="disabled">Alerts disabled</option>
-      </select>
-    </div>
-
-    <div id="status" class="status">Checking superuser access...</div>
-    <div class="table-wrap">
-      <table aria-label="Business support overview">
-        <thead>
-          <tr>
-            <th>Business</th>
-            <th>Owner</th>
-            <th>Industry</th>
-            <th>Plan</th>
-            <th>Alerts</th>
-            <th>Locations</th>
-            <th>Feedback</th>
-            <th>Latest</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody id="businessRows"></tbody>
-      </table>
-    </div>
-    <div id="empty" class="empty">No businesses match the current filters.</div>
-    <div id="pagination" class="pagination" aria-label="Business table pagination">
-      <div id="paginationSummary">Showing 0 of 0 businesses.</div>
-      <div class="pagination-actions">
-        <button class="btn" type="button" id="prevPageBtn">Prev</button>
-        <span id="paginationPage">Page 1 of 1</span>
-        <button class="btn" type="button" id="nextPageBtn">Next</button>
+    <section id="metricsPanel" class="console-tab-panel active" role="tabpanel" aria-labelledby="metricsTab">
+      <div class="intro">
+        <div>
+          <h2>Metrics Dashboard</h2>
+          <p class="muted">Track whether FlashFeedback is turning business signups into real-world feedback and paid value.</p>
+        </div>
       </div>
-    </div>
+
+      <section id="metricsDashboard" class="metrics-dashboard" aria-label="Founder metrics dashboard">
+        <div class="metrics-hero" id="weeklyActiveHero"></div>
+
+        <section class="metrics-section" aria-labelledby="funnelMetricsTitle">
+          <div class="metrics-section-heading">
+            <h3 id="funnelMetricsTitle">Activation Funnel</h3>
+            <p>Lifetime unique counts, except weekly activity, which covers the trailing seven days.</p>
+          </div>
+          <div class="funnel-flow" id="metricsFunnelFlow"></div>
+          <div class="metric-grid" id="funnelMetricCards"></div>
+        </section>
+
+        <section class="metrics-section" aria-labelledby="engagementMetricsTitle">
+          <div class="metrics-section-heading">
+            <h3 id="engagementMetricsTitle">Engagement</h3>
+            <p>Whether customers add useful detail and businesses return to see it.</p>
+          </div>
+          <div class="metric-grid" id="engagementMetricCards"></div>
+        </section>
+
+        <section class="metrics-section" aria-labelledby="monetisationMetricsTitle">
+          <div class="metrics-section-heading">
+            <h3 id="monetisationMetricsTitle">Monetisation</h3>
+            <p>Whether businesses see enough value to move from Free to a paid plan.</p>
+          </div>
+          <div class="metric-grid" id="monetisationMetricCards"></div>
+        </section>
+
+        <p class="metrics-note">FlashFeedback creates value when it turns silent customer experiences into private, visible, actionable signals for businesses. These metrics track whether that loop is working: businesses sign up, deploy QR codes, customers submit feedback, businesses view it, and some businesses upgrade because the value is clear.</p>
+      </section>
+    </section>
+
+    <section id="businessPanel" class="console-tab-panel" role="tabpanel" aria-labelledby="businessTab" hidden>
+      <div class="intro">
+        <div>
+          <h2>Business Support Overview</h2>
+          <p class="muted">Read-only account health details for internal superusers.</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input id="searchInput" type="search" placeholder="Search business, owner, industry, or type">
+        <select id="alertsFilter">
+          <option value="all">All alert states</option>
+          <option value="enabled">Alerts enabled</option>
+          <option value="disabled">Alerts disabled</option>
+        </select>
+      </div>
+
+      <div id="status" class="status">Checking superuser access...</div>
+      <div class="table-wrap">
+        <table aria-label="Business support overview">
+          <thead>
+            <tr>
+              <th>Business</th>
+              <th>Owner</th>
+              <th>Industry</th>
+              <th>Plan</th>
+              <th>Alerts</th>
+              <th>Locations</th>
+              <th>Feedback</th>
+              <th>Latest</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody id="businessRows"></tbody>
+        </table>
+      </div>
+      <div id="empty" class="empty">No businesses match the current filters.</div>
+      <div id="pagination" class="pagination" aria-label="Business table pagination">
+        <div id="paginationSummary">Showing 0 of 0 businesses.</div>
+        <div class="pagination-actions">
+          <button class="btn" type="button" id="prevPageBtn">Prev</button>
+          <span id="paginationPage">Page 1 of 1</span>
+          <button class="btn" type="button" id="nextPageBtn">Next</button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <div id="overlay" class="overlay"></div>
@@ -475,12 +708,36 @@
     const paginationPageEl = document.getElementById('paginationPage');
     const prevPageBtn = document.getElementById('prevPageBtn');
     const nextPageBtn = document.getElementById('nextPageBtn');
+    const consoleTabEls = Array.from(document.querySelectorAll('[data-console-tab]'));
+    const metricsPanelEl = document.getElementById('metricsPanel');
+    const businessPanelEl = document.getElementById('businessPanel');
+    const weeklyActiveHeroEl = document.getElementById('weeklyActiveHero');
+    const metricsFunnelFlowEl = document.getElementById('metricsFunnelFlow');
+    const funnelMetricCardsEl = document.getElementById('funnelMetricCards');
+    const engagementMetricCardsEl = document.getElementById('engagementMetricCards');
+    const monetisationMetricCardsEl = document.getElementById('monetisationMetricCards');
     const rowsPerPage = 10;
     let currentPage = 1;
     const searchEl = document.getElementById('searchInput');
     const alertsEl = document.getElementById('alertsFilter');
     const drawerEl = document.getElementById('drawer');
     const overlayEl = document.getElementById('overlay');
+
+    function switchConsoleTab(tabName, focusTab = false) {
+      const isBusiness = tabName === 'business';
+      metricsPanelEl.classList.toggle('active', !isBusiness);
+      businessPanelEl.classList.toggle('active', isBusiness);
+      metricsPanelEl.hidden = isBusiness;
+      businessPanelEl.hidden = !isBusiness;
+
+      consoleTabEls.forEach((tab) => {
+        const isActive = tab.dataset.consoleTab === tabName;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', String(isActive));
+        tab.tabIndex = isActive ? 0 : -1;
+        if (isActive && focusTab) tab.focus();
+      });
+    }
 
     function setStatus(message, tone = '') {
       statusEl.textContent = message || '';
@@ -707,6 +964,27 @@
       link.remove();
     }
 
+    async function trackSupportQrEvent(action, businessId, locationId) {
+      try {
+        const token = await assertSuperuser();
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-support-overview`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            action,
+            business_id: businessId,
+            location_id: locationId
+          })
+        });
+        if (!response.ok) throw new Error(`Tracking request failed (${response.status})`);
+      } catch (trackingError) {
+        console.warn('Support QR tracking failed:', trackingError?.message || trackingError);
+      }
+    }
+
     async function generateAdminQrSign(businessId, locationId) {
       const business = (overview?.businesses || []).find((item) => item.id === businessId);
       const location = (business?.locations || []).find((item) => item.id === locationId);
@@ -736,7 +1014,11 @@
         preview.src = dataUrl;
         preview.style.display = 'block';
         download.disabled = false;
-        download.onclick = () => downloadDataUrl(dataUrl, filename);
+        download.onclick = () => {
+          downloadDataUrl(dataUrl, filename);
+          trackSupportQrEvent('track_qr_deployed', businessId, locationId);
+        };
+        trackSupportQrEvent('track_qr_generated', businessId, locationId);
       } catch (err) {
         title.textContent = err?.message || 'Could not generate QR sign.';
       }
@@ -872,6 +1154,148 @@
         .toLowerCase();
     }
 
+    const metricDefinitions = {
+      signups: {
+        name: 'Signups',
+        category: 'Acquisition',
+        definition: 'Businesses that have created an account.',
+        tells: 'Shows whether the proposition is generating interest.'
+      },
+      qrGenerated: {
+        name: 'QR generated',
+        category: 'Activation',
+        definition: 'Unique locations where a QR sign has been successfully generated.',
+        tells: 'Shows whether businesses are moving beyond signup into setup.'
+      },
+      qrDeployed: {
+        name: 'QR deployed',
+        category: 'Activation',
+        definition: 'Unique locations where a QR sign was downloaded, printed, or a paid sticker order was completed.',
+        tells: 'Signals that a business intends to place FlashFeedback in the real world.'
+      },
+      firstFeedbackReceived: {
+        name: 'First feedback received',
+        category: 'Activation / Customer participation',
+        definition: 'Unique locations that have received at least one persisted customer feedback submission.',
+        tells: 'Marks the first real value moment for a location.'
+      },
+      weeklyActiveFeedbackLocations: {
+        name: 'Weekly Active Feedback Locations',
+        category: 'North Star / Retention / Customer participation',
+        definition: 'Unique locations with at least one persisted feedback submission in the trailing seven days.',
+        tells: 'Shows whether FlashFeedback is live, being used by real customers, and creating repeatable value.'
+      },
+      dashboardViewedAfterFeedback: {
+        name: 'Dashboard viewed after feedback',
+        category: 'Business engagement',
+        definition: 'Businesses with a tracked dashboard view after their first feedback was received.',
+        tells: 'Shows whether businesses are returning to see the feedback customers submit.'
+      },
+      commentRate: {
+        name: 'Comment rate',
+        category: 'Customer participation / Feedback quality',
+        definition: 'Percentage of persisted feedback submissions containing a non-empty optional comment.',
+        tells: 'Shows how often customers provide detail that makes feedback more actionable.',
+        format: 'percent'
+      },
+      freeToPaidUpgrade: {
+        name: 'Free to paid upgrade',
+        category: 'Monetisation',
+        definition: 'Businesses known to have moved from Free to a production Growth or Pro subscription.',
+        tells: 'Shows whether the product creates enough perceived value for businesses to pay.'
+      }
+    };
+
+    function metricStatusClass(status) {
+      return String(status || '').toLowerCase().replace(/\s+/g, '-');
+    }
+
+    function metricValue(metricKey, metric) {
+      if (!metric || metric.value === null || metric.value === undefined) return '-';
+      const numericValue = Number(metric.value);
+      if (!Number.isFinite(numericValue)) return '-';
+      if (metricDefinitions[metricKey]?.format === 'percent') return `${numericValue.toFixed(1)}%`;
+      return numericValue.toLocaleString();
+    }
+
+    function metricExtra(metricKey, metric) {
+      if (!metric) return '';
+      if (metricKey === 'commentRate' && Number.isFinite(Number(metric.denominator))) {
+        return `${Number(metric.numerator || 0).toLocaleString()} of ${Number(metric.denominator || 0).toLocaleString()} submissions included a comment.`;
+      }
+      if (metricKey === 'qrDeployed' && Number(metric.legacyBusinessCount || 0) > 0) {
+        return `${Number(metric.legacyBusinessCount).toLocaleString()} additional businesses have legacy deployment events without location detail.`;
+      }
+      return '';
+    }
+
+    function metricCard(metricKey, metric) {
+      const definition = metricDefinitions[metricKey];
+      const status = metric?.status || 'Not enough data yet';
+      const extra = metricExtra(metricKey, metric);
+      return `
+        <article class="metric-card">
+          <div class="metric-eyebrow">${escapeHtml(definition.category)}</div>
+          <div class="metric-card-value">${escapeHtml(metricValue(metricKey, metric))}</div>
+          <h4>${escapeHtml(definition.name)}</h4>
+          <p class="metric-definition">${escapeHtml(definition.definition)}</p>
+          <p class="metric-tells"><strong>What this tells me:</strong> ${escapeHtml(definition.tells)}</p>
+          ${extra ? `<p class="metric-detail">${escapeHtml(extra)}</p>` : ''}
+          <span class="metric-status ${escapeHtml(metricStatusClass(status))}">Tracking/data status: ${escapeHtml(status)}</span>
+        </article>
+      `;
+    }
+
+    function renderMetrics() {
+      const metrics = overview?.metricsSnapshot?.metrics || {};
+      const heroMetric = metrics.weeklyActiveFeedbackLocations;
+      const heroDefinition = metricDefinitions.weeklyActiveFeedbackLocations;
+      const heroStatus = heroMetric?.status || 'Not enough data yet';
+
+      weeklyActiveHeroEl.innerHTML = `
+        <div>
+          <div class="metric-eyebrow">${escapeHtml(heroDefinition.category)}</div>
+          <h3>${escapeHtml(heroDefinition.name)}</h3>
+          <p class="metric-definition">${escapeHtml(heroDefinition.definition)}</p>
+          <p class="metric-tells"><strong>What this tells me:</strong> ${escapeHtml(heroDefinition.tells)}</p>
+          <span class="metric-status ${escapeHtml(metricStatusClass(heroStatus))}">Tracking/data status: ${escapeHtml(heroStatus)}</span>
+        </div>
+        <div class="metrics-hero-value">${escapeHtml(metricValue('weeklyActiveFeedbackLocations', heroMetric))}</div>
+      `;
+
+      const funnelKeys = [
+        'signups',
+        'qrGenerated',
+        'qrDeployed',
+        'firstFeedbackReceived',
+        'weeklyActiveFeedbackLocations'
+      ];
+      metricsFunnelFlowEl.innerHTML = funnelKeys.map((metricKey, index) => `
+        ${index ? '<div class="funnel-arrow" aria-hidden="true">&rarr;</div>' : ''}
+        <div class="funnel-stage">
+          <strong>${escapeHtml(metricValue(metricKey, metrics[metricKey]))}</strong>
+          <span>${escapeHtml(metricDefinitions[metricKey].name)}</span>
+        </div>
+      `).join('');
+
+      funnelMetricCardsEl.innerHTML = [
+        'signups',
+        'qrGenerated',
+        'qrDeployed',
+        'firstFeedbackReceived'
+      ].map((metricKey) => metricCard(metricKey, metrics[metricKey])).join('');
+
+      engagementMetricCardsEl.innerHTML = [
+        'dashboardViewedAfterFeedback',
+        'commentRate'
+      ].map((metricKey) => metricCard(metricKey, metrics[metricKey])).join('');
+
+      monetisationMetricCardsEl.innerHTML = metricCard(
+        'freeToPaidUpgrade',
+        metrics.freeToPaidUpgrade
+      );
+    }
+
     async function loadOverview() {
       rowsEl.innerHTML = '';
       emptyEl.style.display = 'none';
@@ -910,6 +1334,7 @@
     }
 
     function render() {
+      renderMetrics();
       const businesses = Array.isArray(overview?.businesses) ? overview.businesses : [];
       const query = searchEl.value.trim().toLowerCase();
       const alertsFilter = alertsEl.value;
@@ -1002,6 +1427,7 @@
       }
 
       requestedQrSignGenerated = true;
+      switchConsoleTab('business');
       setQrRequestStatus(`Generating QR sign for ${location.name || 'requested location'}...`);
       searchEl.value = '';
       alertsEl.value = 'all';
@@ -1135,6 +1561,19 @@
     loginFormEl.addEventListener('submit', handleLogin);
     logoutBtn.addEventListener('click', handleLogout);
     refreshBtn.addEventListener('click', loadOverview);
+    consoleTabEls.forEach((tab, index) => {
+      tab.addEventListener('click', () => switchConsoleTab(tab.dataset.consoleTab));
+      tab.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        let nextIndex = index;
+        if (event.key === 'ArrowLeft') nextIndex = (index - 1 + consoleTabEls.length) % consoleTabEls.length;
+        if (event.key === 'ArrowRight') nextIndex = (index + 1) % consoleTabEls.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = consoleTabEls.length - 1;
+        switchConsoleTab(consoleTabEls[nextIndex].dataset.consoleTab, true);
+      });
+    });
     prevPageBtn.addEventListener('click', () => {
       currentPage -= 1;
       render();
@@ -1170,6 +1609,7 @@
       generateAdminQrSign(button.dataset.qrBusinessId, button.dataset.qrLocationId);
     });
     overlayEl.addEventListener('click', closeDetail);
+    switchConsoleTab('metrics');
     loadOverview();
   </script>
 </body>
