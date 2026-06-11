@@ -3355,12 +3355,20 @@
 			  return __ffBusinessId;
 			}
 			
-			async function logEvent(eventType) {
+			async function logEvent(eventType, details = {}) {
 			  try {
 			    const bizId = await getCurrentBusinessId();
 			    if (!bizId) return; // silently skip if not authenticated/owner context
+			    const payload = {
+			      business_id: bizId,
+			      event_type: eventType
+			    };
+			    if (details.locationId) payload.location_id = details.locationId;
+			    if (details.source) payload.source = details.source;
+			    if (details.metadata) payload.metadata = details.metadata;
+			    if (details.idempotencyKey) payload.idempotency_key = details.idempotencyKey;
 			    await supabase.from('analytics_events').insert(
-			      { business_id: bizId, event_type: eventType },
+			      payload,
 			      { returning: 'minimal' }
 			    );
 			  } catch (e) {
@@ -5978,6 +5986,10 @@
 		  imageContainer.appendChild(img);
 		  signContainer.style.display = 'block';
 		  signContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		  logEvent('qr_generated', {
+		    locationId: selectedLocation,
+		    source: 'business_dashboard'
+		  });
 
 		  // --- Helpers ---
 		  function setFont(context, sizePx, bold, italic, family) {
@@ -6666,6 +6678,14 @@
 		});
 
 		// Download the generated sign image and log activation
+		function getSelectedQrTrackingLocationId() {
+		  const locations = currentUser ? currentUser.locations : {};
+		  return document.getElementById('qrLocationSelect')?.value ||
+		    Object.keys(locations || {})[0] ||
+		    currentLocation ||
+		    null;
+		}
+
 		function downloadQrSignAndLog() {
 		  const img = document.querySelector('#signImageContainer img');
 		  if (!img || !img.src) {
@@ -6678,7 +6698,10 @@
 		  document.body.appendChild(a);
 		  a.click();
 		  a.remove();
-		  logEvent('qr_downloaded');
+		  logEvent('qr_deployed', {
+		    locationId: getSelectedQrTrackingLocationId(),
+		    source: 'download'
+		  });
 		  // hide the onboarding banner right away
 		  const banner = document.getElementById('qrOnboardingBanner');
 		  if (banner) banner.style.display = 'none';
@@ -6741,7 +6764,12 @@
 		    window.open(pdfUrl, '_blank');
 		
 		    // Same analytics + onboarding suppression as Download
-		    try { logEvent('qr_downloaded'); } catch {}
+		    try {
+		      logEvent('qr_deployed', {
+		        locationId: getSelectedQrTrackingLocationId(),
+		        source: 'print'
+		      });
+		    } catch {}
 		    document.getElementById('qrOnboardingBanner')
 		      ?.style.setProperty('display', 'none', 'important');
 		  }
@@ -6811,7 +6839,12 @@
 		  }
 		
 		  // Same analytics + onboarding suppression as Download
-		  try { logEvent('qr_downloaded'); } catch {}
+		  try {
+		    logEvent('qr_deployed', {
+		      locationId: getSelectedQrTrackingLocationId(),
+		      source: 'print'
+		    });
+		  } catch {}
 		  document.getElementById('qrOnboardingBanner')?.style.setProperty('display', 'none', 'important');
 		}
 
@@ -7028,10 +7061,10 @@
 		      .from('analytics_events')
 		      .select('id')
 		      .eq('business_id', bizId)
-		      .eq('event_type', 'qr_downloaded')
+		      .in('event_type', ['qr_deployed', 'qr_downloaded'])
 		      .limit(1)
 		      .maybeSingle();
-		    if (error) { console.warn('check qr_downloaded failed:', error.message); return false; }
+		    if (error) { console.warn('check QR deployment failed:', error.message); return false; }
 		    return !!data;
 		  } catch (e) {
 		    console.warn('hasDownloadedQrSign error:', e?.message || e);
