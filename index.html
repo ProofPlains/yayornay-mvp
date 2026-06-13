@@ -3367,10 +3367,11 @@
 			    if (details.source) payload.source = details.source;
 			    if (details.metadata) payload.metadata = details.metadata;
 			    if (details.idempotencyKey) payload.idempotency_key = details.idempotencyKey;
-			    await supabase.from('analytics_events').insert(
+			    const { error } = await supabase.from('analytics_events').insert(
 			      payload,
 			      { returning: 'minimal' }
 			    );
+			    if (error) throw error;
 			  } catch (e) {
 			    // non-blocking
 			    console.warn('analytics log failed:', e?.message || e);
