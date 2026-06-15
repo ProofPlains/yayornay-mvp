@@ -1203,30 +1203,91 @@
 
 		.qr-sign-actions {
 		  margin-top: 14px;
+		  width: 100%;
+		  display: grid;
+		  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+		  gap: 12px;
+		  align-items: stretch;
+		}
+
+		.qr-action-choice {
 		  display: flex;
-		  gap: 8px;
-		  justify-content: center;
-		  flex-wrap: wrap;
-		  align-items: center;
+		  flex-direction: column;
+		  gap: 10px;
+		  min-width: 0;
+		  padding: 16px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 12px;
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		  text-align: left;
+		}
+
+		.qr-action-choice-title {
+		  color: var(--ff-text);
+		  font-size: 17px;
+		  font-weight: 800;
+		  line-height: 1.2;
+		}
+
+		.qr-action-choice-copy {
+		  flex: 1;
+		  margin: 0;
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  line-height: 1.45;
+		}
+
+		.qr-action-choice .btn {
+		  width: 100%;
+		  margin-top: auto;
+		}
+
+		.qr-action-or {
+		  align-self: center;
+		  color: var(--ff-text-muted);
+		  font-size: 12px;
+		  font-weight: 800;
+		  letter-spacing: .08em;
+		}
+
+		.qr-print-layout {
+		  display: grid;
+		  gap: 6px;
+		  color: var(--ff-text-muted);
+		  font-size: 12px;
+		  font-weight: 700;
+		}
+
+		.qr-print-layout select {
+		  width: 100%;
+		  min-width: 0;
+		  padding: 10px 34px 10px 12px;
 		}
 
 		.qr-sign-action-step {
 		  display: grid;
 		  gap: 10px;
-		  justify-items: center;
-		  margin-top: 16px;
+		  justify-items: stretch;
+		  margin-top: 36px;
+		  text-align: left;
 		}
 
-		.qr-action-or {
+		.qr-action-instruction {
 		  color: var(--ff-text-muted);
 		  font-size: 14px;
-		  font-weight: 700;
-		  text-transform: lowercase;
+		  line-height: 1.4;
 		}
 
-		.qr-placement-note {
-		  margin: 12px auto 0;
-		  max-width: 720px;
+		.qr-placement-step {
+		  width: 100%;
+		  margin-top: 22px;
+		  padding-top: 18px;
+		  border-top: 1px solid var(--ff-border);
+		  text-align: left;
+		}
+
+		.qr-placement-copy {
+		  margin: 6px 0 0;
 		  color: var(--ff-text-muted);
 		  font-size: 14px;
 		  line-height: 1.45;
@@ -1324,13 +1385,24 @@
 		  }
 		}
 
+		@media (max-width: 760px) {
+		  .qr-sign-actions {
+		    grid-template-columns: 1fr;
+		  }
+
+		  .qr-action-or {
+		    justify-self: center;
+		    padding: 2px 0;
+		  }
+		}
+
 		@media (min-width: 720px) {
 		  .qr-sign-panel {
 		    padding: 24px;
 		  }
 
 		  #generatedSign {
-		    max-width: 640px;
+		    max-width: 860px;
 		    margin-left: auto;
 		    margin-right: auto;
 		  }
@@ -1343,9 +1415,6 @@
 		    width: 280px;
 		  }
 
-		  .qr-sign-actions {
-		    justify-content: center;
-		  }
 		}
 
 		.settings-toggle {
@@ -2419,13 +2488,37 @@
 
 					  <div class="qr-sign-action-step">
 					    <div class="qr-step-label"><strong>Step 2:</strong> Get your QR Codes:</div>
+					    <div class="qr-action-instruction">Choose the option that works best for you.</div>
 					    <div class="qr-sign-actions">
-					      <button id="ffDownloadQrBtn" class="btn">Download</button>
-					      <button id="ffPrintQrBtn" class="btn">Print</button>
-					      <span class="qr-action-or">or</span>
-					      <button id="ffOrderQrBtn" class="btn">Order Stickers</button>
+					      <div class="qr-action-choice">
+					        <div class="qr-action-choice-title">Order stickers</div>
+					        <p class="qr-action-choice-copy">Have ready-to-use QR stickers printed and delivered to you.</p>
+					        <button id="ffOrderQrBtn" class="btn">Order Stickers</button>
+					      </div>
+					      <div class="qr-action-or" aria-hidden="true">OR</div>
+					      <div class="qr-action-choice">
+					        <div class="qr-action-choice-title">Print</div>
+					        <p class="qr-action-choice-copy">Print one large sign or nine smaller signs to cut out.</p>
+					        <label class="qr-print-layout" for="qrPrintLayout">
+					          Choose print layout
+					          <select id="qrPrintLayout">
+					            <option value="single">1 large sign</option>
+					            <option value="nine">9 small signs</option>
+					          </select>
+					        </label>
+					        <button id="ffPrintQrBtn" class="btn">Print Signs</button>
+					      </div>
+					      <div class="qr-action-or" aria-hidden="true">OR</div>
+					      <div class="qr-action-choice">
+					        <div class="qr-action-choice-title">Download</div>
+					        <p class="qr-action-choice-copy">Save the sign as an image to use digitally or print later.</p>
+					        <button id="ffDownloadQrBtn" class="btn">Download Sign</button>
+					      </div>
 					    </div>
-					    <div class="qr-placement-note"><strong>Step 3:</strong> Place them at point-of-sale, on tables, inside bill folders, and wherever else your customers can see them.</div>
+					    <div class="qr-placement-step">
+					      <div class="qr-step-label"><strong>Step 3:</strong> Place your QR Codes</div>
+					      <p class="qr-placement-copy">Place them at point-of-sale, on tables, inside bill folders, and wherever else your customers can see them.</p>
+					    </div>
 					  </div>
 					
 					  <form id="qrOrderForm" class="qr-order-form" style="display:none; margin:18px auto 0; text-align:left; background:var(--ff-surface); border:1px solid var(--ff-border); border-radius:12px; padding:16px;">
@@ -6730,6 +6823,36 @@
 		    }
 		    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 		    const pageW = 210, pageH = 297;
+		    const printLayout = document.getElementById('qrPrintLayout')?.value || 'single';
+
+		    if (printLayout === 'nine') {
+		      const margin = 6;
+		      const gap = 3;
+		      const columns = 3;
+		      const rows = 3;
+		      const iw = img.naturalWidth || 2000;
+		      const ih = img.naturalHeight || 3000;
+		      const imgRatio = iw / ih;
+		      const cellW = (pageW - (margin * 2) - (gap * (columns - 1))) / columns;
+		      const cellH = (pageH - (margin * 2) - (gap * (rows - 1))) / rows;
+		      const cellRatio = cellW / cellH;
+		      const signW = imgRatio > cellRatio ? cellW : cellH * imgRatio;
+		      const signH = imgRatio > cellRatio ? cellW / imgRatio : cellH;
+
+		      for (let row = 0; row < rows; row++) {
+		        for (let column = 0; column < columns; column++) {
+		          const cellX = margin + column * (cellW + gap);
+		          const cellY = margin + row * (cellH + gap);
+		          const x = cellX + (cellW - signW) / 2;
+		          const y = cellY + (cellH - signH) / 2;
+
+		          doc.addImage(img.src, 'PNG', x, y, signW, signH, undefined, 'FAST');
+		          doc.setDrawColor(190);
+		          doc.setLineWidth(0.2);
+		          doc.rect(x, y, signW, signH);
+		        }
+		      }
+		    } else {
 		    const margin = 10;                          // 10mm all around
 		    const maxW = pageW - margin * 2;            // 190mm
 		    const maxH = pageH - margin * 2;            // 277mm
@@ -6759,6 +6882,7 @@
 		
 		    // Add image to the PDF (png/jpg both fine)
 		    doc.addImage(img.src, 'PNG', x, y, w, h, undefined, 'FAST');
+		    }
 		
 		    // Open the PDF in a new tab (Android Chrome shows print icon there)
 		    const pdfUrl = doc.output('bloburl');
