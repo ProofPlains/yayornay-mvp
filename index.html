@@ -2616,6 +2616,22 @@
 				    <div id="settingsPlanPanel" class="plan-panel"></div>
 				  </div>
 
+				  <!-- Team -->
+				  <div style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:20px;margin-bottom:20px;">
+				    <h3 style="margin-bottom:12px;">Team</h3>
+				    <div class="settings-helper">Invite Admins to help manage feedback, locations, QR codes, and business settings.</div>
+				    <div id="settingsTeamSummary" class="settings-helper" style="margin-top:8px;"></div>
+				    <div id="settingsTeamList" style="margin-top:14px;"></div>
+				    <form id="settingsTeamInviteForm" onsubmit="inviteTeamMember(event)" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:16px;">
+				      <div class="form-group" style="flex:1;min-width:220px;margin:0;">
+				        <label for="settingsTeamInviteEmail">Invite Admin by email</label>
+				        <input id="settingsTeamInviteEmail" type="email" placeholder="teammate@example.com">
+				      </div>
+				      <button class="btn" type="submit">Send invite</button>
+				    </form>
+				    <div id="settingsTeamStatus" style="margin-top:8px;color:#4b5563;"></div>
+				  </div>
+
 				  <!-- Notifications -->
 				  <div style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:20px;margin-bottom:20px;">
 				    <h3 style="margin-bottom:12px;">Email alerts</h3>
@@ -2778,15 +2794,16 @@
 			window.supabase = supabase; // expose the client for console/debug use
 
 			const PRICING_TIERS = {
-			  free: { key: 'free', label: 'Free', priceLabel: 'Free', locationLimit: 1, checkout: false, summary: '1 location to get started.', features: ['1 location', '30 days of feedback history', 'Private feedback dashboard', 'QR code generation'] },
+			  free: { key: 'free', label: 'Free', priceLabel: 'Free', locationLimit: 1, teamLimit: 1, checkout: false, summary: '1 location to get started.', features: ['1 location', '1 user', '30 days of feedback history', 'Private feedback dashboard', 'QR code generation'] },
 			  growth: {
 			    key: 'growth',
 			    label: 'Growth',
 			    priceLabel: 'Paid plan',
 			    locationLimit: 5,
+			    teamLimit: 3,
 			    checkout: true,
 			    summary: 'Up to 5 locations.',
-			    features: ['Up to 5 locations', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
+			    features: ['Up to 5 locations', 'Up to 3 users', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
 			    sandboxPriceId: 'price_1TaajGFIxmPNhgh2Purgftxq',
 			    productionPriceId: 'price_1TabHTFNq4Xp479bhvLoemuU'
 			  },
@@ -2795,9 +2812,10 @@
 			    label: 'Pro',
 			    priceLabel: 'Paid plan',
 			    locationLimit: Infinity,
+			    teamLimit: 10,
 			    checkout: true,
 			    summary: 'Unlimited locations.',
-			    features: ['Unlimited locations', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
+			    features: ['Unlimited locations', 'Up to 10 users', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
 			    sandboxPriceId: 'price_1TaaliFIxmPNhgh2psSx6s23',
 			    productionPriceId: 'price_1TabHQFNq4Xp479bH5NeGLYu'
 			  }
@@ -2821,6 +2839,31 @@
 
 			function getCurrentPricingTier() {
 			  return getPricingTier(currentUser?.pricingTier || 'free');
+			}
+
+			function isCurrentUserOwner() {
+			  return currentUser?.role === 'owner';
+			}
+
+			function getTeamLimit(tierKey = currentUser?.pricingTier || 'free') {
+			  return getPricingTier(tierKey).teamLimit || 1;
+			}
+
+			function getTeamSeatCount() {
+			  const members = Array.isArray(currentUser?.teamMembers) ? currentUser.teamMembers.length : 1;
+			  const invites = Array.isArray(currentUser?.teamInvites) ? currentUser.teamInvites.length : 0;
+			  return members + invites;
+			}
+
+			function getTeamMemberLabel(count) {
+			  return `${count} user${count === 1 ? '' : 's'}`;
+			}
+
+			function getTeamLimitMessage() {
+			  const tier = getCurrentPricingTier();
+			  const used = getTeamSeatCount();
+			  const limit = getTeamLimit(tier.key);
+			  return `${getTeamMemberLabel(used)} used, ${getTeamMemberLabel(limit)} included`;
 			}
 
 			function getActiveLocationCount() {
@@ -3090,6 +3133,8 @@
 			    : getPricingTier(currentTier).key;
 			  if (context === 'limit') {
 			    pricingModalSelectedTier = currentTier === 'free' ? 'growth' : currentTier === 'growth' ? 'pro' : 'pro';
+			  } else if (context === 'team-limit') {
+			    pricingModalSelectedTier = currentTier === 'free' ? 'growth' : currentTier === 'growth' ? 'pro' : 'pro';
 			  } else if (context === 'history-upgrade') {
 			    pricingModalSelectedTier = currentTier === 'free' ? 'growth' : currentTier;
 			  }
@@ -3103,6 +3148,8 @@
 
 			  if (title) title.textContent = context === 'limit'
 			    ? 'Upgrade to add more locations'
+			    : context === 'team-limit'
+			      ? 'Upgrade to add team members'
 			    : context === 'history-upgrade'
 			      ? 'Unlock full feedback history'
 			    : context === 'pending-location-action'
@@ -3115,6 +3162,10 @@
 			      ? 'This complimentary plan is managed by FlashFeedback support.'
 			      : context === 'limit'
 			      ? 'Your current plan has reached its location limit. Choose a plan with more room to keep growing.'
+			      : context === 'team-limit'
+			        ? currentTier === 'growth'
+			          ? 'Pro includes up to 10 team members for larger teams.'
+			          : 'Growth lets you invite your team so more people can help manage feedback and QR codes.'
 			      : context === 'history-upgrade'
 			        ? 'Growth and Pro include unlimited feedback history, so you can see every response your customers have sent.'
 			      : context === 'pending-location-action'
@@ -3192,6 +3243,10 @@
 			}
 
 			async function startSubscriptionCheckout(tierKey, expectedUserId = currentUser?.userId) {
+			  if (currentUser && !isCurrentUserOwner()) {
+			    alert('Only the Owner can change the plan.');
+			    return false;
+			  }
 			  const tier = getPricingTier(tierKey);
 			  if (!currentUser?.businessId || !tier.checkout) return false;
 			  const returnUrl = getPlanReturnUrl();
@@ -3232,6 +3287,10 @@
 			}
 
 			async function changeSubscriptionPlan(tierKey) {
+			  if (currentUser && !isCurrentUserOwner()) {
+			    alert('Only the Owner can change the plan.');
+			    return false;
+			  }
 			  if (!currentUser?.businessId) return false;
 			  const pendingAction = pricingModalPendingAction;
 			  const continueBtn = document.getElementById('pricingModalContinue');
@@ -3387,6 +3446,8 @@
 			    ? 'Unlimited locations'
 			    : `${tier.locationLimit} location${tier.locationLimit === 1 ? '' : 's'} included`;
 			  const historyAllowanceText = tier.key === 'free' ? '30 days' : 'Unlimited';
+			  const teamAllowanceText = `${getTeamLimit(tier.key)} user${getTeamLimit(tier.key) === 1 ? '' : 's'} included`;
+			  const teamUsageText = getTeamMemberLabel(getTeamSeatCount());
 			  const pendingTier = currentUser.pendingPricingTier ? getPricingTier(currentUser.pendingPricingTier) : null;
 			  const pendingDate = formatPlanDate(currentUser.planChangeEffectiveAt);
 			  const pendingMessage = pendingTier
@@ -3407,6 +3468,7 @@
 			      <div class="plan-usage-grid">
 			        <div class="plan-usage-item"><span>Allowance</span><strong>${allowanceText}</strong></div>
 			        <div class="plan-usage-item"><span>Current usage</span><strong>${usageText}</strong></div>
+			        <div class="plan-usage-item"><span>Team</span><strong>${teamUsageText} / ${teamAllowanceText}</strong></div>
 			        <div class="plan-usage-item"><span>Feedback history</span><strong>${historyAllowanceText}</strong></div>
 			      </div>
 			    </div>
@@ -3415,10 +3477,232 @@
 			    ${isTestMode ? '<div class="settings-helper">This account is using a Stripe test subscription. No real payment was collected.</div>' : ''}
 			    ${pendingMessage}
 			    ${paymentMessage}
-			    <div class="plan-actions">
-			      <button class="btn" type="button" onclick="openPricingModal('settings')">${isComped ? 'View Plan' : 'Upgrade / Change Plan'}</button>
-			    </div>
+			    ${isCurrentUserOwner() ? `
+			      <div class="plan-actions">
+			        <button class="btn" type="button" onclick="openPricingModal('settings')">${isComped ? 'View Plan' : 'Upgrade / Change Plan'}</button>
+			      </div>
+			    ` : '<div class="settings-helper">Only the Owner can change or cancel the plan.</div>'}
 			  `;
+			}
+
+			async function callTeamMembersApi(payload) {
+			  const { data: { session } } = await supabase.auth.getSession();
+			  const accessToken = session?.access_token;
+			  if (!accessToken) throw new Error('Please log in again.');
+
+			  const res = await fetch(`${SUPABASE_URL}/functions/v1/team-members`, {
+			    method: 'POST',
+			    headers: {
+			      'Content-Type': 'application/json',
+			      'apikey': SUPABASE_ANON_KEY,
+			      'Authorization': 'Bearer ' + accessToken
+			    },
+			    body: JSON.stringify(payload)
+			  });
+			  const body = await res.json().catch(() => ({}));
+			  if (!res.ok) {
+			    const error = new Error(body?.error || 'Team update failed');
+			    error.code = body?.code;
+			    error.tier = body?.tier;
+			    error.limit = body?.limit;
+			    error.used = body?.used;
+			    throw error;
+			  }
+			  return body;
+			}
+
+			async function callBusinessSettingsApi(payload) {
+			  const { data: { session } } = await supabase.auth.getSession();
+			  const accessToken = session?.access_token;
+			  if (!accessToken) throw new Error('Please log in again.');
+
+			  const res = await fetch(`${SUPABASE_URL}/functions/v1/business-settings`, {
+			    method: 'POST',
+			    headers: {
+			      'Content-Type': 'application/json',
+			      'apikey': SUPABASE_ANON_KEY,
+			      'Authorization': 'Bearer ' + accessToken
+			    },
+			    body: JSON.stringify(payload)
+			  });
+			  const body = await res.json().catch(() => ({}));
+			  if (!res.ok) throw new Error(body?.error || 'Could not save settings');
+			  return body;
+			}
+
+			function getTeamReturnUrl() {
+			  if (window.location.protocol === 'file:') return null;
+			  return window.location.href.split('#')[0].split('?')[0];
+			}
+
+			function renderTeamPanel() {
+			  const summary = document.getElementById('settingsTeamSummary');
+			  const list = document.getElementById('settingsTeamList');
+			  const status = document.getElementById('settingsTeamStatus');
+			  if (!summary || !list || !currentUser) return;
+
+			  const members = Array.isArray(currentUser.teamMembers) ? currentUser.teamMembers : [];
+			  const invites = Array.isArray(currentUser.teamInvites) ? currentUser.teamInvites : [];
+			  summary.textContent = getTeamLimitMessage();
+
+			  const memberRows = members.map((member) => {
+			    const isOwner = member.role === 'owner';
+			    const canRemove = !isOwner;
+			    const email = escapePricingHtml(member.email || (member.user_id === currentUser.userId ? currentUser.email : 'Team member'));
+			    const role = isOwner ? 'Owner' : 'Admin';
+			    return `
+			      <div class="plan-usage-item" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;">
+			        <div><strong>${email}</strong><div class="settings-helper" style="margin:2px 0 0 0;">${role}</div></div>
+			        ${canRemove ? `<button class="btn" type="button" onclick="removeTeamMember('${escapePricingHtml(member.user_id)}')">Remove</button>` : ''}
+			      </div>
+			    `;
+			  }).join('');
+
+			  const inviteRows = invites.map((invite) => `
+			    <div class="plan-usage-item" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;">
+			      <div><strong>${escapePricingHtml(invite.email)}</strong><div class="settings-helper" style="margin:2px 0 0 0;">Pending Admin invite</div></div>
+			      <button class="btn" type="button" onclick="revokeTeamInvite('${escapePricingHtml(invite.id)}')">Revoke</button>
+			    </div>
+			  `).join('');
+
+			  list.innerHTML = memberRows + inviteRows || '<div class="settings-helper">No team members yet.</div>';
+			  if (status && !status.textContent) status.textContent = '';
+			}
+
+			async function loadTeamMembers() {
+			  if (!currentUser?.businessId) return;
+			  const status = document.getElementById('settingsTeamStatus');
+			  try {
+			    const team = await callTeamMembersApi({
+			      action: 'list',
+			      business_id: currentUser.businessId
+			    });
+			    currentUser.teamMembers = Array.isArray(team.members) ? team.members : [];
+			    currentUser.teamInvites = Array.isArray(team.invites) ? team.invites : [];
+			    renderTeamPanel();
+			    renderPlanPanel();
+			  } catch (error) {
+			    console.error(error);
+			    if (status) status.textContent = error.message || 'Could not load team members.';
+			  }
+			}
+
+			async function inviteTeamMember(event) {
+			  event.preventDefault();
+			  const input = document.getElementById('settingsTeamInviteEmail');
+			  const status = document.getElementById('settingsTeamStatus');
+			  const email = String(input?.value || '').trim().toLowerCase();
+			  if (!email) {
+			    if (status) status.textContent = 'Enter an email address.';
+			    return;
+			  }
+
+			  const tier = getCurrentPricingTier();
+			  const used = getTeamSeatCount();
+			  const limit = getTeamLimit(tier.key);
+			  if (used >= limit) {
+			    if (tier.key === 'pro') {
+			      if (status) status.textContent = 'Pro includes up to 10 team members. Contact FlashFeedback to add more.';
+			    } else {
+			      openPricingModal('team-limit');
+			    }
+			    return;
+			  }
+
+			  if (status) status.textContent = 'Sending invite...';
+			  try {
+			    const result = await callTeamMembersApi({
+			      action: 'invite',
+			      business_id: currentUser.businessId,
+			      email,
+			      return_url: getTeamReturnUrl()
+			    });
+			    if (input) input.value = '';
+			    await loadTeamMembers();
+			    if (status) {
+			      status.textContent = result.emailed
+			        ? 'Invite sent.'
+			        : `Invite created. Share this link: ${result.inviteUrl}`;
+			    }
+			  } catch (error) {
+			    console.error(error);
+			    if (error.code === 'team_limit') {
+			      if ((error.tier || tier.key) === 'pro') {
+			        if (status) status.textContent = 'Pro includes up to 10 team members. Contact FlashFeedback to add more.';
+			      } else {
+			        openPricingModal('team-limit');
+			        if (status) status.textContent = '';
+			      }
+			      return;
+			    }
+			    if (status) status.textContent = error.message || 'Could not send invite.';
+			  }
+			}
+
+			async function removeTeamMember(userId) {
+			  if (!currentUser?.businessId || !userId) return;
+			  const status = document.getElementById('settingsTeamStatus');
+			  if (!confirm('Remove this Admin from the team?')) return;
+			  if (status) status.textContent = 'Removing...';
+			  try {
+			    await callTeamMembersApi({
+			      action: 'remove',
+			      business_id: currentUser.businessId,
+			      user_id: userId
+			    });
+			    await loadTeamMembers();
+			    if (status) status.textContent = 'Admin removed.';
+			  } catch (error) {
+			    console.error(error);
+			    if (status) status.textContent = error.message || 'Could not remove Admin.';
+			  }
+			}
+
+			async function revokeTeamInvite(inviteId) {
+			  if (!currentUser?.businessId || !inviteId) return;
+			  const status = document.getElementById('settingsTeamStatus');
+			  if (status) status.textContent = 'Revoking invite...';
+			  try {
+			    await callTeamMembersApi({
+			      action: 'revoke',
+			      business_id: currentUser.businessId,
+			      invite_id: inviteId
+			    });
+			    await loadTeamMembers();
+			    if (status) status.textContent = 'Invite revoked.';
+			  } catch (error) {
+			    console.error(error);
+			    if (status) status.textContent = error.message || 'Could not revoke invite.';
+			  }
+			}
+
+			async function handleTeamInviteFromUrl(user) {
+			  const urlParams = new URLSearchParams(window.location.search);
+			  const token = urlParams.get('team_invite');
+			  if (!token) return false;
+
+			  if (!user) {
+			    showLogin();
+			    showError?.('loginError', 'Log in or create an account with the invited email to accept this team invite.');
+			    return true;
+			  }
+
+			  try {
+			    await callTeamMembersApi({ action: 'accept', token });
+			    urlParams.delete('team_invite');
+			    const cleanQuery = urlParams.toString();
+			    history.replaceState({}, document.title, `${window.location.pathname}${cleanQuery ? '?' + cleanQuery : ''}`);
+			    await hydrateAndShowDashboard(user);
+			    showSection('settings');
+			    const status = document.getElementById('settingsTeamStatus');
+			    if (status) status.textContent = 'Invite accepted. You are now an Admin on this team.';
+			    return true;
+			  } catch (error) {
+			    console.error(error);
+			    showLogin();
+			    showError?.('loginError', error.message || 'Could not accept this team invite.');
+			    return true;
+			  }
 			}
 
 			// ---- Analytics helpers (events table already exists server-side) ----
@@ -3435,16 +3719,10 @@
 			  const uid = u?.user?.id;
 			  if (!uid) return null;
 			
-			  // Find the first business owned by the user (mirrors your hydrate logic)
-			  const { data, error } = await supabase
-			    .from('businesses')
-			    .select('id')
-			    .eq('owner_id', uid)
-			    .order('created_at', { ascending: true })
-			    .limit(1);
-			  if (error || !data || !data[0]) return null;
+			  const loaded = await loadBusinessForUser({ id: uid });
+			  if (!loaded?.business?.id) return null;
 			
-			  __ffBusinessId = data[0].id;
+			  __ffBusinessId = loaded.business.id;
 			  return __ffBusinessId;
 			}
 			
@@ -3811,6 +4089,7 @@
 		  const qrSignLocationId = urlParams.get('qr-sign-location') || (urlParams.get('qr-sign') === '1' ? locationId : null);
 		  const unsubscribeType = urlParams.get('unsubscribe');
 		  const unsubscribeBusinessId = urlParams.get('business');
+		  const teamInviteToken = urlParams.get('team_invite');
 		
 		  // 👇 NEW: detect Supabase recovery deeplink in the URL hash or query
 		  const isRecovery =
@@ -3885,9 +4164,18 @@
 		    // 3) Try to restore owner session (non-recovery)
 		    const { data: { session } } = await supabase.auth.getSession();
 		    if (session?.user) {
+		      if (teamInviteToken && await handleTeamInviteFromUrl(session.user)) {
+		        booted = true;
+		        return;
+		      }
 		      await hydrateAndShowDashboard(session.user);
 		      await handleSubscriptionReturn();
 		      showQrOrderReturnMessage();
+		      booted = true;
+		      return;
+		    }
+		    if (teamInviteToken) {
+		      await handleTeamInviteFromUrl(null);
 		      booted = true;
 		      return;
 		    }
@@ -4185,6 +4473,24 @@
 		    signupSession = login.session;
 		  }
 
+		  const inviteToken = new URLSearchParams(window.location.search).get('team_invite');
+		  if (inviteToken) {
+		    try {
+		      await callTeamMembersApi({ action: 'accept', token: inviteToken });
+		      const cleanUrl = new URL(window.location.href);
+		      cleanUrl.searchParams.delete('team_invite');
+		      history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+		      await hydrateAndShowDashboard(user);
+		      showSection('settings');
+		      const status = document.getElementById('settingsTeamStatus');
+		      if (status) status.textContent = 'Invite accepted. You are now an Admin on this team.';
+		      return;
+		    } catch (error) {
+		      showError('signupError', error.message || 'Could not accept this team invite.');
+		      return;
+		    }
+		  }
+
 		  try {
 			// 2) Create business owned by this user
 			const { data: biz, error: bizErr } = await supabase
@@ -4228,6 +4534,7 @@
 			// 5) Build the in-memory shape your UI expects
 			currentUser = {
 			  userId: user.id,
+			  role: 'owner',
 			  businessId: biz.id,
 			  businessName,
 			  ownerName,
@@ -4241,6 +4548,8 @@
 			  planChangeEffectiveAt: null,
 			  stripeSubscriptionScheduleId: null,
 			  feedbackHistoryEntitlement: defaultFeedbackHistoryEntitlement('free'),
+			  teamMembers: [{ user_id: user.id, role: 'owner', email }],
+			  teamInvites: [],
 			  feedbackHistoryError: null,
 			  feedbackHistoryLoading: false,
 			  locations: buildLocationsShape([loc], [])
@@ -4294,18 +4603,43 @@
 		  }
 		}
 
-		// Re-usable path after we know "user" is authenticated (fresh login or restored session)
-		async function hydrateAndShowDashboard(user) {
-		  // 2) Load or create business
-		  let { data: bizRows, error: bizErr } = await supabase
+		async function loadBusinessForUser(user) {
+		  let { data: ownedRows, error: ownedErr } = await supabase
 		    .from('businesses')
 		    .select('*')
 		    .eq('owner_id', user.id)
 		    .order('created_at', { ascending: true })
 		    .limit(1);
-		  if (bizErr) throw bizErr;
-		
-		  let business = bizRows && bizRows[0];
+		  if (ownedErr) throw ownedErr;
+		  if (ownedRows && ownedRows[0]) {
+		    return { business: ownedRows[0], role: 'owner' };
+		  }
+
+		  const { data: membershipRows, error: membershipErr } = await supabase
+		    .from('business_users')
+		    .select('business_id,role,created_at')
+		    .eq('user_id', user.id)
+		    .order('created_at', { ascending: true })
+		    .limit(1);
+		  if (membershipErr) throw membershipErr;
+		  const membership = membershipRows && membershipRows[0];
+		  if (!membership?.business_id) return { business: null, role: null };
+
+		  const { data: business, error: businessErr } = await supabase
+		    .from('businesses')
+		    .select('*')
+		    .eq('id', membership.business_id)
+		    .single();
+		  if (businessErr) throw businessErr;
+		  return { business, role: membership.role || 'admin' };
+		}
+
+		// Re-usable path after we know "user" is authenticated (fresh login or restored session)
+		async function hydrateAndShowDashboard(user) {
+		  // 2) Load or create business
+		  const loaded = await loadBusinessForUser(user);
+		  let business = loaded.business;
+		  let businessRole = loaded.role || 'owner';
 		  if (!business) {
 		    const { data: newBiz, error: nbErr } = await supabase
 		      .from('businesses')
@@ -4327,6 +4661,7 @@
 		    if (blErr) throw blErr;
 		
 		    business = newBiz;
+		    businessRole = 'owner';
 		  }
 		
 		  // 3) Load locations (create one if none)
@@ -4368,6 +4703,7 @@
 		  // 5) Set state
 		  currentUser = {
 			  userId: user.id,
+			  role: businessRole,
 			  businessId: business.id,
 			  businessName: business.name,
 			  ownerName: business.owner_name || '',
@@ -4386,6 +4722,8 @@
 			  feedbackHistoryEntitlement: historyResult.entitlement,
 			  feedbackHistoryError: historyError,
 			  feedbackHistoryLoading: false,
+			  teamMembers: [{ user_id: user.id, role: businessRole, email: user.email || '' }],
+			  teamInvites: [],
 			  locations: buildLocationsShape(locRows, fbRows)
 			};
 			renderBranding();		  
@@ -4552,7 +4890,10 @@
 		    }
 		
 		    const user = login.user;
-		    await hydrateAndShowDashboard(user);
+		    const urlParams = new URLSearchParams(window.location.search);
+		    if (!(urlParams.get('team_invite') && await handleTeamInviteFromUrl(user))) {
+		      await hydrateAndShowDashboard(user);
+		    }
 
 			hideLoader(); // 👈 stop once dashboard is ready
 			  
@@ -6236,6 +6577,10 @@
 		  adjustQrOrderQuantity,
 		  startSubscriptionCheckout,
 		  renderPlanPanel,
+		  loadTeamMembers,
+		  inviteTeamMember,
+		  removeTeamMember,
+		  revokeTeamInvite,
 		  openPricingModal,
 		  closePricingModal,
 		  confirmPricingModal,
@@ -6315,6 +6660,7 @@
 		    try { sel.value = currentUser.defaultLocationId; } catch {}
 		  }
 		  renderPlanPanel();
+		  await loadTeamMembers();
 		}
 
 		async function saveProfileSettings() {
@@ -6322,14 +6668,15 @@
 		  const status = document.getElementById('settingsProfileStatus');
 		  status.textContent = 'Saving...';
 		
-		  const { error } = await supabase
-		    .from('businesses')
-		    .update({ owner_name: ownerName })
-		    .eq('id', currentUser.businessId);
-		
-		  if (error) {
+		  try {
+		    await callBusinessSettingsApi({
+		      action: 'profile',
+		      business_id: currentUser.businessId,
+		      owner_name: ownerName
+		    });
+		  } catch (error) {
 		    console.error(error);
-		    status.textContent = 'Error saving profile';
+		    status.textContent = error.message || 'Error saving profile';
 		    return;
 		  }
 		  currentUser.ownerName = ownerName;
@@ -6351,17 +6698,20 @@
 		  }
 		  status.textContent = 'Saving...';
 		
-		  const patch = { name, timezone: tz, logo_url: logo || null, industry: industry || null, business_type: businessType || null };
-		  if (def) patch.default_location_id = def;
-		
-		  const { error } = await supabase
-		    .from('businesses')
-		    .update(patch)
-		    .eq('id', currentUser.businessId);
-		
-		  if (error) {
+		  try {
+		    await callBusinessSettingsApi({
+		      action: 'business',
+		      business_id: currentUser.businessId,
+		      name,
+		      timezone: tz,
+		      default_location_id: def,
+		      logo_url: logo || null,
+		      industry: industry || null,
+		      business_type: businessType || null
+		    });
+		  } catch (error) {
 		    console.error(error);
-		    status.textContent = 'Error saving business';
+		    status.textContent = error.message || 'Error saving business';
 		    return;
 		  }
 		
@@ -6385,14 +6735,15 @@
 		  }
 
 		  if (status) status.textContent = 'Saving...';
-		  const { error } = await supabase
-		    .from('businesses')
-		    .update({ email_alerts_enabled: enabled })
-		    .eq('id', currentUser.businessId);
-
-		  if (error) {
+		  try {
+		    await callBusinessSettingsApi({
+		      action: 'email_alerts',
+		      business_id: currentUser.businessId,
+		      email_alerts_enabled: enabled
+		    });
+		  } catch (error) {
 		    console.error(error);
-		    if (status) status.textContent = 'Error saving alerts';
+		    if (status) status.textContent = error.message || 'Error saving alerts';
 		    if (event?.target) event.target.checked = !enabled;
 		    return;
 		  }
