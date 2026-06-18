@@ -2192,6 +2192,45 @@
         </div>
     </div>
 
+	<!-- Team Invite Account Creation -->
+	<div id="teamInviteAccountScreen" class="login-container" style="display:none;">
+	  <div class="brand-header">
+		  <img class="brand-logo" src="Grape%20Bolt%20Transparent.png" alt="FlashFeedback logo">
+		  <span class="brand-title">FLASHFEEDBACK</span>
+		</div>
+
+	  <div class="form-title">
+	    <h2>Create your account</h2>
+	    <p id="teamInviteIntro" style="opacity:.9;">Create your user account to join this team.</p>
+	  </div>
+
+	  <div id="teamInviteError" class="error-message" style="display:none;"></div>
+
+	  <form id="teamInviteAccountForm" onsubmit="handleTeamInviteAccountSignup(event)">
+	    <div class="form-group">
+	      <label for="teamInviteName">Your name</label>
+	      <input id="teamInviteName" type="text" required>
+	    </div>
+	    <div class="form-group">
+	      <label for="teamInviteEmail">Email Address</label>
+	      <input id="teamInviteEmail" type="email" readonly required>
+	    </div>
+	    <div class="form-group">
+	      <label for="teamInvitePassword">Password</label>
+	      <input id="teamInvitePassword" type="password" required minlength="6">
+	    </div>
+	    <div class="form-group">
+	      <label for="teamInviteConfirmPassword">Confirm Password</label>
+	      <input id="teamInviteConfirmPassword" type="password" required minlength="6">
+	    </div>
+	    <button type="submit" class="btn-primary" style="width:100%;margin-top:10px;">Create account and join team</button>
+	  </form>
+
+	  <div style="text-align:center; margin-top: 20px;">
+	    <button class="link-button" onclick="showLogin()">Already have an account? Log in</button>
+	  </div>
+	</div>
+
 	<!-- Forgot Password (request link) -->
 	<div id="forgotPasswordScreen" class="login-container" style="display:none;">
 	  <div class="brand-header">
@@ -3506,9 +3545,26 @@
 			    error.tier = body?.tier;
 			    error.limit = body?.limit;
 			    error.used = body?.used;
+			    error.inviteEmail = body?.inviteEmail;
+			    error.currentEmail = body?.currentEmail;
 			    throw error;
 			  }
 			  return body;
+			}
+
+			async function lookupTeamInvite(token) {
+			  const res = await fetch(`${SUPABASE_URL}/functions/v1/team-members`, {
+			    method: 'POST',
+			    headers: {
+			      'Content-Type': 'application/json',
+			      'apikey': SUPABASE_ANON_KEY,
+			      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+			    },
+			    body: JSON.stringify({ action: 'lookup', token })
+			  });
+			  const body = await res.json().catch(() => ({}));
+			  if (!res.ok) throw new Error(body?.error || 'Could not load this team invite.');
+			  return body.invite;
 			}
 
 			async function callBusinessSettingsApi(payload) {
@@ -3635,6 +3691,10 @@
 			      }
 			      return;
 			    }
+			    if (error.code === 'existing_user') {
+			      if (status) status.textContent = 'That email already has a FlashFeedback account, so it cannot be invited to another business.';
+			      return;
+			    }
 			    if (status) status.textContent = error.message || 'Could not send invite.';
 			  }
 			}
@@ -3682,8 +3742,7 @@
 			  if (!token) return false;
 
 			  if (!user) {
-			    showLogin();
-			    showError?.('loginError', 'Log in or create an account with the invited email to accept this team invite.');
+			    await showTeamInviteAccountScreen(token);
 			    return true;
 			  }
 
@@ -3699,6 +3758,29 @@
 			    return true;
 			  } catch (error) {
 			    console.error(error);
+			    if (error.code === 'email_mismatch') {
+			      try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+			      currentUser = null;
+			      window.currentUser = null;
+			      await showTeamInviteAccountScreen(token);
+			      const invitedEmail = String(error.inviteEmail || '').trim();
+			      const loginEmail = document.getElementById('loginEmail');
+			      if (invitedEmail && loginEmail) loginEmail.value = invitedEmail;
+			      const signupEmail = document.getElementById('email');
+			      if (invitedEmail && signupEmail) signupEmail.value = invitedEmail;
+			      showError?.('teamInviteError', invitedEmail
+			        ? `This invite is for ${invitedEmail}. Create a new user account with that email, or ask the business to invite a different email.`
+			        : 'Create a new user account with the invited email address to accept this team invite.');
+			      return true;
+			    }
+			    if (error.code === 'existing_user') {
+			      try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+			      currentUser = null;
+			      window.currentUser = null;
+			      await showTeamInviteAccountScreen(token);
+			      showError?.('teamInviteError', 'This email already has a FlashFeedback account, so it cannot be invited to another business.');
+			      return true;
+			    }
 			    showLogin();
 			    showError?.('loginError', error.message || 'Could not accept this team invite.');
 			    return true;
@@ -4250,7 +4332,103 @@
 		}
 
 
+        function getTeamInviteEmailHint() {
+            const loginEmail = document.getElementById('loginEmail')?.value?.trim();
+            const signupEmail = document.getElementById('email')?.value?.trim();
+            const inviteEmail = document.getElementById('teamInviteEmail')?.value?.trim();
+            return inviteEmail || loginEmail || signupEmail || '';
+        }
+
+        async function showTeamInviteAccountScreen(token = new URLSearchParams(window.location.search).get('team_invite')) {
+            hideAllScreens();
+            hideAdminControls();
+            resetQrSignUI();
+
+            const screen = document.getElementById('teamInviteAccountScreen');
+            const intro = document.getElementById('teamInviteIntro');
+            const emailInput = document.getElementById('teamInviteEmail');
+            const errorEl = document.getElementById('teamInviteError');
+            if (errorEl) {
+                errorEl.style.display = 'none';
+                errorEl.textContent = '';
+            }
+            screen.style.display = 'block';
+            currentView = 'team-invite-account';
+
+            if (!token) {
+                showError?.('teamInviteError', 'This invite link is missing its invite code.');
+                return;
+            }
+
+            try {
+                const invite = await lookupTeamInvite(token);
+                if (emailInput) emailInput.value = invite.email || '';
+                if (intro) intro.textContent = `Create your user account to join ${invite.businessName || 'this business'} as an Admin.`;
+            } catch (error) {
+                console.error(error);
+                showError?.('teamInviteError', error.message || 'Could not load this team invite.');
+            }
+        }
+
+        async function handleTeamInviteAccountSignup(event) {
+            event.preventDefault();
+            const token = new URLSearchParams(window.location.search).get('team_invite');
+            const name = document.getElementById('teamInviteName')?.value.trim() || '';
+            const email = document.getElementById('teamInviteEmail')?.value.trim().toLowerCase() || '';
+            const password = document.getElementById('teamInvitePassword')?.value || '';
+            const confirm = document.getElementById('teamInviteConfirmPassword')?.value || '';
+
+            if (!token) { showError?.('teamInviteError', 'This invite link is missing its invite code.'); return; }
+            if (!name || !email || !password || !confirm) { showError?.('teamInviteError', 'Please fill in all fields.'); return; }
+            if (password !== confirm) { showError?.('teamInviteError', 'Passwords do not match.'); return; }
+            if (password.length < 6) { showError?.('teamInviteError', 'Password must be at least 6 characters long.'); return; }
+
+            try {
+                try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+                const { data: signup, error: signupError } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { data: { full_name: name } }
+                });
+                if (signupError) {
+                    const message = String(signupError.message || '');
+                    if (message.toLowerCase().includes('already')) {
+                        showError?.('teamInviteError', 'This email already has a FlashFeedback account, so it cannot be invited to another business.');
+                        return;
+                    }
+                    throw signupError;
+                }
+
+                let user = signup.user;
+                if (!signup.session) {
+                    const { data: login, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+                    if (loginError || !login.session?.user) {
+                        showError?.('teamInviteError', 'Account created. Please confirm your email, then reopen this invite link to join the team.');
+                        return;
+                    }
+                    user = login.session.user;
+                }
+
+                await callTeamMembersApi({ action: 'accept', token });
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('team_invite');
+                history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+                await hydrateAndShowDashboard(user);
+                showSection('settings');
+                const status = document.getElementById('settingsTeamStatus');
+                if (status) status.textContent = 'Invite accepted. You are now an Admin on this team.';
+            } catch (error) {
+                console.error(error);
+                showError?.('teamInviteError', error.message || 'Could not create this account.');
+            }
+        }
+
         function showSignup() {
+            if (new URLSearchParams(window.location.search).get('team_invite')) {
+                showTeamInviteAccountScreen();
+                return;
+            }
+            const invitedEmail = getTeamInviteEmailHint();
             hideAllScreens();
             hideAdminControls();
 
@@ -4258,15 +4436,24 @@
             resetQrSignUI();
 
             document.getElementById('signupScreen').style.display = 'block';
+            if (new URLSearchParams(window.location.search).get('team_invite') && invitedEmail) {
+                const emailInput = document.getElementById('email');
+                if (emailInput) emailInput.value = invitedEmail;
+            }
             currentView = 'signup';
             clearFormErrors();
         }
 
 
         function showLogin() {
+            const invitedEmail = getTeamInviteEmailHint();
             hideAllScreens();
             hideAdminControls();
             document.getElementById('loginScreen').style.display = 'block';
+            if (new URLSearchParams(window.location.search).get('team_invite') && invitedEmail) {
+                const loginEmail = document.getElementById('loginEmail');
+                if (loginEmail) loginEmail.value = invitedEmail;
+            }
             currentView = 'login';
             clearFormErrors();
         }
@@ -4300,6 +4487,7 @@
 		  var screens = [
 		    'welcomeScreen',
 		    'signupScreen',
+		    'teamInviteAccountScreen',
 		    'checkoutRedirectScreen',
 		    'loginScreen',
 		    'customerView',
