@@ -3567,6 +3567,25 @@
 			  return body.invite;
 			}
 
+			async function createInvitedTeamUser(payload) {
+			  const res = await fetch(`${SUPABASE_URL}/functions/v1/team-members`, {
+			    method: 'POST',
+			    headers: {
+			      'Content-Type': 'application/json',
+			      'apikey': SUPABASE_ANON_KEY,
+			      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+			    },
+			    body: JSON.stringify({ action: 'create_invited_user', ...payload })
+			  });
+			  const body = await res.json().catch(() => ({}));
+			  if (!res.ok) {
+			    const error = new Error(body?.error || 'Could not create this account.');
+			    error.code = body?.code;
+			    throw error;
+			  }
+			  return body;
+			}
+
 			async function callBusinessSettingsApi(payload) {
 			  const { data: { session } } = await supabase.auth.getSession();
 			  const accessToken = session?.access_token;
@@ -4385,31 +4404,18 @@
 
             try {
                 try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
-                const { data: signup, error: signupError } = await supabase.auth.signUp({
+                await createInvitedTeamUser({
+                    token,
+                    name,
                     email,
-                    password,
-                    options: { data: { full_name: name } }
+                    password
                 });
-                if (signupError) {
-                    const message = String(signupError.message || '');
-                    if (message.toLowerCase().includes('already')) {
-                        showError?.('teamInviteError', 'This email already has a FlashFeedback account, so it cannot be invited to another business.');
-                        return;
-                    }
-                    throw signupError;
-                }
 
-                let user = signup.user;
-                if (!signup.session) {
-                    const { data: login, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-                    if (loginError || !login.session?.user) {
-                        showError?.('teamInviteError', 'Account created. Please confirm your email, then reopen this invite link to join the team.');
-                        return;
-                    }
-                    user = login.session.user;
+                const { data: login, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+                if (loginError || !login.session?.user) {
+                    throw new Error('Account created, but sign-in failed. Please log in with the email and password you just created.');
                 }
-
-                await callTeamMembersApi({ action: 'accept', token });
+                const user = login.session.user;
                 const cleanUrl = new URL(window.location.href);
                 cleanUrl.searchParams.delete('team_invite');
                 history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
