@@ -2206,7 +2206,7 @@
 
 	  <div id="teamInviteError" class="error-message" style="display:none;"></div>
 
-	  <form id="teamInviteAccountForm" onsubmit="handleTeamInviteAccountSignup(event)">
+	  <form id="teamInviteAccountForm">
 	    <div class="form-group">
 	      <label for="teamInviteName">Your name</label>
 	      <input id="teamInviteName" type="text" required>
@@ -6775,6 +6775,8 @@
 		  inviteTeamMember,
 		  removeTeamMember,
 		  revokeTeamInvite,
+		  showTeamInviteAccountScreen,
+		  handleTeamInviteAccountSignup,
 		  openPricingModal,
 		  closePricingModal,
 		  confirmPricingModal,
@@ -7130,6 +7132,8 @@
 		  const commentsEl = document.getElementById('additionalComments');
 		  commentsEl?.addEventListener('input', updateCommentCounter);
 		  updateCommentCounter(); // initialise on load
+
+		  document.getElementById('teamInviteAccountForm')?.addEventListener('submit', handleTeamInviteAccountSignup);
 		});
 
 		window.addEventListener('focus', () => {
