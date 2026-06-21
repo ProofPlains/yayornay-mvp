@@ -3624,10 +3624,11 @@
 			    const isOwner = member.role === 'owner';
 			    const canRemove = !isOwner;
 			    const email = escapePricingHtml(member.email || (member.user_id === currentUser.userId ? currentUser.email : 'Team member'));
+			    const name = escapePricingHtml(member.name || '');
 			    const role = isOwner ? 'Owner' : 'Admin';
 			    return `
 			      <div class="plan-usage-item" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;">
-			        <div><strong>${email}</strong><div class="settings-helper" style="margin:2px 0 0 0;">${role}</div></div>
+			        <div><strong>${name || email}</strong><div class="settings-helper" style="margin:2px 0 0 0;">${name ? `${email} - ` : ''}${role}</div></div>
 			        ${canRemove ? `<button class="btn" type="button" onclick="removeTeamMember('${escapePricingHtml(member.user_id)}')">Remove</button>` : ''}
 			      </div>
 			    `;
@@ -3721,7 +3722,9 @@
 			async function removeTeamMember(userId) {
 			  if (!currentUser?.businessId || !userId) return;
 			  const status = document.getElementById('settingsTeamStatus');
-			  if (!confirm('Remove this Admin from the team?')) return;
+			  const member = (currentUser.teamMembers || []).find((item) => item.user_id === userId);
+			  const label = member?.email || 'this Admin';
+			  if (!confirm(`Are you sure? This will delete ${label}'s account.`)) return;
 			  if (status) status.textContent = 'Removing...';
 			  try {
 			    await callTeamMembersApi({
@@ -3771,9 +3774,7 @@
 			    const cleanQuery = urlParams.toString();
 			    history.replaceState({}, document.title, `${window.location.pathname}${cleanQuery ? '?' + cleanQuery : ''}`);
 			    await hydrateAndShowDashboard(user);
-			    showSection('settings');
-			    const status = document.getElementById('settingsTeamStatus');
-			    if (status) status.textContent = 'Invite accepted. You are now an Admin on this team.';
+			    showSection('Feedback');
 			    return true;
 			  } catch (error) {
 			    console.error(error);
@@ -4420,9 +4421,7 @@
                 cleanUrl.searchParams.delete('team_invite');
                 history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
                 await hydrateAndShowDashboard(user);
-                showSection('settings');
-                const status = document.getElementById('settingsTeamStatus');
-                if (status) status.textContent = 'Invite accepted. You are now an Admin on this team.';
+                showSection('Feedback');
             } catch (error) {
                 console.error(error);
                 showError?.('teamInviteError', error.message || 'Could not create this account.');
@@ -4732,6 +4731,7 @@
 			  businessId: biz.id,
 			  businessName,
 			  ownerName,
+			  userName: ownerName,
 			  email,
 			  emailAlertsEnabled: true,
 			  pricingTier: 'free',
@@ -4835,27 +4835,12 @@
 		  let business = loaded.business;
 		  let businessRole = loaded.role || 'owner';
 		  if (!business) {
-		    const { data: newBiz, error: nbErr } = await supabase
-		      .from('businesses')
-		      .insert({ name: 'My Business', owner_id: user.id, email_alerts_enabled: true, pricing_tier: 'free', subscription_status: 'none', subscription_comped: false })
-		      .select()
-		      .single();
-		    if (nbErr) throw nbErr;
-		
-		    const { error: buErr } = await supabase
-		      .from('business_users')
-		      .insert({ business_id: newBiz.id, user_id: user.id, role: 'owner' });
-		    if (buErr) throw buErr;
-		
-		    const { error: blErr } = await supabase
-		      .from('locations')
-		      .insert({ business_id: newBiz.id, name: `Location 01` })
-		      .select()
-		      .single();
-		    if (blErr) throw blErr;
-		
-		    business = newBiz;
-		    businessRole = 'owner';
+		    try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+		    currentUser = null;
+		    window.currentUser = null;
+		    showLogin();
+		    showError?.('loginError', 'Your account no longer has access to a business.');
+		    return false;
 		  }
 		
 		  // 3) Load locations (create one if none)
@@ -4901,6 +4886,7 @@
 			  businessId: business.id,
 			  businessName: business.name,
 			  ownerName: business.owner_name || '',
+			  userName: user.user_metadata?.full_name || (businessRole === 'owner' ? business.owner_name || '' : ''),
 			  email: user.email || '',
 			  emailAlertsEnabled: business.email_alerts_enabled !== false,
 			  timezone: business.timezone || 'Europe/London',
@@ -4916,7 +4902,7 @@
 			  feedbackHistoryEntitlement: historyResult.entitlement,
 			  feedbackHistoryError: historyError,
 			  feedbackHistoryLoading: false,
-			  teamMembers: [{ user_id: user.id, role: businessRole, email: user.email || '' }],
+			  teamMembers: [{ user_id: user.id, role: businessRole, email: user.email || '', name: user.user_metadata?.full_name || '' }],
 			  teamInvites: [],
 			  locations: buildLocationsShape(locRows, fbRows)
 			};
@@ -5528,7 +5514,7 @@
 
 		  const nameInput = document.getElementById('qrOrderName');
 		  if (nameInput && !nameInput.value) {
-		    nameInput.value = currentUser.ownerName || currentUser.businessName || '';
+		    nameInput.value = currentUser.userName || currentUser.ownerName || currentUser.businessName || '';
 		  }
 
 		  const status = document.getElementById('qrOrderStatus');
@@ -5639,7 +5625,7 @@
 		      body: JSON.stringify({
 		        business_id: currentUser.businessId,
 		        business_name: currentUser.businessName || null,
-		        owner_name: currentUser.ownerName || null,
+		        owner_name: currentUser.userName || currentUser.ownerName || null,
 		        owner_email: currentUser.email || null,
 		        location_id: locationId,
 		        location_name: locationName,
@@ -6803,6 +6789,7 @@
 		  // Hydrate fields/state
 		  currentUser.businessName    = biz.name || currentUser.businessName;
 		  currentUser.ownerName       = biz.owner_name || '';
+		  currentUser.userName        = currentUser.userName || '';
 		  currentUser.timezone        = biz.timezone || 'Europe/London';
 		  currentUser.defaultLocationId = biz.default_location_id || currentUser.defaultLocationId || null;
 		  currentUser.logoUrl         = biz.logo_url || '';
@@ -6837,7 +6824,7 @@
 		  }
 		
 		  // Populate controls
-		  document.getElementById('settingsOwnerName').value = currentUser.ownerName || '';
+		  document.getElementById('settingsOwnerName').value = currentUser.userName || '';
 		  document.getElementById('settingsEmail').textContent = currentUser.email || '';
 		  document.getElementById('settingsBusinessName').value = currentUser.businessName || '';
 		  populateTimezoneSelect(currentUser.timezone || 'Europe/London');
@@ -6860,7 +6847,7 @@
 		}
 
 		async function saveProfileSettings() {
-		  const ownerName = document.getElementById('settingsOwnerName')?.value.trim() || '';
+		  const userName = document.getElementById('settingsOwnerName')?.value.trim() || '';
 		  const status = document.getElementById('settingsProfileStatus');
 		  status.textContent = 'Saving...';
 		
@@ -6868,14 +6855,15 @@
 		    await callBusinessSettingsApi({
 		      action: 'profile',
 		      business_id: currentUser.businessId,
-		      owner_name: ownerName
+		      user_name: userName
 		    });
 		  } catch (error) {
 		    console.error(error);
 		    status.textContent = error.message || 'Error saving profile';
 		    return;
 		  }
-		  currentUser.ownerName = ownerName;
+		  currentUser.userName = userName;
+		  if (currentUser.role === 'owner') currentUser.ownerName = userName;
 		  status.textContent = 'Saved ✓';
 		  setTimeout(() => status.textContent = '', 1500);
 		}
