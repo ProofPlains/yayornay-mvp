@@ -1628,7 +1628,7 @@
         <div class="section">
           <h3>Danger Zone</h3>
           <div class="simulation-panel">
-            <div class="simulation-status">Deleting a business removes its locations, feedback, team memberships, invites, and analytics events. Auth users are not deleted unless you delete them separately.</div>
+            <div class="simulation-status">Deleting a business removes its linked user accounts, locations, feedback, team memberships, invites, and analytics events.</div>
             <button class="small-btn" type="button" data-delete-business-id="${escapeHtml(business.id)}" data-delete-business-name="${escapeHtml(business.name || 'Untitled business')}">Delete business</button>
           </div>
         </div>
@@ -1697,7 +1697,7 @@
       const deleteBusinessButton = event.target.closest('[data-delete-business-id]');
       if (deleteBusinessButton) {
         const name = deleteBusinessButton.dataset.deleteBusinessName || 'this business';
-        if (!confirm(`Delete ${name}? This removes locations, feedback, team memberships, invites, and analytics events. This cannot be undone.`)) return;
+        if (!confirm(`Delete ${name}? This removes linked user accounts, locations, feedback, team memberships, invites, and analytics events. This cannot be undone.`)) return;
         deleteBusinessButton.disabled = true;
         runSupportMutation('delete_business', { business_id: deleteBusinessButton.dataset.deleteBusinessId })
           .then(closeDetail)
