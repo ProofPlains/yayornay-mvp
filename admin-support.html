@@ -1175,6 +1175,23 @@
       }
     }
 
+    async function runSupportMutation(action, payload) {
+      const token = await assertSuperuser();
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-support-overview`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'apikey': SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ action, ...payload })
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || 'Support action failed.');
+      await loadOverview();
+      return body;
+    }
+
     function searchText(business) {
       return [business.name, business.ownerName, business.ownerUserId, business.industry, business.businessType, planLabel(business.pricingTier), business.subscriptionStatus, business.subscriptionTestMode ? 'test subscription' : '']
         .filter(Boolean)
@@ -1488,6 +1505,7 @@
       if (!business) return;
       const locations = Array.isArray(business.locations) ? business.locations : [];
       const recentFeedback = Array.isArray(business.recentFeedback) ? business.recentFeedback : [];
+      const users = Array.isArray(business.users) ? business.users : [];
       const hasSimulation = Boolean(business.stripeTestClockId);
       const canStartSimulation = !business.subscriptionComped &&
         !business.stripeSubscriptionId &&
@@ -1552,6 +1570,22 @@
           </div>
         </div>
         <div class="section">
+          <h3>Users (${users.length})</h3>
+          <div class="list">
+            ${users.length ? users.map((user) => `
+              <div class="list-item">
+                <div class="list-item-header">
+                  <div>
+                    <strong>${escapeHtml(user.name || user.email || 'Unnamed user')}</strong>
+                    <div class="muted">${escapeHtml(user.email || '-')} - ${escapeHtml(user.role || '-')} - ${escapeHtml(user.userId || '-')}</div>
+                  </div>
+                  <button class="small-btn" type="button" data-delete-user-id="${escapeHtml(user.userId)}" data-delete-user-email="${escapeHtml(user.email || '')}">Delete user</button>
+                </div>
+              </div>
+            `).join('') : '<div class="muted">No users found.</div>'}
+          </div>
+        </div>
+        <div class="section">
           <h3>Billing Simulation</h3>
           <div class="simulation-panel">
             ${simulationNotice ? `<div class="simulation-status ${simulationNotice.tone === 'success' ? 'success' : ''}" id="billingSimulationStatus">${escapeHtml(simulationNotice.message)}</div>` : `<div class="simulation-status" id="billingSimulationStatus">${escapeHtml(simulationSummary)}</div>`}
@@ -1589,6 +1623,13 @@
                 <div class="muted">${escapeHtml(feedback.locationName || 'Unknown location')} - ${escapeHtml(formatDate(feedback.submittedAt))}${feedback.hasComment ? ' - includes comment' : ''}</div>
               </div>
             `).join('') : '<div class="muted">No feedback found.</div>'}
+          </div>
+        </div>
+        <div class="section">
+          <h3>Danger Zone</h3>
+          <div class="simulation-panel">
+            <div class="simulation-status">Deleting a business removes its locations, feedback, team memberships, invites, and analytics events. Auth users are not deleted unless you delete them separately.</div>
+            <button class="small-btn" type="button" data-delete-business-id="${escapeHtml(business.id)}" data-delete-business-name="${escapeHtml(business.name || 'Untitled business')}">Delete business</button>
           </div>
         </div>
       `;
@@ -1639,6 +1680,34 @@
       if (button) openDetail(button.dataset.businessId);
     });
     drawerEl.addEventListener('click', (event) => {
+      const deleteUserButton = event.target.closest('[data-delete-user-id]');
+      if (deleteUserButton) {
+        const email = deleteUserButton.dataset.deleteUserEmail || 'this user';
+        if (!confirm(`Delete ${email}'s account? This cannot be undone.`)) return;
+        deleteUserButton.disabled = true;
+        runSupportMutation('delete_user', { user_id: deleteUserButton.dataset.deleteUserId })
+          .then(closeDetail)
+          .catch((error) => {
+            console.error(error);
+            alert(error.message || 'Could not delete user.');
+            deleteUserButton.disabled = false;
+          });
+        return;
+      }
+      const deleteBusinessButton = event.target.closest('[data-delete-business-id]');
+      if (deleteBusinessButton) {
+        const name = deleteBusinessButton.dataset.deleteBusinessName || 'this business';
+        if (!confirm(`Delete ${name}? This removes locations, feedback, team memberships, invites, and analytics events. This cannot be undone.`)) return;
+        deleteBusinessButton.disabled = true;
+        runSupportMutation('delete_business', { business_id: deleteBusinessButton.dataset.deleteBusinessId })
+          .then(closeDetail)
+          .catch((error) => {
+            console.error(error);
+            alert(error.message || 'Could not delete business.');
+            deleteBusinessButton.disabled = false;
+          });
+        return;
+      }
       const simulationButton = event.target.closest('[data-simulation-action]');
       if (simulationButton) {
         runBillingSimulation(
