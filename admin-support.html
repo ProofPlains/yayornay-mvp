@@ -621,6 +621,14 @@
           <div class="metric-grid" id="engagementMetricCards"></div>
         </section>
 
+        <section class="metrics-section" aria-labelledby="postFeedbackMetricsTitle">
+          <div class="metrics-section-heading">
+            <h3 id="postFeedbackMetricsTitle">Google routing vs owner onboarding</h3>
+            <p>Whether public Google support helps happy-customer conversion without reducing business-owner interest.</p>
+          </div>
+          <div class="metric-grid" id="postFeedbackMetricCards"></div>
+        </section>
+
         <section class="metrics-section" aria-labelledby="monetisationMetricsTitle">
           <div class="metrics-section-heading">
             <h3 id="monetisationMetricsTitle">Monetisation</h3>
@@ -726,6 +734,7 @@
     const metricsFunnelFlowEl = document.getElementById('metricsFunnelFlow');
     const funnelMetricCardsEl = document.getElementById('funnelMetricCards');
     const engagementMetricCardsEl = document.getElementById('engagementMetricCards');
+    const postFeedbackMetricCardsEl = document.getElementById('postFeedbackMetricCards');
     const monetisationMetricCardsEl = document.getElementById('monetisationMetricCards');
     const rowsPerPage = 10;
     let currentPage = 1;
@@ -1243,6 +1252,108 @@
         tells: 'Shows how often customers provide detail that makes feedback more actionable.',
         format: 'percent'
       },
+      googleReviewCtaClicks: {
+        name: 'Google review CTA clicks',
+        category: 'Post-feedback conversion',
+        definition: 'Clicks on the primary Google review button shown after happy feedback.',
+        tells: 'Shows whether happy customers are willing to support the business publicly after giving private feedback.'
+      },
+      googleReviewTextLinkClicks: {
+        name: 'Google review text-link clicks',
+        category: 'Post-feedback conversion',
+        definition: 'Clicks on the subtle business/location text link after neutral or negative feedback.',
+        tells: 'Shows whether the quieter path is being used without turning neutral or negative screens into public-review prompts.'
+      },
+      feedbackToGoogleClickConversion: {
+        name: 'Feedback to Google click conversion',
+        category: 'Post-feedback conversion',
+        definition: 'Percentage of feedback submissions that led to any Google review click.',
+        tells: 'Shows whether Google routing creates measurable public-support intent from the feedback flow.',
+        format: 'percent'
+      },
+      googleClicksBySentiment: {
+        name: 'Google clicks by sentiment',
+        category: 'Post-feedback conversion',
+        definition: 'Google review clicks split by submitted emoji sentiment.',
+        tells: 'Confirms that most Google activity comes from happy customers while still measuring subtle text-link use.'
+      },
+      googleClicksBySentimentGroup: {
+        name: 'Google clicks by sentiment group',
+        category: 'Post-feedback conversion',
+        definition: 'Google review clicks split into positive versus neutral/negative feedback.',
+        tells: 'Shows whether the central sentiment-aware routing is behaving as intended.'
+      },
+      ownerOnboardingShown: {
+        name: 'Owner onboarding shown',
+        category: 'Owner acquisition',
+        definition: 'Post-feedback business-owner onboarding blocks shown to customers.',
+        tells: 'Shows the size of the owner-acquisition opportunity after customer feedback.'
+      },
+      ownerOnboardingClicks: {
+        name: 'Owner onboarding clicks',
+        category: 'Owner acquisition',
+        definition: 'Clicks on the post-feedback owner onboarding block.',
+        tells: 'Shows direct interest in using FlashFeedback from people who just experienced the customer flow.'
+      },
+      ownerOnboardingClickRate: {
+        name: 'Owner onboarding click rate',
+        category: 'Owner acquisition',
+        definition: 'Percentage of owner onboarding blocks shown that received a click.',
+        tells: 'Shows how efficiently the post-feedback screen converts owner curiosity.',
+        format: 'percent'
+      },
+      ownerOnboardingClicksBySentiment: {
+        name: 'Owner clicks by sentiment',
+        category: 'Owner acquisition',
+        definition: 'Owner onboarding clicks split by the customer feedback sentiment.',
+        tells: 'Shows which customer mood creates the strongest business-owner interest.'
+      },
+      ownerOnboardingClicksBySentimentGroup: {
+        name: 'Owner clicks by sentiment group',
+        category: 'Owner acquisition',
+        definition: 'Owner onboarding clicks split into positive versus neutral/negative feedback.',
+        tells: 'Shows whether owner interest performs differently when Google routing is visually primary.'
+      },
+      ownerOnboardingPositiveClickRate: {
+        name: 'Owner click rate after positive feedback',
+        category: 'Cannibalisation',
+        definition: 'Owner onboarding click rate after happy feedback.',
+        tells: 'Shows whether the Google CTA may be competing with owner onboarding after positive experiences.',
+        format: 'percent'
+      },
+      ownerOnboardingNeutralNegativeClickRate: {
+        name: 'Owner click rate after neutral/negative feedback',
+        category: 'Cannibalisation',
+        definition: 'Owner onboarding click rate after neutral or negative feedback.',
+        tells: 'Shows whether the private-first screen gives owner onboarding more room to perform.',
+        format: 'percent'
+      },
+      ownerOnboardingRoutingEnabledClicks: {
+        name: 'Owner clicks with Google routing enabled',
+        category: 'Cannibalisation',
+        definition: 'Owner onboarding clicks and rate on screens where Google review routing was enabled.',
+        tells: 'Shows whether enabling Google routing changes owner-onboarding performance.'
+      },
+      ownerOnboardingRoutingDisabledClicks: {
+        name: 'Owner clicks with Google routing disabled',
+        category: 'Cannibalisation',
+        definition: 'Owner onboarding clicks and rate on screens where Google review routing was disabled.',
+        tells: 'Provides the comparison baseline for owner onboarding without Google routing.'
+      },
+      positiveGoogleVsOwnerOnboarding: {
+        name: 'Positive: Google vs owner onboarding',
+        category: 'Cannibalisation',
+        definition: 'Google CTA click rate compared with owner onboarding click rate after positive feedback.',
+        tells: 'Shows whether happy customers are choosing Google review support instead of the owner signup path.',
+        format: 'percent'
+      },
+      neutralNegativeOwnerVsGoogleTextLink: {
+        name: 'Neutral/negative: owner vs Google text link',
+        category: 'Cannibalisation',
+        definition: 'Owner onboarding click rate compared with the subtle Google text-link rate after neutral/negative feedback.',
+        tells: 'Shows whether the private-first screen supports owner onboarding while keeping the Google path quiet.',
+        format: 'percent'
+      },
       freeToPaidUpgrade: {
         name: 'Free to paid upgrade',
         category: 'Monetisation',
@@ -1267,6 +1378,43 @@
       if (!metric) return '';
       if (metricKey === 'commentRate' && Number.isFinite(Number(metric.denominator))) {
         return `${Number(metric.numerator || 0).toLocaleString()} of ${Number(metric.denominator || 0).toLocaleString()} submissions included a comment.`;
+      }
+      if (['googleReviewCtaClicks', 'googleReviewTextLinkClicks'].includes(metricKey) && Number.isFinite(Number(metric.denominator))) {
+        const rate = Number.isFinite(Number(metric.rate)) ? `${Number(metric.rate).toFixed(1)}%` : '-';
+        return `${Number(metric.value || 0).toLocaleString()} clicks from ${Number(metric.denominator || 0).toLocaleString()} shown. Click rate: ${rate}.`;
+      }
+      if (metricKey === 'feedbackToGoogleClickConversion' && Number.isFinite(Number(metric.denominator))) {
+        return `${Number(metric.numerator || 0).toLocaleString()} Google clicks from ${Number(metric.denominator || 0).toLocaleString()} feedback submissions.`;
+      }
+      if (metricKey === 'googleClicksBySentiment') {
+        return `Very happy: ${Number(metric.veryHappy || 0).toLocaleString()} | Happy: ${Number(metric.happy || 0).toLocaleString()} | Neutral: ${Number(metric.neutral || 0).toLocaleString()} | Sad: ${Number(metric.sad || 0).toLocaleString()} | Very sad: ${Number(metric.verySad || 0).toLocaleString()}.`;
+      }
+      if (metricKey === 'googleClicksBySentimentGroup') {
+        return `Positive: ${Number(metric.positive || 0).toLocaleString()} | Neutral/negative: ${Number(metric.neutralNegative || 0).toLocaleString()}.`;
+      }
+      if (metricKey === 'ownerOnboardingClickRate' && Number.isFinite(Number(metric.denominator))) {
+        return `${Number(metric.numerator || 0).toLocaleString()} clicks from ${Number(metric.denominator || 0).toLocaleString()} blocks shown.`;
+      }
+      if (metricKey === 'ownerOnboardingClicksBySentiment') {
+        return `Very happy: ${Number(metric.veryHappy || 0).toLocaleString()} | Happy: ${Number(metric.happy || 0).toLocaleString()} | Neutral: ${Number(metric.neutral || 0).toLocaleString()} | Sad: ${Number(metric.sad || 0).toLocaleString()} | Very sad: ${Number(metric.verySad || 0).toLocaleString()}.`;
+      }
+      if (metricKey === 'ownerOnboardingClicksBySentimentGroup') {
+        return `Positive: ${Number(metric.positive || 0).toLocaleString()} | Neutral/negative: ${Number(metric.neutralNegative || 0).toLocaleString()}.`;
+      }
+      if (['ownerOnboardingPositiveClickRate', 'ownerOnboardingNeutralNegativeClickRate'].includes(metricKey) && Number.isFinite(Number(metric.denominator))) {
+        return `${Number(metric.numerator || 0).toLocaleString()} clicks from ${Number(metric.denominator || 0).toLocaleString()} blocks shown.`;
+      }
+      if (['ownerOnboardingRoutingEnabledClicks', 'ownerOnboardingRoutingDisabledClicks'].includes(metricKey)) {
+        const rate = Number.isFinite(Number(metric.rate)) ? `${Number(metric.rate).toFixed(1)}%` : '-';
+        return `${Number(metric.value || 0).toLocaleString()} clicks from ${Number(metric.denominator || 0).toLocaleString()} blocks shown. Click rate: ${rate}.`;
+      }
+      if (metricKey === 'positiveGoogleVsOwnerOnboarding') {
+        const ownerRate = Number.isFinite(Number(metric.ownerRate)) ? `${Number(metric.ownerRate).toFixed(1)}%` : '-';
+        return `Google: ${Number(metric.googleClicks || 0).toLocaleString()} / ${Number(metric.googleShown || 0).toLocaleString()}. Owner onboarding: ${Number(metric.ownerClicks || 0).toLocaleString()} / ${Number(metric.ownerShown || 0).toLocaleString()} (${ownerRate}).`;
+      }
+      if (metricKey === 'neutralNegativeOwnerVsGoogleTextLink') {
+        const googleRate = Number.isFinite(Number(metric.googleTextRate)) ? `${Number(metric.googleTextRate).toFixed(1)}%` : '-';
+        return `Owner onboarding: ${Number(metric.ownerClicks || 0).toLocaleString()} / ${Number(metric.ownerShown || 0).toLocaleString()}. Google text link: ${Number(metric.googleTextClicks || 0).toLocaleString()} / ${Number(metric.googleTextShown || 0).toLocaleString()} (${googleRate}).`;
       }
       if (metricKey === 'qrDeployed') {
         const sourceCounts = [
@@ -1345,6 +1493,25 @@
       engagementMetricCardsEl.innerHTML = [
         'dashboardViewedAfterFeedback',
         'commentRate'
+      ].map((metricKey) => metricCard(metricKey, metrics[metricKey])).join('');
+
+      postFeedbackMetricCardsEl.innerHTML = [
+        'googleReviewCtaClicks',
+        'googleReviewTextLinkClicks',
+        'feedbackToGoogleClickConversion',
+        'googleClicksBySentiment',
+        'googleClicksBySentimentGroup',
+        'ownerOnboardingShown',
+        'ownerOnboardingClicks',
+        'ownerOnboardingClickRate',
+        'ownerOnboardingClicksBySentiment',
+        'ownerOnboardingClicksBySentimentGroup',
+        'ownerOnboardingPositiveClickRate',
+        'ownerOnboardingNeutralNegativeClickRate',
+        'ownerOnboardingRoutingEnabledClicks',
+        'ownerOnboardingRoutingDisabledClicks',
+        'positiveGoogleVsOwnerOnboarding',
+        'neutralNegativeOwnerVsGoogleTextLink'
       ].map((metricKey) => metricCard(metricKey, metrics[metricKey])).join('');
 
       monetisationMetricCardsEl.innerHTML = metricCard(
