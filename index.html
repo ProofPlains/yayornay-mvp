@@ -2833,16 +2833,16 @@
 			window.supabase = supabase; // expose the client for console/debug use
 
 			const PRICING_TIERS = {
-			  free: { key: 'free', label: 'Free', priceLabel: 'Free', locationLimit: 1, teamLimit: 1, checkout: false, summary: '1 location to get started.', features: ['1 location', '1 user', '30 days of feedback history', 'Private feedback dashboard', 'QR code generation'] },
+			  free: { key: 'free', label: 'Free', priceLabel: 'Free', locationLimit: 1, teamLimit: 1, checkout: false, summary: '1 location and 1 team member to get started.', features: ['1 location', '1 user', '30 days of feedback history', 'Private feedback dashboard', 'QR code generation'] },
 			  growth: {
 			    key: 'growth',
 			    label: 'Growth',
 			    priceLabel: 'Paid plan',
-			    locationLimit: 5,
-			    teamLimit: 3,
+			    locationLimit: 3,
+			    teamLimit: 6,
 			    checkout: true,
-			    summary: 'Up to 5 locations.',
-			    features: ['Up to 5 locations', 'Up to 3 users', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
+			    summary: 'Up to 3 locations.',
+			    features: ['Up to 3 locations', 'Invite up to 6 team members', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
 			    sandboxPriceId: 'price_1TaajGFIxmPNhgh2Purgftxq',
 			    productionPriceId: 'price_1TabHTFNq4Xp479bhvLoemuU'
 			  },
@@ -2850,11 +2850,11 @@
 			    key: 'pro',
 			    label: 'Pro',
 			    priceLabel: 'Paid plan',
-			    locationLimit: Infinity,
-			    teamLimit: 10,
+			    locationLimit: 10,
+			    teamLimit: 20,
 			    checkout: true,
-			    summary: 'Unlimited locations.',
-			    features: ['Unlimited locations', 'Up to 10 users', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
+			    summary: 'Up to 10 locations.',
+			    features: ['Up to 10 locations', 'Invite up to 20 team members', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
 			    sandboxPriceId: 'price_1TaaliFIxmPNhgh2psSx6s23',
 			    productionPriceId: 'price_1TabHQFNq4Xp479bH5NeGLYu'
 			  }
@@ -2895,14 +2895,15 @@
 			}
 
 			function getTeamMemberLabel(count) {
-			  return `${count} user${count === 1 ? '' : 's'}`;
+			  return `${count} team member${count === 1 ? '' : 's'}`;
 			}
 
 			function getTeamLimitMessage() {
 			  const tier = getCurrentPricingTier();
 			  const used = getTeamSeatCount();
 			  const limit = getTeamLimit(tier.key);
-			  return `${getTeamMemberLabel(used)} used, ${getTeamMemberLabel(limit)} included`;
+			  const overLimit = used > limit ? ' Remove team members or revoke pending invites before adding more.' : '';
+			  return `${getTeamMemberLabel(used)} used, ${getTeamMemberLabel(limit)} included.${overLimit}`;
 			}
 
 			function getActiveLocationCount() {
@@ -2910,12 +2911,25 @@
 			}
 
 			function formatLocationLimit(limit) {
-			  return limit === Infinity ? 'Unlimited locations' : `${limit} location${limit === 1 ? '' : 's'}`;
+			  return `${limit} location${limit === 1 ? '' : 's'}`;
 			}
 
 			function isTierAtLocationLimit(tierKey, count) {
 			  const limit = getPricingTier(tierKey).locationLimit;
-			  return limit !== Infinity && count >= limit;
+			  return count >= limit;
+			}
+
+			function enterpriseContactHtml() {
+			  return 'Need more locations or team members? <a href="mailto:contact@flashfeedback.co.uk">Contact us</a> for Enterprise.';
+			}
+
+			function enterpriseContactText() {
+			  return 'Need more locations or team members? Contact us for Enterprise: contact@flashfeedback.co.uk';
+			}
+
+			function setStatusHtml(status, html) {
+			  if (!status) return;
+			  status.innerHTML = html;
 			}
 
 			function subscriptionStatusLabel(status) {
@@ -3036,7 +3050,6 @@
 
 			function getRequiredDeactivationCount(tierKey) {
 			  const limit = getPricingTier(tierKey).locationLimit;
-			  if (limit === Infinity) return 0;
 			  return Math.max(0, getActiveLocationCount() + getPendingActionDelta() - limit);
 			}
 
@@ -3055,7 +3068,7 @@
 			  const currentTierKey = pricingModalContext.startsWith('signup') ? null : (currentUser?.pricingTier || 'free');
 			  const pendingTierKey = pricingModalContext.startsWith('signup') ? null : currentUser?.pendingPricingTier;
 			  const isComped = !pricingModalContext.startsWith('signup') && currentUser?.subscriptionComped === true;
-			  container.innerHTML = Object.values(PRICING_TIERS).map((tier) => {
+			  const planCards = Object.values(PRICING_TIERS).map((tier) => {
 			    const checked = tier.key === pricingModalSelectedTier ? 'checked' : '';
 			    const selectedClass = tier.key === pricingModalSelectedTier ? ' is-selected' : '';
 			    const currentClass = tier.key === currentTierKey ? ' is-current' : '';
@@ -3077,6 +3090,7 @@
 			      </label>
 			    `;
 			  }).join('');
+			  container.innerHTML = `${planCards}<div class="settings-helper" style="margin-top:10px;">${enterpriseContactHtml()}</div>`;
 			  renderPricingLocationPicker();
 			}
 
@@ -3200,10 +3214,14 @@
 			    intro.textContent = currentUser?.subscriptionComped && !context.startsWith('signup')
 			      ? 'This complimentary plan is managed by FlashFeedback support.'
 			      : context === 'limit'
-			      ? 'Your current plan has reached its location limit. Choose a plan with more room to keep growing.'
+			      ? currentTier === 'pro'
+			        ? enterpriseContactText()
+			        : 'Your current plan has reached its location limit. Choose a plan with more room to keep growing.'
 			      : context === 'team-limit'
-			        ? currentTier === 'growth'
-			          ? 'Pro includes up to 10 team members for larger teams.'
+			        ? currentTier === 'pro'
+			          ? enterpriseContactText()
+			          : currentTier === 'growth'
+			          ? 'Pro lets you invite up to 20 team members for larger teams.'
 			          : 'Growth lets you invite your team so more people can help manage feedback and QR codes.'
 			      : context === 'history-upgrade'
 			        ? 'Growth and Pro include unlimited feedback history, so you can see every response your customers have sent.'
@@ -3212,7 +3230,8 @@
 			      : 'Pick the plan that matches how many locations you want to manage.';
 			  }
 			  if (continueBtn) {
-			    continueBtn.style.display = currentUser?.subscriptionComped && !context.startsWith('signup') ? 'none' : '';
+			    const enterpriseOnly = !context.startsWith('signup') && currentTier === 'pro' && (context === 'limit' || context === 'team-limit');
+			    continueBtn.style.display = (currentUser?.subscriptionComped && !context.startsWith('signup')) || enterpriseOnly ? 'none' : '';
 			    continueBtn.textContent = context === 'signup-submit' ? 'Create account' : 'Continue';
 			  }
 			  renderPricingModalOptions();
@@ -3247,6 +3266,12 @@
 
 			  if (selected.key === currentUser?.pricingTier && !currentUser?.pendingPricingTier) {
 			    closePricingModal();
+			    return;
+			  }
+
+			  if (selected.teamLimit < getTeamLimit(currentUser?.pricingTier) && getTeamSeatCount() > selected.teamLimit) {
+			    const message = `Remove team members or revoke pending invites before changing to ${selected.label}. ${selected.label} includes ${getTeamMemberLabel(selected.teamLimit)}.`;
+			    window.showToast ? window.showToast(message, 'error') : alert(message);
 			    return;
 			  }
 
@@ -3355,7 +3380,14 @@
 			      })
 			    });
 			    const body = await response.json().catch(() => ({}));
-			    if (!response.ok) throw new Error(body.error || 'Could not change your plan.');
+			    if (!response.ok) {
+			      const error = new Error(body.error || 'Could not change your plan.');
+			      error.code = body.code;
+			      error.tier = body.tier;
+			      error.limit = body.limit;
+			      error.used = body.used;
+			      throw error;
+			    }
 
 			    if (body.action === 'downgrade_scheduled') {
 			      currentUser.pendingPricingTier = body.pendingTier;
@@ -3481,12 +3513,16 @@
 			  const paidTier = tier.key !== 'free';
 			  const statusText = isComped ? subscriptionStatusLabel('comped') : subscriptionStatusLabel(status);
 			  const usageText = `${count} location${count === 1 ? '' : 's'} used`;
-			  const allowanceText = tier.locationLimit === Infinity
-			    ? 'Unlimited locations'
-			    : `${tier.locationLimit} location${tier.locationLimit === 1 ? '' : 's'} included`;
+			  const allowanceText = `${formatLocationLimit(tier.locationLimit)} included`;
 			  const historyAllowanceText = tier.key === 'free' ? '30 days' : 'Unlimited';
-			  const teamAllowanceText = `${getTeamLimit(tier.key)} user${getTeamLimit(tier.key) === 1 ? '' : 's'} included`;
+			  const teamAllowanceText = `${getTeamMemberLabel(getTeamLimit(tier.key))} included`;
 			  const teamUsageText = getTeamMemberLabel(getTeamSeatCount());
+			  const locationOverLimitMessage = count > tier.locationLimit
+			    ? `<div class="settings-helper">This account has ${count} active locations, above the ${formatLocationLimit(tier.locationLimit)} included with ${tier.label}. Existing locations remain visible, but new locations need a higher plan or Enterprise.</div>`
+			    : '';
+			  const teamOverLimitMessage = getTeamSeatCount() > getTeamLimit(tier.key)
+			    ? `<div class="settings-helper">This account has ${getTeamMemberLabel(getTeamSeatCount())}, above the ${getTeamMemberLabel(getTeamLimit(tier.key))} included with ${tier.label}. Existing access remains visible, but new invites are blocked until seats are reduced or Enterprise is arranged.</div>`
+			    : '';
 			  const pendingTier = currentUser.pendingPricingTier ? getPricingTier(currentUser.pendingPricingTier) : null;
 			  const pendingDate = formatPlanDate(currentUser.planChangeEffectiveAt);
 			  const pendingMessage = pendingTier
@@ -3511,7 +3547,10 @@
 			        <div class="plan-usage-item"><span>Feedback history</span><strong>${historyAllowanceText}</strong></div>
 			      </div>
 			    </div>
-			    <div class="settings-helper">${paidTier ? statusText : 'Upgrade anytime when you need more locations.'}</div>
+			    <div class="settings-helper">${paidTier ? statusText : 'Upgrade anytime when you need more locations or team members.'}</div>
+			    <div class="settings-helper">${enterpriseContactHtml()}</div>
+			    ${locationOverLimitMessage}
+			    ${teamOverLimitMessage}
 			    ${isComped ? '<div class="settings-helper">This account has a complimentary paid plan.</div>' : ''}
 			    ${isTestMode ? '<div class="settings-helper">This account is using a Stripe test subscription. No real payment was collected.</div>' : ''}
 			    ${pendingMessage}
@@ -3678,7 +3717,7 @@
 			  const limit = getTeamLimit(tier.key);
 			  if (used >= limit) {
 			    if (tier.key === 'pro') {
-			      if (status) status.textContent = 'Pro includes up to 10 team members. Contact FlashFeedback to add more.';
+			      setStatusHtml(status, enterpriseContactHtml());
 			    } else {
 			      openPricingModal('team-limit');
 			    }
@@ -3704,7 +3743,7 @@
 			    console.error(error);
 			    if (error.code === 'team_limit') {
 			      if ((error.tier || tier.key) === 'pro') {
-			        if (status) status.textContent = 'Pro includes up to 10 team members. Contact FlashFeedback to add more.';
+			        setStatusHtml(status, enterpriseContactHtml());
 			      } else {
 			        openPricingModal('team-limit');
 			        if (status) status.textContent = '';
@@ -6055,6 +6094,10 @@
 		  const locationCount = getActiveLocationCount();
 		  if (isTierAtLocationLimit(tier.key, locationCount)) {
 		    renderPlanPanel();
+		    if (tier.key === 'pro') {
+		      alert(enterpriseContactText());
+		      return;
+		    }
 		    openPricingModal('limit');
 		    return;
 		  }
@@ -6062,7 +6105,7 @@
 		  const pendingTier = currentUser.pendingPricingTier
 		    ? getPricingTier(currentUser.pendingPricingTier)
 		    : null;
-		  if (!bypassPendingCheck && pendingTier && pendingTier.locationLimit !== Infinity &&
+		  if (!bypassPendingCheck && pendingTier &&
 		      locationCount + 1 > pendingTier.locationLimit) {
 		    pricingModalPendingAction = { type: 'add', name };
 		    openPricingModal('pending-location-action');
@@ -6143,13 +6186,17 @@
 		    const activeCount = getActiveLocationCount();
 		    if (isTierAtLocationLimit(tier.key, activeCount)) {
 		      renderPlanPanel();
+		      if (tier.key === 'pro') {
+		        alert(enterpriseContactText());
+		        return false;
+		      }
 		      openPricingModal('limit');
 		      return false;
 		    }
 		    const pendingTier = currentUser?.pendingPricingTier
 		      ? getPricingTier(currentUser.pendingPricingTier)
 		      : null;
-		    if (pendingTier && pendingTier.locationLimit !== Infinity &&
+		    if (pendingTier &&
 		        activeCount + 1 > pendingTier.locationLimit) {
 		      pricingModalPendingAction = { type: 'activate', locationId: id };
 		      openPricingModal('pending-location-action');
