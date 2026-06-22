@@ -290,14 +290,20 @@
 
         .cta-button {
             background: #7c3aed;
-            color: white;
+            color: white !important;
             border: none;
             padding: 10px 20px;
             border-radius: 20px;
             font-size: 14px;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: inline-block;
+            font-weight: 700;
+            line-height: 1.2;
+            text-decoration: none !important;
         }
+        .cta-button:visited { color: white !important; }
+        .cta-button:hover { text-decoration: none !important; transform: translateY(-1px); }
 
         .logo { font-size: 48px; font-weight: bold; color: var(--ff-brand-1); margin-bottom: 10px; }
         .tagline { font-size: 20px; color: #718096; margin-bottom: 30px; }
@@ -1797,6 +1803,17 @@
 		  border: 1px solid var(--ff-border) !important;
 		  border-radius: 8px;
 		  margin-bottom: 12px;
+		}
+		.location-card > .location-name {
+		  display: inline-flex;
+		  align-items: center;
+		  gap: 8px;
+		  color: var(--ff-text);
+		  font-size: 20px;
+		  font-weight: 800;
+		  line-height: 1.25;
+		  letter-spacing: 0;
+		  margin-right: 14px;
 		}
 		.location-card-header {
 		  display: flex;
