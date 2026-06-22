@@ -1660,6 +1660,13 @@
 		  flex-wrap: wrap;
 		  margin-top: 16px;
 		}
+		.pricing-enterprise-contact {
+		  margin-top: 10px;
+		  text-align: right;
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  line-height: 1.4;
+		}
 		.pricing-location-picker {
 		  display: none;
 		  margin-top: 18px;
@@ -2816,6 +2823,7 @@
 	      <button class="btn" type="button" onclick="closePricingModal()">Cancel</button>
 	      <button id="pricingModalContinue" class="btn-primary" type="button" onclick="confirmPricingModal()">Continue</button>
 	    </div>
+	    <div class="pricing-enterprise-contact">Need even more locations or team members? <a href="mailto:contact@flashfeedback.co.uk">Contact us</a> for Enterprise.</div>
 	  </div>
 	</div>
 
@@ -2920,11 +2928,11 @@
 			}
 
 			function enterpriseContactHtml() {
-			  return 'Need more locations or team members? <a href="mailto:contact@flashfeedback.co.uk">Contact us</a> for Enterprise.';
+			  return 'Need even more locations or team members? <a href="mailto:contact@flashfeedback.co.uk">Contact us</a> for Enterprise.';
 			}
 
 			function enterpriseContactText() {
-			  return 'Need more locations or team members? Contact us for Enterprise: contact@flashfeedback.co.uk';
+			  return 'Need even more locations or team members? Contact us for Enterprise: contact@flashfeedback.co.uk';
 			}
 
 			function setStatusHtml(status, html) {
@@ -3090,7 +3098,7 @@
 			      </label>
 			    `;
 			  }).join('');
-			  container.innerHTML = `${planCards}<div class="settings-helper" style="margin-top:10px;">${enterpriseContactHtml()}</div>`;
+			  container.innerHTML = planCards;
 			  renderPricingLocationPicker();
 			}
 
@@ -3512,8 +3520,8 @@
 			  const isTestMode = currentUser.subscriptionTestMode === true;
 			  const paidTier = tier.key !== 'free';
 			  const statusText = isComped ? subscriptionStatusLabel('comped') : subscriptionStatusLabel(status);
-			  const usageText = `${count} location${count === 1 ? '' : 's'} used`;
-			  const allowanceText = `${formatLocationLimit(tier.locationLimit)} included`;
+			  const locationUsageText = `${count} location${count === 1 ? '' : 's'} used`;
+			  const locationAllowanceText = `${formatLocationLimit(tier.locationLimit)} included`;
 			  const historyAllowanceText = tier.key === 'free' ? '30 days' : 'Unlimited';
 			  const teamAllowanceText = `${getTeamMemberLabel(getTeamLimit(tier.key))} included`;
 			  const teamUsageText = getTeamMemberLabel(getTeamSeatCount());
@@ -3526,7 +3534,10 @@
 			  const pendingTier = currentUser.pendingPricingTier ? getPricingTier(currentUser.pendingPricingTier) : null;
 			  const pendingDate = formatPlanDate(currentUser.planChangeEffectiveAt);
 			  const pendingMessage = pendingTier
-			    ? `<div class="pending-plan-note">Your plan will change to <strong>${pendingTier.label}</strong>${pendingDate ? ` on ${pendingDate}` : ' at your next renewal'}. Until then, your current plan and limits remain active.</div>`
+			    ? `<div class="pending-plan-note">Your plan will change to <strong>${pendingTier.label}</strong>${pendingDate ? ` on ${pendingDate}` : ' at your next renewal'}. Until then, your current locations allowance remains active.</div>`
+			    : '';
+			  const enterpriseSettingsMessage = tier.key === 'pro'
+			    ? `<div class="settings-helper">${enterpriseContactHtml()}</div>`
 			    : '';
 			  const paymentMessage = pendingUpgradePayment?.url
 			    ? `<div class="pending-plan-note">
@@ -3541,14 +3552,13 @@
 			    <div class="plan-summary">
 			      <span class="plan-badge">${tier.label}</span>
 			      <div class="plan-usage-grid">
-			        <div class="plan-usage-item"><span>Allowance</span><strong>${allowanceText}</strong></div>
-			        <div class="plan-usage-item"><span>Current usage</span><strong>${usageText}</strong></div>
+			        <div class="plan-usage-item"><span>Locations</span><strong>${locationUsageText} / ${locationAllowanceText}</strong></div>
 			        <div class="plan-usage-item"><span>Team</span><strong>${teamUsageText} / ${teamAllowanceText}</strong></div>
 			        <div class="plan-usage-item"><span>Feedback history</span><strong>${historyAllowanceText}</strong></div>
 			      </div>
 			    </div>
 			    <div class="settings-helper">${paidTier ? statusText : 'Upgrade anytime when you need more locations or team members.'}</div>
-			    <div class="settings-helper">${enterpriseContactHtml()}</div>
+			    ${enterpriseSettingsMessage}
 			    ${locationOverLimitMessage}
 			    ${teamOverLimitMessage}
 			    ${isComped ? '<div class="settings-helper">This account has a complimentary paid plan.</div>' : ''}
