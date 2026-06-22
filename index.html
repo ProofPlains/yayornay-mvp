@@ -2896,6 +2896,12 @@
 			  return getPricingTier(tierKey).teamLimit || 1;
 			}
 
+			function getPendingTeamLimit() {
+			  return currentUser?.pendingPricingTier
+			    ? getTeamLimit(currentUser.pendingPricingTier)
+			    : null;
+			}
+
 			function getTeamSeatCount() {
 			  const members = Array.isArray(currentUser?.teamMembers) ? currentUser.teamMembers.length : 1;
 			  const invites = Array.isArray(currentUser?.teamInvites) ? currentUser.teamInvites.length : 0;
@@ -2910,8 +2916,13 @@
 			  const tier = getCurrentPricingTier();
 			  const used = getTeamSeatCount();
 			  const limit = getTeamLimit(tier.key);
-			  const overLimit = used > limit ? ' Remove team members or revoke pending invites before adding more.' : '';
-			  return `${getTeamMemberLabel(used)} used, ${getTeamMemberLabel(limit)} included.${overLimit}`;
+			  const pendingLimit = getPendingTeamLimit();
+			  const effectiveLimit = pendingLimit === null ? limit : Math.min(limit, pendingLimit);
+			  const overLimit = used > effectiveLimit ? ' Remove team members or revoke pending invites before adding more.' : '';
+			  const pendingText = pendingLimit !== null && pendingLimit < limit
+			    ? ` ${getTeamMemberLabel(pendingLimit)} will be included after the scheduled plan change.`
+			    : '';
+			  return `${getTeamMemberLabel(used)} used, ${getTeamMemberLabel(limit)} included.${pendingText}${overLimit}`;
 			}
 
 			function getActiveLocationCount() {
@@ -3686,7 +3697,10 @@
 			  const inviteRows = invites.map((invite) => `
 			    <div class="plan-usage-item" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;">
 			      <div><strong>${escapePricingHtml(invite.email)}</strong><div class="settings-helper" style="margin:2px 0 0 0;">Pending Admin invite</div></div>
-			      <button class="btn" type="button" onclick="revokeTeamInvite('${escapePricingHtml(invite.id)}')">Revoke</button>
+			      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+			        <span class="settings-helper" style="margin:0;">${escapePricingHtml(invite.deliveryMessage || 'Invite sent')}</span>
+			        <button class="btn" type="button" onclick="revokeTeamInvite('${escapePricingHtml(invite.id)}')">Revoke</button>
+			      </div>
 			    </div>
 			  `).join('');
 
@@ -3725,7 +3739,13 @@
 			  const tier = getCurrentPricingTier();
 			  const used = getTeamSeatCount();
 			  const limit = getTeamLimit(tier.key);
-			  if (used >= limit) {
+			  const pendingLimit = getPendingTeamLimit();
+			  const effectiveLimit = pendingLimit === null ? limit : Math.min(limit, pendingLimit);
+			  if (used >= effectiveLimit) {
+			    if (pendingLimit !== null && pendingLimit < limit) {
+			      if (status) status.textContent = `Your scheduled plan change includes ${getTeamMemberLabel(pendingLimit)}. Revoke pending invites or remove team members before inviting more.`;
+			      return;
+			    }
 			    if (tier.key === 'pro') {
 			      setStatusHtml(status, enterpriseContactHtml());
 			    } else {
@@ -3744,14 +3764,19 @@
 			    });
 			    if (input) input.value = '';
 			    await loadTeamMembers();
-			    if (status) {
-			      status.textContent = result.emailed
-			        ? 'Invite sent.'
-			        : `Invite created. Share this link: ${result.inviteUrl}`;
+			    const createdInvite = (currentUser.teamInvites || []).find((invite) => invite.id === result.invite?.id || invite.email === email);
+			    if (createdInvite) {
+			      createdInvite.deliveryMessage = result.emailed ? 'Invite sent' : `Invite created. Share this link: ${result.inviteUrl}`;
+			      renderTeamPanel();
 			    }
+			    if (status) status.textContent = '';
 			  } catch (error) {
 			    console.error(error);
-			    if (error.code === 'team_limit') {
+			    if (error.code === 'team_limit' || error.code === 'pending_team_limit') {
+			      if (error.code === 'pending_team_limit') {
+			        if (status) status.textContent = error.message || 'Revoke pending invites or remove team members before inviting more.';
+			        return;
+			      }
 			      if ((error.tier || tier.key) === 'pro') {
 			        setStatusHtml(status, enterpriseContactHtml());
 			      } else {
