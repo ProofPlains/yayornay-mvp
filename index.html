@@ -245,15 +245,47 @@
 
         .thank-you { display: none; background: #151b23; padding: 40px; text-align: center; }
         .thank-you h2 { color: #48bb78; margin-bottom: 15px; }
+        .post-feedback-panel {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        .google-review-card {
+            margin: 22px auto 0;
+            padding: 22px;
+            border: 1px solid rgba(72, 187, 120, 0.45);
+            border-radius: 12px;
+            background: color-mix(in oklab, var(--ff-surface) 88%, #48bb78);
+            color: var(--ff-text);
+        }
+        .google-review-card p {
+            margin: 0 0 16px;
+            color: var(--ff-text-muted);
+        }
+        .google-review-link {
+            color: #a78bfa;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .google-review-link:focus-visible,
+        .owner-onboarding-link:focus-visible {
+            outline: 3px solid rgba(167, 139, 250, 0.65);
+            outline-offset: 3px;
+        }
 
         .business-cta {
             background: #212121;
-            border: 1px solid #e2e8f0;
-            color: #2d3748;
+            border: 1px solid var(--ff-border);
+            color: var(--ff-text);
             padding: 20px;
             border-radius: 12px;
             margin-top: 25px;
             text-align: center;
+        }
+        .business-cta p { color: var(--ff-text-muted); margin: 8px 0; }
+        .business-cta.secondary {
+            opacity: 0.86;
+            transform: scale(0.98);
         }
 
         .cta-button {
@@ -1759,6 +1791,71 @@
 		.loc-edit-input { background:#1f1f25; color:#eae7ff; border:1px solid rgba(167,139,250,.35); border-radius:8px; padding:6px 10px; min-width: 220px; }
 		.loc-edit-link, .loc-edit-save, .loc-edit-cancel { cursor:pointer; text-decoration:underline; }
 		.loc-edit-save, .loc-edit-cancel { font-size: 0.95rem; }
+		.location-card {
+		  padding: 16px;
+		  background: #0d1117;
+		  border: 1px solid var(--ff-border) !important;
+		  border-radius: 8px;
+		  margin-bottom: 12px;
+		}
+		.location-card-header {
+		  display: flex;
+		  justify-content: space-between;
+		  align-items: center;
+		  gap: 12px;
+		  flex-wrap: wrap;
+		}
+		.google-routing-settings {
+		  margin-top: 14px;
+		  padding-top: 14px;
+		  border-top: 1px solid var(--ff-border);
+		  display: grid;
+		  gap: 10px;
+		}
+		.google-routing-settings label {
+		  color: var(--ff-text);
+		  font-weight: 700;
+		  display: block;
+		  margin-bottom: 6px;
+		}
+		.google-routing-settings input[type="url"] {
+		  width: 100%;
+		  padding: 10px 12px;
+		  border: 1px solid rgba(167,139,250,.35);
+		  border-radius: 8px;
+		  background: #1f1f25;
+		  color: var(--ff-text);
+		}
+		.google-routing-settings details {
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		}
+		.google-routing-settings summary {
+		  cursor: pointer;
+		  color: #a78bfa;
+		  font-weight: 700;
+		}
+		.google-routing-settings ol {
+		  margin: 8px 0 0 20px;
+		  padding: 0;
+		}
+		.google-routing-settings li { margin: 4px 0; }
+		.google-routing-toggle {
+		  display: flex !important;
+		  align-items: center;
+		  gap: 10px;
+		  font-weight: 600 !important;
+		}
+		.google-routing-actions {
+		  display: flex;
+		  align-items: center;
+		  gap: 10px;
+		  flex-wrap: wrap;
+		}
+		.google-routing-status {
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		}
 
 		/* === Emoji-centric dashboard header === */
 		.mood-hero {
@@ -3949,6 +4046,8 @@
 		      name: loc.name,
 		      is_active: (loc.is_active === false ? false : true),
 		      pending_deactivation_at: loc.pending_deactivation_at || null,
+		      google_review_url: loc.google_review_url || '',
+		      google_review_routing_enabled: loc.google_review_routing_enabled === true,
 		      feedback: []
 		    };
 		  }
@@ -4666,7 +4765,12 @@
 			
 			// Keep existing display function happy (expects a map keyed by currentLocation)
 			const locations = {};
-			locations[locationId] = { name: displayName, feedback: [] };
+			locations[locationId] = {
+			  name: displayName,
+			  google_review_url: locRow?.google_review_url || '',
+			  google_review_routing_enabled: locRow?.google_review_routing_enabled === true,
+			  feedback: []
+			};
 			updateCustomerLocationDisplay(locations);
 
 
@@ -5305,6 +5409,148 @@
 		    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 		}
 
+		function isPositiveSentiment(sentiment) {
+		  return sentiment === 'very-happy' || sentiment === 'happy';
+		}
+
+		function getSentimentGroup(sentiment) {
+		  return isPositiveSentiment(sentiment) ? 'positive' : 'neutral_negative';
+		}
+
+		function getSentimentEmoji(sentiment) {
+		  return {
+		    'very-happy': '😍',
+		    happy: '😊',
+		    neutral: '😐',
+		    sad: '😠',
+		    'very-sad': '😡'
+		  }[sentiment] || '';
+		}
+
+		function isValidGoogleReviewUrl(url) {
+		  if (!url) return false;
+		  try {
+		    const parsed = new URL(String(url).trim());
+		    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+		  } catch (_) {
+		    return false;
+		  }
+		}
+
+		function getGoogleReviewRoutingState(locationContext = null) {
+		  const localLocation = currentUser?.locations?.[currentLocation] || null;
+		  const url = String(locationContext?.google_review_url || localLocation?.google_review_url || '').trim();
+		  const enabled = (locationContext?.google_review_routing_enabled ?? localLocation?.google_review_routing_enabled) === true;
+		  const validUrl = isValidGoogleReviewUrl(url);
+		  return { url, enabled, validUrl, active: enabled && validUrl };
+		}
+
+		function getPostFeedbackLocationLabel(locationContext = null) {
+		  const localName = currentUser?.locations?.[currentLocation]?.name || '';
+		  const businessName = String(locationContext?.business_name || currentUser?.businessName || '').trim();
+		  const locationName = String(locationContext?.name || localName || 'this location').trim();
+		  return [businessName, locationName].filter(Boolean).join(' - ') || locationName;
+		}
+
+		async function trackPostFeedbackEvent(eventType, context) {
+		  try {
+		    if (!isUuid(context?.locationId)) return;
+		    await fetch(`${SUPABASE_URL}/functions/v1/track-post-feedback-event`, {
+		      method: 'POST',
+		      headers: {
+		        'Content-Type': 'application/json',
+		        'apikey': SUPABASE_ANON_KEY,
+		        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+		      },
+		      body: JSON.stringify({
+		        event_type: eventType,
+		        location_id: context.locationId,
+		        sentiment: context.sentiment,
+		        emoji: context.emoji,
+		        sentiment_group: context.sentimentGroup,
+		        google_review_routing_enabled: context.googleReviewRoutingEnabled,
+		        google_review_url_valid: context.googleReviewUrlValid,
+		        google_review_cta_shown: context.googleReviewCtaShown,
+		        google_review_text_link_shown: context.googleReviewTextLinkShown,
+		        owner_onboarding_shown: context.ownerOnboardingShown
+		      })
+		    });
+		  } catch (e) {
+		    console.warn('post-feedback analytics failed:', e?.message || e);
+		  }
+		}
+
+		function renderOwnerOnboardingBlock(isSecondary) {
+		  return `
+		    <div class="business-cta${isSecondary ? ' secondary' : ''}" id="postFeedbackOwnerOnboarding">
+		      <h3>Are you a business owner?</h3>
+		      <p>FlashFeedback helps you collect quick, private customer feedback with a simple QR code.</p>
+		      <p>Setup takes minutes.</p>
+		      <button id="learnMoreBtn" class="cta-button" onclick="onLearnMoreClick()">Get started free</button>
+		    </div>
+		  `;
+		}
+
+		function renderPostFeedbackState(sentiment, locationContext = null) {
+		  const thankYouDiv = document.getElementById('thankYou');
+		  if (!thankYouDiv) return;
+		  const routing = getGoogleReviewRoutingState(locationContext);
+		  const isPositive = isPositiveSentiment(sentiment);
+		  const sentimentGroup = getSentimentGroup(sentiment);
+		  const label = getPostFeedbackLocationLabel(locationContext);
+		  const safeLabel = escapePricingHtml(label);
+		  const ownerOnboardingShown = !((currentView === 'customer-demo') || (currentUser && currentView === 'customer'));
+		  const googleReviewCtaShown = isPositive && routing.active;
+		  const googleReviewTextLinkShown = !isPositive && routing.active;
+		  const trackingContext = {
+		    locationId: currentLocation,
+		    sentiment,
+		    emoji: getSentimentEmoji(sentiment),
+		    sentimentGroup,
+		    googleReviewRoutingEnabled: routing.enabled,
+		    googleReviewUrlValid: routing.validUrl,
+		    googleReviewCtaShown,
+		    googleReviewTextLinkShown,
+		    ownerOnboardingShown
+		  };
+
+		  let bodyHtml = '';
+		  if (!routing.active) {
+		    bodyHtml = `
+		      <h2>Thank you for your feedback!</h2>
+		      <p>Your opinion helps us improve our service.</p>
+		    `;
+		  } else if (isPositive) {
+		    bodyHtml = `
+		      <h2>Thanks - we're glad you had a good experience.</h2>
+		      <div class="google-review-card">
+		        <p>If you'd like to support ${safeLabel} publicly, you can leave a Google review.</p>
+		        <a class="cta-button owner-onboarding-link" href="${escapePricingHtml(routing.url)}" target="_blank" rel="noopener noreferrer" onclick="trackPostFeedbackEvent('google_review_cta_clicked', window.__lastPostFeedbackTrackingContext)">Leave a Google review</a>
+		      </div>
+		    `;
+		  } else {
+		    const linkedName = googleReviewTextLinkShown
+		      ? `<a class="google-review-link" href="${escapePricingHtml(routing.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open Google review page for ${safeLabel}" onclick="trackPostFeedbackEvent('google_review_text_link_clicked', window.__lastPostFeedbackTrackingContext)">${safeLabel}</a>`
+		      : safeLabel;
+		    bodyHtml = `
+		      <h2>Thanks - your feedback has been sent privately.</h2>
+		      <p>Thanks - your feedback has been sent privately to ${linkedName} so the team can understand what happened and improve.</p>
+		    `;
+		  }
+
+		  thankYouDiv.innerHTML = `
+		    <div id="postFeedbackContent" class="post-feedback-panel">
+		      ${bodyHtml}
+		      ${ownerOnboardingShown ? renderOwnerOnboardingBlock(googleReviewCtaShown) : ''}
+		    </div>
+		  `;
+		  window.__lastPostFeedbackTrackingContext = trackingContext;
+
+		  if (googleReviewCtaShown) trackPostFeedbackEvent('google_review_prompt_shown', trackingContext);
+		  if (googleReviewTextLinkShown) trackPostFeedbackEvent('google_review_text_link_shown', trackingContext);
+		  if (ownerOnboardingShown) trackPostFeedbackEvent('owner_onboarding_block_shown', trackingContext);
+		}
+
 		
        async function submitFeedback() {
 		  if (!selectedSentiment) return;
@@ -5412,15 +5658,7 @@
 		  if (section) section.style.display = 'none';
 		  const thankYouDiv = document.getElementById('thankYou');
 		  if (thankYouDiv) thankYouDiv.style.display = 'block';
-		
-		  const businessCta = thankYouDiv?.querySelector?.('.business-cta');
-		  if (businessCta) {
-		    businessCta.style.display =
-		      (currentView === 'customer-demo') ||
-		      (currentUser && currentView === 'customer')
-		        ? 'none'
-		        : 'block';
-		  }
+		  renderPostFeedbackState(selectedSentiment, locationContext);
 		
 		  if (currentView === 'customer-demo') {
 		    setTimeout(showDemoAdmin, 2000);
@@ -6163,6 +6401,8 @@
 			  name: newLoc.name,
 			  is_active: (newLoc.is_active === false ? false : true),
 			  pending_deactivation_at: newLoc.pending_deactivation_at || null,
+			  google_review_url: newLoc.google_review_url || '',
+			  google_review_routing_enabled: newLoc.google_review_routing_enabled === true,
 			  feedback: []
 			};
 
@@ -6303,6 +6543,45 @@
 
 
 			
+		async function saveGoogleReviewRoutingSettings(id) {
+		  if (!currentUser?.businessId || !currentUser?.locations?.[id]) return false;
+		  const urlInput = document.getElementById('googleReviewUrl-' + id);
+		  const enabledInput = document.getElementById('googleReviewEnabled-' + id);
+		  const status = document.getElementById('googleReviewStatus-' + id);
+		  const googleReviewUrl = (urlInput?.value || '').trim();
+		  const enabled = enabledInput?.checked === true;
+
+		  if (enabled && !isValidGoogleReviewUrl(googleReviewUrl)) {
+		    if (status) status.textContent = 'Add a valid Google review link before enabling routing.';
+		    return false;
+		  }
+		  if (!enabled && googleReviewUrl && !isValidGoogleReviewUrl(googleReviewUrl)) {
+		    if (status) status.textContent = 'Enter a valid link starting with http:// or https://.';
+		    return false;
+		  }
+
+		  if (status) status.textContent = 'Saving...';
+		  try {
+		    const result = await callBusinessSettingsApi({
+		      action: 'location_google_review',
+		      business_id: currentUser.businessId,
+		      location_id: id,
+		      google_review_url: googleReviewUrl || null,
+		      google_review_routing_enabled: enabled
+		    });
+		    currentUser.locations[id].google_review_url = result.location?.google_review_url || '';
+		    currentUser.locations[id].google_review_routing_enabled = result.location?.google_review_routing_enabled === true;
+		    if (status) {
+		      status.textContent = 'Saved';
+		      setTimeout(() => { status.textContent = ''; }, 1800);
+		    }
+		  } catch (error) {
+		    console.error(error);
+		    if (status) status.textContent = error.message || 'Could not save Google review routing.';
+		  }
+		  return false;
+		}
+
         function updateLocationsList() {
 		  var container = document.getElementById('locationsList');
 		  if (!container) return;
@@ -6320,7 +6599,7 @@
 		    demoData.forEach(function(location) {
 		      var isActive = location.is_active !== false;
 		      var div = document.createElement('div');
-		      div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
+		      div.className = 'location-card';
 		
 		      // name + (optional) Inactive badge
 		      var pendingDate = location.pending_deactivation_at ? formatPlanDate(location.pending_deactivation_at) : '';
@@ -6364,6 +6643,8 @@
 		      var div = document.createElement('div');
 		      div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0d1117; border: 1px solid var(--ff-border) !important; border-radius: 8px; margin-bottom: 10px;';
 		      div.setAttribute('data-location-id', id);
+		      div.className = 'location-card';
+		      div.style.cssText = '';
 		
 		      // name + (optional) Inactive badge
 		      var pendingDate = location.pending_deactivation_at ? formatPlanDate(location.pending_deactivation_at) : '';
@@ -6388,6 +6669,35 @@
 		            (isActive ? 'Deactivate' : 'Activate') +
 		          '</a>' +
 		        '</span>';
+		      var googleReviewUrl = escapePricingHtml(location.google_review_url || '');
+		      var googleReviewEnabled = location.google_review_routing_enabled === true;
+		      div.insertAdjacentHTML('beforeend',
+		        '<div class="google-routing-settings">' +
+		          '<div>' +
+		            '<label for="googleReviewUrl-' + id + '">Google review link</label>' +
+		            '<input id="googleReviewUrl-' + id + '" type="url" placeholder="https://g.page/r/..." value="' + googleReviewUrl + '">' +
+		            '<div class="settings-helper" style="margin-top:6px;">Optionally invite happy customers to leave a Google review after they submit feedback. Neutral and negative feedback remains focused on private feedback first and foremost.</div>' +
+		          '</div>' +
+		          '<details>' +
+		            '<summary>How to find your Google review link</summary>' +
+		            '<ol>' +
+		              '<li>Open your Google Business Profile.</li>' +
+		              '<li>Choose the location you want reviews for.</li>' +
+		              '<li>Select Ask for reviews or Share review form.</li>' +
+		              '<li>Copy the review link and paste it here.</li>' +
+		              '<li>Use the link that opens Google&rsquo;s review form for this exact location.</li>' +
+		            '</ol>' +
+		          '</details>' +
+		          '<label class="google-routing-toggle" for="googleReviewEnabled-' + id + '">' +
+		            '<input id="googleReviewEnabled-' + id + '" type="checkbox"' + (googleReviewEnabled ? ' checked' : '') + '> ' +
+		            '<span>Enable Google review routing for this location</span>' +
+		          '</label>' +
+		          '<div class="google-routing-actions">' +
+		            '<button class="btn" type="button" onclick="return saveGoogleReviewRoutingSettings(\'' + id + '\')">Save Google routing</button>' +
+		            '<span id="googleReviewStatus-' + id + '" class="google-routing-status"></span>' +
+		          '</div>' +
+		        '</div>'
+		      );
 		
 		      container.appendChild(div);
 		    });
@@ -6808,6 +7118,7 @@
 		  handleLogin,
 		  selectSentiment,
 		  submitFeedback,
+		  trackPostFeedbackEvent,
 		  toggleView,
 		  openNavDrawer,
 		  closeNavDrawer,
@@ -6817,6 +7128,7 @@
 		  addLocation,
 		  renameLocation,
 		  toggleLocationActive,
+		  saveGoogleReviewRoutingSettings,
 		  updateLocationsList,
 		  updateFeedback,
 		  retryFeedbackHistory,
@@ -6892,7 +7204,7 @@
 
 		  const { data: freshLocations, error: locationsError } = await supabase
 		    .from('locations')
-		    .select('id,name,is_active,pending_deactivation_at')
+		    .select('id,name,is_active,pending_deactivation_at,google_review_url,google_review_routing_enabled')
 		    .eq('business_id', currentUser.businessId);
 		  if (!locationsError) {
 		    for (const location of freshLocations || []) {
@@ -6902,6 +7214,8 @@
 		      currentUser.locations[location.id].name = location.name;
 		      currentUser.locations[location.id].is_active = location.is_active !== false;
 		      currentUser.locations[location.id].pending_deactivation_at = location.pending_deactivation_at || null;
+		      currentUser.locations[location.id].google_review_url = location.google_review_url || '';
+		      currentUser.locations[location.id].google_review_routing_enabled = location.google_review_routing_enabled === true;
 		    }
 		  }
 		
@@ -7110,7 +7424,7 @@
 		  if (!id) return null;
 		  const { data, error } = await supabase
 		    .from('location_public')
-		    .select('location_id, location_name, business_id, business_name, is_active')
+		    .select('location_id, location_name, business_id, business_name, is_active, google_review_url, google_review_routing_enabled')
 		    .eq('location_id', id)
 		    .maybeSingle();
 		
@@ -7126,7 +7440,9 @@
 		    name: data.location_name,
 		    business_id: data.business_id,
 		    is_active: data.is_active,
-		    business_name: data.business_name
+		    business_name: data.business_name,
+		    google_review_url: data.google_review_url || '',
+		    google_review_routing_enabled: data.google_review_routing_enabled === true
 		  };
 		}
 
@@ -7746,6 +8062,9 @@
 
 		// Logs anon "learn more" click for the current location, then goes to signup
 		async function onLearnMoreClick() {
+		  if (window.__lastPostFeedbackTrackingContext) {
+		    trackPostFeedbackEvent('owner_onboarding_block_clicked', window.__lastPostFeedbackTrackingContext);
+		  }
 		  // Resolve the location id (from state or URL)
 		  const locFromState = window.currentLocation || null;
 		  const locFromUrl = new URLSearchParams(window.location.search).get('location');
@@ -7788,10 +8107,6 @@
 		  // Continue to your existing signup flow
 		  try { goToSignup(); } catch {}
 		}
-
-		
-		// expose for inline onclick
-		window.onLearnMoreClick = onLearnMoreClick;
 
 		
 		// expose for inline onclick
