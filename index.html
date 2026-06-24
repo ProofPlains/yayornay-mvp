@@ -252,9 +252,9 @@
         .google-review-card {
             margin: 22px auto 0;
             padding: 22px;
-            border: 1px solid rgba(72, 187, 120, 0.45);
+            border: 1px solid rgba(167, 139, 250, 0.52);
             border-radius: 12px;
-            background: color-mix(in oklab, var(--ff-surface) 88%, #48bb78);
+            background: color-mix(in oklab, var(--ff-surface) 88%, var(--ff-brand-1));
             color: var(--ff-text);
         }
         .google-review-card p {
@@ -5547,7 +5547,7 @@
 		    const isNeutral = sentiment === 'neutral';
 		    bodyHtml = `
 		      <h2>${isNeutral ? 'Thanks for your feedback.' : 'We\'re sorry this wasn\'t a better experience.'}</h2>
-		      <p>Your feedback has been shared privately with ${linkedName} so the team can understand what happened and improve.</p>
+		      <p>Your feedback has been shared privately with ${linkedName} so the team can improve.</p>
 		      <p>${isNeutral ? 'They appreciate you taking the time to let them know.' : 'Thank you for taking a moment to let them know &mdash; it really helps.'}</p>
 		    `;
 		  } else {
