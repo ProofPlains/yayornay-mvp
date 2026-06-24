@@ -5532,26 +5532,28 @@
 		  };
 
 		  let bodyHtml = '';
-		  if (!routing.active) {
+		  if (isPositive && routing.active) {
 		    bodyHtml = `
-		      <h2>Thank you for your feedback!</h2>
-		      <p>Your opinion helps us improve our service.</p>
-		    `;
-		  } else if (isPositive) {
-		    bodyHtml = `
-		      <h2>Thanks - we're glad you had a good experience.</h2>
+		      <h2>Thanks &mdash; we're glad you had a good experience.</h2>
 		      <div class="google-review-card">
-		        <p>If you'd like to support ${safeLabel} publicly, you can leave a Google review.</p>
+		        <p>If you'd like to support ${safeLabel}, you can leave a quick Google review.</p>
 		        <a class="cta-button owner-onboarding-link" href="${escapePricingHtml(routing.url)}" target="_blank" rel="noopener noreferrer" onclick="trackPostFeedbackEvent('google_review_cta_clicked', window.__lastPostFeedbackTrackingContext)">Leave a Google review</a>
 		      </div>
 		    `;
-		  } else {
+		  } else if (!isPositive) {
 		    const linkedName = googleReviewTextLinkShown
-		      ? `<a class="google-review-link" href="${escapePricingHtml(routing.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open Google review page for ${safeLabel}" onclick="trackPostFeedbackEvent('google_review_text_link_clicked', window.__lastPostFeedbackTrackingContext)">${safeLabel}</a>`
+		      ? `<a class="google-review-link" href="${escapePricingHtml(routing.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${safeLabel} on Google" onclick="trackPostFeedbackEvent('google_review_text_link_clicked', window.__lastPostFeedbackTrackingContext)">${safeLabel}</a>`
 		      : safeLabel;
+		    const isNeutral = sentiment === 'neutral';
 		    bodyHtml = `
-		      <h2>Thanks - your feedback has been sent privately.</h2>
-		      <p>Thanks - your feedback has been sent privately to ${linkedName} so the team can understand what happened and improve.</p>
+		      <h2>${isNeutral ? 'Thanks for your feedback.' : 'We\'re sorry this wasn\'t a better experience.'}</h2>
+		      <p>Your feedback has been shared privately with ${linkedName} so the team can understand what happened and improve.</p>
+		      <p>${isNeutral ? 'They appreciate you taking the time to let them know.' : 'Thank you for taking a moment to let them know &mdash; it really helps.'}</p>
+		    `;
+		  } else {
+		    bodyHtml = `
+		      <h2>Thank you for your feedback!</h2>
+		      <p>Your opinion helps us improve our service.</p>
 		    `;
 		  }
 
