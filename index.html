@@ -1248,6 +1248,14 @@
 		  align-items: stretch;
 		}
 
+		.qr-order-builder-open .qr-sign-actions {
+		  grid-template-columns: minmax(0, 1fr);
+		}
+
+		.qr-order-builder-open .qr-sign-actions > :not(:first-child) {
+		  display: none;
+		}
+
 		.qr-action-choice {
 		  display: flex;
 		  flex-direction: column;
@@ -1499,6 +1507,68 @@
 		  width: 10px;
 		  flex-basis: 10px;
 		}
+
+		.qr-kit-guide {
+		  display: grid;
+		  gap: 12px;
+		  margin: 0 0 18px;
+		  padding: 16px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 40%, var(--ff-border));
+		  border-radius: 14px;
+		  background: color-mix(in oklab, var(--ff-surface) 93%, var(--ff-brand-1));
+		}
+
+		.qr-kit-guide h4 { margin: 0; color: var(--ff-text); }
+		.qr-kit-guide select,
+		.qr-kit-guide input { width: 100%; }
+		.qr-kit-field {
+		  width: 100%;
+		  min-height: 48px;
+		  padding: 12px 14px;
+		  border: 1px solid color-mix(in oklab, var(--ff-border) 82%, var(--ff-brand-2));
+		  border-radius: 10px;
+		  background: color-mix(in oklab, var(--ff-surface) 92%, black);
+		  color: var(--ff-text);
+		  font: inherit;
+		  font-weight: 700;
+		  box-shadow: inset 0 1px 0 rgba(255,255,255,.03), 0 0 0 0 rgba(139,92,246,0);
+		  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+		}
+		.qr-kit-field:focus {
+		  outline: none;
+		  border-color: var(--ff-brand-2);
+		  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ff-brand-2) 28%, transparent);
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		}
+		.qr-kit-field::placeholder { color: var(--ff-text-muted); }
+		.qr-kit-volume-fields { display: grid; gap: 10px; }
+		.qr-kit-volume-fields label { display: grid; gap: 6px; color: var(--ff-text-muted); font-weight: 700; }
+		.qr-kit-question-label {
+		  display: grid;
+		  grid-template-columns: auto minmax(0, 1fr);
+		  gap: 6px;
+		  align-items: start;
+		  line-height: 1.35;
+		}
+		.qr-kit-question-label .qr-kit-question-number {
+		  color: var(--ff-text);
+		  font-weight: 900;
+		}
+		.qr-kit-recommendation { display: grid; gap: 10px; }
+		.qr-kit-recommendation:empty { display: none; }
+		.qr-kit-item {
+		  display: grid;
+		  grid-template-columns: minmax(0, 1fr) 110px;
+		  gap: 10px;
+		  align-items: center;
+		  padding: 12px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 10px;
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		}
+		.qr-kit-item strong { display: block; color: var(--ff-text); }
+		.qr-kit-item span { color: var(--ff-text-muted); font-size: 13px; }
+		.qr-kit-item input { text-align: center; }
 
 		.qr-delivery-options .qr-price-loader {
 		  grid-column: 1 / -1;
@@ -2828,7 +2898,7 @@
                     <div class="qr-generator-row">
                         <select id="qrLocationSelect" onchange="handleQrLocationChange()">
                         </select>
-                        <button class="btn" onclick="generateSign()">Generate</button>
+                        <button id="qrGenerateSignBtn" class="btn" type="button">Generate</button>
                     </div>
                 </div>
                 
@@ -2842,9 +2912,9 @@
 					    <div class="qr-action-instruction">Choose the option that works best for you.</div>
 					    <div class="qr-sign-actions">
 					      <div class="qr-action-choice">
-					        <div class="qr-action-choice-title">Order stickers</div>
-					        <p class="qr-action-choice-copy">Have ready-to-use QR stickers printed and delivered to you.</p>
-					        <button id="ffOrderQrBtn" class="btn">Order Stickers</button>
+					        <div class="qr-action-choice-title">Order your QR kit</div>
+					        <p class="qr-action-choice-copy">Get a tailored mix of QR stickers and delivery inserts, ready to use.</p>
+					        <button id="ffOrderQrBtn" class="btn">Build my QR kit</button>
 					      </div>
 					      <div class="qr-action-or" aria-hidden="true">OR</div>
 					      <div class="qr-action-choice">
@@ -2872,69 +2942,76 @@
 					    <div class="qr-order-hero">
 					      <div>
 					        <div class="qr-order-kicker">Fresh from the printer</div>
-					        <h4>Order glossy QR stickers</h4>
-					        <p>We'll print your exact FlashFeedback QR sign as 3x4 glossy stickers and send them to your door.</p>
+					        <h4>Build your QR kit</h4>
+					        <p>We'll recommend the right QR stickers and delivery inserts, then print your exact FlashFeedback QR sign.</p>
 					      </div>
 					      <div id="qrOrderStartingPrice" class="qr-order-starting-price">Loading price...</div>
 					    </div>
-					    <div class="form-group">
-					      <label>How many stickers?</label>
-					      <div id="qrOrderQuantityOptions" class="qr-choice-grid" role="radiogroup" aria-label="Sticker quantity">
-					        <button class="qr-choice-pill active" type="button" data-qr-quantity="10">10</button>
-					        <button class="qr-choice-pill" type="button" data-qr-quantity="20">20</button>
-					        <button class="qr-choice-pill" type="button" data-qr-quantity="50">50</button>
-					        <button class="qr-choice-pill" type="button" data-qr-quantity="100">100</button>
-					      </div>
-					      <input id="qrOrderQuantity" type="hidden" value="10">
-					      <div class="settings-helper">Stickers are ordered in sensible batches of 10. One checkout creates one print order.</div>
-					    </div>
-					    <div class="form-group">
-					      <label>Delivery speed</label>
-					      <div id="qrOrderDeliveryOptions" class="qr-delivery-options" role="radiogroup" aria-label="Delivery speed"></div>
-					    </div>
-					    <div id="qrOrderPriceSummary" class="qr-price-breakdown" style="margin:0 0 14px 0; padding:12px; border:1px solid var(--ff-border); border-radius:8px; background:color-mix(in oklab, var(--ff-surface) 94%, black); color:var(--ff-text);">
-					      Getting live delivery prices...
-					    </div>
-					    <h4 style="margin:18px 0 12px 0;">Delivery details</h4>
-					    <div class="form-group">
-					      <label for="qrOrderName">Delivery contact</label>
-					      <input id="qrOrderName" type="text" autocomplete="name" required>
-					    </div>
-					    <div class="form-group">
-					      <label for="qrOrderPostcode">Find your address</label>
-					      <div class="qr-address-lookup">
-					        <input id="qrOrderPostcode" type="text" autocomplete="postal-code" inputmode="text" placeholder="Enter your postcode" required>
-					        <button id="qrOrderAddressLookup" class="btn qr-address-lookup-button" type="button">Find address</button>
-					      </div>
-					      <div id="qrOrderAddressLookupStatus" class="qr-address-lookup-status" aria-live="polite">Enter a UK postcode, then choose your address.</div>
-					      <select id="qrOrderAddressSelect" class="qr-address-select" aria-label="Choose your address" hidden></select>
-					    </div>
-					    <div class="form-group">
-					      <label for="qrOrderAddress1">Address line 1</label>
-					      <input id="qrOrderAddress1" type="text" autocomplete="address-line1" required>
-					    </div>
-					    <div class="form-group">
-					      <label for="qrOrderAddress2">Address line 2 (optional)</label>
-					      <input id="qrOrderAddress2" type="text" autocomplete="address-line2">
-					    </div>
-					    <div class="form-group">
-					      <label for="qrOrderCity">Town / city</label>
-					      <input id="qrOrderCity" type="text" autocomplete="address-level2" required>
-					    </div>
-					    <div class="form-group">
-					      <label for="qrOrderCountry">Country</label>
-					      <select id="qrOrderCountry" autocomplete="country-name" required>
-					        <option value="United Kingdom">United Kingdom</option>
+					    <div class="qr-kit-guide">
+					      <div class="qr-order-kicker">Quick questions</div>
+					      <h4><span class="qr-kit-question-label"><span class="qr-kit-question-number">1.</span><span>Where should customers find your QR code?</span></span></h4>
+					      <select id="qrKitEncounter" class="qr-kit-field">
+					        <option value="">Please select</option>
+					        <option value="in_person">In person - tables, bill folders, till points or service areas</option>
+					        <option value="delivery">In deliveries - inside outgoing parcels</option>
+					        <option value="both">Both in person and in deliveries</option>
+					        <option value="unsure">I'm not sure yet</option>
 					      </select>
+					      <div id="qrKitVolumeFields" class="qr-kit-volume-fields"></div>
+					      <button id="qrKitRecommend" class="btn" type="button">Show my recommended QR kit</button>
+					      <div id="qrKitRecommendation" class="qr-kit-recommendation" aria-live="polite"></div>
 					    </div>
-					    <div class="form-group">
-					      <label for="qrOrderNotes">Notes (optional)</label>
-					      <textarea id="qrOrderNotes" rows="3" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
-					    </div>
-					    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-					      <button id="qrOrderSubmit" class="btn" type="submit" disabled aria-disabled="true">Pay and order glossy stickers</button>
-					      <button id="qrOrderCancel" class="btn" type="button">Cancel</button>
-					      <span id="qrOrderStatus" style="color:#4b5563;"></span>
+					    <button id="qrOrderCancelLite" class="btn" type="button" style="margin:0 0 14px 0;">Cancel</button>
+					    <div id="qrOrderCheckoutDetails" style="display:none;">
+					      <input id="qrOrderQuantity" type="hidden" value="10">
+					      <div class="form-group">
+					        <label>Delivery speed</label>
+					        <div id="qrOrderDeliveryOptions" class="qr-delivery-options" role="radiogroup" aria-label="Delivery speed"></div>
+					      </div>
+					      <div id="qrOrderPriceSummary" class="qr-price-breakdown" style="margin:0 0 14px 0; padding:12px; border:1px solid var(--ff-border); border-radius:8px; background:color-mix(in oklab, var(--ff-surface) 94%, black); color:var(--ff-text);">
+					        Getting live delivery prices...
+					      </div>
+					      <h4 style="margin:18px 0 12px 0;">Delivery details</h4>
+					      <div class="form-group">
+					        <label for="qrOrderName">Delivery contact</label>
+					        <input id="qrOrderName" type="text" autocomplete="name" required>
+					      </div>
+					      <div class="form-group">
+					        <label for="qrOrderPostcode">Find your address</label>
+					        <div class="qr-address-lookup">
+					          <input id="qrOrderPostcode" type="text" autocomplete="postal-code" inputmode="text" placeholder="Enter your postcode" required>
+					          <button id="qrOrderAddressLookup" class="btn qr-address-lookup-button" type="button">Find address</button>
+					        </div>
+					        <div id="qrOrderAddressLookupStatus" class="qr-address-lookup-status" aria-live="polite">Enter a UK postcode, then choose your address.</div>
+					        <select id="qrOrderAddressSelect" class="qr-address-select" aria-label="Choose your address" hidden></select>
+					      </div>
+					      <div class="form-group">
+					        <label for="qrOrderAddress1">Address line 1</label>
+					        <input id="qrOrderAddress1" type="text" autocomplete="address-line1" required>
+					      </div>
+					      <div class="form-group">
+					        <label for="qrOrderAddress2">Address line 2 (optional)</label>
+					        <input id="qrOrderAddress2" type="text" autocomplete="address-line2">
+					      </div>
+					      <div class="form-group">
+					        <label for="qrOrderCity">Town / city</label>
+					        <input id="qrOrderCity" type="text" autocomplete="address-level2" required>
+					      </div>
+					      <div class="form-group">
+					        <label for="qrOrderCountry">Country</label>
+					        <select id="qrOrderCountry" autocomplete="country-name" required>
+					          <option value="United Kingdom">United Kingdom</option>
+					        </select>
+					      </div>
+					      <div class="form-group">
+					        <label for="qrOrderNotes">Notes (optional)</label>
+					        <textarea id="qrOrderNotes" rows="3" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
+					      </div>
+					      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+					        <button id="qrOrderSubmit" class="btn" type="submit" disabled aria-disabled="true">Pay and order QR kit</button>
+					        <button id="qrOrderCancel" class="btn" type="button">Cancel</button>
+					        <span id="qrOrderStatus" style="color:#4b5563;"></span>
+					      </div>
 					    </div>
 					  </form>
 					    <div class="qr-placement-step">
@@ -5497,6 +5574,7 @@
           const orderStatus = document.getElementById('qrOrderStatus');
 
           if (signWrapper) signWrapper.style.display = 'none';
+          setQrOrderBuilderOpen(false);
           if (signImageContainer) signImageContainer.innerHTML = '';
           if (qrContainer) qrContainer.innerHTML = '';
           if (orderForm) {
@@ -5991,23 +6069,21 @@
 		  };
 		}
 
-		const QR_PRINT_PRODUCT = {
-		  productType: 'qr_sticker',
-		  productName: 'Glossy QR Stickers',
-		  sku: 'GLOBAL-STI-3X4-G',
-		  quantities: [10, 20, 50, 100],
-		  defaultQuantity: 10,
-		  defaultDeliveryMethod: 'Standard'
+		const QR_PRINT_PRODUCTS = {
+		  qr_sticker: { productType: 'qr_sticker', productName: 'Glossy QR Stickers', quantityIncrement: 1, helper: 'Place them where customers can scan in person.' },
+		  qr_insert: { productType: 'qr_insert', productName: 'Glossy QR Inserts', quantityIncrement: 10, helper: 'Include one in each outgoing parcel.' }
 		};
 		let qrPrintQuoteState = {
 		  orderId: null,
-		  quantity: QR_PRINT_PRODUCT.defaultQuantity,
-		  deliveryMethod: QR_PRINT_PRODUCT.defaultDeliveryMethod,
+		  items: [],
+		  deliveryMethod: 'Standard',
 		  options: [],
 		  loading: false,
-		  error: ''
+		  error: '',
+		  hasRecommendation: false
 		};
 		let qrPrintQuoteTimer = null;
+		let qrPrintQuoteRequestId = 0;
 		let qrAddressCandidates = [];
 
 		function formatQrOrderMoney(amount, currency = 'gbp') {
@@ -6039,9 +6115,161 @@
 
 		function getSelectedQrPrintOption() {
 		  return (qrPrintQuoteState.options || []).find((option) => option.delivery_method === qrPrintQuoteState.deliveryMethod)
-		    || (qrPrintQuoteState.options || []).find((option) => option.delivery_method === QR_PRINT_PRODUCT.defaultDeliveryMethod)
+		    || (qrPrintQuoteState.options || []).find((option) => option.delivery_method === 'Standard')
 		    || (qrPrintQuoteState.options || [])[0]
 		    || null;
+		}
+
+		function normalizeQrKitQuantity(productType, quantity) {
+		  const product = QR_PRINT_PRODUCTS[productType] || QR_PRINT_PRODUCTS.qr_sticker;
+		  const increment = Math.max(1, Number(product.quantityIncrement || 1));
+		  const rounded = Math.ceil((Number(quantity || 0) - 1e-9) / increment) * increment;
+		  return Math.max(increment, rounded);
+		}
+
+		function isQrKitItemQuantityValid(item) {
+		  const product = QR_PRINT_PRODUCTS[item.product_type];
+		  const increment = Math.max(1, Number(product?.quantityIncrement || 1));
+		  const quantity = Number(item.quantity);
+		  return Number.isInteger(quantity) && quantity >= increment && quantity % increment === 0;
+		}
+
+		function hasFreshQrKitRecommendation() {
+		  return Boolean(qrPrintQuoteState.hasRecommendation && qrPrintQuoteState.items.length);
+		}
+
+		function renderQrOrderDetailsVisibility() {
+		  const details = document.getElementById('qrOrderCheckoutDetails');
+		  const questionCancel = document.getElementById('qrOrderCancelLite');
+		  if (details) details.style.display = hasFreshQrKitRecommendation() ? 'block' : 'none';
+		  if (questionCancel) questionCancel.style.display = hasFreshQrKitRecommendation() ? 'none' : 'inline-flex';
+		}
+
+		function scrollQrOrderIntoView(target = 'form') {
+		  const element = target === 'checkout'
+		    ? (document.getElementById('qrOrderCheckoutDetails') || document.getElementById('qrOrderForm'))
+		    : (document.getElementById('qrOrderForm') || document.getElementById('generatedSign'));
+		  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+
+		function setQrOrderBuilderOpen(isOpen) {
+		  document.getElementById('generatedSign')?.classList.toggle('qr-order-builder-open', Boolean(isOpen));
+		}
+
+		function resetQrOrderBuilderState(options = {}) {
+		  const shouldClearDeliveryDetails = options.clearDeliveryDetails === true;
+		  clearTimeout(qrPrintQuoteTimer);
+		  qrPrintQuoteRequestId += 1;
+		  qrPrintQuoteState.orderId = null;
+		  qrPrintQuoteState.items = [];
+		  qrPrintQuoteState.options = [];
+		  qrPrintQuoteState.error = '';
+		  qrPrintQuoteState.loading = false;
+		  qrPrintQuoteState.deliveryMethod = 'Standard';
+		  qrPrintQuoteState.hasRecommendation = false;
+		  qrAddressCandidates = [];
+
+		  const encounter = document.getElementById('qrKitEncounter');
+		  const recommendation = document.getElementById('qrKitRecommendation');
+		  const status = document.getElementById('qrOrderStatus');
+		  const addressSelect = document.getElementById('qrOrderAddressSelect');
+		  const addressStatus = document.getElementById('qrOrderAddressLookupStatus');
+		  if (encounter) encounter.value = '';
+		  if (recommendation) recommendation.innerHTML = '';
+		  if (status) status.textContent = '';
+		  if (addressSelect) {
+		    addressSelect.innerHTML = '';
+		    addressSelect.hidden = true;
+		  }
+		  if (addressStatus) addressStatus.textContent = 'Enter a UK postcode, then choose your address.';
+
+		  if (shouldClearDeliveryDetails) {
+		    ['qrOrderName', 'qrOrderPostcode', 'qrOrderAddress1', 'qrOrderAddress2', 'qrOrderCity', 'qrOrderNotes'].forEach((id) => {
+		      const field = document.getElementById(id);
+		      if (field) field.value = '';
+		    });
+		    const country = document.getElementById('qrOrderCountry');
+		    if (country) country.value = 'United Kingdom';
+		  }
+
+		  renderQrKitVolumeFields();
+		  renderQrKitRecommendation();
+		  renderQrPrintQuote();
+		}
+
+		function resetQrKitRecommendation() {
+		  clearTimeout(qrPrintQuoteTimer);
+		  qrPrintQuoteRequestId += 1;
+		  qrPrintQuoteState.orderId = null;
+		  qrPrintQuoteState.items = [];
+		  qrPrintQuoteState.options = [];
+		  qrPrintQuoteState.error = '';
+		  qrPrintQuoteState.loading = false;
+		  qrPrintQuoteState.deliveryMethod = 'Standard';
+		  qrPrintQuoteState.hasRecommendation = false;
+		  const recommendation = document.getElementById('qrKitRecommendation');
+		  if (recommendation) recommendation.innerHTML = '';
+		  renderQrPrintQuote();
+		}
+
+		function renderQrKitVolumeFields() {
+		  const route = document.getElementById('qrKitEncounter')?.value || '';
+		  const container = document.getElementById('qrKitVolumeFields');
+		  const recommendButton = document.getElementById('qrKitRecommend');
+		  if (!container) return;
+		  if (!route) {
+		    container.innerHTML = '';
+		    if (recommendButton) recommendButton.style.display = 'none';
+		    return;
+		  }
+		  if (recommendButton) recommendButton.style.display = 'block';
+		  const fields = [];
+		  let questionNumber = 2;
+		  if (route === 'in_person' || route === 'both') {
+		    const touchpointLabel = route === 'both'
+		      ? 'How many in-person QR sticker locations do you have? For example, tables, bill folders, till points or service areas.'
+		      : 'How many of these customer touchpoints do you have?';
+		    fields.push(`<label><span class="qr-kit-question-label"><span class="qr-kit-question-number">${questionNumber++}.</span><span>${touchpointLabel}</span></span><input id="qrKitTouchpoints" class="qr-kit-field" type="number" min="1" value="10" inputmode="numeric"></label>`);
+		  }
+		  if (route === 'delivery' || route === 'both') fields.push(`<label><span class="qr-kit-question-label"><span class="qr-kit-question-number">${questionNumber++}.</span><span>How many outgoing parcels do you send each month?</span></span><input id="qrKitDispatches" class="qr-kit-field" type="number" min="1" value="100" inputmode="numeric"></label>`);
+		  container.innerHTML = fields.join('') || '<div class="settings-helper">We\'ll start with a small flexible QR kit. You can edit the recommendation before checkout.</div>';
+		}
+
+		function renderQrKitRecommendation() {
+		  const container = document.getElementById('qrKitRecommendation');
+		  if (!container) return;
+		  if (!hasFreshQrKitRecommendation()) {
+		    container.innerHTML = '';
+		    return;
+		  }
+		  container.innerHTML = qrPrintQuoteState.items.map((item) => {
+		    const product = QR_PRINT_PRODUCTS[item.product_type];
+		    const increment = Math.max(1, Number(product?.quantityIncrement || 1));
+		    return `<div class="qr-kit-item"><div><strong>${escapePricingHtml(product?.productName || item.product_type)}</strong><span>${escapePricingHtml(product?.helper || '')}</span></div><input class="qr-kit-field" type="number" min="${increment}" step="${increment}" data-qr-kit-quantity="${item.product_type}" value="${Number(item.quantity)}" aria-label="${escapePricingHtml(product?.productName || item.product_type)} quantity"></div>`;
+		  }).join('') + '<div class="settings-helper">Sticker quantities can be exact. Insert quantities are rounded up to practical batches of 10, with a sensible spare allowance included.</div>';
+		}
+
+		function recommendQrKit() {
+		  const route = document.getElementById('qrKitEncounter')?.value || '';
+		  if (!route) {
+		    resetQrKitRecommendation();
+		    document.getElementById('qrKitEncounter')?.focus();
+		    return;
+		  }
+		  const touchpoints = Number(document.getElementById('qrKitTouchpoints')?.value || 0);
+		  const dispatches = Number(document.getElementById('qrKitDispatches')?.value || 0);
+		  const items = [];
+		  if (route === 'in_person' || route === 'both') items.push({ product_type: 'qr_sticker', quantity: normalizeQrKitQuantity('qr_sticker', Math.max(1, touchpoints) * 2 * 1.2) });
+		  if (route === 'delivery' || route === 'both') items.push({ product_type: 'qr_insert', quantity: normalizeQrKitQuantity('qr_insert', Math.max(1, dispatches) * 1.1) });
+		  qrPrintQuoteState.items = items.length ? items : [{ product_type: 'qr_sticker', quantity: 10 }];
+		  qrPrintQuoteState.orderId = null;
+		  qrPrintQuoteState.options = [];
+		  qrPrintQuoteState.error = '';
+		  qrPrintQuoteState.deliveryMethod = 'Standard';
+		  qrPrintQuoteState.hasRecommendation = true;
+		  renderQrKitRecommendation();
+		  scrollQrOrderIntoView('checkout');
+		  refreshQrPrintQuote();
 		}
 
 		function isQrOrderReady() {
@@ -6051,8 +6279,11 @@
 		  const postcode = (document.getElementById('qrOrderPostcode')?.value || '').trim();
 		  const country = (document.getElementById('qrOrderCountry')?.value || '').trim();
 		  const signImage = document.querySelector('#signImageContainer img');
+		  const hasValidKit = hasFreshQrKitRecommendation()
+		    && qrPrintQuoteState.items.every(isQrKitItemQuantityValid);
 		  return Boolean(
 		    currentUser?.businessId
+		    && hasValidKit
 		    && contactName
 		    && addressLine1
 		    && city
@@ -6073,16 +6304,6 @@
 		  submitBtn.disabled = !ready;
 		  submitBtn.setAttribute('aria-disabled', String(!ready));
 		  submitBtn.title = ready ? '' : 'Choose a delivery option and complete the delivery details to continue.';
-		}
-
-		function renderQrQuantityOptions() {
-		  document.querySelectorAll('[data-qr-quantity]').forEach((button) => {
-		    const isActive = Number(button.dataset.qrQuantity) === Number(qrPrintQuoteState.quantity);
-		    button.classList.toggle('active', isActive);
-		    button.setAttribute('aria-pressed', String(isActive));
-		  });
-		  const quantityInput = document.getElementById('qrOrderQuantity');
-		  if (quantityInput) quantityInput.value = String(qrPrintQuoteState.quantity);
 		}
 
 		function renderQrDeliveryOptions() {
@@ -6110,14 +6331,16 @@
 		}
 
 		function renderQrPrintQuote() {
-		  renderQrQuantityOptions();
+		  renderQrOrderDetailsVisibility();
 		  renderQrDeliveryOptions();
 		  const summary = document.getElementById('qrOrderPriceSummary');
 		  const startingPrice = document.getElementById('qrOrderStartingPrice');
 		  const status = document.getElementById('qrOrderStatus');
 		  const option = getSelectedQrPrintOption();
 		  if (startingPrice) {
-		    startingPrice.innerHTML = qrPrintQuoteState.loading
+		    startingPrice.innerHTML = !hasFreshQrKitRecommendation()
+		      ? 'Start with two questions'
+		      : qrPrintQuoteState.loading
 		      ? qrPriceLoadingMarkup('Loading price')
 		      : option
 		        ? `${escapePricingHtml(formatQrOrderMoney(option.customer_total_amount, option.currency))} total`
@@ -6130,10 +6353,8 @@
 		      summary.textContent = qrPrintQuoteState.error;
 		    } else if (option) {
 		      summary.innerHTML = `
-		        <div class="qr-price-row">
-		          <span class="qr-price-label">${qrPrintQuoteState.quantity} glossy QR stickers</span>
-		          <span class="qr-price-value">${formatQrOrderMoney(option.customer_total_amount - option.shipping_amount, option.currency)}</span>
-		        </div>
+		        ${qrPrintQuoteState.items.map((item) => `<div class="qr-price-row"><span class="qr-price-label">${Number(item.quantity)} ${escapePricingHtml(QR_PRINT_PRODUCTS[item.product_type]?.productName || 'QR items')}</span></div>`).join('')}
+		        <div class="qr-price-row"><span class="qr-price-label">QR kit and print</span><span class="qr-price-value">${formatQrOrderMoney(option.customer_total_amount - option.shipping_amount, option.currency)}</span></div>
 		        <div class="qr-price-row">
 		          <span class="qr-price-label">${option.delivery_method} delivery</span>
 		          <span class="qr-price-value">${formatQrOrderMoney(option.shipping_amount, option.currency)}</span>
@@ -6144,7 +6365,9 @@
 		        </div>
 		      `;
 		    } else {
-		      summary.textContent = 'Choose a quantity to get a live price.';
+		      summary.textContent = hasFreshQrKitRecommendation()
+		        ? 'Live price will appear here once the quote loads.'
+		        : '';
 		    }
 		  }
 		  if (status && status.textContent === 'Loading price') {
@@ -6155,6 +6378,10 @@
 
 		async function refreshQrPrintQuote() {
 		  if (!currentUser?.businessId) return;
+		  if (!hasFreshQrKitRecommendation()) {
+		    renderQrPrintQuote();
+		    return;
+		  }
 		  const { locationId, locationName } = getSelectedQrOrderLocation();
 		  if (!locationId) return;
 		  const contactName = (document.getElementById('qrOrderName')?.value || '').trim();
@@ -6163,6 +6390,7 @@
 		  const city = (document.getElementById('qrOrderCity')?.value || '').trim();
 		  const postcode = (document.getElementById('qrOrderPostcode')?.value || '').trim();
 		  const notes = (document.getElementById('qrOrderNotes')?.value || '').trim();
+		  const quoteRequestId = ++qrPrintQuoteRequestId;
 		  qrPrintQuoteState.loading = true;
 		  qrPrintQuoteState.error = '';
 		  renderQrPrintQuote();
@@ -6179,14 +6407,13 @@
 		      },
 		      body: JSON.stringify({
 		        order_id: qrPrintQuoteState.orderId,
-		        product_type: QR_PRINT_PRODUCT.productType,
+		        items: qrPrintQuoteState.items,
 		        business_id: currentUser.businessId,
 		        business_name: currentUser.businessName || null,
 		        owner_name: currentUser.userName || currentUser.ownerName || null,
 		        owner_email: currentUser.email || null,
 		        location_id: locationId,
 		        location_name: locationName,
-		        quantity: qrPrintQuoteState.quantity,
 		        delivery_method: qrPrintQuoteState.deliveryMethod,
 		        country: 'United Kingdom',
 		        delivery_contact: contactName || null,
@@ -6198,23 +6425,30 @@
 		      })
 		    });
 		    const body = await res.json().catch(() => ({}));
+		    if (quoteRequestId !== qrPrintQuoteRequestId) return;
 		    if (!res.ok) throw new Error(body.error || 'Could not get live delivery prices.');
 		    qrPrintQuoteState.orderId = body.order_id || qrPrintQuoteState.orderId;
 		    qrPrintQuoteState.options = Array.isArray(body.quote_options) ? body.quote_options : [];
 		    if (!qrPrintQuoteState.options.some((option) => option.delivery_method === qrPrintQuoteState.deliveryMethod)) {
-		      qrPrintQuoteState.deliveryMethod = body.default_delivery_method || QR_PRINT_PRODUCT.defaultDeliveryMethod;
+		      qrPrintQuoteState.deliveryMethod = body.default_delivery_method || 'Standard';
 		    }
 		  } catch (error) {
-		    console.warn('QR print quote failed:', error?.message || error);
-		    qrPrintQuoteState.error = error?.message || 'Could not get live delivery prices.';
+		    if (quoteRequestId !== qrPrintQuoteRequestId) return;
+		    const quoteErrorMessage = error?.message || 'Could not get live delivery prices.';
+		    console.warn('QR print quote failed:', quoteErrorMessage);
+		    qrPrintQuoteState.error = /valid QR product and quantity/i.test(quoteErrorMessage)
+		      ? ''
+		      : quoteErrorMessage;
 		    qrPrintQuoteState.options = [];
 		  } finally {
+		    if (quoteRequestId !== qrPrintQuoteRequestId) return;
 		    qrPrintQuoteState.loading = false;
 		    renderQrPrintQuote();
 		  }
 		}
 
 		function scheduleQrPrintQuoteRefresh(delay = 250) {
+		  if (!hasFreshQrKitRecommendation()) return;
 		  clearTimeout(qrPrintQuoteTimer);
 		  qrPrintQuoteTimer = setTimeout(refreshQrPrintQuote, delay);
 		}
@@ -6290,11 +6524,10 @@
 		}
 
 		function adjustQrOrderQuantity(change) {
-		  const quantities = QR_PRINT_PRODUCT.quantities;
-		  const currentIndex = Math.max(0, quantities.indexOf(Number(qrPrintQuoteState.quantity)));
-		  const nextIndex = Math.max(0, Math.min(quantities.length - 1, currentIndex + change));
-		  qrPrintQuoteState.quantity = quantities[nextIndex];
-		  renderQrPrintQuote();
+		  const sticker = qrPrintQuoteState.items.find((item) => item.product_type === 'qr_sticker');
+		  if (!sticker) return;
+		  sticker.quantity = Math.max(1, sticker.quantity + change);
+		  renderQrKitRecommendation();
 		  scheduleQrPrintQuoteRefresh();
 		}
 
@@ -6316,18 +6549,19 @@
 		  if (status) status.textContent = '';
 
 		  form.style.display = 'block';
-		  qrPrintQuoteState.quantity = QR_PRINT_PRODUCT.defaultQuantity;
-		  qrPrintQuoteState.deliveryMethod = QR_PRINT_PRODUCT.defaultDeliveryMethod;
-		  renderQrPrintQuote();
-		  refreshQrPrintQuote();
-		  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		  setQrOrderBuilderOpen(true);
+		  resetQrOrderBuilderState({ clearDeliveryDetails: true });
+		  if (nameInput && !nameInput.value) {
+		    nameInput.value = currentUser.userName || currentUser.ownerName || currentUser.businessName || '';
+		  }
+		  scrollQrOrderIntoView('form');
 		}
 
 		function hideQrOrderForm() {
 		  const form = document.getElementById('qrOrderForm');
-		  const status = document.getElementById('qrOrderStatus');
+		  resetQrOrderBuilderState({ clearDeliveryDetails: true });
 		  if (form) form.style.display = 'none';
-		  if (status) status.textContent = '';
+		  setQrOrderBuilderOpen(false);
 		}
 
 		function showQrOrderReturnMessage() {
@@ -6341,7 +6575,7 @@
 		  const qrSection = document.getElementById('qr');
 		  const isSuccess = orderStatus === 'success';
 		  const message = isSuccess
-		    ? 'Payment received. Your QR sign order has been sent.'
+		    ? 'Payment received. Your QR kit has been sent to production.'
 		    : 'Payment was cancelled. No order was placed.';
 		  if (form) form.style.display = 'block';
 		  renderQrPrintQuote();
@@ -6386,7 +6620,7 @@
 
 		  const submitBtn = document.getElementById('qrOrderSubmit');
 		  const status = document.getElementById('qrOrderStatus');
-		  const quantity = Number(document.getElementById('qrOrderQuantity')?.value || qrPrintQuoteState.quantity || 0);
+		  const quantity = qrPrintQuoteState.items.reduce((total, item) => total + Number(item.quantity || 0), 0);
 		  const contactName = (document.getElementById('qrOrderName')?.value || '').trim();
 		  const addressLine1 = (document.getElementById('qrOrderAddress1')?.value || '').trim();
 		  const addressLine2 = (document.getElementById('qrOrderAddress2')?.value || '').trim();
@@ -6401,7 +6635,7 @@
 		  const signDataUrl = signImage?.src || '';
 		  const selectedQuote = getSelectedQrPrintOption();
 
-		  if (!quantity || quantity < 10 || quantity > 100 || quantity % 10 !== 0 || !contactName || !addressLine1 || !city || !postcode || country !== 'United Kingdom') {
+		  if (!quantity || !hasFreshQrKitRecommendation() || !qrPrintQuoteState.items.every(isQrKitItemQuantityValid) || !contactName || !addressLine1 || !city || !postcode || country !== 'United Kingdom') {
 		    if (status) status.textContent = 'Please complete the delivery details.';
 		    return;
 		  }
@@ -7426,6 +7660,8 @@
         }
 
         async function generateSign() {
+		  hideQrOrderForm();
+		  setQrOrderBuilderOpen(false);
 		  // --- Data lookups ---
 		  var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
 		  var qrSelect = document.getElementById('qrLocationSelect');
@@ -8415,22 +8651,31 @@
 		// Wire the button after DOM is ready
 		document.addEventListener('DOMContentLoaded', () => {
 		  document.getElementById('qrLocationSelect')?.addEventListener('change', handleQrLocationChange);
+		  document.getElementById('qrGenerateSignBtn')?.addEventListener('click', generateSign);
 		  document.getElementById('ffDownloadQrBtn')?.addEventListener('click', downloadQrSignAndLog);
 		  document.getElementById('ffPrintQrBtn')?.addEventListener('click', printQrSignAsPDFAndLog);
 		  document.getElementById('ffOrderQrBtn')?.addEventListener('click', showQrOrderForm);
 		  document.getElementById('qrOrderCancel')?.addEventListener('click', hideQrOrderForm);
+		  document.getElementById('qrOrderCancelLite')?.addEventListener('click', hideQrOrderForm);
 		  document.getElementById('qrOrderForm')?.addEventListener('submit', submitQrOrder);
-		  document.getElementById('qrOrderQuantityOptions')?.addEventListener('click', (event) => {
-		    const button = event.target.closest('[data-qr-quantity]');
-		    if (!button) return;
-		    qrPrintQuoteState.quantity = Number(button.dataset.qrQuantity || QR_PRINT_PRODUCT.defaultQuantity);
-		    renderQrPrintQuote();
+		  document.getElementById('qrKitEncounter')?.addEventListener('change', () => {
+		    resetQrKitRecommendation();
+		    renderQrKitVolumeFields();
+		  });
+		  document.getElementById('qrKitVolumeFields')?.addEventListener('input', resetQrKitRecommendation);
+		  document.getElementById('qrKitRecommend')?.addEventListener('click', recommendQrKit);
+		  document.getElementById('qrKitRecommendation')?.addEventListener('input', (event) => {
+		    const input = event.target.closest('[data-qr-kit-quantity]');
+		    if (!input) return;
+		    const item = qrPrintQuoteState.items.find((candidate) => candidate.product_type === input.dataset.qrKitQuantity);
+		    if (!item) return;
+		    item.quantity = normalizeQrKitQuantity(item.product_type, input.value);
 		    scheduleQrPrintQuoteRefresh();
 		  });
 		  document.getElementById('qrOrderDeliveryOptions')?.addEventListener('click', (event) => {
 		    const button = event.target.closest('[data-qr-delivery-method]');
 		    if (!button) return;
-		    qrPrintQuoteState.deliveryMethod = button.dataset.qrDeliveryMethod || QR_PRINT_PRODUCT.defaultDeliveryMethod;
+		    qrPrintQuoteState.deliveryMethod = button.dataset.qrDeliveryMethod || 'Standard';
 		    renderQrPrintQuote();
 		    scheduleQrPrintQuoteRefresh(0);
 		  });
