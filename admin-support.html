@@ -521,6 +521,26 @@
       color: var(--good);
       font-weight: 700;
     }
+    .qr-print-order-card {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+    }
+    .qr-print-order-card.needs-attention {
+      border-color: rgba(239,68,68,.55);
+      background: rgba(239,68,68,.12);
+    }
+    .qr-print-order-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .qr-print-order-meta .badge { white-space: nowrap; }
+    .qr-print-order-card a { color: var(--brand); }
     .qr-sign-panel {
       display: none;
       margin-top: 14px;
@@ -858,6 +878,32 @@
       const date = new Date(value);
       if (Number.isNaN(date.getTime())) return '-';
       return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function formatSupportMoney(amount, currency = 'gbp') {
+      return new Intl.NumberFormat('en-GB', {
+        style: 'currency',
+        currency: String(currency || 'gbp').toUpperCase()
+      }).format(Number(amount || 0) / 100);
+    }
+
+    function qrPrintFulfilmentLabel(status) {
+      const labels = {
+        quoted: 'Quoted',
+        checkout_started: 'Checkout started',
+        paid: 'Paid',
+        prodigi_submitted: 'Submitted to Prodigi',
+        in_production: 'In production',
+        shipped: 'Shipped',
+        completed: 'Completed',
+        failed: 'Failed',
+        needs_attention: 'Needs attention'
+      };
+      return labels[status] || status || 'Unknown';
+    }
+
+    function qrPrintFulfilmentTone(status) {
+      return ['failed', 'needs_attention'].includes(status) ? 'disabled' : 'enabled';
     }
 
     function customerFeedbackUrl(locationId) {
@@ -1202,7 +1248,15 @@
     }
 
     function searchText(business) {
-      return [business.name, business.ownerName, business.ownerUserId, business.industry, business.businessType, planLabel(business.pricingTier), business.subscriptionStatus, business.subscriptionTestMode ? 'test subscription' : '']
+      const qrPrintOrderText = (business.qrPrintOrders || []).map((order) => [
+        order.productName,
+        order.prodigiSku,
+        order.prodigiOrderId,
+        order.fulfilmentStatus,
+        order.deliveryMethod,
+        order.locationName
+      ].filter(Boolean).join(' ')).join(' ');
+      return [business.name, business.ownerName, business.ownerUserId, business.industry, business.businessType, planLabel(business.pricingTier), business.subscriptionStatus, business.subscriptionTestMode ? 'test subscription' : '', qrPrintOrderText]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
@@ -1226,6 +1280,12 @@
         category: 'Activation',
         definition: 'Unique locations where a QR sign was downloaded, printed, or a paid sticker order was completed.',
         tells: 'Signals that a business intends to place FlashFeedback in the real world.'
+      },
+      qrPrintOrders: {
+        name: 'QR print orders',
+        category: 'Fulfilment',
+        definition: 'Paid QR print orders and their Prodigi fulfilment progress.',
+        tells: 'Shows whether paid sticker demand is turning into successful print fulfilment.'
       },
       firstFeedbackReceived: {
         name: 'First feedback received',
@@ -1431,6 +1491,13 @@
         }
         return detail;
       }
+      if (metricKey === 'qrPrintOrders') {
+        const revenue = new Intl.NumberFormat('en-GB', {
+          style: 'currency',
+          currency: String(metric.currency || 'gbp').toUpperCase()
+        }).format(Number(metric.paidRevenueAmount || 0) / 100);
+        return `Paid: ${Number(metric.paidOrders || 0).toLocaleString()} | Submitted: ${Number(metric.submittedOrders || 0).toLocaleString()} | In production: ${Number(metric.inProductionOrders || 0).toLocaleString()} | Shipped: ${Number(metric.shippedOrders || 0).toLocaleString()} | Completed: ${Number(metric.completedOrders || 0).toLocaleString()} | Needs attention: ${Number(metric.failedOrders || 0).toLocaleString()} | Revenue: ${revenue}.`;
+      }
       return '';
     }
 
@@ -1517,6 +1584,9 @@
       monetisationMetricCardsEl.innerHTML = metricCard(
         'freeToPaidUpgrade',
         metrics.freeToPaidUpgrade
+      ) + metricCard(
+        'qrPrintOrders',
+        metrics.qrPrintOrders
       );
     }
 
@@ -1673,6 +1743,7 @@
       const locations = Array.isArray(business.locations) ? business.locations : [];
       const recentFeedback = Array.isArray(business.recentFeedback) ? business.recentFeedback : [];
       const users = Array.isArray(business.users) ? business.users : [];
+      const qrPrintOrders = Array.isArray(business.qrPrintOrders) ? business.qrPrintOrders : [];
       const hasSimulation = Boolean(business.stripeTestClockId);
       const canStartSimulation = !business.subscriptionComped &&
         !business.stripeSubscriptionId &&
@@ -1734,6 +1805,34 @@
               <button class="small-btn" type="button" id="qrSignDownload" disabled>Download PNG</button>
             </div>
             <img id="qrSignPreview" class="qr-sign-preview" alt="Generated QR sign preview" style="display:none;">
+          </div>
+        </div>
+        <div class="section">
+          <h3>QR Print Orders (${qrPrintOrders.length})</h3>
+          <div class="list">
+            ${qrPrintOrders.length ? qrPrintOrders.map((order) => {
+              const needsAttention = ['failed', 'needs_attention'].includes(order.fulfilmentStatus);
+              return `
+                <div class="qr-print-order-card ${needsAttention ? 'needs-attention' : ''}">
+                  <div class="list-item-header">
+                    <div>
+                      <strong>${escapeHtml(order.quantity || 0)} ${escapeHtml(order.productName || 'QR print items')}</strong>
+                      <div class="muted">${escapeHtml(order.locationName || 'Unknown location')} - ${escapeHtml(formatDate(order.createdAt))}</div>
+                    </div>
+                    <span class="badge ${qrPrintFulfilmentTone(order.fulfilmentStatus)}">${escapeHtml(qrPrintFulfilmentLabel(order.fulfilmentStatus))}</span>
+                  </div>
+                  <div class="qr-print-order-meta">
+                    <span class="badge enabled">${escapeHtml(order.deliveryMethod || 'Delivery')}</span>
+                    <span class="badge enabled">${escapeHtml(formatSupportMoney(order.customerTotalAmount, order.currency))}</span>
+                    <span class="badge ${order.stripePaymentStatus === 'paid' ? 'enabled' : 'disabled'}">Stripe: ${escapeHtml(order.stripePaymentStatus || '-')}</span>
+                  </div>
+                  <div class="muted">SKU ${escapeHtml(order.prodigiSku || '-')} - Prodigi ${escapeHtml(order.prodigiOrderId || 'not submitted yet')}</div>
+                  ${order.trackingUrl ? `<div><a href="${escapeHtml(order.trackingUrl)}" target="_blank" rel="noopener noreferrer">Open tracking link</a></div>` : ''}
+                  ${order.errorMessage ? `<div class="simulation-status error">${escapeHtml(order.errorMessage)}</div>` : ''}
+                  <div class="muted">Deliver to ${escapeHtml(order.deliveryContact || '-')} - ${escapeHtml(order.city || '')} ${escapeHtml(order.postcode || '')}</div>
+                </div>
+              `;
+            }).join('') : '<div class="muted">No QR print orders yet.</div>'}
           </div>
         </div>
         <div class="section">
