@@ -1682,6 +1682,45 @@
 		  text-decoration: none !important;
 		}
 
+		.qr-google-routing-prompt {
+		  display: grid;
+		  grid-template-columns: minmax(0, 1fr) auto;
+		  gap: 12px;
+		  align-items: center;
+		  margin-top: 14px;
+		  padding: 12px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 34%, var(--ff-border));
+		  border-radius: 12px;
+		  background:
+		    radial-gradient(circle at top left, color-mix(in oklab, var(--ff-brand-2) 16%, transparent), transparent 40%),
+		    color-mix(in oklab, var(--ff-surface) 92%, black);
+		}
+
+		.qr-google-routing-prompt[hidden] {
+		  display: none;
+		}
+
+		.qr-google-routing-prompt strong {
+		  display: block;
+		  color: var(--ff-text);
+		  font-size: 14px;
+		  margin-bottom: 3px;
+		}
+
+		.qr-google-routing-prompt span {
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  line-height: 1.4;
+		}
+
+		.qr-google-routing-prompt .btn {
+		  width: auto;
+		  min-width: 150px;
+		  min-height: 42px;
+		  margin-top: 0;
+		  padding-inline: 14px;
+		}
+
 		.qr-quantity-stepper {
 		  display: grid;
 		  grid-template-columns: 56px minmax(0, 1fr) 56px;
@@ -1901,13 +1940,63 @@
 		.qr-kit-recommendation:empty { display: none; }
 		.qr-kit-item {
 		  display: grid;
-		  grid-template-columns: minmax(0, 1fr) 110px;
-		  gap: 10px;
+		  grid-template-columns: minmax(118px, 148px) minmax(0, 1fr) minmax(104px, 118px);
+		  gap: 14px;
 		  align-items: center;
 		  padding: 12px;
 		  border: 1px solid var(--ff-border);
 		  border-radius: 10px;
 		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		}
+		.qr-kit-visual {
+		  position: relative;
+		  width: 100%;
+		  aspect-ratio: 4 / 3;
+		  overflow: hidden;
+		  border-radius: 14px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 34%, var(--ff-border));
+		  background: color-mix(in oklab, var(--ff-surface) 90%, black);
+		  box-shadow: 0 12px 26px rgba(0,0,0,.22);
+		}
+		.qr-kit-visual img {
+		  width: 100%;
+		  height: 100%;
+		  display: block;
+		  object-fit: cover;
+		}
+		.qr-kit-copy {
+		  min-width: 0;
+		}
+		.qr-kit-quantity {
+		  display: grid;
+		  gap: 7px;
+		  justify-items: stretch;
+		}
+		.qr-kit-quantity-label {
+		  color: color-mix(in oklab, var(--ff-brand-2) 70%, var(--ff-text));
+		  font-size: 11px;
+		  font-weight: 900;
+		  letter-spacing: .07em;
+		  text-transform: uppercase;
+		  text-align: center;
+		}
+		.qr-kit-quantity .qr-kit-field {
+		  border-color: color-mix(in oklab, var(--ff-brand-2) 58%, var(--ff-border));
+		  background:
+		    linear-gradient(135deg, color-mix(in oklab, var(--ff-brand-2) 9%, transparent), transparent 42%),
+		    color-mix(in oklab, var(--ff-surface) 94%, black);
+		  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 1px rgba(139,92,246,.08);
+		  cursor: text;
+		}
+		.qr-kit-quantity .qr-kit-field:hover {
+		  border-color: color-mix(in oklab, var(--ff-brand-2) 76%, var(--ff-border));
+		  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 3px color-mix(in oklab, var(--ff-brand-2) 12%, transparent);
+		}
+		.qr-kit-edit-hint {
+		  color: var(--ff-text-muted);
+		  font-size: 11px;
+		  line-height: 1.25;
+		  text-align: center;
 		}
 		.qr-kit-item strong { display: block; color: var(--ff-text); }
 		.qr-kit-item span { color: var(--ff-text-muted); font-size: 13px; }
@@ -1951,11 +2040,35 @@
 		}
 
 		.qr-price-context-note {
-		  margin-top: 8px;
-		  color: var(--ff-text-muted);
+		  margin-top: 10px;
+		  padding: 12px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 40%, var(--ff-border));
+		  border-radius: 12px;
+		  background:
+		    radial-gradient(circle at top right, color-mix(in oklab, var(--ff-brand-2) 18%, transparent), transparent 38%),
+		    color-mix(in oklab, var(--ff-surface) 94%, black);
+		  color: var(--ff-text);
 		  font-size: 13px;
 		  line-height: 1.4;
 		}
+		.qr-price-context-note strong {
+		  display: block;
+		  margin-bottom: 2px;
+		  color: var(--ff-text);
+		  font-size: 18px;
+		  line-height: 1.1;
+		}
+		.qr-price-context-note span {
+		  color: var(--ff-text-muted);
+		}
+
+		.qr-print-validation {
+		  min-height: 18px;
+		  color: #fecaca;
+		  font-size: 12px;
+		  line-height: 1.35;
+		}
+		.qr-print-validation:empty { display: none; }
 
 		.qr-order-sticky-summary {
 		  display: none;
@@ -2072,13 +2185,47 @@
 		  }
 
 		  .qr-kit-item {
-		    grid-template-columns: 1fr;
-		    align-items: stretch;
+		    grid-template-columns: minmax(88px, 110px) minmax(0, 1fr);
+		    grid-template-areas:
+		      "visual copy"
+		      "quantity quantity";
+		    gap: 12px;
+		    align-items: center;
+		  }
+
+		  .qr-kit-visual {
+		    grid-area: visual;
+		  }
+
+		  .qr-kit-copy {
+		    grid-area: copy;
+		  }
+
+		  .qr-kit-quantity {
+		    grid-area: quantity;
+		    grid-template-columns: minmax(0, 1fr) minmax(112px, 150px);
+		    align-items: center;
+		  }
+
+		  .qr-kit-quantity-label {
+		    text-align: left;
+		  }
+
+		  .qr-kit-edit-hint {
+		    grid-column: 1 / -1;
+		    text-align: right;
 		  }
 
 		  .qr-kit-item input {
-		    width: min(150px, 100%);
-		    justify-self: end;
+		    width: 100%;
+		  }
+
+		  .qr-google-routing-prompt {
+		    grid-template-columns: 1fr;
+		  }
+
+		  .qr-google-routing-prompt .btn {
+		    width: 100%;
 		  }
 		}
 
@@ -3474,6 +3621,7 @@
 					          </div>
 					        </div>
 					        <button id="ffPrintQrBtn" class="btn">Print</button>
+					        <div id="qrPrintCopiesStatus" class="qr-print-validation" aria-live="polite"></div>
 					      </div>
 					      <div class="qr-diy-option">
 					        <div class="qr-diy-option-title">Download</div>
@@ -3579,6 +3727,13 @@
 					      <ul id="qrPlacementChecklist" class="qr-placement-checklist"></ul>
 					      <div class="qr-placement-actions">
 					        <a id="qrPlacementTestLink" class="btn" href="#" target="_blank" rel="noopener">Test QR code</a>
+					      </div>
+					      <div id="qrGoogleRoutingPrompt" class="qr-google-routing-prompt" hidden>
+					        <div>
+					          <strong>Want more public reviews too?</strong>
+					          <span>Enable Google review routing so happy customers can be gently invited after they leave feedback.</span>
+					        </div>
+					        <button id="qrGoogleRoutingPromptBtn" class="btn" type="button">Set up Google reviews</button>
 					      </div>
 					    </div>
 					</div>
@@ -6662,14 +6817,19 @@
 		  }).format(Number(amount || 0) / 100);
 		}
 
-		function getInsertOnlyCostPerParcelMarkup(option) {
+		function getInsertCostPerParcelMarkup(option) {
 		  const insertItem = qrPrintQuoteState.items.find((item) => item.product_type === 'qr_insert');
 		  const hasStickerItem = qrPrintQuoteState.items.some((item) => item.product_type === 'qr_sticker');
 		  const insertQuantity = Number(insertItem?.quantity || 0);
-		  if (!option || hasStickerItem || !insertItem || insertQuantity <= 0) return '';
-		  const costPerParcel = Math.ceil(Number(option.customer_total_amount || 0) / insertQuantity);
+		  if (!option || !insertItem || insertQuantity <= 0) return '';
+		  const insertAmount = Number(option.insert_customer_total_amount ?? option.insertCustomerTotalAmount ?? (!hasStickerItem ? option.customer_total_amount : 0));
+		  if (!insertAmount) return '';
+		  const costPerParcel = Math.ceil(insertAmount / insertQuantity);
+		  const helper = hasStickerItem
+		    ? 'Approximate QR insert cost per outgoing parcel. Stickers are not included in this figure.'
+		    : 'Approximate cost when you include one QR insert in each outgoing parcel.';
 		  return `
-		    <div class="qr-price-context-note">That works out at about ${formatQrOrderMoney(costPerParcel, option.currency)} per parcel.</div>
+		    <div class="qr-price-context-note"><strong>${formatQrOrderMoney(costPerParcel, option.currency)} per parcel</strong><span>${helper}</span></div>
 		  `;
 		}
 
@@ -6736,6 +6896,7 @@
 		  const placement = document.getElementById('qrPlacementStep');
 		  if (placement) placement.style.display = qrStep2Completed ? 'block' : 'none';
 		  if (qrStep2Completed) renderQrPlacementGuidance();
+		  if (!qrStep2Completed) renderQrGoogleRoutingPrompt();
 		}
 
 		function setQrStep2Completed(isCompleted, context = null) {
@@ -6781,9 +6942,12 @@
 		}
 
 		function rememberQrOrderCompletionContext() {
+		  const { locationId, locationName } = getSelectedQrOrderLocation();
 		  try {
 		    localStorage.setItem('ff_last_qr_order_context', JSON.stringify({
 		      type: 'printed_order',
+		      locationId,
+		      locationName,
 		      items: qrPrintQuoteState.items.map((item) => ({
 		        product_type: item.product_type,
 		        quantity: Number(item.quantity || 0)
@@ -6799,7 +6963,7 @@
 		    if (!parsed || parsed.type !== 'printed_order') return { type: 'printed_order', productMix: 'stickers' };
 		    const ageMs = Date.now() - Number(parsed.savedAt || 0);
 		    if (ageMs > 1000 * 60 * 60 * 24) return { type: 'printed_order', productMix: 'stickers' };
-		    return { type: 'printed_order', productMix: getQrOrderProductMix(parsed.items || []) };
+		    return { type: 'printed_order', productMix: getQrOrderProductMix(parsed.items || []), items: parsed.items || [], locationId: parsed.locationId || null, locationName: parsed.locationName || null };
 		  } catch {
 		    return { type: 'printed_order', productMix: 'stickers' };
 		  }
@@ -6895,6 +7059,32 @@
 		    testLink.href = locationId ? getCustomerFeedbackUrl(locationId) : '#';
 		    testLink.style.display = locationId ? 'inline-flex' : 'none';
 		  }
+		  renderQrGoogleRoutingPrompt();
+		}
+
+		function renderQrGoogleRoutingPrompt() {
+		  const prompt = document.getElementById('qrGoogleRoutingPrompt');
+		  if (!prompt) return;
+		  const locationId = getSelectedQrTrackingLocationId();
+		  const location = locationId
+		    ? (currentUser?.locations?.[locationId] || window.demoAccount?.locations?.[locationId] || null)
+		    : null;
+		  const routingEnabled = location?.google_review_routing_enabled === true || location?.googleReviewRoutingEnabled === true;
+		  prompt.hidden = !qrStep2Completed || !locationId || routingEnabled;
+		}
+
+		function openGoogleRoutingSettingsFromQr() {
+		  const locationId = getSelectedQrTrackingLocationId();
+		  showSection('settings');
+		  setTimeout(() => {
+		    const target = locationId
+		      ? (document.getElementById('googleReviewEnabled-' + locationId) || document.getElementById('googleReviewUrl-' + locationId))
+		      : document.querySelector('[id^="googleReviewUrl-"], [id^="googleReviewEnabled-"]');
+		    const container = target?.closest?.('.form-group') || target;
+		    container?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+		    target?.focus?.({ preventScroll: true });
+		  }, 150);
+		  return false;
 		}
 
 		function getQrOrderStickySummaryText(option) {
@@ -7063,6 +7253,18 @@
 		  renderQrKitRecommendButtonState();
 		}
 
+		function handleQrKitVolumeKeydown(event) {
+		  if (event.key !== 'Enter') return;
+		  const input = event.target.closest('#qrKitTouchpoints, #qrKitDispatches');
+		  if (!input) return;
+		  event.preventDefault();
+		  if (isQrKitRecommendationInputReady()) {
+		    recommendQrKit();
+		  } else {
+		    renderQrKitRecommendButtonState();
+		  }
+		}
+
 		function renderQrKitRecommendation() {
 		  const container = document.getElementById('qrKitRecommendation');
 		  if (!container) return;
@@ -7078,7 +7280,11 @@
 		  container.innerHTML = qrPrintQuoteState.items.map((item) => {
 		    const product = QR_PRINT_PRODUCTS[item.product_type];
 		    const increment = Math.max(1, Number(product?.quantityIncrement || 1));
-		    return `<div class="qr-kit-item"><div><strong>${escapePricingHtml(product?.productName || item.product_type)}</strong><span>${escapePricingHtml(product?.helper || '')}</span></div><input class="qr-kit-field" type="number" min="${increment}" step="${increment}" data-qr-kit-quantity="${item.product_type}" value="${Number(item.quantity)}" aria-label="${escapePricingHtml(product?.productName || item.product_type)} quantity"></div>`;
+		    const imageSrc = item.product_type === 'qr_insert' ? 'assets/qr-insert-box-card.jpg' : 'assets/qr-sticker-stack-card.jpg';
+		    const imageAlt = item.product_type === 'qr_insert'
+		      ? 'QR insert being added to a parcel'
+		      : 'Stack of glossy QR stickers';
+		    return `<div class="qr-kit-item"><div class="qr-kit-visual"><img src="${imageSrc}" alt="${escapePricingHtml(imageAlt)}" loading="lazy"></div><div class="qr-kit-copy"><strong>${escapePricingHtml(product?.productName || item.product_type)}</strong><span>${escapePricingHtml(product?.helper || '')}</span></div><div class="qr-kit-quantity"><label class="qr-kit-quantity-label" for="qrKitQty-${escapePricingHtml(item.product_type)}">Edit quantity</label><input id="qrKitQty-${escapePricingHtml(item.product_type)}" class="qr-kit-field" type="number" min="${increment}" step="${increment}" data-qr-kit-quantity="${item.product_type}" value="${Number(item.quantity)}" aria-label="${escapePricingHtml(product?.productName || item.product_type)} quantity"><span class="qr-kit-edit-hint">You can change this</span></div></div>`;
 		  }).join('') + `<div class="settings-helper">${helperParts.join(' ')}</div>`;
 		}
 
@@ -7213,7 +7419,7 @@
 		          <span class="qr-price-label">Total today</span>
 		          <span class="qr-price-value">${formatQrOrderMoney(option.customer_total_amount, option.currency)}</span>
 		        </div>
-		        ${getInsertOnlyCostPerParcelMarkup(option)}
+		        ${getInsertCostPerParcelMarkup(option)}
 		      `;
 		    } else {
 		      summary.textContent = hasFreshQrKitRecommendation()
@@ -7433,13 +7639,22 @@
 		  const status = document.getElementById('qrOrderStatus');
 		  const qrSection = document.getElementById('qr');
 		  const isSuccess = orderStatus === 'success';
+		  const completionContext = isSuccess ? getRememberedQrOrderCompletionContext() : null;
 		  const message = isSuccess
 		    ? 'Payment received. Your QR kit has been ordered successfully and will be delivered to you.'
 		    : 'Payment was cancelled. No order was placed.';
+		  if (isSuccess) {
+		    const signContainer = document.getElementById('generatedSign');
+		    const qrSelect = document.getElementById('qrLocationSelect');
+		    if (completionContext?.locationId && qrSelect) {
+		      try { qrSelect.value = completionContext.locationId; } catch {}
+		    }
+		    if (signContainer) signContainer.style.display = 'block';
+		  }
 		  if (form) form.style.display = isSuccess ? 'none' : 'block';
 		  setQrOrderBuilderOpen(!isSuccess);
 		  setQrDiyBuilderOpen(false);
-		  setQrStep2Completed(isSuccess, isSuccess ? getRememberedQrOrderCompletionContext() : null);
+		  setQrStep2Completed(isSuccess, completionContext);
 		  renderQrPrintQuote();
 		  renderQrStickyOrderSummary();
 
@@ -7464,7 +7679,7 @@
 		    ].join(';');
 		    banner.textContent = message;
 		    qrSection.insertBefore(banner, qrSection.firstChild);
-		    banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		    (isSuccess ? document.getElementById('qrPlacementStep') || banner : banner).scrollIntoView({ behavior: 'smooth', block: 'start' });
 		  }
 
 		  urlParams.delete('qr_order');
@@ -8181,6 +8396,7 @@
 		    });
 		    currentUser.locations[id].google_review_url = result.location?.google_review_url || '';
 		    currentUser.locations[id].google_review_routing_enabled = result.location?.google_review_routing_enabled === true;
+		    renderQrGoogleRoutingPrompt();
 		    if (status) {
 		      status.textContent = 'Saved';
 		      setTimeout(() => { status.textContent = ''; }, 1800);
@@ -9338,9 +9554,27 @@
 
 		function getQrPrintCopyCount() {
 		  const copiesInput = document.getElementById('qrPrintCopies');
-		  const copies = Math.min(50, Math.max(1, Math.floor(Number(copiesInput?.value || 1))));
+		  const copies = Math.min(50, Math.max(1, Math.floor(Number(copiesInput?.value || 0))));
 		  if (copiesInput && String(copiesInput.value) !== String(copies)) copiesInput.value = String(copies);
 		  return copies;
+		}
+
+		function getQrPrintCopyCountIfValid() {
+		  const rawValue = (document.getElementById('qrPrintCopies')?.value || '').trim();
+		  if (!rawValue) return null;
+		  const copies = Math.floor(Number(rawValue));
+		  return Number.isFinite(copies) && copies >= 1 ? Math.min(50, copies) : null;
+		}
+
+		function renderQrPrintButtonState() {
+		  const button = document.getElementById('ffPrintQrBtn');
+		  const status = document.getElementById('qrPrintCopiesStatus');
+		  const copies = getQrPrintCopyCountIfValid();
+		  if (button) {
+		    button.disabled = !copies;
+		    button.setAttribute('aria-disabled', String(!copies));
+		  }
+		  if (status) status.textContent = copies ? '' : 'Please specify at least 1 copy.';
 		}
 
 		function renderQrPrintLayoutPreview() {
@@ -9350,7 +9584,7 @@
 		  const title = document.getElementById('qrPrintLayoutPreviewTitle');
 		  const text = document.getElementById('qrPrintLayoutPreviewText');
 		  const layout = select?.value === 'nine' ? 'nine' : 'single';
-		  const copies = getQrPrintCopyCount();
+		  const copies = getQrPrintCopyCountIfValid() || 1;
 		  if (!preview || !sheet) return;
 		  preview.dataset.layout = layout;
 		  sheet.innerHTML = layout === 'nine'
@@ -9364,6 +9598,7 @@
 		      ? `${copyText}: ${copies} printable sheet${copies === 1 ? '' : 's'} with 9 small signs per sheet.`
 		      : `${copyText}: ${copies} large sign${copies === 1 ? '' : 's'} on separate page${copies === 1 ? '' : 's'}.`;
 		  }
+		  renderQrPrintButtonState();
 		}
 
 		function downloadQrSignAndLog() {
@@ -9416,7 +9651,12 @@
 		    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 		    const pageW = 210, pageH = 297;
 		    const printLayout = document.getElementById('qrPrintLayout')?.value || 'single';
-		    const printCopies = getQrPrintCopyCount();
+		    const printCopies = getQrPrintCopyCountIfValid();
+		    if (!printCopies) {
+		      renderQrPrintButtonState();
+		      document.getElementById('qrPrintCopies')?.focus();
+		      return;
+		    }
 
 		    for (let copyIndex = 0; copyIndex < printCopies; copyIndex++) {
 		      if (copyIndex > 0) doc.addPage('a4', 'p');
@@ -9625,11 +9865,13 @@
 		  document.getElementById('qrOrderStickySubmit')?.addEventListener('click', () => {
 		    document.getElementById('qrOrderSubmit')?.click();
 		  });
+		  document.getElementById('qrGoogleRoutingPromptBtn')?.addEventListener('click', openGoogleRoutingSettingsFromQr);
 		  document.getElementById('qrKitEncounter')?.addEventListener('change', () => {
 		    resetQrKitRecommendation();
 		    renderQrKitVolumeFields();
 		  });
 		  document.getElementById('qrKitVolumeFields')?.addEventListener('input', resetQrKitRecommendation);
+		  document.getElementById('qrKitVolumeFields')?.addEventListener('keydown', handleQrKitVolumeKeydown);
 		  document.getElementById('qrKitRecommend')?.addEventListener('click', recommendQrKit);
 		  document.getElementById('qrKitRecommendation')?.addEventListener('input', (event) => {
 		    const input = event.target.closest('[data-qr-kit-quantity]');
