@@ -179,12 +179,42 @@
     .metrics-section {
       display: grid;
       gap: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,.025);
+      padding: 14px;
+    }
+    .metrics-section[open] { gap: 14px; }
+    .metrics-section-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      cursor: pointer;
+      list-style: none;
+    }
+    .metrics-section-heading::-webkit-details-marker { display: none; }
+    .metrics-section-heading::after {
+      content: "Open";
+      padding: 4px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .metrics-section[open] > .metrics-section-heading::after {
+      content: "Hide";
+      color: var(--brand);
+      border-color: rgba(184,138,255,.45);
+      background: rgba(184,138,255,.10);
     }
     .metrics-section-heading h3 { font-size: 20px; }
     .metrics-section-heading p {
       margin-top: 4px;
       color: var(--muted);
       font-size: 13px;
+      grid-column: 1 / -1;
     }
     .funnel-flow {
       display: flex;
@@ -624,38 +654,47 @@
       <section id="metricsDashboard" class="metrics-dashboard" aria-label="Founder metrics dashboard">
         <div class="metrics-hero" id="weeklyActiveHero"></div>
 
-        <section class="metrics-section" aria-labelledby="funnelMetricsTitle">
-          <div class="metrics-section-heading">
+        <details class="metrics-section" open>
+          <summary class="metrics-section-heading">
             <h3 id="funnelMetricsTitle">Activation Funnel</h3>
             <p>Lifetime unique counts, except weekly activity, which covers the trailing seven days.</p>
-          </div>
+          </summary>
           <div class="funnel-flow" id="metricsFunnelFlow"></div>
           <div class="metric-grid" id="funnelMetricCards"></div>
-        </section>
+        </details>
 
-        <section class="metrics-section" aria-labelledby="engagementMetricsTitle">
-          <div class="metrics-section-heading">
+        <details class="metrics-section" open>
+          <summary class="metrics-section-heading">
+            <h3 id="qrJourneyMetricsTitle">QR code journeys</h3>
+            <p>How businesses choose between ordering, printing, downloading, and reaching first feedback.</p>
+          </summary>
+          <div class="funnel-flow" id="qrJourneyFunnelFlow"></div>
+          <div class="metric-grid" id="qrJourneyMetricCards"></div>
+        </details>
+
+        <details class="metrics-section">
+          <summary class="metrics-section-heading">
             <h3 id="engagementMetricsTitle">Engagement</h3>
             <p>Whether customers add useful detail and businesses return to see it.</p>
-          </div>
+          </summary>
           <div class="metric-grid" id="engagementMetricCards"></div>
-        </section>
+        </details>
 
-        <section class="metrics-section" aria-labelledby="postFeedbackMetricsTitle">
-          <div class="metrics-section-heading">
+        <details class="metrics-section">
+          <summary class="metrics-section-heading">
             <h3 id="postFeedbackMetricsTitle">Google routing vs owner onboarding</h3>
             <p>Whether public Google support helps happy-customer conversion without reducing business-owner interest.</p>
-          </div>
+          </summary>
           <div class="metric-grid" id="postFeedbackMetricCards"></div>
-        </section>
+        </details>
 
-        <section class="metrics-section" aria-labelledby="monetisationMetricsTitle">
-          <div class="metrics-section-heading">
+        <details class="metrics-section">
+          <summary class="metrics-section-heading">
             <h3 id="monetisationMetricsTitle">Monetisation</h3>
             <p>Whether businesses see enough value to move from Free to a paid plan.</p>
-          </div>
+          </summary>
           <div class="metric-grid" id="monetisationMetricCards"></div>
-        </section>
+        </details>
 
         <p class="metrics-note">FlashFeedback creates value when it turns silent customer experiences into private, visible, actionable signals for businesses. These metrics track whether that loop is working: businesses sign up, deploy QR codes, customers submit feedback, businesses view it, and some businesses upgrade because the value is clear.</p>
       </section>
@@ -752,7 +791,9 @@
     const businessPanelEl = document.getElementById('businessPanel');
     const weeklyActiveHeroEl = document.getElementById('weeklyActiveHero');
     const metricsFunnelFlowEl = document.getElementById('metricsFunnelFlow');
+    const qrJourneyFunnelFlowEl = document.getElementById('qrJourneyFunnelFlow');
     const funnelMetricCardsEl = document.getElementById('funnelMetricCards');
+    const qrJourneyMetricCardsEl = document.getElementById('qrJourneyMetricCards');
     const engagementMetricCardsEl = document.getElementById('engagementMetricCards');
     const postFeedbackMetricCardsEl = document.getElementById('postFeedbackMetricCards');
     const monetisationMetricCardsEl = document.getElementById('monetisationMetricCards');
@@ -1281,6 +1322,12 @@
         definition: 'Unique locations where a QR sign was downloaded, printed, or a paid sticker order was completed.',
         tells: 'Signals that a business intends to place FlashFeedback in the real world.'
       },
+      qrJourney: {
+        name: 'QR journey health',
+        category: 'QR activation',
+        definition: 'The path from QR generation to ordering, DIY deployment, and first feedback.',
+        tells: 'Shows whether QR codes are becoming visible customer touchpoints, which is the bridge between onboarding and real feedback.'
+      },
       qrPrintOrders: {
         name: 'QR print orders',
         category: 'Fulfilment',
@@ -1491,6 +1538,22 @@
         }
         return detail;
       }
+      if (metricKey === 'qrJourney') {
+        const revenue = formatSupportMoney(metric.paidRevenueAmount || 0, metric.currency || 'gbp');
+        const rates = [
+          `Generate → choose path: ${Number.isFinite(Number(metric.generatedToStep2Rate)) ? Number(metric.generatedToStep2Rate).toFixed(1) + '%' : '-'}`,
+          `Recommendation → checkout: ${Number.isFinite(Number(metric.recommendationToCheckoutRate)) ? Number(metric.recommendationToCheckoutRate).toFixed(1) + '%' : '-'}`,
+          `Checkout → paid: ${Number.isFinite(Number(metric.checkoutToPaidRate)) ? Number(metric.checkoutToPaidRate).toFixed(1) + '%' : '-'}`,
+          `Deployment → first feedback: ${Number.isFinite(Number(metric.deploymentToFeedbackRate)) ? Number(metric.deploymentToFeedbackRate).toFixed(1) + '%' : '-'}`
+        ];
+        return [
+          `Path choice: Order ${Number(metric.orderPathBusinesses || 0).toLocaleString()} | DIY ${Number(metric.diyPathBusinesses || 0).toLocaleString()}.`,
+          `DIY deployed: Print ${Number(metric.diyPrintDeployments || 0).toLocaleString()} | Download ${Number(metric.diyDownloadDeployments || 0).toLocaleString()} | Estimated printed signs ${Number(metric.estimatedDiyPrintedSigns || 0).toLocaleString()}.`,
+          `Recommendations: Stickers ${Number(metric.recommendationProductMix?.stickers || 0).toLocaleString()} | Inserts ${Number(metric.recommendationProductMix?.inserts || 0).toLocaleString()} | Both ${Number(metric.recommendationProductMix?.both || 0).toLocaleString()}.`,
+          `Paid orders: ${Number(metric.paidOrders || 0).toLocaleString()} | Revenue: ${revenue}.`,
+          rates.join(' | ')
+        ].join(' ');
+      }
       if (metricKey === 'qrPrintOrders') {
         const revenue = new Intl.NumberFormat('en-GB', {
           style: 'currency',
@@ -1556,6 +1619,25 @@
         'qrDeployed',
         'firstFeedbackReceived'
       ].map((metricKey) => metricCard(metricKey, metrics[metricKey])).join('');
+
+      const qrJourney = metrics.qrJourney || {};
+      const qrJourneyStages = [
+        ['Generated', qrJourney.generatedLocations],
+        ['Chose Order/DIY', qrJourney.step2StartedLocations],
+        ['Recommended kit', qrJourney.recommendationLocations],
+        ['Checkout started', qrJourney.checkoutStartedLocations],
+        ['DIY deployed', qrJourney.diyDeployedLocations],
+        ['Paid print order', qrJourney.paidPrintOrderLocations],
+        ['First feedback', qrJourney.firstFeedbackLocations]
+      ];
+      qrJourneyFunnelFlowEl.innerHTML = qrJourneyStages.map(([label, value], index) => `
+        ${index ? '<div class="funnel-arrow" aria-hidden="true">&rarr;</div>' : ''}
+        <div class="funnel-stage">
+          <strong>${escapeHtml(Number(value || 0).toLocaleString())}</strong>
+          <span>${escapeHtml(label)}</span>
+        </div>
+      `).join('');
+      qrJourneyMetricCardsEl.innerHTML = metricCard('qrJourney', qrJourney);
 
       engagementMetricCardsEl.innerHTML = [
         'dashboardViewedAfterFeedback',
@@ -1812,11 +1894,12 @@
           <div class="list">
             ${qrPrintOrders.length ? qrPrintOrders.map((order) => {
               const needsAttention = ['failed', 'needs_attention'].includes(order.fulfilmentStatus);
+              const kitItems = Array.isArray(order.kitItems) && order.kitItems.length ? order.kitItems : [{ product_name: order.productName, quantity: order.quantity, prodigi_sku: order.prodigiSku }];
               return `
                 <div class="qr-print-order-card ${needsAttention ? 'needs-attention' : ''}">
                   <div class="list-item-header">
                     <div>
-                      <strong>${escapeHtml(order.quantity || 0)} ${escapeHtml(order.productName || 'QR print items')}</strong>
+                      <strong>${escapeHtml(kitItems.map((item) => `${item.quantity || 0} ${item.product_name || 'QR item'}`).join(' + '))}</strong>
                       <div class="muted">${escapeHtml(order.locationName || 'Unknown location')} - ${escapeHtml(formatDate(order.createdAt))}</div>
                     </div>
                     <span class="badge ${qrPrintFulfilmentTone(order.fulfilmentStatus)}">${escapeHtml(qrPrintFulfilmentLabel(order.fulfilmentStatus))}</span>
@@ -1826,9 +1909,10 @@
                     <span class="badge enabled">${escapeHtml(formatSupportMoney(order.customerTotalAmount, order.currency))}</span>
                     <span class="badge ${order.stripePaymentStatus === 'paid' ? 'enabled' : 'disabled'}">Stripe: ${escapeHtml(order.stripePaymentStatus || '-')}</span>
                   </div>
-                  <div class="muted">SKU ${escapeHtml(order.prodigiSku || '-')} - Prodigi ${escapeHtml(order.prodigiOrderId || 'not submitted yet')}</div>
+                  <div class="muted">${escapeHtml(kitItems.map((item) => item.prodigi_sku || '-').join(' + '))} - Prodigi ${escapeHtml(order.prodigiOrderId || 'not submitted yet')}</div>
                   ${order.trackingUrl ? `<div><a href="${escapeHtml(order.trackingUrl)}" target="_blank" rel="noopener noreferrer">Open tracking link</a></div>` : ''}
                   ${order.errorMessage ? `<div class="simulation-status error">${escapeHtml(order.errorMessage)}</div>` : ''}
+                  ${order.artworkDeletedAt ? `<div class="muted">Artwork removed automatically on ${escapeHtml(formatDate(order.artworkDeletedAt))}</div>` : ''}
                   <div class="muted">Deliver to ${escapeHtml(order.deliveryContact || '-')} - ${escapeHtml(order.city || '')} ${escapeHtml(order.postcode || '')}</div>
                 </div>
               `;
