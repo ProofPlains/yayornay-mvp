@@ -2157,6 +2157,27 @@
 		  transform: none;
 		}
 
+		#qrOrderCancelLite {
+		  justify-self: start;
+		  width: auto;
+		  min-height: 0;
+		  margin: 0 0 14px 0;
+		  padding: 4px 2px;
+		  border: 0;
+		  background: transparent !important;
+		  color: var(--ff-text-muted) !important;
+		  box-shadow: none;
+		  text-decoration: underline;
+		  text-underline-offset: 3px;
+		}
+
+		#qrOrderCancelLite:hover,
+		#qrOrderCancelLite:focus {
+		  color: var(--ff-text) !important;
+		  text-decoration: underline;
+		  transform: none;
+		}
+
 		@media (max-width: 560px) {
 		  .qr-sign-panel {
 		    padding: 16px 10px;
@@ -3664,7 +3685,7 @@
 					      <button id="qrKitRecommend" class="btn" type="button">Show my recommended QR kit</button>
 					      <div id="qrKitRecommendation" class="qr-kit-recommendation" aria-live="polite"></div>
 					    </div>
-					    <button id="qrOrderCancelLite" class="btn" type="button" style="margin:0 0 14px 0;">Back to choices</button>
+					    <button id="qrOrderCancelLite" class="btn" type="button">Back to choices</button>
 					    <div id="qrOrderCheckoutDetails" style="display:none;">
 					      <input id="qrOrderQuantity" type="hidden" value="10">
 					      <div class="form-group">
@@ -7065,22 +7086,26 @@
 		function renderQrGoogleRoutingPrompt() {
 		  const prompt = document.getElementById('qrGoogleRoutingPrompt');
 		  if (!prompt) return;
+		  const isDemoQrExperience = currentView === 'customer-demo'
+		    || currentView === 'admin-demo'
+		    || currentLocation === 'demo'
+		    || (!currentUser && !!window.demoAccount);
 		  const locationId = getSelectedQrTrackingLocationId();
 		  const location = locationId
 		    ? (currentUser?.locations?.[locationId] || window.demoAccount?.locations?.[locationId] || null)
 		    : null;
 		  const routingEnabled = location?.google_review_routing_enabled === true || location?.googleReviewRoutingEnabled === true;
-		  prompt.hidden = !qrStep2Completed || !locationId || routingEnabled;
+		  prompt.hidden = isDemoQrExperience || !qrStep2Completed || !locationId || routingEnabled;
 		}
 
 		function openGoogleRoutingSettingsFromQr() {
 		  const locationId = getSelectedQrTrackingLocationId();
-		  showSection('settings');
+		  showSection('locations');
 		  setTimeout(() => {
 		    const target = locationId
 		      ? (document.getElementById('googleReviewEnabled-' + locationId) || document.getElementById('googleReviewUrl-' + locationId))
 		      : document.querySelector('[id^="googleReviewUrl-"], [id^="googleReviewEnabled-"]');
-		    const container = target?.closest?.('.form-group') || target;
+		    const container = target?.closest?.('.google-routing-settings') || target?.closest?.('.location-card') || target;
 		    container?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
 		    target?.focus?.({ preventScroll: true });
 		  }, 150);
