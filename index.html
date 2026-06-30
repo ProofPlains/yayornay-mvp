@@ -3127,6 +3127,420 @@
 		  .emoji-bar { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 		}
 
+		.feedback-dashboard {
+		  display: grid;
+		  gap: 18px;
+		}
+
+		.feedback-dashboard > .mood-hero,
+		.feedback-dashboard > div[style*="margin-top: 30px"] {
+		  display: none !important;
+		}
+
+		.feedback-page-header {
+		  display: flex;
+		  align-items: flex-start;
+		  justify-content: space-between;
+		  gap: 14px;
+		  flex-wrap: wrap;
+		}
+
+		.feedback-page-title {
+		  display: grid;
+		  gap: 4px;
+		}
+
+		.feedback-page-title h2 {
+		  margin: 0;
+		}
+
+		.feedback-page-title p {
+		  margin: 0;
+		  color: var(--ff-text-muted);
+		  font-size: 14px;
+		  line-height: 1.45;
+		}
+
+		.feedback-qr-link {
+		  min-height: 40px;
+		  padding: 9px 12px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 44%, var(--ff-border));
+		  border-radius: 10px;
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
+		  color: var(--ff-brand-2);
+		  font-weight: 800;
+		  text-decoration: none;
+		}
+
+		.feedback-toolbar {
+		  display: grid;
+		  grid-template-columns: repeat(4, minmax(0, 1fr));
+		  gap: 10px;
+		  align-items: end;
+		  padding: 14px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 12px;
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		}
+
+		.feedback-filter {
+		  display: grid;
+		  gap: 6px;
+		  min-width: 0;
+		  color: var(--ff-text-muted);
+		  font-size: 12px;
+		  font-weight: 800;
+		}
+
+		.feedback-filter select {
+		  width: 100%;
+		}
+
+		.feedback-toggle {
+		  min-height: 42px;
+		  display: flex;
+		  align-items: center;
+		  gap: 8px;
+		  padding: 10px 12px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 10px;
+		  background: color-mix(in oklab, var(--ff-surface) 92%, black);
+		  color: var(--ff-text);
+		  font-size: 13px;
+		  font-weight: 800;
+		  cursor: pointer;
+		}
+
+		.feedback-toggle input {
+		  width: 16px;
+		  height: 16px;
+		}
+
+		.feedback-summary-grid {
+		  display: grid;
+		  grid-template-columns: repeat(4, minmax(0, 1fr));
+		  gap: 12px;
+		}
+
+		.feedback-summary-card,
+		.feedback-distribution,
+		.feedback-list-panel {
+		  border: 1px solid var(--ff-border);
+		  border-radius: 12px;
+		  background:
+		    linear-gradient(135deg, color-mix(in oklab, var(--ff-brand-1) 7%, transparent), transparent 45%),
+		    color-mix(in oklab, var(--ff-surface) 96%, black);
+		  box-shadow: 0 14px 32px rgba(0,0,0,.16);
+		}
+
+		.feedback-summary-card {
+		  min-height: 126px;
+		  display: grid;
+		  gap: 8px;
+		  align-content: space-between;
+		  padding: 16px;
+		}
+
+		.feedback-summary-label,
+		.feedback-section-kicker {
+		  color: color-mix(in oklab, var(--ff-brand-2) 74%, var(--ff-text-muted));
+		  font-size: 12px;
+		  font-weight: 900;
+		  letter-spacing: .06em;
+		  text-transform: uppercase;
+		}
+
+		.feedback-summary-value {
+		  display: flex;
+		  align-items: baseline;
+		  gap: 8px;
+		  color: var(--ff-text);
+		  font-size: 34px;
+		  font-weight: 900;
+		  line-height: 1;
+		}
+
+		.feedback-summary-value .feedback-summary-emoji {
+		  font-size: 30px;
+		  line-height: 1;
+		}
+
+		.feedback-summary-note {
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  line-height: 1.35;
+		}
+
+		.feedback-distribution {
+		  display: grid;
+		  gap: 12px;
+		  padding: 16px;
+		}
+
+		.feedback-distribution-header,
+		.feedback-list-header {
+		  display: flex;
+		  justify-content: space-between;
+		  gap: 12px;
+		  align-items: flex-start;
+		  flex-wrap: wrap;
+		}
+
+		.feedback-distribution-title,
+		.feedback-list-title {
+		  margin: 2px 0 0;
+		  color: var(--ff-text);
+		  font-size: 20px;
+		  font-weight: 900;
+		  line-height: 1.15;
+		}
+
+		.feedback-period-note {
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  line-height: 1.35;
+		}
+
+		.feedback-distribution-bars {
+		  display: grid;
+		  gap: 9px;
+		}
+
+		.feedback-distribution-row {
+		  display: grid;
+		  grid-template-columns: minmax(126px, 170px) minmax(0, 1fr) minmax(84px, auto);
+		  gap: 10px;
+		  align-items: center;
+		}
+
+		.feedback-distribution-label {
+		  display: flex;
+		  align-items: center;
+		  gap: 8px;
+		  min-width: 0;
+		  color: var(--ff-text);
+		  font-weight: 800;
+		}
+
+		.feedback-distribution-emoji {
+		  font-size: 22px;
+		}
+
+		.feedback-bar-track {
+		  height: 11px;
+		  overflow: hidden;
+		  border-radius: 999px;
+		  background: rgba(255,255,255,.08);
+		}
+
+		.feedback-bar-fill {
+		  width: 0%;
+		  height: 100%;
+		  border-radius: inherit;
+		  transition: width .24s ease;
+		}
+
+		.feedback-distribution-meta {
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  font-weight: 800;
+		  text-align: right;
+		  white-space: nowrap;
+		}
+
+		.feedback-list-panel {
+		  display: grid;
+		  gap: 12px;
+		  padding: 16px;
+		}
+
+		.feedback-list-count {
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  font-weight: 800;
+		}
+
+		#recentFeedbackList {
+		  display: grid;
+		  gap: 10px;
+		}
+
+		.feedback-row-card {
+		  display: grid;
+		  grid-template-columns: auto minmax(0, 1fr) auto;
+		  gap: 12px;
+		  align-items: start;
+		  padding: 14px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 10px;
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		}
+
+		.feedback-row-card.needs-attention {
+		  border-left: 4px solid #f97316;
+		}
+
+		.feedback-row-emoji {
+		  display: grid;
+		  place-items: center;
+		  width: 38px;
+		  height: 38px;
+		  border-radius: 10px;
+		  background: rgba(255,255,255,.06);
+		  font-size: 24px;
+		}
+
+		.feedback-row-main {
+		  display: grid;
+		  gap: 6px;
+		  min-width: 0;
+		}
+
+		.feedback-row-topline {
+		  display: flex;
+		  flex-wrap: wrap;
+		  align-items: center;
+		  gap: 8px;
+		}
+
+		.feedback-sentiment-label {
+		  color: var(--ff-text);
+		  font-weight: 900;
+		}
+
+		.feedback-location-label,
+		.feedback-row-time,
+		.feedback-comment-empty {
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		}
+
+		.feedback-location-label {
+		  min-width: 0;
+		  overflow: hidden;
+		  text-overflow: ellipsis;
+		  white-space: nowrap;
+		}
+
+		.feedback-comment-preview {
+		  margin: 0;
+		  color: var(--ff-text);
+		  line-height: 1.45;
+		  overflow-wrap: anywhere;
+		}
+
+		.feedback-comment-preview.is-collapsed {
+		  display: -webkit-box;
+		  -webkit-line-clamp: 2;
+		  -webkit-box-orient: vertical;
+		  overflow: hidden;
+		}
+
+		.feedback-row-action {
+		  justify-self: start;
+		  width: fit-content;
+		  border: 0;
+		  background: transparent;
+		  color: var(--ff-brand-2);
+		  padding: 0;
+		  font: inherit;
+		  font-size: 13px;
+		  font-weight: 900;
+		  text-decoration: underline;
+		  text-underline-offset: 3px;
+		  cursor: pointer;
+		}
+
+		.feedback-row-meta {
+		  color: var(--ff-text-muted);
+		  font-size: 12px;
+		  text-align: right;
+		  white-space: nowrap;
+		}
+
+		.feedback-pill {
+		  display: inline-flex;
+		  align-items: center;
+		  min-height: 24px;
+		  padding: 4px 8px;
+		  border-radius: 999px;
+		  border: 1px solid color-mix(in oklab, var(--ff-border) 80%, var(--ff-brand-2));
+		  color: var(--ff-text-muted);
+		  font-size: 12px;
+		  font-weight: 800;
+		}
+
+		.feedback-empty-state {
+		  display: grid;
+		  gap: 10px;
+		  padding: 18px;
+		  border: 1px dashed color-mix(in oklab, var(--ff-brand-2) 52%, var(--ff-border));
+		  border-radius: 12px;
+		  background: color-mix(in oklab, var(--ff-brand-1) 8%, transparent);
+		}
+
+		.feedback-empty-state strong {
+		  color: var(--ff-text);
+		  font-size: 18px;
+		}
+
+		.feedback-empty-state span {
+		  color: var(--ff-text-muted);
+		  line-height: 1.45;
+		}
+
+		.feedback-pagination {
+		  display: flex;
+		  align-items: center;
+		  justify-content: flex-end;
+		  gap: 10px;
+		  margin-top: 4px;
+		}
+
+		.feedback-pagination button {
+		  min-height: 36px;
+		  padding: 7px 12px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 9px;
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
+		  color: var(--ff-text);
+		  cursor: pointer;
+		  font: inherit;
+		  font-weight: 800;
+		}
+
+		.feedback-pagination button:disabled {
+		  cursor: not-allowed;
+		  opacity: .45;
+		}
+
+		.feedback-pagination span {
+		  color: var(--ff-text-muted);
+		  font-size: 12px;
+		  font-weight: 800;
+		}
+
+		@media (max-width: 860px) {
+		  .feedback-toolbar,
+		  .feedback-summary-grid {
+		    grid-template-columns: repeat(2, minmax(0, 1fr));
+		  }
+		}
+
+		@media (max-width: 640px) {
+		  .feedback-toolbar,
+		  .feedback-summary-grid,
+		  .feedback-distribution-row,
+		  .feedback-row-card {
+		    grid-template-columns: 1fr;
+		  }
+
+		  .feedback-row-meta,
+		  .feedback-distribution-meta {
+		    text-align: left;
+		  }
+		}
+
 		/* === Grape Dark: selects (clean caret, no overlap) === */
 		select, .form-group select {
 		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
@@ -3860,17 +4274,100 @@
         <!-- Main Content Area -->
         <main class="admin-content">
             <section id="Feedback" class="content-section active">
-                <div class="feedback-page-header">
-                    <h2>Feedback</h2>
-                    <button class="link-button" type="button" onclick="showSection('qr')" title="Go to QR Codes">Need QR Codes?</button>
-                </div>
+                <div class="feedback-dashboard">
+                    <div class="feedback-page-header">
+                        <div class="feedback-page-title">
+                            <h2>Feedback</h2>
+                            <p id="feedbackDashboardSubtitle">Private customer signal, grouped by mood, location, and time.</p>
+                        </div>
+                        <button class="feedback-qr-link" type="button" onclick="handleDashboardQrCta()" title="Go to QR Codes">Need QR Codes?</button>
+                    </div>
 
-				<div style="margin-bottom: 20px;">
-                    <label>Select Location: </label>
-                    <select id="FeedbackLocationSelect" onchange="updateFeedback()">
-                        <option value="all">All Locations</option>
-                    </select>
-                </div>
+                    <div class="feedback-toolbar" aria-label="Feedback filters">
+                        <label class="feedback-filter" for="FeedbackLocationSelect">
+                            Location
+                            <select id="FeedbackLocationSelect" onchange="handleFeedbackFilterChanged('location')">
+                                <option value="all">All Locations</option>
+                            </select>
+                        </label>
+                        <label class="feedback-filter" for="feedbackDateRange">
+                            Time period
+                            <select id="feedbackDateRange" onchange="handleFeedbackFilterChanged('date_range')">
+                                <option value="today">Today</option>
+                                <option value="7">Last 7 days</option>
+                                <option value="30" selected>Last 30 days</option>
+                                <option value="all">All available history</option>
+                            </select>
+                        </label>
+                        <label class="feedback-filter" for="feedbackSentimentFilter">
+                            Mood
+                            <select id="feedbackSentimentFilter" onchange="handleFeedbackFilterChanged('sentiment')">
+                                <option value="all">All moods</option>
+                                <option value="needs-attention">Needs attention</option>
+                                <option value="very-happy">Loved it</option>
+                                <option value="happy">Happy</option>
+                                <option value="neutral">Neutral</option>
+                                <option value="sad">Unhappy</option>
+                                <option value="very-sad">Angry</option>
+                            </select>
+                        </label>
+                        <label class="feedback-toggle" for="commentsOnlyToggle">
+                            <input id="commentsOnlyToggle" type="checkbox" />
+                            <span>Comments only</span>
+                        </label>
+                    </div>
+
+                    <div id="feedbackHistoryNotice" class="history-limit-card" style="display:none;"></div>
+
+                    <div class="feedback-summary-grid" aria-label="Feedback summary">
+                        <div class="feedback-summary-card">
+                            <div class="feedback-summary-label">Mood score</div>
+                            <div class="feedback-summary-value"><span id="moodScore">--</span>/100 <span class="feedback-summary-emoji" id="moodEmoji" title="Calculated from emoji feedback">:)</span></div>
+                            <div class="feedback-summary-note" id="moodScoreNote">Based on selected feedback.</div>
+                        </div>
+                        <div class="feedback-summary-card">
+                            <div class="feedback-summary-label">Responses</div>
+                            <div class="feedback-summary-value" id="dashboardTotalFeedback">0</div>
+                            <div class="feedback-summary-note" id="dashboardTotalNote">In this view.</div>
+                        </div>
+                        <div class="feedback-summary-card">
+                            <div class="feedback-summary-label">Comment rate</div>
+                            <div class="feedback-summary-value" id="dashboardCommentRate">0%</div>
+                            <div class="feedback-summary-note" id="dashboardCommentNote">0 comments captured.</div>
+                        </div>
+                        <div class="feedback-summary-card">
+                            <div class="feedback-summary-label">Needs attention</div>
+                            <div class="feedback-summary-value" id="dashboardAttentionCount">0</div>
+                            <div class="feedback-summary-note" id="dashboardAttentionNote">Neutral or negative responses.</div>
+                        </div>
+                    </div>
+
+                    <div class="feedback-distribution" aria-label="Mood distribution">
+                        <div class="feedback-distribution-header">
+                            <div>
+                                <div class="feedback-section-kicker">Mood distribution</div>
+                                <div class="feedback-distribution-title">How customers are feeling</div>
+                            </div>
+                            <div class="feedback-period-note" id="feedbackPeriodNote">Last 30 days</div>
+                        </div>
+                        <div id="emojiChartWrap" class="feedback-distribution-bars"></div>
+                    </div>
+
+                    <div class="feedback-list-panel">
+                        <div class="feedback-list-header">
+                            <div>
+                                <div class="feedback-section-kicker">Customer signal</div>
+                                <div class="feedback-list-title">Recent feedback <span id="feedbackCount" class="feedback-list-count">(0)</span></div>
+                            </div>
+                            <div class="feedback-period-note" id="feedbackListNote">Newest first.</div>
+                        </div>
+                        <div id="recentFeedbackList"></div>
+                        <div id="recentPagination" class="feedback-pagination">
+                            <button id="recentPrev" type="button">Prev</button>
+                            <span id="recentPageInfo">Page 1 of 1</span>
+                            <button id="recentNext" type="button">Next</button>
+                        </div>
+                    </div>
 				
 				<!-- Emoji-centric hero -->
 				<div class="mood-hero" id="moodHero">
@@ -3909,6 +4406,7 @@
 				    <button id="recentNext" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">Next ›</button>
 				  </div>
 				</div>
+                </div>
 
             </section>
 
@@ -5419,6 +5917,7 @@
 			
 			async function logEvent(eventType, details = {}) {
 			  try {
+			    if (isDashboardDemoContext?.()) return;
 			    const bizId = await getCurrentBusinessId();
 			    if (!bizId) return; // silently skip if not authenticated/owner context
 			    const payload = {
@@ -8349,6 +8848,204 @@
 		}
 		function pct(n,total){ return total > 0 ? Math.round((n/total)*100)+'%' : '0%'; }
 
+		const FEEDBACK_SENTIMENTS = [
+		  { key: 'very-happy', label: 'Loved it', emoji: '\uD83D\uDE0D', color: '#22c55e', attention: false },
+		  { key: 'happy', label: 'Happy', emoji: '\uD83D\uDE0A', color: '#84cc16', attention: false },
+		  { key: 'neutral', label: 'Neutral', emoji: '\uD83D\uDE10', color: '#facc15', attention: true },
+		  { key: 'sad', label: 'Unhappy', emoji: '\uD83D\uDE20', color: '#fb923c', attention: true },
+		  { key: 'very-sad', label: 'Angry', emoji: '\uD83D\uDE21', color: '#f43f5e', attention: true }
+		];
+
+		function isDashboardDemoContext() {
+		  return currentView === 'admin-demo' ||
+		    currentView === 'customer-demo' ||
+		    currentLocation === 'demo' ||
+		    (!currentUser && !!window.demoAccount);
+		}
+
+		function getSentimentMeta(sentiment) {
+		  return FEEDBACK_SENTIMENTS.find((item) => item.key === sentiment) ||
+		    { key: sentiment || 'unknown', label: 'Unknown', emoji: '\u2022', color: '#94a3b8', attention: false };
+		}
+
+		function isAttentionSentiment(sentiment) {
+		  return getSentimentMeta(sentiment).attention === true;
+		}
+
+		function getFeedbackDateRangeLabel(value = document.getElementById('feedbackDateRange')?.value || '30') {
+		  if (value === 'today') return 'Today';
+		  if (value === '7') return 'Last 7 days';
+		  if (value === 'all') return 'All available history';
+		  return 'Last 30 days';
+		}
+
+		function getFeedbackDateRangeStart(value = document.getElementById('feedbackDateRange')?.value || '30') {
+		  const now = new Date();
+		  if (value === 'all') return null;
+		  if (value === 'today') {
+		    return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+		  }
+		  const days = value === '7' ? 7 : 30;
+		  return now.getTime() - (days * 24 * 60 * 60 * 1000);
+		}
+
+		function filterFeedbackByDateRange(feedback) {
+		  const start = getFeedbackDateRangeStart();
+		  if (!start) return feedback || [];
+		  return (feedback || []).filter((item) => {
+		    const time = item?.timestamp ? new Date(item.timestamp).getTime() : 0;
+		    return Number.isFinite(time) && time >= start;
+		  });
+		}
+
+		function applyDashboardFeedbackFilters(feedback) {
+		  const sentimentFilter = document.getElementById('feedbackSentimentFilter')?.value || 'all';
+		  const commentsOnly = document.getElementById('commentsOnlyToggle')?.checked === true;
+		  let filtered = feedback || [];
+		  if (sentimentFilter === 'needs-attention') {
+		    filtered = filtered.filter((item) => isAttentionSentiment(item?.sentiment));
+		  } else if (sentimentFilter !== 'all') {
+		    filtered = filtered.filter((item) => item?.sentiment === sentimentFilter);
+		  }
+		  if (commentsOnly) {
+		    filtered = filtered.filter((item) => item?.comments && item.comments.trim());
+		  }
+		  return filtered;
+		}
+
+		function formatFeedbackRelativeTime(timestamp) {
+		  const time = timestamp ? new Date(timestamp).getTime() : 0;
+		  if (!Number.isFinite(time) || !time) return '';
+		  const diffMs = Date.now() - time;
+		  const future = diffMs < 0;
+		  const absMs = Math.abs(diffMs);
+		  const minute = 60 * 1000;
+		  const hour = 60 * minute;
+		  const day = 24 * hour;
+		  if (absMs < minute) return future ? 'Soon' : 'Just now';
+		  if (absMs < hour) {
+		    const count = Math.round(absMs / minute);
+		    return future ? `in ${count} min` : `${count} min ago`;
+		  }
+		  if (absMs < day) {
+		    const count = Math.round(absMs / hour);
+		    return future ? `in ${count} hr` : `${count} hr ago`;
+		  }
+		  if (absMs < 7 * day) {
+		    const count = Math.round(absMs / day);
+		    return future ? `in ${count} days` : `${count} days ago`;
+		  }
+		  try {
+		    return new Date(timestamp).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+		  } catch {
+		    return '';
+		  }
+		}
+
+		function formatFeedbackExactTime(timestamp) {
+		  try {
+		    const tz = currentUser?.timezone || 'Europe/London';
+		    return new Date(timestamp).toLocaleString(undefined, { timeZone: tz });
+		  } catch {
+		    try { return new Date(timestamp).toLocaleString(); } catch { return ''; }
+		  }
+		}
+
+		function logDashboardEvent(eventType, metadata = {}) {
+		  if (isDashboardDemoContext()) return;
+		  try {
+		    logEvent(eventType, { metadata });
+		  } catch {}
+		}
+
+		function setDashboardText(id, value) {
+		  const el = document.getElementById(id);
+		  if (el) el.textContent = value;
+		}
+
+		function renderDashboardDistribution(counts, total) {
+		  const wrap = document.getElementById('emojiChartWrap');
+		  if (!wrap) return;
+		  wrap.innerHTML = '';
+		  FEEDBACK_SENTIMENTS.forEach((sentiment) => {
+		    const count = counts[sentiment.key] || 0;
+		    const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+		    const row = document.createElement('div');
+		    row.className = 'feedback-distribution-row';
+
+		    const label = document.createElement('div');
+		    label.className = 'feedback-distribution-label';
+		    label.innerHTML = `<span class="feedback-distribution-emoji">${sentiment.emoji}</span><span>${sentiment.label}</span>`;
+
+		    const track = document.createElement('div');
+		    track.className = 'feedback-bar-track';
+		    const fill = document.createElement('div');
+		    fill.className = 'feedback-bar-fill';
+		    fill.style.width = `${percent}%`;
+		    fill.style.background = sentiment.color;
+		    track.appendChild(fill);
+
+		    const meta = document.createElement('div');
+		    meta.className = 'feedback-distribution-meta';
+		    meta.textContent = `${count} (${percent}%)`;
+
+		    row.appendChild(label);
+		    row.appendChild(track);
+		    row.appendChild(meta);
+		    wrap.appendChild(row);
+		  });
+		}
+
+		function renderDashboardSummary({ counts, total, commentsCount, periodLabel, selectedLocationName }) {
+		  const score = computeMoodScoreFromCounts(counts);
+		  const attentionCount = (counts.neutral || 0) + (counts.sad || 0) + (counts['very-sad'] || 0);
+		  const commentRate = total > 0 ? Math.round((commentsCount / total) * 100) : 0;
+		  const scoreEl = document.getElementById('moodScore');
+		  const emojiEl = document.getElementById('moodEmoji');
+		  if (scoreEl) scoreEl.textContent = score == null ? '--' : String(score);
+		  if (emojiEl) emojiEl.textContent = score == null ? ':)' : getSentimentMeta(score >= 85 ? 'very-happy' : score >= 65 ? 'happy' : score >= 45 ? 'neutral' : score >= 25 ? 'sad' : 'very-sad').emoji;
+		  setDashboardText('moodScoreNote', total ? `${periodLabel} at ${selectedLocationName}.` : `No responses for ${periodLabel.toLowerCase()}.`);
+		  setDashboardText('dashboardTotalFeedback', String(total));
+		  setDashboardText('dashboardTotalNote', total === 1 ? '1 response in this view.' : `${total} responses in this view.`);
+		  setDashboardText('dashboardCommentRate', `${commentRate}%`);
+		  setDashboardText('dashboardCommentNote', commentsCount === 1 ? '1 comment captured.' : `${commentsCount} comments captured.`);
+		  setDashboardText('dashboardAttentionCount', String(attentionCount));
+		  setDashboardText('dashboardAttentionNote', attentionCount === 1 ? '1 response needs attention.' : `${attentionCount} responses need attention.`);
+		  setDashboardText('feedbackPeriodNote', `${periodLabel} - ${selectedLocationName}`);
+		  setDashboardText('feedbackListNote', total ? 'Newest first.' : 'No matching feedback yet.');
+		  renderDashboardDistribution(counts, total);
+		}
+
+		function handleFeedbackFilterChanged(filterName = 'filter') {
+		  recentPage = 0;
+		  updateFeedback();
+		  const sentimentValue = document.getElementById('feedbackSentimentFilter')?.value || 'all';
+		  logDashboardEvent(filterName === 'sentiment' && sentimentValue === 'needs-attention'
+		    ? 'dashboard_attention_filter_used'
+		    : 'dashboard_filter_changed', {
+		      filter: filterName,
+		      location: document.getElementById('FeedbackLocationSelect')?.value || 'all',
+		      date_range: document.getElementById('feedbackDateRange')?.value || '30',
+		      sentiment: sentimentValue,
+		      comments_only: document.getElementById('commentsOnlyToggle')?.checked === true
+		    });
+		}
+
+		function openFeedbackHistoryUpgrade() {
+		  logDashboardEvent('feedback_history_upgrade_clicked', {
+		    tier: currentUser?.pricingTier || 'free',
+		    hidden_count: currentUser?.feedbackHistoryEntitlement?.hiddenCount || 0
+		  });
+		  openPricingModal('history-upgrade');
+		}
+
+		function handleDashboardQrCta() {
+		  logDashboardEvent('dashboard_qr_cta_clicked', {
+		    source: 'feedback_dashboard'
+		  });
+		  showSection('qr');
+		}
+
 		// --- Polar area chart for emoji distribution ---
 		const emojiPolarCharts = {};
 		
@@ -8440,6 +9137,12 @@
 		  const card = document.getElementById('feedbackHistoryNotice');
 		  if (!card) return;
 
+		  if (isDashboardDemoContext()) {
+		    card.style.display = 'none';
+		    card.innerHTML = '';
+		    return;
+		  }
+
 		  const historyError = currentUser?.feedbackHistoryError;
 		  if (currentView === 'admin' && currentUser && historyError) {
 		    const isLoading = currentUser.feedbackHistoryLoading === true;
@@ -8478,9 +9181,18 @@
 		      <strong>${headline}</strong>
 		      <span>${detail}</span>
 		    </div>
-		    <button class="btn" type="button" onclick="openPricingModal('history-upgrade')">Unlock full history</button>
+		    <button class="btn" type="button" onclick="openFeedbackHistoryUpgrade()">Unlock full history</button>
 		  `;
 		  card.style.display = 'flex';
+		  const promptKey = `ff_history_prompt_logged_${currentUser?.businessId || 'business'}`;
+		  if (!sessionStorage.getItem(promptKey)) {
+		    sessionStorage.setItem(promptKey, '1');
+		    logDashboardEvent('feedback_history_upgrade_prompt_shown', {
+		      tier: currentUser?.pricingTier || 'free',
+		      limit_days: limitDays,
+		      hidden_count: hiddenCount
+		    });
+		  }
 		}
 
 		async function retryFeedbackHistory() {
@@ -8498,6 +9210,9 @@
                 var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
 			    var selectedLocation = document.getElementById('FeedbackLocationSelect')?.value || 'all';
 			    var allFeedback = [];
+			    var selectedLocationName = selectedLocation === 'all'
+			      ? 'all locations'
+			      : (locations[selectedLocation]?.name || 'this location');
 			    
 			    if (selectedLocation === 'all') {
 			        Object.values(locations).forEach(function(location) {
@@ -8508,12 +9223,15 @@
 			    } else if (locations[selectedLocation]?.feedback) {
 			        allFeedback = locations[selectedLocation].feedback;
 			    }
+
+			    var rangedFeedback = filterFeedbackByDateRange(allFeedback);
+			    var dashboardFeedback = applyDashboardFeedbackFilters(rangedFeedback);
 			    
-			    var total = allFeedback.length;
+			    var total = dashboardFeedback.length;
 			    var counts = { 'very-happy': 0, 'happy': 0, 'neutral': 0, 'sad': 0, 'very-sad': 0 };
 			    var commentsCount = 0;
 			    
-			    allFeedback.forEach(function(item) {
+			    dashboardFeedback.forEach(function(item) {
 			        counts[item.sentiment] = (counts[item.sentiment] || 0) + 1;
 			        if (item.comments && item.comments.trim()) {
 			            commentsCount++;
@@ -8539,8 +9257,7 @@
 				const fc = document.getElementById('feedbackCount');
 				if (fc) fc.textContent = `(${total})`;
 				
-				// Render/refresh emoji polar chart
-				renderEmojiPolar(counts);
+				// Dashboard uses readable distribution bars; the polar chart remains only for the landing mock.
 
 
 			
@@ -8566,10 +9283,18 @@
 			      setText('pctSad', pct(counts['sad'], total));
 			      setText('pctVerySad', pct(counts['very-sad'], total));
 			    })();
+
+			    renderDashboardSummary({
+			      counts,
+			      total,
+			      commentsCount,
+			      periodLabel: getFeedbackDateRangeLabel(),
+			      selectedLocationName
+			    });
 			
 			    // Recent list (unchanged)
 			    recentPage = 0;
-			    updateRecentFeedback(allFeedback);
+			    updateRecentFeedback(dashboardFeedback);
         }
 
        function updateRecentFeedback(feedback) {
@@ -9364,6 +10089,9 @@
 		  saveGoogleReviewRoutingSettings,
 		  updateLocationsList,
 		  updateFeedback,
+		  handleFeedbackFilterChanged,
+		  handleDashboardQrCta,
+		  openFeedbackHistoryUpgrade,
 		  retryFeedbackHistory,
 		  logout,
 		  showForgotPassword,
@@ -9795,9 +10523,15 @@
 		  });
 		
 		  const commentsOnly = document.getElementById('commentsOnlyToggle')?.checked;
+		  const sentimentFilter = document.getElementById('feedbackSentimentFilter')?.value || 'all';
+		  const filtered = sentimentFilter === 'all'
+		    ? base
+		    : sentimentFilter === 'needs-attention'
+		      ? base.filter(it => isAttentionSentiment(it?.sentiment))
+		      : base.filter(it => it?.sentiment === sentimentFilter);
 		  return commentsOnly
-		    ? base.filter(it => it?.comments && it.comments.trim())
-		    : base;
+		    ? filtered.filter(it => it?.comments && it.comments.trim())
+		    : filtered;
 		}
 
 		
@@ -9805,6 +10539,7 @@
 		document.getElementById('commentsOnlyToggle')?.addEventListener('change', () => {
 		  recentPage = 0;           // 0-based index avoids off-by-one after toggling
 		  renderRecentPage();
+		  handleFeedbackFilterChanged('comments_only');
 		});
 
 
@@ -9813,6 +10548,113 @@
 		let RECENT_PAGE_SIZE = 10;
 		let recentPage = 0;
 		let recentSorted = []; // always newest -> oldest
+
+		function renderDashboardRecentPage({ container, src, totalPages, start, pageItems }) {
+		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+
+		  if (!pageItems.length) {
+		    const empty = document.createElement('div');
+		    empty.className = 'feedback-empty-state';
+		    const selectedSentiment = document.getElementById('feedbackSentimentFilter')?.value || 'all';
+		    const hasFilters = selectedSentiment !== 'all' || document.getElementById('commentsOnlyToggle')?.checked;
+		    empty.innerHTML = `
+		      <strong>${hasFilters ? 'No matching feedback yet.' : 'No feedback in this period yet.'}</strong>
+		      <span>${hasFilters ? 'Try clearing a filter or choosing a wider time period.' : 'Place your QR codes where customers can see them, then feedback will appear here.'}</span>
+		      ${hasFilters ? '' : '<button class="btn" type="button" id="feedbackEmptyQrCta">Get QR Codes</button>'}
+		    `;
+		    container.appendChild(empty);
+		    empty.querySelector('#feedbackEmptyQrCta')?.addEventListener('click', () => {
+		      logDashboardEvent('dashboard_empty_state_cta_clicked', { source: 'feedback_empty_state' });
+		      showSection('qr');
+		    });
+		  }
+
+		  pageItems.forEach((item, index) => {
+		    const meta = getSentimentMeta(item.sentiment);
+		    const row = document.createElement('div');
+		    row.className = `feedback-row-card${meta.attention ? ' needs-attention' : ''}`;
+
+		    const left = document.createElement('span');
+		    left.className = 'feedback-row-emoji';
+		    left.textContent = meta.emoji;
+
+		    const middle = document.createElement('div');
+		    middle.className = 'feedback-row-main';
+
+		    const topLine = document.createElement('div');
+		    topLine.className = 'feedback-row-topline';
+		    const sentiment = document.createElement('span');
+		    sentiment.className = 'feedback-sentiment-label';
+		    sentiment.textContent = meta.label;
+		    const location = document.createElement('span');
+		    location.className = 'feedback-location-label';
+		    location.textContent = locations[item.location]?.name || 'Unknown location';
+		    const relative = document.createElement('span');
+		    relative.className = 'feedback-row-time';
+		    relative.textContent = formatFeedbackRelativeTime(item.timestamp);
+		    topLine.appendChild(sentiment);
+		    topLine.appendChild(location);
+		    if (relative.textContent) topLine.appendChild(relative);
+
+		    const comment = String(item.comments || '').trim();
+		    middle.appendChild(topLine);
+		    if (comment) {
+		      const commentEl = document.createElement('p');
+		      commentEl.className = 'feedback-comment-preview';
+		      commentEl.textContent = comment;
+		      middle.appendChild(commentEl);
+		      if (comment.length > 150) {
+		        commentEl.classList.add('is-collapsed');
+		        const expand = document.createElement('button');
+		        expand.type = 'button';
+		        expand.className = 'feedback-row-action';
+		        expand.textContent = 'Read more';
+		        expand.addEventListener('click', () => {
+		          const expanded = !commentEl.classList.toggle('is-collapsed');
+		          expand.textContent = expanded ? 'Show less' : 'Read more';
+		          if (expanded) {
+		            logDashboardEvent('dashboard_feedback_expanded', {
+		              sentiment: item.sentiment,
+		              location_id: item.location || null,
+		              row_index: start + index
+		            });
+		          }
+		        });
+		        middle.appendChild(expand);
+		      }
+		    } else {
+		      const empty = document.createElement('span');
+		      empty.className = 'feedback-pill';
+		      empty.textContent = 'Mood only';
+		      middle.appendChild(empty);
+		    }
+
+		    const right = document.createElement('span');
+		    right.className = 'feedback-row-meta';
+		    right.title = formatFeedbackExactTime(item.timestamp);
+		    right.textContent = formatFeedbackExactTime(item.timestamp);
+
+		    row.appendChild(left);
+		    row.appendChild(middle);
+		    row.appendChild(right);
+		    container.appendChild(row);
+		  });
+
+		  const info = document.getElementById('recentPageInfo');
+		  const prev = document.getElementById('recentPrev');
+		  const next = document.getElementById('recentNext');
+		  const pagination = document.getElementById('recentPagination');
+		  if (pagination) pagination.style.display = totalPages <= 1 ? 'none' : 'flex';
+		  if (info) info.textContent = `Page ${Math.min(recentPage + 1, totalPages)} of ${totalPages}`;
+		  if (prev) {
+		    prev.disabled = recentPage === 0;
+		    prev.style.opacity = prev.disabled ? '0.5' : '1';
+		  }
+		  if (next) {
+		    next.disabled = recentPage >= totalPages - 1;
+		    next.style.opacity = next.disabled ? '0.5' : '1';
+		  }
+		}
 		
 		function renderRecentPage() {
 		  const container = document.getElementById('recentFeedbackList');
@@ -9832,6 +10674,8 @@
 		  const start = recentPage * RECENT_PAGE_SIZE;
 		  const end = start + RECENT_PAGE_SIZE;
 		  const pageItems = src.slice(start, end);
+		  renderDashboardRecentPage({ container, src, totalPages, start, pageItems });
+		  return;
 		
 		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
 		  const emojiMap = { 'very-happy':'😍','happy':'😊','neutral':'😐','sad':'😠','very-sad':'😡' };
@@ -9922,11 +10766,13 @@
 		
 		function nextRecentPage() {
 		  recentPage += 1;
+		  logDashboardEvent('dashboard_pagination_clicked', { direction: 'next', page: recentPage + 1 });
 		  renderRecentPage();
 		}
 		
 		function prevRecentPage() {
 		  recentPage -= 1;
+		  logDashboardEvent('dashboard_pagination_clicked', { direction: 'previous', page: recentPage + 1 });
 		  renderRecentPage();
 		}
 
