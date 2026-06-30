@@ -3239,6 +3239,27 @@
 		  gap: 8px;
 		  align-content: space-between;
 		  padding: 16px;
+		  color: inherit;
+		  font: inherit;
+		  text-align: left;
+		  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
+		}
+
+		.feedback-summary-card.is-clickable,
+		.feedback-distribution-row.is-clickable {
+		  cursor: pointer;
+		}
+
+		.feedback-summary-card.is-clickable:hover,
+		.feedback-summary-card.is-active,
+		.feedback-distribution-row.is-clickable:hover,
+		.feedback-distribution-row.is-active {
+		  border-color: color-mix(in oklab, var(--ff-brand-2) 72%, var(--ff-border));
+		  background:
+		    linear-gradient(135deg, color-mix(in oklab, var(--ff-brand-2) 14%, transparent), transparent 48%),
+		    color-mix(in oklab, var(--ff-surface) 94%, black);
+		  box-shadow: 0 12px 26px rgba(124,58,237,.24);
+		  transform: translateY(-1px);
 		}
 
 		.feedback-summary-label,
@@ -3311,6 +3332,15 @@
 		  grid-template-columns: minmax(126px, 170px) minmax(0, 1fr) minmax(84px, auto);
 		  gap: 10px;
 		  align-items: center;
+		  padding: 8px;
+		  border: 1px solid transparent;
+		  border-radius: 10px;
+		  width: 100%;
+		  color: inherit;
+		  font: inherit;
+		  text-align: left;
+		  background: transparent;
+		  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease;
 		}
 
 		.feedback-distribution-label {
@@ -3489,6 +3519,11 @@
 		  line-height: 1.45;
 		}
 
+		.feedback-empty-state.is-top-notice {
+		  margin: 0;
+		  border-style: solid;
+		}
+
 		.feedback-pagination {
 		  display: flex;
 		  align-items: center;
@@ -3528,11 +3563,125 @@
 		}
 
 		@media (max-width: 640px) {
-		  .feedback-toolbar,
-		  .feedback-summary-grid,
+		  .feedback-dashboard {
+		    gap: 12px;
+		  }
+
+		  .feedback-page-header {
+		    gap: 8px;
+		  }
+
+		  .feedback-page-title p {
+		    font-size: 12px;
+		  }
+
+		  .feedback-qr-link {
+		    min-height: 36px;
+		    padding: 7px 10px;
+		    font-size: 13px;
+		  }
+
+		  .feedback-toolbar {
+		    grid-template-columns: repeat(2, minmax(0, 1fr));
+		    gap: 8px;
+		    padding: 10px;
+		  }
+
+		  .feedback-filter {
+		    gap: 4px;
+		    font-size: 11px;
+		  }
+
+		  .feedback-filter select {
+		    min-height: 40px;
+		    padding-top: 8px;
+		    padding-bottom: 8px;
+		    font-size: 13px;
+		  }
+
+		  .feedback-toggle {
+		    min-height: 40px;
+		    padding: 8px 10px;
+		    font-size: 12px;
+		  }
+
+		  .feedback-summary-grid {
+		    display: grid;
+		    grid-template-columns: repeat(2, minmax(0, 1fr));
+		    gap: 8px;
+		  }
+
+		  .feedback-summary-card {
+		    min-height: 96px;
+		    padding: 11px;
+		    gap: 6px;
+		  }
+
+		  .feedback-summary-label,
+		  .feedback-section-kicker {
+		    font-size: 10px;
+		  }
+
+		  .feedback-summary-value {
+		    font-size: 24px;
+		  }
+
+		  .feedback-summary-value .feedback-summary-emoji {
+		    font-size: 22px;
+		  }
+
+		  .feedback-summary-note {
+		    font-size: 11px;
+		  }
+
+		  .feedback-distribution,
+		  .feedback-list-panel {
+		    gap: 9px;
+		    padding: 11px;
+		  }
+
+		  .feedback-distribution-title,
+		  .feedback-list-title {
+		    font-size: 17px;
+		  }
+
+		  .feedback-period-note,
+		  .feedback-list-count {
+		    font-size: 11px;
+		  }
+
 		  .feedback-distribution-row,
 		  .feedback-row-card {
 		    grid-template-columns: 1fr;
+		  }
+
+		  .feedback-distribution-row {
+		    gap: 6px;
+		    padding: 7px;
+		  }
+
+		  .feedback-distribution-emoji {
+		    font-size: 19px;
+		  }
+
+		  .feedback-bar-track {
+		    height: 8px;
+		  }
+
+		  .feedback-row-card {
+		    gap: 8px;
+		    padding: 10px;
+		  }
+
+		  .feedback-row-emoji {
+		    width: 32px;
+		    height: 32px;
+		    font-size: 20px;
+		  }
+
+		  .feedback-comment-preview {
+		    font-size: 13px;
+		    line-height: 1.35;
 		  }
 
 		  .feedback-row-meta,
@@ -4330,16 +4479,16 @@
                             <div class="feedback-summary-value" id="dashboardTotalFeedback">0</div>
                             <div class="feedback-summary-note" id="dashboardTotalNote">In this view.</div>
                         </div>
-                        <div class="feedback-summary-card">
+                        <button class="feedback-summary-card is-clickable" id="dashboardCommentRateCard" type="button" onclick="toggleDashboardQuickFilter('comments')" aria-pressed="false">
                             <div class="feedback-summary-label">Comment rate</div>
                             <div class="feedback-summary-value" id="dashboardCommentRate">0%</div>
                             <div class="feedback-summary-note" id="dashboardCommentNote">0 comments captured.</div>
-                        </div>
-                        <div class="feedback-summary-card">
+                        </button>
+                        <button class="feedback-summary-card is-clickable" id="dashboardAttentionCard" type="button" onclick="toggleDashboardQuickFilter('attention')" aria-pressed="false">
                             <div class="feedback-summary-label">Needs attention</div>
                             <div class="feedback-summary-value" id="dashboardAttentionCount">0</div>
                             <div class="feedback-summary-note" id="dashboardAttentionNote">Neutral or negative responses.</div>
-                        </div>
+                        </button>
                     </div>
 
                     <div class="feedback-distribution" aria-label="Mood distribution">
@@ -7222,6 +7371,7 @@
             adminView.style.display = 'flex';
             
             currentView = 'admin';
+            if (currentUser) window.demoAccount = null;
             
             var demoNotice = document.getElementById('demoNotice');
             if (demoNotice) demoNotice.remove();
@@ -7237,7 +7387,7 @@
             showSection('Feedback');
 
 			// Log a dashboard view once per session
-			if (!sessionStorage.getItem('ff_dashboard_view_logged')) {
+			if (!isDashboardDemoContext() && !sessionStorage.getItem('ff_dashboard_view_logged')) {
 			  sessionStorage.setItem('ff_dashboard_view_logged', '1');
 			  logEvent('dashboard_view');
 			}
@@ -8860,7 +9010,7 @@
 		  return currentView === 'admin-demo' ||
 		    currentView === 'customer-demo' ||
 		    currentLocation === 'demo' ||
-		    (!currentUser && !!window.demoAccount);
+		    !!window.demoAccount;
 		}
 
 		function getSentimentMeta(sentiment) {
@@ -8963,6 +9113,63 @@
 		  if (el) el.textContent = value;
 		}
 
+		function dashboardEmptyStateMarkup(hasFilters = false, topNotice = false) {
+		  return `
+		    <div class="feedback-empty-state${topNotice ? ' is-top-notice' : ''}">
+		      <strong>${hasFilters ? 'No matching feedback yet.' : 'No feedback in this period yet.'}</strong>
+		      <span>${hasFilters ? 'Try clearing a filter or choosing a wider time period.' : 'Place your QR codes where customers can see them, then feedback will appear here.'}</span>
+		      ${hasFilters ? '' : '<button class="btn" type="button" onclick="handleDashboardEmptyStateCta()">Get QR Codes</button>'}
+		    </div>
+		  `;
+		}
+
+		function syncDashboardFilterActiveStates() {
+		  const commentsOnly = document.getElementById('commentsOnlyToggle')?.checked === true;
+		  const sentimentFilter = document.getElementById('feedbackSentimentFilter')?.value || 'all';
+		  const commentCard = document.getElementById('dashboardCommentRateCard');
+		  const attentionCard = document.getElementById('dashboardAttentionCard');
+		  if (commentCard) {
+		    commentCard.classList.toggle('is-active', commentsOnly);
+		    commentCard.setAttribute('aria-pressed', String(commentsOnly));
+		  }
+		  if (attentionCard) {
+		    const active = sentimentFilter === 'needs-attention';
+		    attentionCard.classList.toggle('is-active', active);
+		    attentionCard.setAttribute('aria-pressed', String(active));
+		  }
+		  document.querySelectorAll('[data-feedback-sentiment-row]').forEach((row) => {
+		    const active = row.getAttribute('data-feedback-sentiment-row') === sentimentFilter;
+		    row.classList.toggle('is-active', active);
+		    row.setAttribute('aria-pressed', String(active));
+		  });
+		}
+
+		function toggleDashboardQuickFilter(type) {
+		  if (type === 'comments') {
+		    const toggle = document.getElementById('commentsOnlyToggle');
+		    if (toggle) toggle.checked = !toggle.checked;
+		    handleFeedbackFilterChanged('comments_only');
+		    return;
+		  }
+		  if (type === 'attention') {
+		    const select = document.getElementById('feedbackSentimentFilter');
+		    if (select) select.value = select.value === 'needs-attention' ? 'all' : 'needs-attention';
+		    handleFeedbackFilterChanged('sentiment');
+		  }
+		}
+
+		function toggleDashboardMoodFilter(sentimentKey) {
+		  const select = document.getElementById('feedbackSentimentFilter');
+		  if (!select) return;
+		  select.value = select.value === sentimentKey ? 'all' : sentimentKey;
+		  handleFeedbackFilterChanged('sentiment');
+		}
+
+		function handleDashboardEmptyStateCta() {
+		  logDashboardEvent('dashboard_empty_state_cta_clicked', { source: 'feedback_empty_state' });
+		  showSection('qr');
+		}
+
 		function renderDashboardDistribution(counts, total) {
 		  const wrap = document.getElementById('emojiChartWrap');
 		  if (!wrap) return;
@@ -8970,8 +9177,12 @@
 		  FEEDBACK_SENTIMENTS.forEach((sentiment) => {
 		    const count = counts[sentiment.key] || 0;
 		    const percent = total > 0 ? Math.round((count / total) * 100) : 0;
-		    const row = document.createElement('div');
-		    row.className = 'feedback-distribution-row';
+		    const row = document.createElement('button');
+		    row.type = 'button';
+		    row.className = 'feedback-distribution-row is-clickable';
+		    row.setAttribute('data-feedback-sentiment-row', sentiment.key);
+		    row.setAttribute('aria-pressed', 'false');
+		    row.addEventListener('click', () => toggleDashboardMoodFilter(sentiment.key));
 
 		    const label = document.createElement('div');
 		    label.className = 'feedback-distribution-label';
@@ -8994,6 +9205,7 @@
 		    row.appendChild(meta);
 		    wrap.appendChild(row);
 		  });
+		  syncDashboardFilterActiveStates();
 		}
 
 		function renderDashboardSummary({ counts, total, commentsCount, periodLabel, selectedLocationName }) {
@@ -9014,6 +9226,7 @@
 		  setDashboardText('feedbackPeriodNote', `${periodLabel} - ${selectedLocationName}`);
 		  setDashboardText('feedbackListNote', total ? 'Newest first.' : 'No matching feedback yet.');
 		  renderDashboardDistribution(counts, total);
+		  syncDashboardFilterActiveStates();
 		}
 
 		function handleFeedbackFilterChanged(filterName = 'filter') {
@@ -9133,9 +9346,18 @@
 		}
 
 
-		function renderFeedbackHistoryNotice() {
+		function renderFeedbackHistoryNotice(currentFeedbackCount = null, unfilteredFeedbackCount = null) {
 		  const card = document.getElementById('feedbackHistoryNotice');
 		  if (!card) return;
+
+		  if (currentFeedbackCount === 0) {
+		    const selectedSentiment = document.getElementById('feedbackSentimentFilter')?.value || 'all';
+		    const hasActiveResultFilters = selectedSentiment !== 'all' || document.getElementById('commentsOnlyToggle')?.checked === true;
+		    const hasFilters = Number(unfilteredFeedbackCount || 0) > 0 && hasActiveResultFilters;
+		    card.innerHTML = dashboardEmptyStateMarkup(hasFilters, true);
+		    card.style.display = 'block';
+		    return;
+		  }
 
 		  if (isDashboardDemoContext()) {
 		    card.style.display = 'none';
@@ -9225,11 +9447,13 @@
 			    }
 
 			    var rangedFeedback = filterFeedbackByDateRange(allFeedback);
+			    dashboardUnfilteredFeedbackCount = rangedFeedback.length;
 			    var dashboardFeedback = applyDashboardFeedbackFilters(rangedFeedback);
 			    
 			    var total = dashboardFeedback.length;
 			    var counts = { 'very-happy': 0, 'happy': 0, 'neutral': 0, 'sad': 0, 'very-sad': 0 };
 			    var commentsCount = 0;
+			    renderFeedbackHistoryNotice(total, rangedFeedback.length);
 			    
 			    dashboardFeedback.forEach(function(item) {
 			        counts[item.sentiment] = (counts[item.sentiment] || 0) + 1;
@@ -10091,6 +10315,9 @@
 		  updateFeedback,
 		  handleFeedbackFilterChanged,
 		  handleDashboardQrCta,
+		  handleDashboardEmptyStateCta,
+		  toggleDashboardQuickFilter,
+		  toggleDashboardMoodFilter,
 		  openFeedbackHistoryUpgrade,
 		  retryFeedbackHistory,
 		  logout,
@@ -10538,7 +10765,6 @@
 		// Re-render when the checkbox is toggled
 		document.getElementById('commentsOnlyToggle')?.addEventListener('change', () => {
 		  recentPage = 0;           // 0-based index avoids off-by-one after toggling
-		  renderRecentPage();
 		  handleFeedbackFilterChanged('comments_only');
 		});
 
@@ -10548,25 +10774,26 @@
 		let RECENT_PAGE_SIZE = 10;
 		let recentPage = 0;
 		let recentSorted = []; // always newest -> oldest
+		let dashboardUnfilteredFeedbackCount = 0;
+
+		function getRecentPageSize() {
+		  try {
+		    return window.matchMedia && window.matchMedia('(max-width: 640px)').matches ? 5 : RECENT_PAGE_SIZE;
+		  } catch {
+		    return RECENT_PAGE_SIZE;
+		  }
+		}
 
 		function renderDashboardRecentPage({ container, src, totalPages, start, pageItems }) {
 		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
 
 		  if (!pageItems.length) {
 		    const empty = document.createElement('div');
-		    empty.className = 'feedback-empty-state';
 		    const selectedSentiment = document.getElementById('feedbackSentimentFilter')?.value || 'all';
-		    const hasFilters = selectedSentiment !== 'all' || document.getElementById('commentsOnlyToggle')?.checked;
-		    empty.innerHTML = `
-		      <strong>${hasFilters ? 'No matching feedback yet.' : 'No feedback in this period yet.'}</strong>
-		      <span>${hasFilters ? 'Try clearing a filter or choosing a wider time period.' : 'Place your QR codes where customers can see them, then feedback will appear here.'}</span>
-		      ${hasFilters ? '' : '<button class="btn" type="button" id="feedbackEmptyQrCta">Get QR Codes</button>'}
-		    `;
+		    const hasFilters = Number(dashboardUnfilteredFeedbackCount || 0) > 0 &&
+		      (selectedSentiment !== 'all' || document.getElementById('commentsOnlyToggle')?.checked);
+		    empty.innerHTML = dashboardEmptyStateMarkup(hasFilters);
 		    container.appendChild(empty);
-		    empty.querySelector('#feedbackEmptyQrCta')?.addEventListener('click', () => {
-		      logDashboardEvent('dashboard_empty_state_cta_clicked', { source: 'feedback_empty_state' });
-		      showSection('qr');
-		    });
 		  }
 
 		  pageItems.forEach((item, index) => {
@@ -10665,14 +10892,15 @@
 		  const src = (typeof getRecentView === 'function') ? getRecentView() : recentSorted;
 		
 		  const total = src.length;
-		  const totalPages = Math.max(1, Math.ceil(total / RECENT_PAGE_SIZE));
+		  const pageSize = getRecentPageSize();
+		  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 		
 		  // clamp page (0-based)
 		  if (recentPage < 0) recentPage = 0;
 		  if (recentPage > totalPages - 1) recentPage = totalPages - 1;
 		
-		  const start = recentPage * RECENT_PAGE_SIZE;
-		  const end = start + RECENT_PAGE_SIZE;
+		  const start = recentPage * pageSize;
+		  const end = start + pageSize;
 		  const pageItems = src.slice(start, end);
 		  renderDashboardRecentPage({ container, src, totalPages, start, pageItems });
 		  return;
