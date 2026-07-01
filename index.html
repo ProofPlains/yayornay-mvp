@@ -3250,9 +3250,7 @@
 		  cursor: pointer;
 		}
 
-		.feedback-summary-card.is-clickable:hover,
 		.feedback-summary-card.is-active,
-		.feedback-distribution-row.is-clickable:hover,
 		.feedback-distribution-row.is-active {
 		  border-color: color-mix(in oklab, var(--ff-brand-2) 72%, var(--ff-border));
 		  background:
@@ -3260,6 +3258,18 @@
 		    color-mix(in oklab, var(--ff-surface) 94%, black);
 		  box-shadow: 0 12px 26px rgba(124,58,237,.24);
 		  transform: translateY(-1px);
+		}
+
+		@media (hover: hover) and (pointer: fine) {
+		  .feedback-summary-card.is-clickable:hover,
+		  .feedback-distribution-row.is-clickable:hover {
+		    border-color: color-mix(in oklab, var(--ff-brand-2) 72%, var(--ff-border));
+		    background:
+		      linear-gradient(135deg, color-mix(in oklab, var(--ff-brand-2) 14%, transparent), transparent 48%),
+		      color-mix(in oklab, var(--ff-surface) 94%, black);
+		    box-shadow: 0 12px 26px rgba(124,58,237,.24);
+		    transform: translateY(-1px);
+		  }
 		}
 
 		.feedback-summary-label,
