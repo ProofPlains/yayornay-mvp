@@ -680,6 +680,15 @@
           <div class="metric-grid" id="engagementMetricCards"></div>
         </details>
 
+        <details class="metrics-section" open>
+          <summary class="metrics-section-heading">
+            <h3 id="dashboardEngagementMetricsTitle">Dashboard engagement</h3>
+            <p>Whether owners are actively finding useful feedback, investigating issues, and hitting upgrade/QR moments.</p>
+          </summary>
+          <p class="metrics-note" id="dashboardEngagementSummary"></p>
+          <div class="metric-grid" id="dashboardEngagementMetricCards"></div>
+        </details>
+
         <details class="metrics-section">
           <summary class="metrics-section-heading">
             <h3 id="postFeedbackMetricsTitle">Google routing vs owner onboarding</h3>
@@ -795,6 +804,8 @@
     const funnelMetricCardsEl = document.getElementById('funnelMetricCards');
     const qrJourneyMetricCardsEl = document.getElementById('qrJourneyMetricCards');
     const engagementMetricCardsEl = document.getElementById('engagementMetricCards');
+    const dashboardEngagementSummaryEl = document.getElementById('dashboardEngagementSummary');
+    const dashboardEngagementMetricCardsEl = document.getElementById('dashboardEngagementMetricCards');
     const postFeedbackMetricCardsEl = document.getElementById('postFeedbackMetricCards');
     const monetisationMetricCardsEl = document.getElementById('monetisationMetricCards');
     const rowsPerPage = 10;
@@ -1359,6 +1370,48 @@
         tells: 'Shows how often customers provide detail that makes feedback more actionable.',
         format: 'percent'
       },
+      dashboardEngagement: {
+        name: 'Dashboard active businesses',
+        category: 'Owner engagement',
+        definition: 'Businesses that used at least one richer dashboard action such as filtering, opening comments, pagination, QR CTA, or history upgrade click.',
+        tells: 'Shows whether owners are doing more than passively landing on the dashboard.'
+      },
+      dashboardFiltersUsed: {
+        name: 'Dashboard filters used',
+        category: 'Owner engagement',
+        definition: 'Filter interactions on the Feedback Dashboard.',
+        tells: 'Shows whether owners are actively slicing feedback by location, time, mood, or comments.'
+      },
+      dashboardAttentionFilterUsed: {
+        name: 'Attention filter used',
+        category: 'Owner engagement',
+        definition: 'Businesses using the Needs Attention filter.',
+        tells: 'Shows whether owners are looking for customer problems they can fix.'
+      },
+      dashboardCommentsOnlyUsed: {
+        name: 'Comments-only used',
+        category: 'Owner engagement',
+        definition: 'Businesses filtering to feedback with written comments.',
+        tells: 'Shows whether owners are seeking detailed, actionable customer feedback.'
+      },
+      dashboardFeedbackExpanded: {
+        name: 'Feedback expanded',
+        category: 'Owner engagement',
+        definition: 'Long comments expanded inside the dashboard.',
+        tells: 'Shows whether written feedback is interesting enough for owners to inspect in detail.'
+      },
+      dashboardHistoryUpgradeInterest: {
+        name: 'History upgrade interest',
+        category: 'Monetisation signal',
+        definition: 'Free-plan history prompts and unlock clicks from the Feedback Dashboard.',
+        tells: 'Shows whether the 30-day history limit is creating paid-plan intent.'
+      },
+      dashboardQrCta: {
+        name: 'QR CTA from dashboard',
+        category: 'Activation expansion',
+        definition: 'Clicks from the Feedback Dashboard to QR Codes.',
+        tells: 'Shows whether dashboard users are trying to place more QR codes and grow feedback volume.'
+      },
       googleReviewCtaClicks: {
         name: 'Google review CTA clicks',
         category: 'Post-feedback conversion',
@@ -1485,6 +1538,28 @@
       if (!metric) return '';
       if (metricKey === 'commentRate' && Number.isFinite(Number(metric.denominator))) {
         return `${Number(metric.numerator || 0).toLocaleString()} of ${Number(metric.denominator || 0).toLocaleString()} submissions included a comment.`;
+      }
+      if (metricKey === 'dashboardEngagement') {
+        return `Filter events: ${Number(metric.filterEvents || 0).toLocaleString()} | Attention filters: ${Number(metric.attentionFilterEvents || 0).toLocaleString()} | Expanded comments: ${Number(metric.feedbackExpandedEvents || 0).toLocaleString()} | QR CTA clicks: ${Number(metric.qrCtaEvents || 0).toLocaleString()}.`;
+      }
+      if (metricKey === 'dashboardFiltersUsed') {
+        return `${Number(metric.value || 0).toLocaleString()} filter events from ${Number(metric.businesses || 0).toLocaleString()} business${Number(metric.businesses || 0) === 1 ? '' : 'es'}. Mood filters: ${Number(metric.moodFilterEvents || 0).toLocaleString()}.`;
+      }
+      if (metricKey === 'dashboardAttentionFilterUsed') {
+        return `${Number(metric.events || 0).toLocaleString()} uses from ${Number(metric.value || 0).toLocaleString()} business${Number(metric.value || 0) === 1 ? '' : 'es'}. This is the clearest signal of owners hunting for issues.`;
+      }
+      if (metricKey === 'dashboardCommentsOnlyUsed') {
+        return `${Number(metric.events || 0).toLocaleString()} uses from ${Number(metric.value || 0).toLocaleString()} business${Number(metric.value || 0) === 1 ? '' : 'es'}.`;
+      }
+      if (metricKey === 'dashboardFeedbackExpanded') {
+        return `${Number(metric.events || 0).toLocaleString()} long-comment expansions from ${Number(metric.value || 0).toLocaleString()} business${Number(metric.value || 0) === 1 ? '' : 'es'}.`;
+      }
+      if (metricKey === 'dashboardHistoryUpgradeInterest') {
+        const rate = Number.isFinite(Number(metric.rate)) ? `${Number(metric.rate).toFixed(1)}%` : '-';
+        return `${Number(metric.clicks || 0).toLocaleString()} unlock clicks from ${Number(metric.prompts || 0).toLocaleString()} prompts. Prompt-to-click rate: ${rate}.`;
+      }
+      if (metricKey === 'dashboardQrCta') {
+        return `${Number(metric.events || 0).toLocaleString()} QR CTA clicks from ${Number(metric.value || 0).toLocaleString()} business${Number(metric.value || 0) === 1 ? '' : 'es'}.`;
       }
       if (['googleReviewCtaClicks', 'googleReviewTextLinkClicks'].includes(metricKey) && Number.isFinite(Number(metric.denominator))) {
         const rate = Number.isFinite(Number(metric.rate)) ? `${Number(metric.rate).toFixed(1)}%` : '-';
@@ -1643,6 +1718,71 @@
         'dashboardViewedAfterFeedback',
         'commentRate'
       ].map((metricKey) => metricCard(metricKey, metrics[metricKey])).join('');
+
+      const dashboardEngagement = metrics.dashboardEngagement || {};
+      const activeDashboardBusinesses = Number(dashboardEngagement.activeBusinesses || dashboardEngagement.value || 0);
+      const attentionUses = Number(dashboardEngagement.attentionFilterEvents || 0);
+      const commentUses = Number(dashboardEngagement.commentsOnlyEvents || 0);
+      const expandedUses = Number(dashboardEngagement.feedbackExpandedEvents || 0);
+      const historyClicks = Number(dashboardEngagement.historyUpgradeClickEvents || 0);
+      const historyPrompts = Number(dashboardEngagement.historyPromptEvents || 0);
+      const qrClicks = Number(dashboardEngagement.qrCtaEvents || 0);
+      if (dashboardEngagementSummaryEl) {
+        const actionSignals = attentionUses + commentUses + expandedUses;
+        const ownerSignal = activeDashboardBusinesses
+          ? `${activeDashboardBusinesses.toLocaleString()} business${activeDashboardBusinesses === 1 ? '' : 'es'} used richer dashboard actions.`
+          : 'No richer dashboard engagement has been recorded yet.';
+        const usefulnessSignal = actionSignals
+          ? `Owners are actively looking for actionable feedback: attention filters, comments-only filtering, and long-comment reads total ${actionSignals.toLocaleString()} interaction${actionSignals === 1 ? '' : 's'}.`
+          : 'There is not enough evidence yet that owners are digging into feedback beyond the default view.';
+        const opportunitySignals = [];
+        if (historyPrompts || historyClicks) {
+          const rate = Number.isFinite(Number(dashboardEngagement.historyPromptClickRate))
+            ? `${Number(dashboardEngagement.historyPromptClickRate).toFixed(1)}%`
+            : 'not enough data';
+          opportunitySignals.push(`History prompts created ${historyClicks.toLocaleString()} unlock click${historyClicks === 1 ? '' : 's'} from ${historyPrompts.toLocaleString()} prompt${historyPrompts === 1 ? '' : 's'} (${rate}).`);
+        }
+        if (qrClicks) {
+          opportunitySignals.push(`${qrClicks.toLocaleString()} dashboard QR click${qrClicks === 1 ? '' : 's'} suggest owners may be trying to increase feedback volume.`);
+        }
+        dashboardEngagementSummaryEl.textContent = `${ownerSignal} ${usefulnessSignal} ${opportunitySignals.length ? opportunitySignals.join(' ') : 'Watch this section for upgrade intent from history limits and activation intent from QR CTA clicks.'}`;
+      }
+      dashboardEngagementMetricCardsEl.innerHTML = [
+        metricCard('dashboardEngagement', dashboardEngagement),
+        metricCard('dashboardFiltersUsed', {
+          value: dashboardEngagement.filterEvents,
+          businesses: dashboardEngagement.filterBusinesses,
+          moodFilterEvents: dashboardEngagement.moodFilterEvents,
+          status: dashboardEngagement.status || 'Not enough data yet'
+        }),
+        metricCard('dashboardAttentionFilterUsed', {
+          value: dashboardEngagement.attentionFilterBusinesses,
+          events: dashboardEngagement.attentionFilterEvents,
+          status: dashboardEngagement.attentionFilterEvents ? 'Ready' : 'Not enough data yet'
+        }),
+        metricCard('dashboardCommentsOnlyUsed', {
+          value: dashboardEngagement.commentsOnlyBusinesses,
+          events: dashboardEngagement.commentsOnlyEvents,
+          status: dashboardEngagement.commentsOnlyEvents ? 'Ready' : 'Not enough data yet'
+        }),
+        metricCard('dashboardFeedbackExpanded', {
+          value: dashboardEngagement.feedbackExpandedBusinesses,
+          events: dashboardEngagement.feedbackExpandedEvents,
+          status: dashboardEngagement.feedbackExpandedEvents ? 'Ready' : 'Not enough data yet'
+        }),
+        metricCard('dashboardHistoryUpgradeInterest', {
+          value: dashboardEngagement.historyUpgradeClickBusinesses,
+          clicks: dashboardEngagement.historyUpgradeClickEvents,
+          prompts: dashboardEngagement.historyPromptEvents,
+          rate: dashboardEngagement.historyPromptClickRate,
+          status: dashboardEngagement.historyPromptEvents ? 'Ready' : 'Not enough data yet'
+        }),
+        metricCard('dashboardQrCta', {
+          value: dashboardEngagement.qrCtaBusinesses,
+          events: dashboardEngagement.qrCtaEvents,
+          status: dashboardEngagement.qrCtaEvents ? 'Ready' : 'Not enough data yet'
+        })
+      ].join('');
 
       postFeedbackMetricCardsEl.innerHTML = [
         'googleReviewCtaClicks',
