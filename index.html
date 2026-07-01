@@ -3748,6 +3748,441 @@
 
 
 		
+		/* === Owner app navigation shell === */
+		#adminView {
+		  max-width: 1400px;
+		  margin: 0 auto;
+		}
+
+		.nav-drawer-overlay,
+		.drawer-close-btn {
+		  display: none !important;
+		}
+
+		.nav-drawer {
+		  position: relative !important;
+		  left: auto !important;
+		  top: auto !important;
+		  width: 248px !important;
+		  flex: 0 0 248px;
+		  min-height: 80vh;
+		  height: auto !important;
+		  padding: 18px 14px;
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black) !important;
+		  color: var(--ff-text) !important;
+		  border-right: 1px solid var(--ff-border);
+		  box-shadow: none !important;
+		  overflow-y: auto;
+		}
+
+		.drawer-header {
+		  padding: 6px 8px 22px;
+		  margin-bottom: 10px;
+		  border-bottom: 0;
+		}
+
+		.app-brand-lockup,
+		.topbar-brand-lockup {
+		  display: flex;
+		  align-items: center;
+		  min-width: 0;
+		}
+
+		.app-brand-lockup { gap: 8px; }
+		.topbar-brand-lockup { gap: 9px; }
+
+		.app-brand-bolt {
+		  width: 31px;
+		  height: 31px;
+		  flex: 0 0 31px;
+		  object-fit: contain;
+		}
+
+		.topbar-brand-logo {
+		  width: 34px;
+		  height: 34px;
+		  flex: 0 0 34px;
+		  object-fit: contain;
+		}
+
+		.drawer-logo,
+		.topbar-title {
+		  font-family: 'Anton', Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+		  font-style: italic;
+		  font-weight: 400;
+		  letter-spacing: 0;
+		  line-height: .95;
+		  text-transform: uppercase;
+		  white-space: nowrap;
+		}
+
+		.drawer-logo {
+		  color: var(--ff-text) !important;
+		  font-size: 20px;
+		  margin: 0;
+		}
+
+		.topbar-title {
+		  color: #ece8dc !important;
+		  font-size: 25px;
+		  margin: 0;
+		  padding-right: 0;
+		}
+
+		.drawer-subtitle {
+		  color: var(--ff-text-muted) !important;
+		  font-size: 13px;
+		  margin-top: 8px;
+		}
+
+		.drawer-menu {
+		  display: grid;
+		  gap: 6px;
+		  list-style: none;
+		  margin: 0;
+		  padding: 0;
+		}
+
+		.drawer-menu-item {
+		  margin: 0;
+		}
+
+		.drawer-menu-link,
+		.sidebar-account-button,
+		.mobile-nav-button {
+		  border: 0;
+		  cursor: pointer;
+		  font: inherit;
+		}
+
+		.drawer-menu-link {
+		  display: flex;
+		  align-items: center;
+		  gap: 12px;
+		  width: 100%;
+		  min-height: 46px;
+		  padding: 10px 12px;
+		  border-radius: 8px;
+		  background: transparent !important;
+		  color: var(--ff-text-muted) !important;
+		  font-size: 15px;
+		  font-weight: 700;
+		  text-align: left;
+		  transition: background .18s ease, color .18s ease;
+		}
+
+		.drawer-menu-link:hover,
+		.drawer-menu-link:focus-visible {
+		  background: color-mix(in oklab, var(--ff-brand-1) 14%, transparent) !important;
+		  color: var(--ff-text) !important;
+		  outline: none;
+		}
+
+		.drawer-menu-link.active {
+		  background: color-mix(in oklab, var(--ff-brand-1) 20%, var(--ff-surface)) !important;
+		  color: var(--ff-text) !important;
+		  box-shadow: inset 3px 0 0 var(--ff-brand-1);
+		}
+
+		.drawer-menu-icon {
+		  display: inline-flex;
+		  align-items: center;
+		  justify-content: center;
+		  flex: 0 0 24px;
+		  width: 24px;
+		  height: 24px;
+		  margin: 0;
+		  text-align: center;
+		}
+
+		.drawer-menu-icon svg,
+		.mobile-nav-button svg,
+		.sidebar-account-avatar svg {
+		  width: 20px;
+		  height: 20px;
+		  display: block;
+		  stroke: currentColor;
+		  fill: none;
+		  stroke-width: 2;
+		  stroke-linecap: round;
+		  stroke-linejoin: round;
+		}
+
+		.nav-drawer .drawer-menu-link[data-section="settings"],
+		.nav-drawer > div[style*="margin-top: auto"] {
+		  display: none !important;
+		}
+
+		.sidebar-account {
+		  position: sticky;
+		  bottom: 0;
+		  margin-top: auto;
+		  padding-top: 16px;
+		  padding-bottom: 4px;
+		  border-top: 1px solid var(--ff-border);
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
+		}
+
+		.sidebar-account-button {
+		  display: grid;
+		  grid-template-columns: 38px minmax(0, 1fr);
+		  align-items: center;
+		  gap: 10px;
+		  width: 100%;
+		  min-height: 58px;
+		  padding: 10px;
+		  border-radius: 8px;
+		  background: transparent;
+		  color: var(--ff-text);
+		  text-align: left;
+		}
+
+		.sidebar-account-button:hover,
+		.sidebar-account-button:focus-visible {
+		  background: color-mix(in oklab, var(--ff-brand-1) 12%, transparent);
+		  outline: none;
+		}
+
+		.sidebar-account-avatar {
+		  display: inline-flex;
+		  align-items: center;
+		  justify-content: center;
+		  width: 38px;
+		  height: 38px;
+		  border-radius: 999px;
+		  background: color-mix(in oklab, var(--ff-brand-1) 20%, var(--ff-surface));
+		  color: var(--ff-text);
+		  overflow: hidden;
+		}
+
+		.sidebar-account-title,
+		.sidebar-account-meta {
+		  display: block;
+		  overflow: hidden;
+		  text-overflow: ellipsis;
+		  white-space: nowrap;
+		}
+
+		.sidebar-account-title {
+		  color: var(--ff-text);
+		  font-size: 13px;
+		  font-weight: 800;
+		}
+
+		.sidebar-account-meta {
+		  color: var(--ff-text-muted);
+		  font-size: 12px;
+		  margin-top: 2px;
+		}
+
+		.admin-topbar {
+		  display: none;
+		}
+
+		.admin-content {
+		  min-width: 0;
+		}
+
+		.mobile-bottom-nav {
+		  display: none;
+		}
+
+		#accountDrawerOverlay {
+		  background: rgba(0,0,0,.45);
+		  z-index: 2000;
+		}
+
+		#accountDrawer,
+		#accountDrawer.drawer {
+		  position: fixed;
+		  top: auto;
+		  right: auto;
+		  bottom: 28px;
+		  left: max(18px, calc(50vw - 700px + 18px));
+		  width: 300px;
+		  max-width: calc(100vw - 32px);
+		  height: auto;
+		  max-height: min(78vh, 440px);
+		  background: var(--ff-surface) !important;
+		  color: var(--ff-text) !important;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 12px;
+		  box-shadow: 0 20px 50px rgba(0,0,0,.28);
+		  opacity: 0;
+		  pointer-events: none;
+		  transform: translateY(14px) scale(.98);
+		  transition: transform .2s ease, opacity .2s ease;
+		  overflow: hidden;
+		}
+
+		.account-drawer-open #accountDrawer,
+		.account-drawer-open #accountDrawer.drawer {
+		  opacity: 1;
+		  pointer-events: auto;
+		  transform: translateY(0) scale(1);
+		}
+
+		.account-sheet-handle {
+		  display: none;
+		}
+
+		#accountDrawer .drawer-header {
+		  padding: 18px 18px 14px;
+		  border-bottom: 1px solid var(--ff-border);
+		  margin: 0;
+		}
+
+		#accountDrawer .drawer-menu {
+		  padding: 8px;
+		}
+
+		#accountDrawer .drawer-menu-link {
+		  display: grid;
+		  grid-template-columns: 34px minmax(0, 1fr);
+		  gap: 10px;
+		  min-height: 48px;
+		  color: var(--ff-text) !important;
+		}
+
+		#accountDrawer .drawer-menu-icon {
+		  width: 34px;
+		  height: 28px;
+		  border-radius: 7px;
+		  background: color-mix(in oklab, var(--ff-brand-1) 16%, transparent);
+		}
+
+		@media (min-width: 761px) {
+		  #adminView {
+		    flex-direction: row;
+		    position: relative;
+		    box-sizing: border-box;
+		    min-height: 100vh;
+		    overflow: visible !important;
+		    padding-left: 0;
+		  }
+
+		  .nav-drawer {
+		    position: fixed !important;
+		    top: 0 !important;
+		    bottom: 0 !important;
+		    left: max(0px, calc(50vw - 700px));
+		    height: auto !important;
+		    min-height: 100vh;
+		    max-height: none;
+		    z-index: 1001;
+		  }
+
+		  .admin-content {
+		    width: auto;
+		    margin-left: 248px;
+		  }
+		}
+
+		@media (max-width: 760px) {
+		  #adminView {
+		    flex-direction: column;
+		    min-height: 100vh;
+		    border-radius: 0 !important;
+		  }
+
+		  .nav-drawer {
+		    display: none !important;
+		  }
+
+		  .admin-topbar {
+		    display: flex !important;
+		    position: sticky;
+		    top: 0;
+		    height: 60px;
+		    padding: 0 16px;
+		    z-index: 1001;
+		  }
+
+		  .topbar-hamburger,
+		  #accountAvatarBtn {
+		    display: none !important;
+		  }
+
+		  .topbar-title {
+		    font-size: 27px;
+		    padding-right: 0;
+		  }
+
+		  .admin-content {
+		    padding: 18px 14px calc(96px + env(safe-area-inset-bottom, 0px));
+		  }
+
+		  .mobile-bottom-nav {
+		    position: fixed;
+		    left: 0;
+		    right: 0;
+		    bottom: 0;
+		    z-index: 1002;
+		    display: grid;
+		    grid-template-columns: repeat(4, minmax(0, 1fr));
+		    gap: 4px;
+		    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+		    background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		    border-top: 1px solid var(--ff-border);
+		    box-shadow: 0 -10px 30px rgba(0,0,0,.22);
+		  }
+
+		  .mobile-nav-button {
+		    display: grid;
+		    justify-items: center;
+		    gap: 3px;
+		    min-width: 0;
+		    min-height: 54px;
+		    padding: 6px 4px;
+		    border-radius: 8px;
+		    background: transparent;
+		    color: var(--ff-text-muted);
+		    font-weight: 800;
+		    font-size: 11px;
+		  }
+
+		  .mobile-nav-button span:first-child {
+		    display: inline-flex;
+		    align-items: center;
+		    justify-content: center;
+		    width: 22px;
+		    height: 22px;
+		    line-height: 1;
+		  }
+
+		  .mobile-nav-button.active,
+		  .mobile-nav-button:focus-visible {
+		    background: color-mix(in oklab, var(--ff-brand-1) 20%, var(--ff-surface));
+		    color: var(--ff-text);
+		    outline: none;
+		  }
+
+		  #accountDrawer,
+		  #accountDrawer.drawer {
+		    left: 0;
+		    right: 0;
+		    bottom: 0;
+		    width: auto;
+		    max-width: none;
+		    max-height: 82vh;
+		    border-radius: 18px 18px 0 0;
+		    transform: translateY(100%);
+		  }
+
+		  .account-drawer-open #accountDrawer,
+		  .account-drawer-open #accountDrawer.drawer {
+		    transform: translateY(0);
+		  }
+
+		  .account-sheet-handle {
+		    display: block;
+		    width: 44px;
+		    height: 5px;
+		    border-radius: 999px;
+		    background: var(--ff-border);
+		    margin: 10px auto 2px;
+		  }
+		}
 	</style>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
 	
@@ -4379,10 +4814,14 @@
         <div class="nav-drawer-overlay" id="navDrawerOverlay" onclick="closeNavDrawer()"></div>
 
         <!-- Navigation Drawer -->
-        <nav class="nav-drawer" id="navDrawer">
+        <nav class="nav-drawer" id="navDrawer" aria-label="Primary navigation">
             <button class="drawer-close-btn" onclick="closeNavDrawer()">✕</button>
             <div class="drawer-header">
-                <div class="drawer-logo brand-title">FlashFeedback</div>
+                <div class="app-brand-lockup">
+                    <img class="app-brand-bolt" src="Grape%20Bolt%20Transparent.png" alt="" aria-hidden="true">
+                    <div class="drawer-logo brand-title">FlashFeedback</div>
+                </div>
+                <div class="drawer-subtitle">Owner workspace</div>
             </div>
             
             <ul class="drawer-menu">
@@ -4412,6 +4851,16 @@
 					</li>
 
             </ul>
+
+            <div class="sidebar-account">
+                <button class="sidebar-account-button" type="button" onclick="openAccountMenu()" aria-label="Open account menu">
+                    <span class="sidebar-account-avatar" id="sidebarAccountAvatar" aria-hidden="true"></span>
+                    <span class="sidebar-account-text">
+                        <span class="sidebar-account-title" id="sidebarAccountTitle">Account</span>
+                        <span class="sidebar-account-meta" id="sidebarAccountMeta">Settings and sign out</span>
+                    </span>
+                </button>
+            </div>
             
             <!-- Bottom Navigation Item -->
             <div style="margin-top: auto; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.2);">
@@ -4427,7 +4876,10 @@
             <button class="topbar-hamburger" onclick="openNavDrawer()" aria-label="Open menu">
 			  <img class="hamburger-img" src="Bolt%20Off-White%20Transparent%202.png" alt="">
 			</button>
-            <h1 class="topbar-title brand-title">FlashFeedback</h1>
+            <div class="topbar-brand-lockup">
+                <img class="topbar-brand-logo" src="Bolt%20Off-White%20Transparent%202.png" alt="" aria-hidden="true">
+                <h1 class="topbar-title brand-title">FlashFeedback</h1>
+            </div>
         </header>
 
         <!-- Main Content Area -->
@@ -4914,6 +5366,25 @@
 				</section>
 
         </main>
+
+        <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+            <button class="mobile-nav-button active" type="button" onclick="showSection('Feedback')" data-section="Feedback">
+                <span aria-hidden="true"></span>
+                <span>Feedback</span>
+            </button>
+            <button class="mobile-nav-button" type="button" onclick="showSection('locations')" data-section="locations">
+                <span aria-hidden="true"></span>
+                <span>Locations</span>
+            </button>
+            <button class="mobile-nav-button" type="button" onclick="showSection('qr')" data-section="qr">
+                <span aria-hidden="true"></span>
+                <span>QR Codes</span>
+            </button>
+            <button class="mobile-nav-button" id="mobileAccountNavButton" type="button" onclick="openAccountMenu()">
+                <span aria-hidden="true"></span>
+                <span id="mobileAccountNavLabel">Account</span>
+            </button>
+        </nav>
     </div>
 
 	<!-- Comment Modal -->
@@ -4935,13 +5406,14 @@
 	<div id="accountDrawerOverlay" onclick="closeAccountMenu()" aria-hidden="true"></div>
 	
 	<aside id="accountDrawer" class="drawer" aria-label="Account menu" role="complementary">
+	  <div class="account-sheet-handle" aria-hidden="true"></div>
 	  <div class="drawer-header">
 	    <div class="drawer-logo" id="accountBusinessName">—</div>
 	    <div class="drawer-subtitle" id="accountUserEmail" style="opacity:.85;font-size:13px;margin-top:4px;">—</div>
 	  </div>
 	
 	
-	  <ul class="drawer-menu">
+	  <ul class="drawer-menu" id="accountDrawerMenu">
 	    <li class="drawer-menu-item">
 	      <button class="drawer-menu-link" onclick="openSettingsFromAccount()">
 	        <span class="drawer-menu-icon">⚙️</span>
@@ -6752,7 +7224,8 @@
 		    'unsubscribeAlertsScreen'
 		  ];
 		  screens.forEach(function(screen) {
-		    document.getElementById(screen).style.display = 'none';
+		    var el = document.getElementById(screen);
+		    if (el) el.style.display = 'none';
 		  });
 		}
 
@@ -7195,7 +7668,7 @@
 		// Show customer branding
 		function renderBranding() {
 		  // Keep product branding (not white-labeled)
-		  const drawerLogo = document.querySelector('.drawer-logo');
+		  const drawerLogo = document.querySelector('#navDrawer .drawer-logo');
 		  const topbarTitle = document.querySelector('.topbar-title');
 		  if (drawerLogo) drawerLogo.textContent = 'FlashFeedback';
 		  if (topbarTitle) topbarTitle.textContent = 'FlashFeedback';
@@ -7209,6 +7682,7 @@
 		
 		  // Optional: hide Settings/Logout in the left drawer now that they live in the account menu
 		  hideLeftMenuItems();
+		  normalizeNavigationIcons();
 		}
 
 		// Simple generic profile SVG icon (fallback)
@@ -7251,8 +7725,59 @@
 		  img.src = logo;
 		}
 		
-		// Right drawer open/close
+		function isOwnerDemoMode() {
+		  return currentView === 'admin-demo' || currentView === 'customer-demo' || currentLocation === 'demo' || (!currentUser && !!window.demoAccount);
+		}
+
+		function updateSidebarAccountSummary() {
+		  const inDemo = isOwnerDemoMode();
+		  const title = document.getElementById('sidebarAccountTitle');
+		  const meta = document.getElementById('sidebarAccountMeta');
+		  const mobileLabel = document.getElementById('mobileAccountNavLabel');
+		  if (title) title.textContent = inDemo ? 'Demo mode' : (currentUser?.businessName || 'Account');
+		  if (meta) meta.textContent = inDemo ? 'Preview actions' : (currentUser?.email || 'Settings and sign out');
+		  if (mobileLabel) mobileLabel.textContent = inDemo ? 'Demo' : 'Account';
+		}
+
+		function renderAccountMenuActions() {
+		  const menu = document.getElementById('accountDrawerMenu');
+		  if (!menu) return;
+		  if (isOwnerDemoMode()) {
+		    menu.innerHTML =
+		      '<li class="drawer-menu-item"><button class="drawer-menu-link" type="button" onclick="closeAccountMenu(); showWelcome();"><span class="drawer-menu-icon" aria-hidden="true">&lt;</span><span>Back to Welcome</span></button></li>' +
+		      '<li class="drawer-menu-item"><button class="drawer-menu-link" type="button" onclick="closeAccountMenu(); toggleView();"><span class="drawer-menu-icon" aria-hidden="true">V</span><span>View as Customer</span></button></li>' +
+		      '<li class="drawer-menu-item"><button class="drawer-menu-link" type="button" onclick="closeAccountMenu(); showSignup();"><span class="drawer-menu-icon" aria-hidden="true">+</span><span>Sign Up</span></button></li>';
+		    return;
+		  }
+		  menu.innerHTML =
+		    '<li class="drawer-menu-item"><button class="drawer-menu-link" type="button" onclick="openSettingsFromAccount()"><span class="drawer-menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2.1 2.1 0 0 1-2.97 2.97l-.04-.04a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.09 1.65V21a2.1 2.1 0 0 1-4.2 0v-.06A1.8 1.8 0 0 0 8.43 19.3a1.8 1.8 0 0 0-1.98.36l-.04.04a2.1 2.1 0 0 1-2.97-2.97l.04-.04A1.8 1.8 0 0 0 3.84 15a1.8 1.8 0 0 0-1.65-1.09H2.1a2.1 2.1 0 0 1 0-4.2h.06A1.8 1.8 0 0 0 3.8 8.62a1.8 1.8 0 0 0-.36-1.98L3.4 6.6a2.1 2.1 0 0 1 2.97-2.97l.04.04a1.8 1.8 0 0 0 1.98.36h.04A1.8 1.8 0 0 0 9.52 2.4V2.1a2.1 2.1 0 0 1 4.2 0v.06a1.8 1.8 0 0 0 1.09 1.65 1.8 1.8 0 0 0 1.98-.36l.04-.04a2.1 2.1 0 0 1 2.97 2.97l-.04.04a1.8 1.8 0 0 0-.36 1.98v.04a1.8 1.8 0 0 0 1.65 1.09h.06a2.1 2.1 0 0 1 0 4.2h-.06A1.8 1.8 0 0 0 19.4 15Z"></path></svg></span><span>Settings</span></button></li>' +
+		    '<li class="drawer-menu-item"><button class="drawer-menu-link" type="button" onclick="logout()"><span class="drawer-menu-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5"></path><path d="M15 12H3"></path><path d="M14 4h4a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-4"></path></svg></span><span>Log out</span></button></li>';
+		}
+
+		function normalizeNavigationIcons() {
+		  const iconSvg = {
+		    Feedback: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5"></path><path d="M4 19h16"></path><rect x="7" y="11" width="3" height="5" rx="1"></rect><rect x="12" y="8" width="3" height="8" rx="1"></rect><rect x="17" y="4" width="3" height="12" rx="1"></rect></svg>',
+		    locations: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.3 6-11a6 6 0 0 0-12 0c0 5.7 6 11 6 11Z"></path><circle cx="12" cy="10" r="2.2"></circle></svg>',
+		    qr: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><path d="M14 14h2v2h-2z"></path><path d="M18 14h2v6h-6v-2h4z"></path></svg>'
+		  };
+		  Object.keys(iconSvg).forEach(function(sectionName) {
+		    document.querySelectorAll('[data-section="' + sectionName + '"] .drawer-menu-icon, [data-section="' + sectionName + '"] span:first-child').forEach(function(icon) {
+		      icon.innerHTML = iconSvg[sectionName];
+		    });
+		  });
+		  const accountIcon = isOwnerDemoMode()
+		    ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h8l3 5-7 9-7-9 3-5Z"></path><path d="M8 5l4 14 4-14"></path></svg>'
+		    : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.6-4 4.3-6 8-6s6.4 2 8 6"></path></svg>';
+		  const accountAvatar = document.getElementById('sidebarAccountAvatar');
+		  if (accountAvatar) accountAvatar.innerHTML = accountIcon;
+		  const mobileAccountIcon = document.querySelector('#mobileAccountNavButton span:first-child');
+		  if (mobileAccountIcon) mobileAccountIcon.innerHTML = accountIcon;
+		}
+
+		// Account sheet open/close
 		function openAccountMenu() {
+		  updateAccountMenuHeader();
+		  renderAccountMenuActions();
 		  document.body.classList.add('account-drawer-open');
 		  // Close with Esc
 		  const onKey = (e) => { if (e.key === 'Escape') closeAccountMenu(); };
@@ -7263,6 +7788,10 @@
 		}
 		
 		function openSettingsFromAccount() {
+		  if (isOwnerDemoMode()) {
+		    closeAccountMenu();
+		    return;
+		  }
 		  closeAccountMenu();
 		  showSection('settings');
 		}
@@ -7271,8 +7800,12 @@
 		function updateAccountMenuHeader() {
 		  const nameEl = document.getElementById('accountBusinessName');
 		  const emailEl = document.getElementById('accountUserEmail');
-		  if (nameEl) nameEl.textContent = currentUser?.businessName || '—';
-		  if (emailEl) emailEl.textContent = currentUser?.email || '—';
+		  const inDemo = isOwnerDemoMode();
+		  if (nameEl) nameEl.textContent = inDemo ? 'Demo mode' : (currentUser?.businessName || 'Account');
+		  if (emailEl) emailEl.textContent = inDemo ? 'Preview only' : (currentUser?.email || '');
+		  updateSidebarAccountSummary();
+		  renderAccountMenuActions();
+		  normalizeNavigationIcons();
 		}
 		
 		// Hide/move items from the left drawer (best-effort; safe if absent)
@@ -10232,13 +10765,18 @@
         }
 
         function showSection(sectionName) {
+            if (sectionName === 'settings' && isOwnerDemoMode()) {
+                closeAccountMenu();
+                return;
+            }
+
             // Hide all sections
             document.querySelectorAll('.content-section').forEach(function(section) {
                 section.classList.remove('active');
             });
             
-            // Remove active from all menu links
-            document.querySelectorAll('.drawer-menu-link').forEach(function(link) {
+            // Remove active from all section navigation links
+            document.querySelectorAll('[data-section]').forEach(function(link) {
                 link.classList.remove('active');
             });
             
@@ -10248,11 +10786,12 @@
                 targetSection.classList.add('active');
             }
             
-            // Add active to clicked menu link
-            var activeLink = document.querySelector('[data-section="' + sectionName + '"]');
-            if (activeLink) {
-                activeLink.classList.add('active');
-            }
+            // Add active to every matching nav entry (desktop + mobile)
+            document.querySelectorAll('[data-section="' + sectionName + '"]').forEach(function(link) {
+                link.classList.add('active');
+            });
+            updateSidebarAccountSummary();
+            normalizeNavigationIcons();
             
             // Update section content (no longer updating top bar title)
             switch(sectionName) {
