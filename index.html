@@ -6076,9 +6076,9 @@
 			
 			async function logEvent(eventType, details = {}) {
 			  try {
-			    if (isDashboardDemoContext?.()) return;
+			    if (isDashboardDemoContext?.()) return false;
 			    const bizId = await getCurrentBusinessId();
-			    if (!bizId) return; // silently skip if not authenticated/owner context
+			    if (!bizId) return false; // silently skip if not authenticated/owner context
 			    const payload = {
 			      business_id: bizId,
 			      event_type: eventType
@@ -6092,9 +6092,11 @@
 			      { returning: 'minimal' }
 			    );
 			    if (error) throw error;
+			    return true;
 			  } catch (e) {
 			    // non-blocking
 			    console.warn('analytics log failed:', e?.message || e);
+			    return false;
 			  }
 			}
 
@@ -6107,8 +6109,7 @@
 			  }
 
 			  // These two lines clear the cached business resolution and the “dashboard view logged” flag whenever the auth state changes, preventing cross-account mixups during QA or rapid sign-in/out.
-			  try { window.__ffBusinessId = null; } catch {}
-			  try { sessionStorage.removeItem('ff_dashboard_view_logged'); } catch {}
+			  try { __ffBusinessId = null; } catch {}
 				
 			  // (Optional) keep or add your SIGNED_IN / SIGNED_OUT handlers here if needed
 			});
@@ -7396,10 +7397,16 @@
             updateLocationSelects();
             showSection('Feedback');
 
-			// Log a dashboard view once per session
-			if (!isDashboardDemoContext() && !sessionStorage.getItem('ff_dashboard_view_logged')) {
-			  sessionStorage.setItem('ff_dashboard_view_logged', '1');
-			  logEvent('dashboard_view');
+			// Log a dashboard view once per real business per browser session.
+			const dashboardViewBusinessId = currentUser?.businessId || null;
+			const dashboardViewKey = dashboardViewBusinessId ? `ff_dashboard_view_logged_${dashboardViewBusinessId}` : '';
+			const dashboardViewPendingKey = dashboardViewBusinessId ? `ff_dashboard_view_pending_${dashboardViewBusinessId}` : '';
+			if (!isDashboardDemoContext() && dashboardViewKey && !sessionStorage.getItem(dashboardViewKey) && !sessionStorage.getItem(dashboardViewPendingKey)) {
+			  sessionStorage.setItem(dashboardViewPendingKey, '1');
+			  logEvent('dashboard_view').then((logged) => {
+			    sessionStorage.removeItem(dashboardViewPendingKey);
+			    if (logged) sessionStorage.setItem(dashboardViewKey, '1');
+			  });
 			}
 
 			
@@ -9114,8 +9121,10 @@
 		function logDashboardEvent(eventType, metadata = {}) {
 		  if (isDashboardDemoContext()) return;
 		  try {
-		    logEvent(eventType, { metadata });
-		  } catch {}
+		    return logEvent(eventType, { metadata });
+		  } catch {
+		    return Promise.resolve(false);
+		  }
 		}
 
 		function setDashboardText(id, value) {
@@ -9416,13 +9425,17 @@
 		    <button class="btn" type="button" onclick="openFeedbackHistoryUpgrade()">Unlock full history</button>
 		  `;
 		  card.style.display = 'flex';
-		  const promptKey = `ff_history_prompt_logged_${currentUser?.businessId || 'business'}`;
-		  if (!sessionStorage.getItem(promptKey)) {
-		    sessionStorage.setItem(promptKey, '1');
+		  const promptKey = `ff_history_prompt_v2_logged_${currentUser?.businessId || 'business'}`;
+		  const promptPendingKey = `ff_history_prompt_v2_pending_${currentUser?.businessId || 'business'}`;
+		  if (!sessionStorage.getItem(promptKey) && !sessionStorage.getItem(promptPendingKey)) {
+		    sessionStorage.setItem(promptPendingKey, '1');
 		    logDashboardEvent('feedback_history_upgrade_prompt_shown', {
 		      tier: currentUser?.pricingTier || 'free',
 		      limit_days: limitDays,
 		      hidden_count: hiddenCount
+		    })?.then((logged) => {
+		      sessionStorage.removeItem(promptPendingKey);
+		      if (logged) sessionStorage.setItem(promptKey, '1');
 		    });
 		  }
 		}
