@@ -10476,7 +10476,136 @@
             };
         }
 
-        async function createQrSignImageDataUrl(locationId) {
+        function getQrSignBusinessName(explicitName) {
+            const candidates = [
+                explicitName,
+                currentUser?.businessName,
+                window.demoAccount?.businessName
+            ];
+            const businessName = candidates
+                .map((value) => String(value || '').trim())
+                .find(Boolean);
+            return businessName || 'this business';
+        }
+
+        function drawFlashFeedbackQrSignTemplate(qrImage, businessName) {
+            var signCanvas = document.createElement('canvas');
+            var ctx = signCanvas.getContext('2d', { alpha: false });
+            const W = signCanvas.width = 2000;
+            const H = signCanvas.height = 3000;
+            const centerX = W / 2;
+            const safeBusinessName = getQrSignBusinessName(businessName);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            setFont(ctx, 210, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+            ctx.fillText('HOW WAS YOUR', centerX, 220);
+            ctx.fillText('EXPERIENCE?', centerX, 450);
+            drawDownArrow(ctx, centerX, 570, 90, 80, 24, '#000000');
+
+            setFont(ctx, 116, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+            ctx.fillText('SCAN WITH YOUR PHONE', centerX, 800);
+
+            const qrSize = 1320;
+            const qrX = (W - qrSize) / 2;
+            const qrY = 945;
+            ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+
+            setFont(ctx, 88, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+            ctx.fillStyle = '#000000';
+            ctx.fillText('NO ACCOUNT NEEDED', centerX, 2415);
+
+            setFont(ctx, 150, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+            ctx.fillText('TAKES 5 SECONDS', centerX, 2605);
+
+            ctx.fillStyle = '#4b5563';
+            drawFittedText(`Private feedback for ${safeBusinessName}`, centerX, 2765, 1720, 85, 58, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+            drawPoweredByWordmark(centerX, 2875, 1720);
+
+            return signCanvas;
+
+            function setFont(context, sizePx, bold, italic, family) {
+                context.font = `${italic ? 'italic ' : ''}${bold ? '700 ' : ''}${Math.round(sizePx)}px ${family}`;
+            }
+
+            function drawFittedText(text, x, y, maxWidth, startSize, minSize, bold, italic, family) {
+                const rawText = String(text || '').trim();
+                let size = startSize;
+                setFont(ctx, size, bold, italic, family);
+                while (size > minSize && ctx.measureText(rawText).width > maxWidth) {
+                    size -= 2;
+                    setFont(ctx, size, bold, italic, family);
+                }
+
+                if (ctx.measureText(rawText).width <= maxWidth) {
+                    ctx.fillText(rawText, x, y);
+                    return;
+                }
+
+                const ellipsis = '...';
+                let fitted = rawText;
+                while (fitted.length > 0 && ctx.measureText(fitted + ellipsis).width > maxWidth) {
+                    fitted = fitted.slice(0, -1).trimEnd();
+                }
+                ctx.fillText((fitted || rawText.slice(0, 1)) + ellipsis, x, y);
+            }
+
+            function drawPoweredByWordmark(x, y, maxWidth) {
+                const prefix = 'Powered by ';
+                const wordmark = 'FLASHFEEDBACK';
+                let prefixSize = 67;
+                let wordmarkSize = 68;
+                const prefixFamily = 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif';
+                const wordmarkFamily = 'Anton, Impact, sans-serif';
+
+                function measureLine() {
+                    setFont(ctx, prefixSize, true, false, prefixFamily);
+                    const prefixWidth = ctx.measureText(prefix).width;
+                    setFont(ctx, wordmarkSize, false, true, wordmarkFamily);
+                    const wordmarkWidth = ctx.measureText(wordmark).width;
+                    return { prefixWidth, wordmarkWidth, totalWidth: prefixWidth + wordmarkWidth };
+                }
+
+                let measurements = measureLine();
+                while (measurements.totalWidth > maxWidth && wordmarkSize > 53) {
+                    prefixSize -= 1;
+                    wordmarkSize -= 1;
+                    measurements = measureLine();
+                }
+
+                let cursorX = x - measurements.totalWidth / 2;
+                setFont(ctx, prefixSize, true, false, prefixFamily);
+                ctx.fillStyle = '#4b5563';
+                ctx.fillText(prefix, cursorX + measurements.prefixWidth / 2, y);
+                cursorX += measurements.prefixWidth;
+
+                setFont(ctx, wordmarkSize, false, true, wordmarkFamily);
+                ctx.fillStyle = '#4b5563';
+                ctx.fillText(wordmark, cursorX + measurements.wordmarkWidth / 2, y);
+                ctx.fillStyle = '#4b5563';
+            }
+
+            function drawDownArrow(context, x, y, headHeight, tailLength, thickness, color) {
+                context.fillStyle = color;
+                const headTop = y + tailLength;
+                context.beginPath();
+                context.moveTo(x - thickness / 2, y);
+                context.lineTo(x + thickness / 2, y);
+                context.lineTo(x + thickness / 2, headTop);
+                context.lineTo(x + headHeight / 2, headTop);
+                context.lineTo(x, headTop + headHeight);
+                context.lineTo(x - headHeight / 2, headTop);
+                context.lineTo(x - thickness / 2, headTop);
+                context.closePath();
+                context.fill();
+            }
+        }
+
+        async function createQrSignImageDataUrl(locationId, businessName) {
             const qrValue = getCustomerFeedbackUrl(locationId);
             const qrCode = new QRCodeStyling(createFlashFeedbackQrOptions(qrValue));
             const qrBlob = await qrCode.getRawData('png');
@@ -10496,59 +10625,8 @@
                 try { await qrImage.decode(); } catch (_) {}
             }
 
-            var signCanvas = document.createElement('canvas');
-            var ctx = signCanvas.getContext('2d', { alpha: false });
-            const W = signCanvas.width = 2000;
-            const H = signCanvas.height = 3000;
-            const centerX = W / 2;
-
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, W, H);
-            ctx.fillStyle = '#000000';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            setFont(ctx, 210, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
-            ctx.fillText('HOW WAS YOUR', centerX, 220);
-            ctx.fillText('EXPERIENCE?', centerX, 450);
-            drawDownArrow(ctx, centerX, 570, 90, 80, 24, '#000000');
-
-            setFont(ctx, 116, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
-            ctx.fillText('SCAN WITH YOUR PHONE', centerX, 800);
-
-            const qrSize = 1320;
-            const qrX = (W - qrSize) / 2;
-            const qrY = 1015;
-            ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
-
-            setFont(ctx, 150, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
-            ctx.fillStyle = '#000000';
-            ctx.fillText('TAKES 5 SECONDS', centerX, 2680);
-
-            setFont(ctx, 118, true, true, 'Anton, Impact, sans-serif');
-            ctx.fillStyle = '#d100ff';
-            ctx.fillText('FLASHFEEDBACK', centerX, 2855);
-
+            const signCanvas = drawFlashFeedbackQrSignTemplate(qrImage, businessName);
             return signCanvas.toDataURL('image/png');
-
-            function setFont(context, sizePx, bold, italic, family) {
-                context.font = `${italic ? 'italic ' : ''}${bold ? '700 ' : ''}${Math.round(sizePx)}px ${family}`;
-            }
-
-            function drawDownArrow(context, x, y, headHeight, tailLength, thickness, color) {
-                context.fillStyle = color;
-                const headTop = y + tailLength;
-                context.beginPath();
-                context.moveTo(x - thickness / 2, y);
-                context.lineTo(x + thickness / 2, y);
-                context.lineTo(x + thickness / 2, headTop);
-                context.lineTo(x + headHeight / 2, headTop);
-                context.lineTo(x, headTop + headHeight);
-                context.lineTo(x - headHeight / 2, headTop);
-                context.lineTo(x - thickness / 2, headTop);
-                context.closePath();
-                context.fill();
-            }
         }
 
         async function showPublicQrSignForLocation(locationId) {
@@ -10557,9 +10635,11 @@
             document.body.style.background = '#151b23';
 
             let locationName = 'Location';
+            let businessName = '';
             try {
                 const location = await getLocationById(locationId);
                 locationName = location?.name || locationName;
+                businessName = location?.business_name || businessName;
             } catch (_) {}
             const safeLocationName = String(locationName).replace(/[&<>"']/g, (char) => ({
                 '&': '&amp;',
@@ -10589,7 +10669,7 @@
             document.body.appendChild(shell);
 
             try {
-                const dataUrl = await createQrSignImageDataUrl(locationId);
+                const dataUrl = await createQrSignImageDataUrl(locationId, businessName);
                 const img = document.getElementById('publicQrSignImage');
                 const status = document.getElementById('publicQrSignStatus');
                 img.src = dataUrl;
@@ -10679,42 +10759,8 @@
             try { await qrImage.decode(); } catch (_) {}
           }
 
-		  // --- 2:3 portrait sticker canvas for 2" x 3" output ---
-		  var signCanvas = document.createElement('canvas');
-		  var ctx = signCanvas.getContext('2d', { alpha: false });
-
-		  const W = signCanvas.width = 2000;
-		  const H = signCanvas.height = 3000;
-		  const centerX = W / 2;
-
-		  ctx.fillStyle = '#ffffff';
-		  ctx.fillRect(0, 0, W, H);
-
-          ctx.fillStyle = '#000000';
-		  ctx.textAlign = 'center';
-		  ctx.textBaseline = 'middle';
-
-                    setFont(ctx, 210, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
-          ctx.fillText('HOW WAS YOUR', centerX, 220);
-          ctx.fillText('EXPERIENCE?', centerX, 450);
-
-          drawDownArrow(ctx, centerX, 570, 90, 80, 24, '#000000');
-
-          setFont(ctx, 116, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
-          ctx.fillText('SCAN WITH YOUR PHONE', centerX, 800);
-
-		  const qrSize = 1320;
-		  const qrX = (W - qrSize) / 2;
-		  const qrY = 1015;
-		  ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
-
-          setFont(ctx, 150, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
-          ctx.fillStyle = '#000000';
-          ctx.fillText('TAKES 5 SECONDS', centerX, 2680);
-
-          setFont(ctx, 118, true, true, 'Anton, Impact, sans-serif');
-          ctx.fillStyle = '#d100ff';
-          ctx.fillText('FLASHFEEDBACK', centerX, 2855);
+		  // --- 2:3 portrait sticker/insert canvas for 2" x 3" output ---
+		  const signCanvas = drawFlashFeedbackQrSignTemplate(qrImage, currentUser?.businessName || window.demoAccount?.businessName);
 
 		  // --- Preview image (PNG) ---
 		  const img = document.createElement('img');
@@ -10736,25 +10782,6 @@
 		    source: 'business_dashboard'
 		  });
 
-		  // --- Helpers ---
-		  function setFont(context, sizePx, bold, italic, family) {
-			context.font = `${italic ? 'italic ' : ''}${bold ? '700 ' : ''}${Math.round(sizePx)}px ${family}`;
-		  }
-
-          function drawDownArrow(context, x, y, headHeight, tailLength, thickness, color) {
-            context.fillStyle = color;
-            var headTop = y + tailLength;
-            context.beginPath();
-            context.moveTo(x - thickness / 2, y);
-            context.lineTo(x + thickness / 2, y);
-            context.lineTo(x + thickness / 2, headTop);
-            context.lineTo(x + headHeight / 2, headTop);
-            context.lineTo(x, headTop + headHeight);
-            context.lineTo(x - headHeight / 2, headTop);
-            context.lineTo(x - thickness / 2, headTop);
-            context.closePath();
-            context.fill();
-          }
 		}
 
 
