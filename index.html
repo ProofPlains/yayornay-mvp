@@ -2976,12 +2976,103 @@
 		.loc-edit-input { background:#1f1f25; color:#eae7ff; border:1px solid rgba(167,139,250,.35); border-radius:8px; padding:6px 10px; min-width: 220px; }
 		.loc-edit-link, .loc-edit-save, .loc-edit-cancel { cursor:pointer; text-decoration:underline; }
 		.loc-edit-save, .loc-edit-cancel { font-size: 0.95rem; }
-		.location-card {
-		  padding: 16px;
-		  background: #0d1117;
-		  border: 1px solid var(--ff-border) !important;
+		.locations-workspace {
+		  display: grid;
+		  gap: 16px;
+		}
+		.locations-header {
+		  display: flex;
+		  align-items: flex-start;
+		  justify-content: space-between;
+		  gap: 16px;
+		  flex-wrap: wrap;
+		}
+		.locations-title {
+		  color: var(--ff-text) !important;
+		  font-size: 28px;
+		  line-height: 1.15;
+		  font-weight: 800;
+		  letter-spacing: 0;
+		  margin: 0;
+		}
+		.locations-subtitle {
+		  color: var(--ff-text-muted);
+		  margin: 6px 0 0;
+		  max-width: 720px;
+		  line-height: 1.45;
+		}
+		.locations-add-panel {
+		  display: grid;
+		  grid-template-columns: minmax(220px, 1fr) auto;
+		  gap: 10px;
+		  align-items: center;
+		  padding: 14px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 12px;
+		  background:
+		    linear-gradient(135deg, color-mix(in oklab, var(--ff-brand-1) 7%, transparent), transparent 45%),
+		    color-mix(in oklab, var(--ff-surface) 96%, black);
+		  box-shadow: 0 14px 32px rgba(0,0,0,.16);
+		}
+		.locations-add-panel input {
+		  width: 100%;
+		  min-height: 42px;
+		  padding: 10px 12px;
+		  border: 1px solid rgba(167,139,250,.35);
 		  border-radius: 8px;
-		  margin-bottom: 12px;
+		  background: color-mix(in oklab, var(--ff-surface) 92%, black);
+		  color: var(--ff-text);
+		}
+		.locations-add-panel input::placeholder {
+		  color: var(--ff-text-muted);
+		}
+		.locations-summary-strip {
+		  display: grid;
+		  grid-template-columns: repeat(3, minmax(0, 1fr));
+		  gap: 10px;
+		}
+		.locations-summary-item {
+		  padding: 12px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 12px;
+		  background:
+		    linear-gradient(135deg, color-mix(in oklab, var(--ff-brand-1) 7%, transparent), transparent 45%),
+		    color-mix(in oklab, var(--ff-surface) 96%, black);
+		  box-shadow: 0 14px 32px rgba(0,0,0,.16);
+		}
+		.locations-summary-item span {
+		  display: block;
+		  color: var(--ff-text-muted);
+		  font-size: 12px;
+		  margin-bottom: 4px;
+		}
+		.locations-summary-item strong {
+		  color: var(--ff-text);
+		  font-size: 18px;
+		  line-height: 1.2;
+		}
+		.locations-list {
+		  display: grid;
+		  gap: 10px;
+		}
+		.location-card {
+		  padding: 0;
+		  background:
+		    linear-gradient(135deg, color-mix(in oklab, var(--ff-brand-1) 7%, transparent), transparent 45%),
+		    color-mix(in oklab, var(--ff-surface) 96%, black);
+		  border: 1px solid var(--ff-border) !important;
+		  border-radius: 12px;
+		  margin-bottom: 0;
+		  overflow: hidden;
+		  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+		}
+		.location-card:hover,
+		.location-card:focus-within {
+		  border-color: color-mix(in oklab, var(--ff-brand-2) 62%, var(--ff-border)) !important;
+		  box-shadow: 0 10px 22px rgba(0,0,0,.18);
+		}
+		.location-card.is-inactive {
+		  opacity: .78;
 		}
 		.location-card > .location-name {
 		  display: inline-flex;
@@ -3000,11 +3091,109 @@
 		  align-items: center;
 		  gap: 12px;
 		  flex-wrap: wrap;
+		  padding: 14px;
+		}
+		.location-card-main {
+		  min-width: 220px;
+		  display: grid;
+		  gap: 7px;
+		}
+		.location-name-row {
+		  display: flex;
+		  align-items: center;
+		  gap: 8px;
+		  flex-wrap: wrap;
+		}
+		.location-card .location-name {
+		  display: inline-flex;
+		  align-items: center;
+		  gap: 8px;
+		  color: var(--ff-text);
+		  font-size: 18px;
+		  font-weight: 800;
+		  line-height: 1.25;
+		  letter-spacing: 0;
+		}
+		.location-meta-row {
+		  display: flex;
+		  align-items: center;
+		  gap: 8px;
+		  flex-wrap: wrap;
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		}
+		.location-status-chip {
+		  display: inline-flex;
+		  align-items: center;
+		  min-height: 24px;
+		  padding: 4px 9px;
+		  border-radius: 999px;
+		  border: 1px solid rgba(167,139,250,.35);
+		  color: var(--ff-text);
+		  background: rgba(255,255,255,0.045);
+		  font-size: 12px;
+		  font-weight: 800;
+		}
+		.location-status-chip.is-active {
+		  border-color: rgba(34,197,94,.45);
+		  color: #bbf7d0;
+		}
+		.location-status-chip.is-inactive {
+		  border-color: rgba(148,163,184,.35);
+		  color: var(--ff-text-muted);
+		}
+		.location-status-chip.is-pending {
+		  border-color: rgba(250,204,21,.45);
+		  color: #fde68a;
+		}
+		.location-status-chip.is-google {
+		  border-color: rgba(96,165,250,.38);
+		  color: #bfdbfe;
+		}
+		.location-status-chip.is-google.is-off {
+		  border-color: rgba(148,163,184,.28);
+		  color: var(--ff-text-muted);
+		}
+		.location-actions {
+		  display: flex;
+		  align-items: center;
+		  justify-content: flex-end;
+		  gap: 8px;
+		  flex-wrap: wrap;
+		}
+		.location-action-link {
+		  display: inline-flex;
+		  align-items: center;
+		  justify-content: center;
+		  min-height: 34px;
+		  padding: 7px 10px;
+		  border: 1px solid rgba(167,139,250,.3);
+		  border-radius: 8px;
+		  color: #a78bfa;
+		  background: rgba(167,139,250,.06);
+		  font-size: 13px;
+		  font-weight: 700;
+		  text-decoration: none;
+		  cursor: pointer;
+		}
+		.location-action-link:hover {
+		  border-color: rgba(167,139,250,.55);
+		  background: rgba(167,139,250,.12);
+		  text-decoration: none;
+		}
+		.location-action-link:focus-visible {
+		  outline: 3px solid rgba(167,139,250,.42);
+		  outline-offset: 2px;
+		}
+		.location-google-panel {
+		  border-top: 1px solid var(--ff-border);
+		  padding: 14px;
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
 		}
 		.google-routing-settings {
-		  margin-top: 14px;
-		  padding-top: 14px;
-		  border-top: 1px solid var(--ff-border);
+		  margin-top: 0;
+		  padding-top: 0;
+		  border-top: 0;
 		  display: grid;
 		  gap: 10px;
 		}
@@ -3019,7 +3208,7 @@
 		  padding: 10px 12px;
 		  border: 1px solid rgba(167,139,250,.35);
 		  border-radius: 8px;
-		  background: #1f1f25;
+		  background: color-mix(in oklab, var(--ff-surface) 92%, black);
 		  color: var(--ff-text);
 		}
 		.google-routing-settings details {
@@ -3051,6 +3240,32 @@
 		.google-routing-status {
 		  color: var(--ff-text-muted);
 		  font-size: 13px;
+		}
+		.locations-demo-notice,
+		.locations-empty-state {
+		  border: 1px solid var(--ff-border);
+		  border-radius: 8px;
+		  padding: 15px;
+		  color: var(--ff-text-muted);
+		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
+		  text-align: center;
+		}
+		@media (max-width: 720px) {
+		  .locations-add-panel,
+		  .locations-summary-strip {
+		    grid-template-columns: 1fr;
+		  }
+		  .locations-add-panel .btn,
+		  .location-actions,
+		  .location-action-link {
+		    width: 100%;
+		  }
+		  .location-actions {
+		    justify-content: stretch;
+		  }
+		  .location-card-header {
+		    align-items: stretch;
+		  }
 		}
 
 		/* === Emoji-centric dashboard header === */
@@ -5057,13 +5272,20 @@
             </section>
 
             <section id="locations" class="content-section">
-                <h2 style="font-size: 28px; color: #2d3748; margin-bottom: 30px; font-weight: 700;">Location Management</h2>
-                <div class="form-group">
-                    <input type="text" id="newLocationInput" placeholder="Enter location name" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; margin-right: 10px; width: 200px;">
-                    <button class="btn" onclick="addLocation()">Add Location</button>
+                <div class="locations-workspace">
+                    <div class="locations-header">
+                        <div>
+                            <h2 class="locations-title">Locations</h2>
+                            <p class="locations-subtitle">Manage the places customers can leave feedback and decide where Google review routing is active.</p>
+                        </div>
+                    </div>
+                    <div class="locations-add-panel">
+                        <input type="text" id="newLocationInput" placeholder="Add a location name" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addLocation(); }">
+                        <button class="btn" type="button" onclick="addLocation()">Add Location</button>
+                    </div>
+                    <div id="locationsSummaryStrip" class="locations-summary-strip"></div>
+                    <div id="locationsList" class="locations-list"></div>
                 </div>
-                
-                <div id="locationsList"></div>
             </section>
 
             <section id="qr" class="content-section">
@@ -6662,11 +6884,19 @@
 		    // Ensure subsequent clicks call with the new desired value
 		    toggle.setAttribute('onclick', "return toggleLocationActive('" + id + "', " + (!isActive) + ")");
 		  }
+
+		  row.classList.toggle('is-inactive', !isActive);
+		  const statusChip = row.querySelector('.location-status-chip.is-active, .location-status-chip.is-inactive');
+		  if (statusChip) {
+		    statusChip.textContent = isActive ? 'Active' : 'Inactive';
+		    statusChip.classList.toggle('is-active', isActive);
+		    statusChip.classList.toggle('is-inactive', !isActive);
+		  }
 		
 		  // Add/remove the Inactive badge next to the name
 		  const nameSpan = row.querySelector('.location-name');
 		  const badge = nameSpan?.querySelector('.badge');
-		  if (!isActive && nameSpan && !badge) {
+		  if (!statusChip && !isActive && nameSpan && !badge) {
 		    const b = document.createElement('span');
 		    b.className = 'badge';
 		    b.style.cssText = 'margin-left:8px; padding:2px 6px; border:1px solid rgba(167,139,250,.4); border-radius:6px; font-size:12px; opacity:.85;';
@@ -6683,6 +6913,7 @@
         var selectedSentiment = null;
         var currentLocation = 'main';
         var currentUser = null;
+        var expandedGoogleRoutingLocationId = null;
         var userDatabase = {};
         var ffQrCode = null;
         var timezoneOptionsCache = [];
@@ -8714,6 +8945,10 @@
 		function openGoogleRoutingSettingsFromQr() {
 		  const locationId = getSelectedQrTrackingLocationId();
 		  showSection('locations');
+		  if (locationId) {
+		    expandedGoogleRoutingLocationId = locationId;
+		    updateLocationsList();
+		  }
 		  setTimeout(() => {
 		    const target = locationId
 		      ? (document.getElementById('googleReviewEnabled-' + locationId) || document.getElementById('googleReviewUrl-' + locationId))
@@ -10341,6 +10576,7 @@
 		    });
 		    currentUser.locations[id].google_review_url = result.location?.google_review_url || '';
 		    currentUser.locations[id].google_review_routing_enabled = result.location?.google_review_routing_enabled === true;
+		    refreshLocationGoogleRoutingSummary(id);
 		    renderQrGoogleRoutingPrompt();
 		    if (status) {
 		      status.textContent = 'Saved';
@@ -10353,7 +10589,127 @@
 		  return false;
 		}
 
-        function updateLocationsList() {
+        function getLocationFeedbackCount(location) {
+		  return Array.isArray(location?.feedback) ? location.feedback.length : 0;
+		}
+
+		function getLocationRoutingMarkup(id, location) {
+		  var googleReviewUrl = escapePricingHtml(location.google_review_url || '');
+		  var googleReviewEnabled = location.google_review_routing_enabled === true;
+		  return '' +
+		    '<div class="location-google-panel">' +
+		      '<div class="google-routing-settings">' +
+		        '<div>' +
+		          '<label for="googleReviewUrl-' + id + '">Google review link</label>' +
+		          '<input id="googleReviewUrl-' + id + '" type="url" placeholder="https://g.page/r/..." value="' + googleReviewUrl + '">' +
+		          '<div class="settings-helper" style="margin-top:6px;">Invite happy customers to leave a Google review after they submit feedback. Neutral and negative customers will still be able to access your Google review page, but their experience will remain focused on private feedback first.</div>' +
+		        '</div>' +
+		        '<details>' +
+		          '<summary>How to find your Google review link</summary>' +
+		          '<ol>' +
+		            '<li>Open your Google Business Profile.</li>' +
+		            '<li>Choose the location you want reviews for.</li>' +
+		            '<li>Select Ask for reviews or Share review form.</li>' +
+		            '<li>Copy the review link and paste it here.</li>' +
+		            '<li>Use the link that opens Google&rsquo;s review form for this exact location.</li>' +
+		          '</ol>' +
+		        '</details>' +
+		        '<label class="google-routing-toggle" for="googleReviewEnabled-' + id + '">' +
+		          '<input id="googleReviewEnabled-' + id + '" type="checkbox"' + (googleReviewEnabled ? ' checked' : '') + '> ' +
+		          '<span>Enable Google review routing for this location</span>' +
+		        '</label>' +
+		        '<div class="google-routing-actions">' +
+		          '<button class="btn" type="button" onclick="return saveGoogleReviewRoutingSettings(\'' + id + '\')">Save Google routing</button>' +
+		          '<span id="googleReviewStatus-' + id + '" class="google-routing-status"></span>' +
+		        '</div>' +
+		      '</div>' +
+		    '</div>';
+		}
+
+		function getLocationCardMarkup(id, location, options = {}) {
+		  var isDemo = options.demo === true;
+		  var safeId = escapePricingHtml(id);
+		  var name = escapePricingHtml(location.name || 'Untitled location');
+		  var isActive = location.is_active !== false;
+		  var pendingDate = location.pending_deactivation_at ? formatPlanDate(location.pending_deactivation_at) : '';
+		  var feedbackCount = getLocationFeedbackCount(location);
+		  var googleReviewEnabled = location.google_review_routing_enabled === true;
+		  var googleReviewUrl = String(location.google_review_url || '').trim();
+		  var routingConfigured = googleReviewEnabled && isValidGoogleReviewUrl(googleReviewUrl);
+		  var isExpanded = expandedGoogleRoutingLocationId === id;
+		  var statusChip = pendingDate
+		    ? '<span class="location-status-chip is-pending">Deactivates ' + escapePricingHtml(pendingDate) + '</span>'
+		    : '<span class="location-status-chip ' + (isActive ? 'is-active' : 'is-inactive') + '">' + (isActive ? 'Active' : 'Inactive') + '</span>';
+		  var routingChip = routingConfigured
+		    ? '<span class="location-status-chip is-google">Google routing on</span>'
+		    : '<span class="location-status-chip is-google is-off">Google routing off</span>';
+		  var editAction = isDemo
+		    ? '<a href="#" class="location-action-link location-edit" onclick="alert(\'Editing is disabled in Demo Mode\'); return false;">Edit</a>'
+		    : '<a href="#" class="location-action-link location-edit" onclick="return renameLocation(\'' + id + '\')">Edit</a>';
+		  var toggleAction = isDemo
+		    ? '<span class="location-action-link location-toggle" title="Unavailable in Demo Mode">' + (isActive ? 'Deactivate' : 'Activate') + '</span>'
+		    : '<a href="#" class="location-action-link location-toggle" data-active="' + String(isActive) + '" onclick="return toggleLocationActive(\'' + id + '\',' + (!isActive) + ')">' + (isActive ? 'Deactivate' : 'Activate') + '</a>';
+		  var googleAction = isDemo
+		    ? '<span class="location-action-link" title="Unavailable in Demo Mode">Google reviews</span>'
+		    : '<a href="#" class="location-action-link" aria-expanded="' + String(isExpanded) + '" onclick="return toggleLocationGoogleRouting(\'' + id + '\')">' + (isExpanded ? 'Hide Google reviews' : 'Google reviews') + '</a>';
+		  return '' +
+		    '<div class="location-card' + (isActive ? '' : ' is-inactive') + '" data-location-id="' + safeId + '">' +
+		      '<div class="location-card-header">' +
+		        '<div class="location-card-main">' +
+		          '<div class="location-name-row">' +
+		            '<span class="location-name">' + name + '</span>' +
+		            statusChip +
+		            routingChip +
+		          '</div>' +
+		          '<div class="location-meta-row">' +
+		            '<span>' + feedbackCount + ' feedback ' + (feedbackCount === 1 ? 'entry' : 'entries') + '</span>' +
+		          '</div>' +
+		        '</div>' +
+		        '<div class="location-actions">' +
+		          editAction +
+		          toggleAction +
+		          googleAction +
+		        '</div>' +
+		      '</div>' +
+		      (isExpanded && !isDemo ? getLocationRoutingMarkup(id, location) : '') +
+		    '</div>';
+		}
+
+		function renderLocationsSummary(locationsMap, isDemo = false) {
+		  var summary = document.getElementById('locationsSummaryStrip');
+		  var locations = Object.values(locationsMap || {});
+		  var activeCount = locations.filter((location) => location.is_active !== false).length;
+		  var inactiveCount = locations.length - activeCount;
+		  var routingCount = locations.filter((location) => {
+		    return location.google_review_routing_enabled === true && isValidGoogleReviewUrl(String(location.google_review_url || '').trim());
+		  }).length;
+		  if (summary) {
+		    summary.innerHTML = '' +
+		      '<div class="locations-summary-item"><span>Active locations</span><strong>' + activeCount + '</strong></div>' +
+		      '<div class="locations-summary-item"><span>Inactive</span><strong>' + inactiveCount + '</strong></div>' +
+		      '<div class="locations-summary-item"><span>Google routing</span><strong>' + routingCount + ' on</strong></div>';
+		  }
+		}
+
+		function toggleLocationGoogleRouting(id, forceOpen = false) {
+		  expandedGoogleRoutingLocationId = forceOpen || expandedGoogleRoutingLocationId !== id ? id : null;
+		  updateLocationsList();
+		  return false;
+		}
+
+		function refreshLocationGoogleRoutingSummary(id) {
+		  if (currentUser?.locations) renderLocationsSummary(currentUser.locations, false);
+		  const row = document.querySelector('[data-location-id="' + id + '"]');
+		  const location = currentUser?.locations?.[id];
+		  if (!row || !location) return;
+		  const chip = row.querySelector('.location-status-chip.is-google');
+		  if (!chip) return;
+		  const configured = location.google_review_routing_enabled === true && isValidGoogleReviewUrl(String(location.google_review_url || '').trim());
+		  chip.textContent = configured ? 'Google routing on' : 'Google routing off';
+		  chip.classList.toggle('is-off', !configured);
+		}
+
+        function updateLocationsListLegacy() {
 		  var container = document.getElementById('locationsList');
 		  if (!container) return;
 		
@@ -10472,6 +10828,43 @@
 		
 		      container.appendChild(div);
 		    });
+		  }
+		}
+
+        function updateLocationsList() {
+		  var container = document.getElementById('locationsList');
+		  if (!container) return;
+		  container.innerHTML = '';
+
+		  if (currentView === 'admin-demo' && window.demoAccount) {
+		    var demoData = {
+		      demoRestaurant: { name: 'Demo Restaurant', is_active: true, google_review_url: '', google_review_routing_enabled: false, feedback: [] },
+		      mainStreetCafe: { name: 'Main Street Cafe', is_active: false, google_review_url: '', google_review_routing_enabled: false, feedback: [] },
+		      downtownStore: { name: 'Downtown Store', is_active: true, google_review_url: '', google_review_routing_enabled: false, feedback: [] }
+		    };
+		    renderLocationsSummary(demoData, true);
+		    container.innerHTML = Object.keys(demoData).map(function(id) {
+		      return getLocationCardMarkup(id, demoData[id], { demo: true });
+		    }).join('');
+
+		    var notice = document.createElement('div');
+		    notice.className = 'locations-demo-notice';
+		    notice.innerHTML = '<strong>Demo Mode:</strong> Location management is available in the full version.';
+		    container.appendChild(notice);
+		    return;
+		  }
+
+		  if (currentUser) {
+		    var locationsMap = currentUser.locations || {};
+		    renderLocationsSummary(locationsMap, false);
+		    var ids = Object.keys(locationsMap);
+		    if (!ids.length) {
+		      container.innerHTML = '<div class="locations-empty-state">No locations yet. Add your first location above.</div>';
+		      return;
+		    }
+		    container.innerHTML = ids.map(function(id) {
+		      return getLocationCardMarkup(id, locationsMap[id]);
+		    }).join('');
 		  }
 		}
 
@@ -10937,6 +11330,7 @@
 		  addLocation,
 		  renameLocation,
 		  toggleLocationActive,
+		  toggleLocationGoogleRouting,
 		  saveGoogleReviewRoutingSettings,
 		  updateLocationsList,
 		  updateFeedback,
