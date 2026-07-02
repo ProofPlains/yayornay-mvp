@@ -1042,7 +1042,69 @@
       context.fill();
     }
 
-    async function createQrSignDataUrl(locationId) {
+    function getQrSignBusinessName(businessName) {
+      const cleanName = String(businessName || '').trim();
+      return cleanName || 'this business';
+    }
+
+    function drawFittedCanvasText(context, text, x, y, maxWidth, startSize, minSize, bold, italic, family) {
+      const rawText = String(text || '').trim();
+      let size = startSize;
+      setCanvasFont(context, size, bold, italic, family);
+      while (size > minSize && context.measureText(rawText).width > maxWidth) {
+        size -= 2;
+        setCanvasFont(context, size, bold, italic, family);
+      }
+
+      if (context.measureText(rawText).width <= maxWidth) {
+        context.fillText(rawText, x, y);
+        return;
+      }
+
+      const ellipsis = '...';
+      let fitted = rawText;
+      while (fitted.length > 0 && context.measureText(fitted + ellipsis).width > maxWidth) {
+        fitted = fitted.slice(0, -1).trimEnd();
+      }
+      context.fillText((fitted || rawText.slice(0, 1)) + ellipsis, x, y);
+    }
+
+    function drawPoweredByWordmark(context, x, y, maxWidth) {
+      const prefix = 'Powered by ';
+      const wordmark = 'FLASHFEEDBACK';
+      let prefixSize = 67;
+      let wordmarkSize = 68;
+      const prefixFamily = 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif';
+      const wordmarkFamily = 'Anton, Impact, sans-serif';
+
+      function measureLine() {
+        setCanvasFont(context, prefixSize, true, false, prefixFamily);
+        const prefixWidth = context.measureText(prefix).width;
+        setCanvasFont(context, wordmarkSize, false, true, wordmarkFamily);
+        const wordmarkWidth = context.measureText(wordmark).width;
+        return { prefixWidth, wordmarkWidth, totalWidth: prefixWidth + wordmarkWidth };
+      }
+
+      let measurements = measureLine();
+      while (measurements.totalWidth > maxWidth && wordmarkSize > 53) {
+        prefixSize -= 1;
+        wordmarkSize -= 1;
+        measurements = measureLine();
+      }
+
+      let cursorX = x - measurements.totalWidth / 2;
+      setCanvasFont(context, prefixSize, true, false, prefixFamily);
+      context.fillStyle = '#4b5563';
+      context.fillText(prefix, cursorX + measurements.prefixWidth / 2, y);
+      cursorX += measurements.prefixWidth;
+
+      setCanvasFont(context, wordmarkSize, false, true, wordmarkFamily);
+      context.fillStyle = '#4b5563';
+      context.fillText(wordmark, cursorX + measurements.wordmarkWidth / 2, y);
+      context.fillStyle = '#4b5563';
+    }
+
+    async function createQrSignDataUrl(locationId, businessName) {
       const qrDataUrl = await createStyledQrDataUrl(locationId);
       const qrImage = new Image();
       qrImage.crossOrigin = 'anonymous';
@@ -1056,6 +1118,7 @@
       const width = signCanvas.width = 2000;
       const height = signCanvas.height = 3000;
       const centerX = width / 2;
+      const safeBusinessName = getQrSignBusinessName(businessName);
 
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, width, height);
@@ -1074,16 +1137,19 @@
 
       const qrSize = 1320;
       const qrX = (width - qrSize) / 2;
-      const qrY = 1015;
+      const qrY = 945;
       ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
 
-      setCanvasFont(ctx, 150, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+      setCanvasFont(ctx, 88, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
       ctx.fillStyle = '#000000';
-      ctx.fillText('TAKES 5 SECONDS', centerX, 2680);
+      ctx.fillText('NO ACCOUNT NEEDED', centerX, 2415);
 
-      setCanvasFont(ctx, 118, true, true, 'Anton, Impact, sans-serif');
-      ctx.fillStyle = '#d100ff';
-      ctx.fillText('FLASHFEEDBACK', centerX, 2855);
+      setCanvasFont(ctx, 150, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+      ctx.fillText('TAKES 5 SECONDS', centerX, 2605);
+
+      ctx.fillStyle = '#4b5563';
+      drawFittedCanvasText(ctx, `Private feedback for ${safeBusinessName}`, centerX, 2765, 1720, 85, 58, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+      drawPoweredByWordmark(ctx, centerX, 2875, 1720);
 
       return signCanvas.toDataURL('image/png');
     }
@@ -1138,7 +1204,7 @@
       urlText.textContent = customerFeedbackUrl(locationId);
 
       try {
-        const dataUrl = await createQrSignDataUrl(locationId);
+        const dataUrl = await createQrSignDataUrl(locationId, business.name);
         const safeBusiness = String(business.name || 'business').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const safeLocation = String(location.name || 'location').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const filename = `flashfeedback-${safeBusiness || 'business'}-${safeLocation || 'location'}-qr-sign.png`;
