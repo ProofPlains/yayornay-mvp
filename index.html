@@ -3239,6 +3239,8 @@
 		  gap: 8px;
 		  align-content: space-between;
 		  padding: 16px;
+		  min-width: 0;
+		  overflow: hidden;
 		  color: inherit;
 		  font: inherit;
 		  text-align: left;
@@ -3285,6 +3287,8 @@
 		  display: flex;
 		  align-items: baseline;
 		  gap: 8px;
+		  min-width: 0;
+		  flex-wrap: wrap;
 		  color: var(--ff-text);
 		  font-size: 34px;
 		  font-weight: 900;
@@ -3292,6 +3296,7 @@
 		}
 
 		.feedback-summary-value .feedback-summary-emoji {
+		  flex: 0 0 auto;
 		  font-size: 30px;
 		  line-height: 1;
 		}
@@ -3569,6 +3574,17 @@
 		  .feedback-toolbar,
 		  .feedback-summary-grid {
 		    grid-template-columns: repeat(2, minmax(0, 1fr));
+		  }
+		}
+
+		@media (min-width: 761px) and (max-width: 1040px) {
+		  .feedback-summary-value {
+		    font-size: 30px;
+		    gap: 6px;
+		  }
+
+		  .feedback-summary-value .feedback-summary-emoji {
+		    font-size: 26px;
 		  }
 		}
 
@@ -4198,9 +4214,28 @@
 	  .sheet p{line-height:1.55;color:#c9c9d1;margin:0 0 10px}
 	  .sheet .meta{color:#9aa;font-size:12px;margin-bottom:8px}
 	  .sheet .close-btn{display:inline-block;margin-top:6px;padding:10px 14px;border:0;border-radius:10px;background:#9b5de5;color:#fff;font-weight:600;cursor:pointer}
-	  .ff-footer{ text-align:center;font-size:14px;margin-top:24px;color:#9aa }
+	  .ff-footer{
+	    box-sizing:border-box;
+	    width:100%;
+	    max-width:1400px;
+	    margin:24px auto 0;
+	    padding:0 16px calc(16px + env(safe-area-inset-bottom, 0px));
+	    text-align:center;
+	    font-size:14px;
+	    color:#9aa;
+	  }
 	  .ff-footer a{ color:#b88aff;text-decoration:none }
 	  .ff-footer a:hover{ text-decoration:underline }
+	  @media (min-width: 761px) {
+	    body.is-admin-shell .ff-footer{
+	      padding-left:264px;
+	    }
+	  }
+	  @media (max-width: 760px) {
+	    body.is-admin-shell .ff-footer{
+	      padding-bottom:calc(104px + env(safe-area-inset-bottom, 0px));
+	    }
+	  }
 	  @media (min-width: 768px) {
 		  .sheet{
 		    left:50%;
@@ -7211,6 +7246,7 @@
         }
 
         function hideAllScreens() {
+		  document.body.classList.remove('is-admin-shell');
 		  var screens = [
 		    'welcomeScreen',
 		    'signupScreen',
@@ -7913,6 +7949,7 @@
 			
             var adminView = document.getElementById('adminView');
             adminView.style.display = 'flex';
+            document.body.classList.add('is-admin-shell');
             
             currentView = 'admin';
             if (currentUser) window.demoAccount = null;
@@ -9420,6 +9457,7 @@
             hideAllScreens();
             var adminView = document.getElementById('adminView');
             adminView.style.display = 'flex';
+            document.body.classList.add('is-admin-shell');
             
             currentUser = null;
             currentView = 'admin-demo';
