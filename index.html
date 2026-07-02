@@ -10515,16 +10515,16 @@
             const qrY = 945;
             ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
 
-            setFont(ctx, 88, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
-            ctx.fillStyle = '#000000';
-            ctx.fillText('NO ACCOUNT NEEDED', centerX, 2415);
-
             setFont(ctx, 150, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
-            ctx.fillText('TAKES 5 SECONDS', centerX, 2605);
+            ctx.fillStyle = '#000000';
+            ctx.fillText('TAKES 5 SECONDS', centerX, 2440);
+
+            setFont(ctx, 88, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+            ctx.fillText('NO ACCOUNT NEEDED', centerX, 2635);
 
             ctx.fillStyle = '#4b5563';
-            drawFittedText(`Private feedback for ${safeBusinessName}`, centerX, 2765, 1720, 85, 58, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
-            drawPoweredByWordmark(centerX, 2875, 1720);
+            drawFittedText(`Private feedback for ${safeBusinessName}`, centerX, 2790, 1720, 85, 58, true, false, 'Quicksand, "Arial Rounded MT Bold", Arial, sans-serif');
+            drawPoweredByWordmark(centerX, 2890, 1720);
 
             return signCanvas;
 
