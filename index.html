@@ -3251,11 +3251,55 @@
 		  text-align: center;
 		}
 		@media (max-width: 720px) {
-		  .locations-add-panel,
-		  .locations-summary-strip {
-		    grid-template-columns: 1fr;
+		  .locations-workspace {
+		    gap: 10px;
 		  }
-		  .locations-add-panel .btn,
+		  .locations-header {
+		    gap: 6px;
+		  }
+		  .locations-title {
+		    font-size: 26px;
+		  }
+		  .locations-subtitle {
+		    display: none;
+		  }
+		  .locations-add-panel {
+		    grid-template-columns: minmax(0, 1fr) auto;
+		    gap: 8px;
+		    padding: 0;
+		    border: 0;
+		    border-radius: 0;
+		    background: transparent;
+		    box-shadow: none;
+		  }
+		  .locations-add-panel input {
+		    min-height: 40px;
+		    padding: 9px 10px;
+		  }
+		  .locations-add-panel .btn {
+		    width: auto;
+		    min-height: 40px;
+		    padding: 9px 12px;
+		    white-space: nowrap;
+		  }
+		  .locations-summary-strip {
+		    grid-template-columns: repeat(3, minmax(0, 1fr));
+		    gap: 6px;
+		  }
+		  .locations-summary-item {
+		    min-width: 0;
+		    padding: 8px;
+		    border-radius: 10px;
+		    box-shadow: none;
+		  }
+		  .locations-summary-item span {
+		    font-size: 10px;
+		    line-height: 1.15;
+		    margin-bottom: 3px;
+		  }
+		  .locations-summary-item strong {
+		    font-size: 16px;
+		  }
 		  .location-actions,
 		  .location-action-link {
 		    width: 100%;
