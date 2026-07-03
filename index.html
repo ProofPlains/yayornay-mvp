@@ -3490,6 +3490,15 @@
 		  gap: 12px;
 		}
 
+		.feedback-summary-strip {
+		  position: relative;
+		  min-width: 0;
+		}
+
+		.feedback-summary-scroll-cue {
+		  display: none;
+		}
+
 		.feedback-summary-card,
 		.feedback-distribution,
 		.feedback-list-panel {
@@ -3914,6 +3923,47 @@
 		    padding: 1px 1px 7px;
 		    scroll-snap-type: x proximity;
 		    scrollbar-width: none;
+		  }
+
+		  .feedback-summary-strip::after {
+		    content: "";
+		    position: absolute;
+		    top: 0;
+		    right: -1px;
+		    bottom: 7px;
+		    width: 42px;
+		    pointer-events: none;
+		    border-radius: 0 10px 10px 0;
+		    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--ff-surface) 88%, black) 78%);
+		  }
+
+		  .feedback-summary-scroll-cue {
+		    position: absolute;
+		    right: 7px;
+		    top: 50%;
+		    z-index: 2;
+		    display: grid;
+		    place-items: center;
+		    width: 28px;
+		    height: 28px;
+		    border: 1px solid color-mix(in oklab, var(--ff-brand-2) 58%, var(--ff-border));
+		    border-radius: 999px;
+		    background:
+		      linear-gradient(135deg, color-mix(in oklab, var(--ff-brand-2) 22%, transparent), transparent 55%),
+		      color-mix(in oklab, var(--ff-surface) 92%, black);
+		    color: var(--ff-brand-2);
+		    box-shadow: 0 10px 24px rgba(124,58,237,.28);
+		    transform: translateY(-56%);
+		    pointer-events: none;
+		  }
+
+		  .feedback-summary-scroll-cue::before {
+		    content: "";
+		    width: 8px;
+		    height: 8px;
+		    border-top: 2px solid currentColor;
+		    border-right: 2px solid currentColor;
+		    transform: translateX(-1px) rotate(45deg);
 		  }
 
 		  .feedback-summary-grid::-webkit-scrollbar {
@@ -5306,27 +5356,30 @@
 
                     <div id="feedbackHistoryNotice" class="history-limit-card" style="display:none;"></div>
 
-                    <div class="feedback-summary-grid" aria-label="Feedback summary">
-                        <div class="feedback-summary-card">
-                            <div class="feedback-summary-label">Mood score</div>
-                            <div class="feedback-summary-value"><span id="moodScore">--</span>/100 <span class="feedback-summary-emoji" id="moodEmoji" title="Calculated from emoji feedback">:)</span></div>
-                            <div class="feedback-summary-note" id="moodScoreNote">Based on selected feedback.</div>
+                    <div class="feedback-summary-strip">
+                        <div class="feedback-summary-grid" aria-label="Feedback summary">
+                            <div class="feedback-summary-card">
+                                <div class="feedback-summary-label">Mood score</div>
+                                <div class="feedback-summary-value"><span id="moodScore">--</span>/100 <span class="feedback-summary-emoji" id="moodEmoji" title="Calculated from emoji feedback">:)</span></div>
+                                <div class="feedback-summary-note" id="moodScoreNote">Based on selected feedback.</div>
+                            </div>
+                            <div class="feedback-summary-card">
+                                <div class="feedback-summary-label">Responses</div>
+                                <div class="feedback-summary-value" id="dashboardTotalFeedback">0</div>
+                                <div class="feedback-summary-note" id="dashboardTotalNote">In this view.</div>
+                            </div>
+                            <button class="feedback-summary-card is-clickable" id="dashboardCommentRateCard" type="button" onclick="toggleDashboardQuickFilter('comments')" aria-pressed="false">
+                                <div class="feedback-summary-label">Comment rate</div>
+                                <div class="feedback-summary-value" id="dashboardCommentRate">0%</div>
+                                <div class="feedback-summary-note" id="dashboardCommentNote">0 comments captured.</div>
+                            </button>
+                            <button class="feedback-summary-card is-clickable" id="dashboardAttentionCard" type="button" onclick="toggleDashboardQuickFilter('attention')" aria-pressed="false">
+                                <div class="feedback-summary-label">Needs attention</div>
+                                <div class="feedback-summary-value" id="dashboardAttentionCount">0</div>
+                                <div class="feedback-summary-note" id="dashboardAttentionNote">Neutral or negative responses.</div>
+                            </button>
                         </div>
-                        <div class="feedback-summary-card">
-                            <div class="feedback-summary-label">Responses</div>
-                            <div class="feedback-summary-value" id="dashboardTotalFeedback">0</div>
-                            <div class="feedback-summary-note" id="dashboardTotalNote">In this view.</div>
-                        </div>
-                        <button class="feedback-summary-card is-clickable" id="dashboardCommentRateCard" type="button" onclick="toggleDashboardQuickFilter('comments')" aria-pressed="false">
-                            <div class="feedback-summary-label">Comment rate</div>
-                            <div class="feedback-summary-value" id="dashboardCommentRate">0%</div>
-                            <div class="feedback-summary-note" id="dashboardCommentNote">0 comments captured.</div>
-                        </button>
-                        <button class="feedback-summary-card is-clickable" id="dashboardAttentionCard" type="button" onclick="toggleDashboardQuickFilter('attention')" aria-pressed="false">
-                            <div class="feedback-summary-label">Needs attention</div>
-                            <div class="feedback-summary-value" id="dashboardAttentionCount">0</div>
-                            <div class="feedback-summary-note" id="dashboardAttentionNote">Neutral or negative responses.</div>
-                        </button>
+                        <span class="feedback-summary-scroll-cue" aria-hidden="true"></span>
                     </div>
 
                     <div class="feedback-distribution" aria-label="Mood distribution">
