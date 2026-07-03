@@ -1429,6 +1429,35 @@
 		  color: var(--ff-text);
 		}
 
+		.qr-step-label.is-complete {
+		  display: flex;
+		  flex-wrap: wrap;
+		  gap: 8px;
+		  align-items: center;
+		  color: color-mix(in oklab, var(--ff-text-muted) 78%, var(--ff-text));
+		}
+
+		.qr-step-label.is-complete::after {
+		  content: "Done";
+		  display: inline-grid;
+		  place-items: center;
+		  min-height: 22px;
+		  padding: 3px 9px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 38%, var(--ff-border));
+		  border-radius: 999px;
+		  background: color-mix(in oklab, var(--ff-brand-2) 18%, transparent);
+		  color: var(--ff-text);
+		  font-size: 11px;
+		  font-weight: 900;
+		  letter-spacing: .06em;
+		  line-height: 1;
+		  text-transform: uppercase;
+		}
+
+		.qr-step-label.is-complete strong {
+		  color: color-mix(in oklab, var(--ff-text) 86%, var(--ff-brand-2));
+		}
+
 		.qr-generator-row {
 		  display: grid;
 		  grid-template-columns: minmax(0, 1fr) auto;
@@ -5481,7 +5510,7 @@
 				</div>
 
                 <div class="qr-generator-controls">
-                    <label class="qr-step-label" for="qrLocationSelect"><strong>Step 1:</strong> Generate QR Code for:</label>
+                    <label id="qrStep1Label" class="qr-step-label" for="qrLocationSelect"><strong>Step 1:</strong> Generate QR Code for:</label>
                     <div class="qr-generator-row">
                         <select id="qrLocationSelect" onchange="handleQrLocationChange()">
                         </select>
@@ -5495,7 +5524,7 @@
 					  <div id="signImageContainer"></div>
 
 					  <div class="qr-sign-action-step">
-					    <div class="qr-step-label"><strong>Step 2:</strong> Get your QR Codes:</div>
+					    <div id="qrStep2Label" class="qr-step-label"><strong>Step 2:</strong> Get your QR Codes:</div>
 					    <div class="qr-action-instruction">Choose how you want to use your QR code.</div>
 					    <div class="qr-sign-actions">
 					      <div class="qr-action-choice" data-qr-action-card="order" role="button" tabindex="0" aria-label="Order printed kit">
@@ -5630,10 +5659,6 @@
 					        <select id="qrOrderCountry" autocomplete="country-name" required>
 					          <option value="United Kingdom">United Kingdom</option>
 					        </select>
-					      </div>
-					      <div class="form-group">
-					        <label for="qrOrderNotes">Notes (optional)</label>
-					        <textarea id="qrOrderNotes" rows="3" style="width:100%; padding:12px; border:2px solid #e2e8f0; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
 					      </div>
 					      <div class="qr-order-final-actions">
 					        <button id="qrOrderSubmit" class="btn" type="submit" disabled aria-disabled="true">Pay and order QR kit</button>
@@ -8941,6 +8966,16 @@
 		  if (placement) placement.style.display = qrStep2Completed ? 'block' : 'none';
 		  if (qrStep2Completed) renderQrPlacementGuidance();
 		  if (!qrStep2Completed) renderQrGoogleRoutingPrompt();
+		  renderQrStepCompletionState();
+		}
+
+		function renderQrStepCompletionState() {
+		  const generatedSign = document.getElementById('generatedSign');
+		  const step1Label = document.getElementById('qrStep1Label');
+		  const step2Label = document.getElementById('qrStep2Label');
+		  const hasGeneratedSign = generatedSign?.style.display !== 'none' && Boolean(getSelectedQrTrackingLocationId());
+		  step1Label?.classList.toggle('is-complete', Boolean(hasGeneratedSign || qrStep2Completed));
+		  step2Label?.classList.toggle('is-complete', Boolean(qrStep2Completed));
 		}
 
 		function setQrStep2Completed(isCompleted, context = null) {
@@ -9229,7 +9264,7 @@
 		  if (addressStatus) addressStatus.textContent = 'Enter a UK postcode, then choose your address.';
 
 		  if (shouldClearDeliveryDetails) {
-		    ['qrOrderName', 'qrOrderPostcode', 'qrOrderAddress1', 'qrOrderAddress2', 'qrOrderCity', 'qrOrderNotes'].forEach((id) => {
+		    ['qrOrderName', 'qrOrderPostcode', 'qrOrderAddress1', 'qrOrderAddress2', 'qrOrderCity'].forEach((id) => {
 		      const field = document.getElementById(id);
 		      if (field) field.value = '';
 		    });
@@ -9498,7 +9533,6 @@
 		  const addressLine2 = (document.getElementById('qrOrderAddress2')?.value || '').trim();
 		  const city = (document.getElementById('qrOrderCity')?.value || '').trim();
 		  const postcode = (document.getElementById('qrOrderPostcode')?.value || '').trim();
-		  const notes = (document.getElementById('qrOrderNotes')?.value || '').trim();
 		  const quoteRequestId = ++qrPrintQuoteRequestId;
 		  qrPrintQuoteState.loading = true;
 		  qrPrintQuoteState.error = '';
@@ -9529,8 +9563,7 @@
 		        address_line_1: addressLine1 || null,
 		        address_line_2: addressLine2 || null,
 		        city: city || null,
-		        postcode: postcode || null,
-		        notes: notes || null
+		        postcode: postcode || null
 		      })
 		    });
 		    const body = await res.json().catch(() => ({}));
@@ -9757,7 +9790,6 @@
 		  const city = (document.getElementById('qrOrderCity')?.value || '').trim();
 		  const postcode = (document.getElementById('qrOrderPostcode')?.value || '').trim();
 		  const country = (document.getElementById('qrOrderCountry')?.value || '').trim();
-		  const notes = (document.getElementById('qrOrderNotes')?.value || '').trim();
 		  const { locationId, locationName } = getSelectedQrOrderLocation();
 		  storeLocalQrSignRequest(locationId);
 		  const signUrl = getQrSignUrl(locationId);
@@ -9809,7 +9841,6 @@
 		        city,
 		        postcode,
 		        country,
-		        notes: notes || null,
 		        return_url: `${window.location.origin}${window.location.pathname}`
 		      })
 		    });
@@ -11405,6 +11436,7 @@
 		  imageContainer.appendChild(img);
 		  syncQrPreviewImages();
 		  signContainer.style.display = 'block';
+		  renderQrStepCompletionState();
 		  signContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 		  logEvent('qr_generated', {
 		    locationId: selectedLocation,
