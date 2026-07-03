@@ -1458,6 +1458,73 @@
 		  color: color-mix(in oklab, var(--ff-text) 86%, var(--ff-brand-2));
 		}
 
+		.qr-completed-summary {
+		  display: none;
+		  grid-template-columns: auto minmax(0, 1fr) auto;
+		  gap: 10px;
+		  align-items: center;
+		  padding: 10px 12px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 30%, var(--ff-border));
+		  border-radius: 12px;
+		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
+		  color: var(--ff-text-muted);
+		  font-size: 14px;
+		  line-height: 1.35;
+		}
+
+		.qr-completed-summary::before {
+		  content: "✓";
+		  width: 24px;
+		  height: 24px;
+		  display: inline-grid;
+		  place-items: center;
+		  border-radius: 999px;
+		  background: color-mix(in oklab, var(--ff-brand-2) 28%, transparent);
+		  color: var(--ff-text);
+		  font-weight: 900;
+		}
+
+		.qr-completed-summary strong {
+		  color: var(--ff-text);
+		}
+
+		.qr-completed-change {
+		  width: auto;
+		  min-height: 0;
+		  padding: 4px 2px;
+		  border: 0;
+		  background: transparent !important;
+		  color: var(--ff-text-muted) !important;
+		  box-shadow: none;
+		  font: inherit;
+		  font-size: 13px;
+		  font-weight: 800;
+		  text-decoration: underline;
+		  text-underline-offset: 3px;
+		  cursor: pointer;
+		}
+
+		.qr-completed-change:hover,
+		.qr-completed-change:focus {
+		  color: var(--ff-text) !important;
+		  transform: none;
+		}
+
+		.qr-flow-completed .qr-generator-row,
+		.qr-flow-completed .qr-sign-action-step .qr-action-instruction,
+		.qr-flow-completed .qr-sign-actions {
+		  display: none;
+		}
+
+		.qr-flow-completed #qrStep1CompleteSummary,
+		.qr-flow-completed #qrStep2CompleteSummary {
+		  display: grid;
+		}
+
+		.qr-flow-completed .qr-generator-controls {
+		  max-width: none;
+		}
+
 		.qr-generator-row {
 		  display: grid;
 		  grid-template-columns: minmax(0, 1fr) auto;
@@ -2413,7 +2480,8 @@
 		  transform: none;
 		}
 
-		#qrOrderCancelLite {
+		#qrOrderCancelLite,
+		#qrDiyCancel {
 		  justify-self: start;
 		  width: auto;
 		  min-height: 0;
@@ -2428,7 +2496,9 @@
 		}
 
 		#qrOrderCancelLite:hover,
-		#qrOrderCancelLite:focus {
+		#qrOrderCancelLite:focus,
+		#qrDiyCancel:hover,
+		#qrDiyCancel:focus {
 		  color: var(--ff-text) !important;
 		  text-decoration: underline;
 		  transform: none;
@@ -5511,6 +5581,10 @@
 
                 <div class="qr-generator-controls">
                     <label id="qrStep1Label" class="qr-step-label" for="qrLocationSelect"><strong>Step 1:</strong> Generate QR Code for:</label>
+                    <div id="qrStep1CompleteSummary" class="qr-completed-summary" hidden>
+                        <span id="qrStep1CompleteText">QR code generated.</span>
+                        <button id="qrStep1Change" class="qr-completed-change" type="button">Change</button>
+                    </div>
                     <div class="qr-generator-row">
                         <select id="qrLocationSelect" onchange="handleQrLocationChange()">
                         </select>
@@ -5525,6 +5599,10 @@
 
 					  <div class="qr-sign-action-step">
 					    <div id="qrStep2Label" class="qr-step-label"><strong>Step 2:</strong> Get your QR Codes:</div>
+					    <div id="qrStep2CompleteSummary" class="qr-completed-summary" hidden>
+					      <span id="qrStep2CompleteText">QR code option completed.</span>
+					      <button id="qrStep2Change" class="qr-completed-change" type="button">Change</button>
+					    </div>
 					    <div class="qr-action-instruction">Choose how you want to use your QR code.</div>
 					    <div class="qr-sign-actions">
 					      <div class="qr-action-choice" data-qr-action-card="order" role="button" tabindex="0" aria-label="Order printed kit">
@@ -5592,7 +5670,7 @@
 					        <button id="ffDownloadQrBtn" class="btn">Download</button>
 					      </div>
 					    </div>
-					    <button id="qrDiyCancel" class="btn" type="button" style="margin-top:14px;">Back to choices</button>
+					    <button id="qrDiyCancel" class="btn" type="button">Back to choices</button>
 					  </div>
 					
 					  <form id="qrOrderForm" class="qr-order-form" style="display:none; margin:18px auto 0; text-align:left; background:var(--ff-surface); border:1px solid var(--ff-border); border-radius:12px; padding:16px;">
@@ -8971,11 +9049,67 @@
 
 		function renderQrStepCompletionState() {
 		  const generatedSign = document.getElementById('generatedSign');
+		  const qrSection = document.getElementById('qr');
 		  const step1Label = document.getElementById('qrStep1Label');
 		  const step2Label = document.getElementById('qrStep2Label');
+		  const step1Summary = document.getElementById('qrStep1CompleteSummary');
+		  const step2Summary = document.getElementById('qrStep2CompleteSummary');
+		  const step1Text = document.getElementById('qrStep1CompleteText');
+		  const step2Text = document.getElementById('qrStep2CompleteText');
 		  const hasGeneratedSign = generatedSign?.style.display !== 'none' && Boolean(getSelectedQrTrackingLocationId());
 		  step1Label?.classList.toggle('is-complete', Boolean(hasGeneratedSign || qrStep2Completed));
 		  step2Label?.classList.toggle('is-complete', Boolean(qrStep2Completed));
+		  qrSection?.classList.toggle('qr-flow-completed', Boolean(qrStep2Completed));
+		  if (step1Summary) step1Summary.hidden = !qrStep2Completed;
+		  if (step2Summary) step2Summary.hidden = !qrStep2Completed;
+		  if (step1Text) step1Text.textContent = getQrStep1CompletionText();
+		  if (step2Text) step2Text.textContent = getQrStep2CompletionText();
+		}
+
+		function getQrStep1CompletionText() {
+		  const locationId = qrStep2CompletionContext?.locationId || getSelectedQrTrackingLocationId();
+		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
+		  const locationName = qrStep2CompletionContext?.locationName || locations?.[locationId]?.name || 'this location';
+		  return `QR code generated for ${locationName}`;
+		}
+
+		function formatQrCompletedItemSummary(items = []) {
+		  const parts = (items || []).map((item) => {
+		    const quantity = Number(item.quantity || 0);
+		    if (!quantity) return '';
+		    if (item.product_type === 'qr_insert') return `${quantity} insert${quantity === 1 ? '' : 's'}`;
+		    if (item.product_type === 'qr_sticker') return `${quantity} sticker${quantity === 1 ? '' : 's'}`;
+		    return `${quantity} QR item${quantity === 1 ? '' : 's'}`;
+		  }).filter(Boolean);
+		  return parts.join(' + ');
+		}
+
+		function getQrStep2CompletionText() {
+		  const context = qrStep2CompletionContext || {};
+		  if (context.type === 'printed_order') {
+		    const summary = formatQrCompletedItemSummary(context.items || qrPrintQuoteState.items);
+		    return summary ? `QR kit ordered — ${summary}` : 'QR kit ordered';
+		  }
+		  if (context.type === 'diy_print') {
+		    return context.layout === 'nine' ? 'Printable sheet created — 9 small signs' : 'Printable QR sign created';
+		  }
+		  if (context.type === 'diy_download') return 'QR sign downloaded';
+		  return 'QR code option completed';
+		}
+
+		function reopenQrStep1() {
+		  setQrStep2Completed(false);
+		  setQrOrderBuilderOpen(false);
+		  setQrDiyBuilderOpen(false);
+		  document.getElementById('qrLocationSelect')?.focus();
+		  document.querySelector('.qr-generator-controls')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+
+		function reopenQrStep2() {
+		  setQrStep2Completed(false);
+		  setQrOrderBuilderOpen(false);
+		  setQrDiyBuilderOpen(false);
+		  document.querySelector('.qr-sign-action-step')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}
 
 		function setQrStep2Completed(isCompleted, context = null) {
@@ -12564,6 +12698,8 @@
 		document.addEventListener('DOMContentLoaded', () => {
 		  document.getElementById('qrLocationSelect')?.addEventListener('change', handleQrLocationChange);
 		  document.getElementById('qrGenerateSignBtn')?.addEventListener('click', generateSign);
+		  document.getElementById('qrStep1Change')?.addEventListener('click', reopenQrStep1);
+		  document.getElementById('qrStep2Change')?.addEventListener('click', reopenQrStep2);
 		  document.getElementById('ffDownloadQrBtn')?.addEventListener('click', downloadQrSignAndLog);
 		  document.getElementById('ffPrintQrBtn')?.addEventListener('click', printQrSignAsPDFAndLog);
 		  document.getElementById('qrPrintLayout')?.addEventListener('change', renderQrPrintLayoutPreview);
