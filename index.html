@@ -3442,6 +3442,15 @@
 		  background: color-mix(in oklab, var(--ff-surface) 96%, black);
 		}
 
+		.feedback-dashboard.is-free-plan .feedback-location-filter,
+		.feedback-dashboard.is-free-plan .feedback-date-filter {
+		  display: none;
+		}
+
+		.feedback-dashboard.is-free-plan .feedback-toolbar {
+		  grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
 		.feedback-filter {
 		  display: grid;
 		  gap: 6px;
@@ -3544,7 +3553,7 @@
 
 		.feedback-summary-value {
 		  display: flex;
-		  align-items: baseline;
+		  align-items: center;
 		  gap: 8px;
 		  min-width: 0;
 		  flex-wrap: wrap;
@@ -3557,7 +3566,8 @@
 		.feedback-summary-value .feedback-summary-emoji {
 		  flex: 0 0 auto;
 		  font-size: 30px;
-		  line-height: 1;
+		  line-height: 1.15;
+		  padding-bottom: 2px;
 		}
 
 		.feedback-summary-note {
@@ -3849,57 +3859,73 @@
 
 		@media (max-width: 640px) {
 		  .feedback-dashboard {
-		    gap: 12px;
+		    gap: 9px;
 		  }
 
 		  .feedback-page-header {
-		    gap: 8px;
+		    gap: 6px;
+		    align-items: center;
 		  }
 
 		  .feedback-page-title p {
-		    font-size: 12px;
+		    display: none;
 		  }
 
 		  .feedback-qr-link {
-		    min-height: 36px;
-		    padding: 7px 10px;
-		    font-size: 13px;
+		    min-height: 32px;
+		    padding: 6px 9px;
+		    border-radius: 8px;
+		    font-size: 12px;
 		  }
 
 		  .feedback-toolbar {
 		    grid-template-columns: repeat(2, minmax(0, 1fr));
-		    gap: 8px;
-		    padding: 10px;
+		    gap: 6px;
+		    padding: 8px;
+		    border-radius: 10px;
 		  }
 
 		  .feedback-filter {
-		    gap: 4px;
-		    font-size: 11px;
+		    gap: 3px;
+		    font-size: 10px;
 		  }
 
 		  .feedback-filter select {
-		    min-height: 40px;
-		    padding-top: 8px;
-		    padding-bottom: 8px;
-		    font-size: 13px;
+		    min-height: 34px;
+		    padding-top: 6px;
+		    padding-bottom: 6px;
+		    font-size: 12px;
 		  }
 
 		  .feedback-toggle {
-		    min-height: 40px;
-		    padding: 8px 10px;
+		    min-height: 34px;
+		    padding: 7px 9px;
 		    font-size: 12px;
+		    border-radius: 8px;
 		  }
 
 		  .feedback-summary-grid {
 		    display: grid;
-		    grid-template-columns: repeat(2, minmax(0, 1fr));
+		    grid-auto-flow: column;
+		    grid-auto-columns: minmax(132px, 42vw);
+		    grid-template-columns: none;
 		    gap: 8px;
+		    overflow-x: auto;
+		    padding: 1px 1px 7px;
+		    scroll-snap-type: x proximity;
+		    scrollbar-width: none;
+		  }
+
+		  .feedback-summary-grid::-webkit-scrollbar {
+		    display: none;
 		  }
 
 		  .feedback-summary-card {
-		    min-height: 96px;
-		    padding: 11px;
-		    gap: 6px;
+		    min-height: 78px;
+		    padding: 9px;
+		    gap: 4px;
+		    border-radius: 10px;
+		    scroll-snap-align: start;
 		  }
 
 		  .feedback-summary-label,
@@ -3908,70 +3934,126 @@
 		  }
 
 		  .feedback-summary-value {
-		    font-size: 24px;
-		  }
-
-		  .feedback-summary-value .feedback-summary-emoji {
 		    font-size: 22px;
 		  }
 
+		  .feedback-summary-value .feedback-summary-emoji {
+		    font-size: 20px;
+		  }
+
 		  .feedback-summary-note {
-		    font-size: 11px;
+		    font-size: 10px;
+		    line-height: 1.25;
 		  }
 
 		  .feedback-distribution,
 		  .feedback-list-panel {
-		    gap: 9px;
-		    padding: 11px;
+		    gap: 7px;
+		    padding: 9px;
+		    border-radius: 10px;
 		  }
 
 		  .feedback-distribution-title,
 		  .feedback-list-title {
-		    font-size: 17px;
+		    font-size: 15px;
+		  }
+
+		  .feedback-distribution-title {
+		    display: none;
 		  }
 
 		  .feedback-period-note,
 		  .feedback-list-count {
-		    font-size: 11px;
-		  }
-
-		  .feedback-distribution-row,
-		  .feedback-row-card {
-		    grid-template-columns: 1fr;
+		    font-size: 10px;
 		  }
 
 		  .feedback-distribution-row {
+		    grid-template-columns: minmax(88px, 108px) minmax(0, 1fr) minmax(48px, auto);
 		    gap: 6px;
-		    padding: 7px;
+		    padding: 5px 6px;
+		    border-radius: 8px;
+		  }
+
+		  .feedback-distribution-label {
+		    gap: 6px;
+		    font-size: 12px;
 		  }
 
 		  .feedback-distribution-emoji {
-		    font-size: 19px;
+		    width: 22px;
+		    height: 22px;
+		    border-radius: 7px;
+		    font-size: 15px;
 		  }
 
 		  .feedback-bar-track {
-		    height: 8px;
+		    height: 6px;
+		  }
+
+		  .feedback-distribution-meta {
+		    font-size: 11px;
+		    text-align: right;
 		  }
 
 		  .feedback-row-card {
+		    grid-template-columns: auto minmax(0, 1fr);
 		    gap: 8px;
-		    padding: 10px;
+		    padding: 9px;
 		  }
 
 		  .feedback-row-emoji {
-		    width: 32px;
-		    height: 32px;
-		    font-size: 20px;
+		    width: 30px;
+		    height: 30px;
+		    border-radius: 8px;
+		    font-size: 18px;
+		  }
+
+		  .feedback-row-topline {
+		    gap: 5px;
+		  }
+
+		  .feedback-sentiment-label,
+		  .feedback-location-label,
+		  .feedback-row-time,
+		  .feedback-comment-empty {
+		    font-size: 12px;
 		  }
 
 		  .feedback-comment-preview {
-		    font-size: 13px;
+		    font-size: 12px;
+		    line-height: 1.32;
+		  }
+
+		  .feedback-row-meta {
+		    grid-column: 2;
+		    text-align: left;
+		    font-size: 10px;
+		  }
+
+		  .feedback-empty-state {
+		    gap: 7px;
+		    padding: 11px;
+		    border-radius: 10px;
+		  }
+
+		  .feedback-empty-state strong {
+		    font-size: 15px;
+		  }
+
+		  .feedback-empty-state span {
+		    font-size: 12px;
 		    line-height: 1.35;
 		  }
 
-		  .feedback-row-meta,
-		  .feedback-distribution-meta {
-		    text-align: left;
+		  .feedback-pagination {
+		    margin-top: 0;
+		    gap: 7px;
+		  }
+
+		  .feedback-pagination button {
+		    min-height: 32px;
+		    padding: 6px 10px;
+		    border-radius: 8px;
 		  }
 		}
 
@@ -5179,7 +5261,7 @@
         <!-- Main Content Area -->
         <main class="admin-content">
             <section id="Feedback" class="content-section active">
-                <div class="feedback-dashboard">
+                <div class="feedback-dashboard" id="feedbackDashboard">
                     <div class="feedback-page-header">
                         <div class="feedback-page-title">
                             <h2>Feedback</h2>
@@ -5189,13 +5271,13 @@
                     </div>
 
                     <div class="feedback-toolbar" aria-label="Feedback filters">
-                        <label class="feedback-filter" for="FeedbackLocationSelect">
+                        <label class="feedback-filter feedback-location-filter" for="FeedbackLocationSelect">
                             Location
                             <select id="FeedbackLocationSelect" onchange="handleFeedbackFilterChanged('location')">
                                 <option value="all">All Locations</option>
                             </select>
                         </label>
-                        <label class="feedback-filter" for="feedbackDateRange">
+                        <label class="feedback-filter feedback-date-filter" for="feedbackDateRange">
                             Time period
                             <select id="feedbackDateRange" onchange="handleFeedbackFilterChanged('date_range')">
                                 <option value="today">Today</option>
@@ -9842,6 +9924,7 @@
 		      }
 		    }
 		  });
+		  syncFeedbackDashboardPlanControls();
 		}
 
 		// === Emoji-centric mood score helpers ===
@@ -9878,6 +9961,23 @@
 		    currentView === 'customer-demo' ||
 		    currentLocation === 'demo' ||
 		    !!window.demoAccount;
+		}
+
+		function isFeedbackDashboardFreePlan() {
+		  return currentView === 'admin' && currentUser && getPricingTier(currentUser.pricingTier || 'free').key === 'free';
+		}
+
+		function syncFeedbackDashboardPlanControls() {
+		  const isFree = isFeedbackDashboardFreePlan();
+		  const dashboard = document.getElementById('feedbackDashboard');
+		  dashboard?.classList.toggle('is-free-plan', isFree);
+		  if (!isFree) return;
+
+		  const dateRange = document.getElementById('feedbackDateRange');
+		  if (dateRange) dateRange.value = '30';
+
+		  const locationSelect = document.getElementById('FeedbackLocationSelect');
+		  if (locationSelect) locationSelect.value = 'all';
 		}
 
 		function getSentimentMeta(sentiment) {
@@ -10302,6 +10402,7 @@
 
         function updateFeedback() {
 			    renderFeedbackHistoryNotice();
+			    syncFeedbackDashboardPlanControls();
                 var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
 			    var selectedLocation = document.getElementById('FeedbackLocationSelect')?.value || 'all';
 			    var allFeedback = [];
