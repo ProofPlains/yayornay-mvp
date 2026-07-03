@@ -5363,6 +5363,11 @@
                                 <div class="feedback-summary-value"><span id="moodScore">--</span>/100 <span class="feedback-summary-emoji" id="moodEmoji" title="Calculated from emoji feedback">:)</span></div>
                                 <div class="feedback-summary-note" id="moodScoreNote">Based on selected feedback.</div>
                             </div>
+                            <button class="feedback-summary-card is-clickable" id="dashboardAttentionCard" type="button" onclick="toggleDashboardQuickFilter('attention')" aria-pressed="false">
+                                <div class="feedback-summary-label">Needs attention</div>
+                                <div class="feedback-summary-value" id="dashboardAttentionCount">0</div>
+                                <div class="feedback-summary-note" id="dashboardAttentionNote">Neutral or negative responses.</div>
+                            </button>
                             <div class="feedback-summary-card">
                                 <div class="feedback-summary-label">Responses</div>
                                 <div class="feedback-summary-value" id="dashboardTotalFeedback">0</div>
@@ -5372,11 +5377,6 @@
                                 <div class="feedback-summary-label">Comment rate</div>
                                 <div class="feedback-summary-value" id="dashboardCommentRate">0%</div>
                                 <div class="feedback-summary-note" id="dashboardCommentNote">0 comments captured.</div>
-                            </button>
-                            <button class="feedback-summary-card is-clickable" id="dashboardAttentionCard" type="button" onclick="toggleDashboardQuickFilter('attention')" aria-pressed="false">
-                                <div class="feedback-summary-label">Needs attention</div>
-                                <div class="feedback-summary-value" id="dashboardAttentionCount">0</div>
-                                <div class="feedback-summary-note" id="dashboardAttentionNote">Neutral or negative responses.</div>
                             </button>
                         </div>
                         <span class="feedback-summary-scroll-cue" aria-hidden="true"></span>
