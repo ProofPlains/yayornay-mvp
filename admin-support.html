@@ -279,6 +279,239 @@
       line-height: 1.55;
       border-left: 4px solid var(--brand);
     }
+    .activation-dashboard {
+      display: grid;
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+    .activation-controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: end;
+      flex-wrap: wrap;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.025);
+    }
+    .activation-controls label {
+      display: grid;
+      gap: 6px;
+      min-width: 220px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .activation-constraint-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+      gap: 18px;
+      padding: 22px;
+      border: 1px solid rgba(184,138,255,.42);
+      border-radius: 10px;
+      background: color-mix(in oklab, var(--surface) 88%, #0f172a);
+      box-shadow: 0 18px 42px rgba(0,0,0,.18);
+    }
+    .activation-constraint-card h3 {
+      margin-top: 8px;
+      font-size: clamp(24px, 4vw, 34px);
+      line-height: 1.1;
+    }
+    .activation-constraint-card p,
+    .activation-stage-card p,
+    .activation-drilldown-card p {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .activation-constraint-numbers {
+      display: grid;
+      gap: 10px;
+    }
+    .activation-number-card {
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,.045);
+    }
+    .activation-number-card strong {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+      color: var(--brand);
+    }
+    .activation-number-card span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .activation-recommendation {
+      margin-top: 14px;
+      padding: 13px;
+      border: 1px solid rgba(34,197,94,.36);
+      border-radius: 8px;
+      background: rgba(34,197,94,.09);
+    }
+    .activation-recommendation strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--good);
+    }
+    .activation-warning {
+      padding: 12px 14px;
+      border: 1px solid rgba(245,158,11,.42);
+      border-radius: 8px;
+      background: rgba(245,158,11,.10);
+      color: #fde68a;
+      font-weight: 800;
+    }
+    .activation-funnel {
+      display: grid;
+      gap: 12px;
+    }
+    .activation-stage-card {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.1fr) minmax(130px, 190px) minmax(260px, 1.4fr);
+      gap: 14px;
+      align-items: start;
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .activation-stage-card.is-bottleneck {
+      border-color: rgba(248,113,113,.58);
+      background: color-mix(in oklab, var(--surface) 88%, #7f1d1d);
+    }
+    .activation-stage-title {
+      display: grid;
+      gap: 7px;
+    }
+    .activation-stage-title h4 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .activation-stage-count {
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--brand);
+    }
+    .activation-stage-metrics {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+    .activation-progress {
+      position: relative;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      overflow: hidden;
+    }
+    .activation-progress span {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--progress, 0%);
+      border-radius: inherit;
+      background: var(--brand);
+    }
+    .activation-status {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      min-height: 25px;
+      padding: 3px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--muted);
+    }
+    .activation-status.healthy { color: var(--good); border-color: rgba(34,197,94,.45); background: rgba(34,197,94,.12); }
+    .activation-status.needs-attention { color: #fde68a; border-color: rgba(245,158,11,.45); background: rgba(245,158,11,.12); }
+    .activation-status.critical { color: var(--bad); border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.12); }
+    .activation-status.not-enough-data { color: #bfdbfe; border-color: rgba(96,165,250,.45); background: rgba(96,165,250,.12); }
+    .activation-stage-recommendation {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 5px;
+      margin-top: 2px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .activation-stage-recommendation strong {
+      color: var(--brand);
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .activation-stage-recommendation p {
+      font-size: 13px;
+      max-width: 940px;
+    }
+    .activation-drilldowns {
+      display: grid;
+      gap: 12px;
+    }
+    .activation-drilldown-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255,255,255,.025);
+      overflow: hidden;
+    }
+    .activation-drilldown-card summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 15px;
+      cursor: pointer;
+      list-style: none;
+    }
+    .activation-drilldown-card summary::-webkit-details-marker { display: none; }
+    .activation-drilldown-card summary::after {
+      content: "Open";
+      padding: 4px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .activation-drilldown-card[open] summary::after {
+      content: "Hide";
+      color: var(--brand);
+      border-color: rgba(184,138,255,.45);
+      background: rgba(184,138,255,.10);
+    }
+    .activation-stuck-list {
+      display: grid;
+      gap: 8px;
+      padding: 0 15px 15px;
+    }
+    .activation-stuck-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.7fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .activation-stuck-item strong,
+    .activation-stuck-item span {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+    .activation-empty {
+      padding: 16px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      text-align: center;
+    }
     .account-overview-heading {
       margin: 8px 0 14px;
     }
@@ -599,7 +832,7 @@
 
     @media (max-width: 720px) {
       header, .intro { display: grid; }
-      .toolbar, .grid, .metric-grid, .metrics-hero { grid-template-columns: 1fr; }
+      .toolbar, .grid, .metric-grid, .metrics-hero, .activation-constraint-card, .activation-stage-card, .activation-stuck-item { grid-template-columns: 1fr; }
       .list-item-header, .qr-sign-toolbar { display: grid; }
       .header-actions { justify-content: start; }
       .metrics-hero-value { text-align: left; }
@@ -639,11 +872,40 @@
 
   <main id="consoleShell" class="hidden">
     <div class="console-tabs" role="tablist" aria-label="Support console sections">
-      <button class="console-tab active" type="button" role="tab" id="metricsTab" aria-selected="true" aria-controls="metricsPanel" data-console-tab="metrics">Metrics Dashboard</button>
+      <button class="console-tab active" type="button" role="tab" id="activationTab" aria-selected="true" aria-controls="activationPanel" data-console-tab="activation">Activation Drop-off</button>
+      <button class="console-tab" type="button" role="tab" id="metricsTab" aria-selected="false" aria-controls="metricsPanel" data-console-tab="metrics" tabindex="-1">Metrics Dashboard</button>
       <button class="console-tab" type="button" role="tab" id="businessTab" aria-selected="false" aria-controls="businessPanel" data-console-tab="business" tabindex="-1">Business Support Overview</button>
     </div>
 
-    <section id="metricsPanel" class="console-tab-panel active" role="tabpanel" aria-labelledby="metricsTab">
+    <section id="activationPanel" class="console-tab-panel active" role="tabpanel" aria-labelledby="activationTab">
+      <div class="intro">
+        <div>
+          <h2>Activation Drop-off Dashboard</h2>
+          <p class="muted">Businesses that signed up during the selected period and how far they progressed toward real product value.</p>
+        </div>
+      </div>
+
+      <section id="activationDashboard" class="activation-dashboard" aria-label="Activation drop-off dashboard">
+        <div class="activation-controls">
+          <label>
+            Cohort
+            <select id="activationRange">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="all">All time</option>
+            </select>
+          </label>
+          <p class="muted" id="activationCohortLabel">Showing businesses that signed up in the last 30 days.</p>
+        </div>
+        <div id="activationWarning"></div>
+        <div id="activationConstraint" class="activation-constraint-card"></div>
+        <div id="activationFunnel" class="activation-funnel"></div>
+        <div id="activationDrilldowns" class="activation-drilldowns"></div>
+      </section>
+    </section>
+
+    <section id="metricsPanel" class="console-tab-panel" role="tabpanel" aria-labelledby="metricsTab" hidden>
       <div class="intro">
         <div>
           <h2>Metrics Dashboard</h2>
@@ -796,6 +1058,13 @@
     const prevPageBtn = document.getElementById('prevPageBtn');
     const nextPageBtn = document.getElementById('nextPageBtn');
     const consoleTabEls = Array.from(document.querySelectorAll('[data-console-tab]'));
+    const activationPanelEl = document.getElementById('activationPanel');
+    const activationRangeEl = document.getElementById('activationRange');
+    const activationCohortLabelEl = document.getElementById('activationCohortLabel');
+    const activationWarningEl = document.getElementById('activationWarning');
+    const activationConstraintEl = document.getElementById('activationConstraint');
+    const activationFunnelEl = document.getElementById('activationFunnel');
+    const activationDrilldownsEl = document.getElementById('activationDrilldowns');
     const metricsPanelEl = document.getElementById('metricsPanel');
     const businessPanelEl = document.getElementById('businessPanel');
     const weeklyActiveHeroEl = document.getElementById('weeklyActiveHero');
@@ -816,14 +1085,20 @@
     const overlayEl = document.getElementById('overlay');
 
     function switchConsoleTab(tabName, focusTab = false) {
-      const isBusiness = tabName === 'business';
-      metricsPanelEl.classList.toggle('active', !isBusiness);
-      businessPanelEl.classList.toggle('active', isBusiness);
-      metricsPanelEl.hidden = isBusiness;
-      businessPanelEl.hidden = !isBusiness;
+      const panels = {
+        activation: activationPanelEl,
+        metrics: metricsPanelEl,
+        business: businessPanelEl
+      };
+      const selectedTab = panels[tabName] ? tabName : 'activation';
+      Object.entries(panels).forEach(([name, panel]) => {
+        const isActive = name === selectedTab;
+        panel.classList.toggle('active', isActive);
+        panel.hidden = !isActive;
+      });
 
       consoleTabEls.forEach((tab) => {
-        const isActive = tab.dataset.consoleTab === tabName;
+        const isActive = tab.dataset.consoleTab === selectedTab;
         tab.classList.toggle('active', isActive);
         tab.setAttribute('aria-selected', String(isActive));
         tab.tabIndex = isActive ? 0 : -1;
@@ -1380,6 +1655,368 @@
         .toLowerCase();
     }
 
+    const activationStageDefinitions = [
+      {
+        key: 'signedUp',
+        name: 'Business signed up',
+        shortName: 'Signed up',
+        meaning: 'A business account was created.',
+        proxy: 'Tracked from the business account creation date.',
+        bottleneckAction: 'Improve post-signup onboarding. Make the next step obvious and consider changing the primary CTA to "Create my first QR code".'
+      },
+      {
+        key: 'qrGenerated',
+        name: 'Created QR code',
+        shortName: 'Created QR code',
+        meaning: 'The business or one of its locations generated a QR code journey.',
+        proxy: 'Tracked from QR generation events. If tracking is missing, later QR deployment or feedback can act as a partial signal.',
+        bottleneckAction: 'Auto-focus the owner on creating their first QR code, simplify the first setup screen, and make the next action impossible to miss.'
+      },
+      {
+        key: 'qrDeployed',
+        name: 'Downloaded or ordered QR code',
+        shortName: 'Deployed QR code',
+        meaning: 'The business downloaded, printed, or ordered QR materials.',
+        proxy: 'Partial signal from QR deployment events, paid QR orders, support downloads, and checkout/order records.',
+        bottleneckAction: 'Improve the QR download, print, and order UX. Add a setup checklist, placement guidance, and clearer printed QR kit prompts.'
+      },
+      {
+        key: 'firstFeedback',
+        name: 'Received first feedback',
+        shortName: 'First feedback',
+        meaning: 'At least one customer feedback submission was received.',
+        proxy: 'Tracked from persisted feedback submissions.',
+        bottleneckAction: 'Improve QR sign copy and placement guidance. Encourage owners to test the QR code and use customer-facing copy like "Takes 5 seconds" and "No account needed".'
+      },
+      {
+        key: 'dashboardViewedAfterFeedback',
+        name: 'Returned to view feedback',
+        shortName: 'Viewed feedback',
+        meaning: 'An owner or admin viewed the dashboard after feedback was received.',
+        proxy: 'Partial signal from dashboard view events after the first feedback. Older accounts may be undercounted.',
+        bottleneckAction: 'Improve email alerts and first-feedback notifications. Add a stronger "View feedback" CTA and make the first insight moment more obvious.'
+      },
+      {
+        key: 'repeatFeedback',
+        name: 'Received repeat feedback',
+        shortName: 'Repeat feedback',
+        meaning: 'Feedback arrived again after the first submission or on more than one day.',
+        proxy: 'Tracked from multiple persisted feedback submissions, with extra weight when feedback arrives on a later day.',
+        bottleneckAction: 'Improve owner education, weekly summaries, and guidance on moving QR codes to better places. Show whether feedback is increasing or fading.'
+      },
+      {
+        key: 'monetisation',
+        name: 'Upgrade or monetisation action',
+        shortName: 'Monetisation',
+        meaning: 'The business upgraded, started checkout, ordered paid QR materials, or showed another paid-intent signal.',
+        proxy: 'Partial signal from paid tiers, subscription status, checkout starts, paid upgrade events, and paid QR orders.',
+        bottleneckAction: 'Show value already received, promote printed kits or paid tiers at the right moment, and surface upgrade prompts only after value has been demonstrated.'
+      }
+    ];
+
+    function dateValue(value) {
+      if (!value) return null;
+      const time = new Date(value).getTime();
+      return Number.isFinite(time) ? time : null;
+    }
+
+    function earliestActivationDate(values) {
+      return values.reduce((earliest, value) => {
+        const time = dateValue(value);
+        if (time === null) return earliest;
+        if (!earliest || time < dateValue(earliest)) return value;
+        return earliest;
+      }, null);
+    }
+
+    function latestActivationDate(values) {
+      return values.reduce((latest, value) => {
+        const time = dateValue(value);
+        if (time === null) return latest;
+        if (!latest || time > dateValue(latest)) return value;
+        return latest;
+      }, null);
+    }
+
+    function activationDatesForBusiness(business) {
+      const activation = business.activation || {};
+      const paidOrderDates = (business.qrPrintOrders || [])
+        .filter((order) => order.stripePaymentStatus === 'paid' || order.stripeSessionId)
+        .map((order) => order.createdAt);
+      const locationActivation = (business.locations || []).map((location) => location.activation || {});
+      const firstFeedbackAt = activation.firstFeedbackAt || earliestActivationDate((business.locations || []).map((location) => location.activation?.firstFeedbackAt));
+      const repeatFeedbackAt = activation.repeatFeedbackAt || earliestActivationDate((business.locations || []).map((location) => location.activation?.repeatFeedbackAt));
+      const monetisationAt = activation.monetisationAt ||
+        (business.pricingTier && business.pricingTier !== 'free' ? business.createdAt : null) ||
+        earliestActivationDate(paidOrderDates);
+      return {
+        signedUp: business.createdAt,
+        qrGenerated: activation.qrGeneratedAt || earliestActivationDate(locationActivation.map((item) => item.qrGeneratedAt)),
+        qrDeployed: activation.qrDeployedAt || earliestActivationDate([...locationActivation.map((item) => item.qrDeployedAt), ...paidOrderDates]),
+        firstFeedback: firstFeedbackAt,
+        dashboardViewedAfterFeedback: activation.dashboardViewedAfterFeedbackAt,
+        repeatFeedback: repeatFeedbackAt,
+        monetisation: monetisationAt,
+      };
+    }
+
+    function activationReachedMap(business) {
+      const dates = activationDatesForBusiness(business);
+      const reached = {};
+      for (let index = activationStageDefinitions.length - 1; index >= 0; index -= 1) {
+        const key = activationStageDefinitions[index].key;
+        const laterReached = index < activationStageDefinitions.length - 1
+          ? reached[activationStageDefinitions[index + 1].key]
+          : false;
+        reached[key] = Boolean(dates[key] || laterReached);
+      }
+      reached.signedUp = true;
+      return { dates, reached };
+    }
+
+    function activationRangeWindow(rangeValue, offsetPeriods = 0) {
+      if (rangeValue === 'all') return { start: null, end: null, label: 'All time' };
+      const days = Number(rangeValue || 30);
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      const periodMs = days * 24 * 60 * 60 * 1000;
+      const shiftedEnd = new Date(end.getTime() - (periodMs * offsetPeriods));
+      const start = new Date(shiftedEnd.getTime() - periodMs + 1);
+      return { start, end: shiftedEnd, label: `Last ${days} days`, days };
+    }
+
+    function isLikelyDemoOrTestBusiness(business) {
+      const text = [
+        business.name,
+        business.ownerName,
+        business.businessType,
+        business.industry,
+        business.subscriptionTestMode ? 'test subscription' : ''
+      ].filter(Boolean).join(' ').toLowerCase();
+      return /\b(demo|test|sandbox)\b/.test(text);
+    }
+
+    function businessesInActivationCohort(businesses, rangeValue, offsetPeriods = 0) {
+      const windowInfo = activationRangeWindow(rangeValue, offsetPeriods);
+      if (!windowInfo.start || !windowInfo.end) return businesses;
+      return businesses.filter((business) => {
+        const created = dateValue(business.createdAt);
+        return created !== null && created >= windowInfo.start.getTime() && created <= windowInfo.end.getTime();
+      });
+    }
+
+    function conversionStatus(conversion, previousCount) {
+      if (previousCount < 5) return 'Not enough data';
+      if (conversion >= 75) return 'Healthy';
+      if (conversion >= 45) return 'Needs attention';
+      return 'Critical';
+    }
+
+    function transitionRecommendation(stageKey) {
+      const stage = activationStageDefinitions.find((item) => item.key === stageKey);
+      return stage?.bottleneckAction || 'Review this step and talk to the affected businesses before optimising later stages.';
+    }
+
+    function buildActivationModel(rangeValue, offsetPeriods = 0) {
+      const businesses = Array.isArray(overview?.businesses) ? overview.businesses : [];
+      const periodBusinesses = businessesInActivationCohort(businesses, rangeValue, offsetPeriods);
+      const excludedDemoCount = periodBusinesses.filter(isLikelyDemoOrTestBusiness).length;
+      const cohort = periodBusinesses.filter((business) => !isLikelyDemoOrTestBusiness(business));
+      const enriched = cohort.map((business) => ({
+        business,
+        ...activationReachedMap(business)
+      }));
+
+      const stages = activationStageDefinitions.map((definition, index) => {
+        const count = enriched.filter((item) => item.reached[definition.key]).length;
+        const previous = index ? activationStageDefinitions[index - 1] : null;
+        const previousCount = previous ? enriched.filter((item) => item.reached[previous.key]).length : count;
+        const conversion = index === 0 ? 100 : (previousCount > 0 ? Math.round((count / previousCount) * 1000) / 10 : null);
+        const dropoffCount = index === 0 ? 0 : Math.max(previousCount - count, 0);
+        const dropoff = index === 0 || previousCount === 0 ? 0 : Math.round((dropoffCount / previousCount) * 1000) / 10;
+        const status = index === 0 ? (count >= 5 ? 'Healthy' : 'Not enough data') : conversionStatus(conversion || 0, previousCount);
+        return { ...definition, index, count, previousCount, conversion, dropoff, dropoffCount, status };
+      });
+
+      const transitions = stages.slice(1).map((stage) => ({
+        from: stages[stage.index - 1],
+        to: stage,
+        dropoff: stage.dropoff,
+        dropoffCount: stage.dropoffCount,
+        previousCount: stage.previousCount,
+      }));
+      const biggest = transitions
+        .filter((item) => item.previousCount > 0)
+        .sort((a, b) => (b.dropoffCount - a.dropoffCount) || (b.dropoff - a.dropoff))[0] || null;
+      return { cohort, enriched, stages, transitions, biggest, excludedDemoCount };
+    }
+
+    function stuckItemsForStage(model, stageIndex) {
+      if (stageIndex >= activationStageDefinitions.length - 1) return [];
+      const current = activationStageDefinitions[stageIndex];
+      const next = activationStageDefinitions[stageIndex + 1];
+      return model.enriched
+        .filter((item) => item.reached[current.key] && !item.reached[next.key])
+        .map((item) => {
+          const business = item.business;
+          const location = findRelevantActivationLocation(business, current.key, next.key);
+          return {
+            business,
+            location,
+            lastDate: latestActivationDate(Object.values(item.dates)),
+            lastStage: current.name,
+            nextAction: transitionRecommendation(current.key)
+          };
+        })
+        .sort((a, b) => (dateValue(a.lastDate) || 0) - (dateValue(b.lastDate) || 0));
+    }
+
+    function findRelevantActivationLocation(business, currentKey, nextKey) {
+      const locations = business.locations || [];
+      if (!locations.length) return null;
+      const candidates = locations.filter((location) => {
+        const activation = location.activation || {};
+        const hasCurrent = currentKey === 'signedUp' || Boolean(activation[currentKey + 'At']) ||
+          (currentKey === 'firstFeedback' && Number(location.feedbackCount || 0) > 0);
+        const hasNext = Boolean(activation[nextKey + 'At']) ||
+          (nextKey === 'firstFeedback' && Number(location.feedbackCount || 0) > 0);
+        return hasCurrent && !hasNext;
+      });
+      return candidates[0] || locations[0] || null;
+    }
+
+    function trendCopy(currentModel, previousModel) {
+      if (!previousModel?.biggest || !currentModel?.biggest) return 'Trend is not available for this range yet.';
+      const currentDrop = Number(currentModel.biggest.dropoff || 0);
+      const previousMatch = previousModel.transitions.find((item) =>
+        item.from.key === currentModel.biggest.from.key && item.to.key === currentModel.biggest.to.key
+      );
+      if (!previousMatch) return 'No matching previous-period bottleneck to compare yet.';
+      const delta = Math.round((currentDrop - Number(previousMatch.dropoff || 0)) * 10) / 10;
+      if (Math.abs(delta) < 1) return 'About unchanged versus the previous matching period.';
+      return delta > 0
+        ? `Worsened by ${delta.toFixed(1)} percentage points versus the previous matching period.`
+        : `Improved by ${Math.abs(delta).toFixed(1)} percentage points versus the previous matching period.`;
+    }
+
+    function renderActivationDashboard() {
+      const rangeValue = activationRangeEl?.value || '30';
+      const model = buildActivationModel(rangeValue);
+      const previousModel = rangeValue === 'all' ? null : buildActivationModel(rangeValue, 1);
+      const windowInfo = activationRangeWindow(rangeValue);
+      if (activationCohortLabelEl) {
+        activationCohortLabelEl.textContent = rangeValue === 'all'
+          ? 'Showing all businesses and how far they progressed.'
+          : `Showing businesses that signed up during ${windowInfo.label.toLowerCase()} and how far they progressed.`;
+      }
+
+      const smallSample = model.cohort.length > 0 && model.cohort.length < 10;
+      const warnings = [];
+      if (model.cohort.length === 0) warnings.push('No businesses signed up in this cohort yet.');
+      if (smallSample) warnings.push('Small sample size - treat this as directional.');
+      if (model.excludedDemoCount) warnings.push(`${model.excludedDemoCount.toLocaleString()} likely demo/test account${model.excludedDemoCount === 1 ? '' : 's'} excluded from this decision view.`);
+      activationWarningEl.innerHTML = warnings.map((warning) => `<div class="activation-warning">${escapeHtml(warning)}</div>`).join('');
+
+      if (!model.cohort.length) {
+        activationConstraintEl.innerHTML = `
+          <div>
+            <div class="metric-eyebrow">Current biggest activation constraint</div>
+            <h3>No cohort data yet</h3>
+            <p>Once businesses sign up in this period, this card will show the biggest drop-off and the recommended action.</p>
+          </div>
+          <div class="activation-constraint-numbers">
+            <div class="activation-number-card"><strong>0</strong><span>Businesses in cohort</span></div>
+          </div>
+        `;
+        activationFunnelEl.innerHTML = '';
+        activationDrilldownsEl.innerHTML = '';
+        return;
+      }
+
+      const bottleneck = model.biggest;
+      const lost = bottleneck?.dropoffCount || 0;
+      const fromCount = bottleneck?.from?.count || 0;
+      const toCount = bottleneck?.to?.count || 0;
+      activationConstraintEl.innerHTML = `
+        <div>
+          <div class="metric-eyebrow">Current biggest activation constraint</div>
+          <h3>${bottleneck ? `${escapeHtml(bottleneck.from.shortName)} to ${escapeHtml(bottleneck.to.shortName)}` : 'No clear bottleneck yet'}</h3>
+          <p>${bottleneck
+            ? `${fromCount.toLocaleString()} businesses reached "${escapeHtml(bottleneck.from.name)}" but only ${toCount.toLocaleString()} reached "${escapeHtml(bottleneck.to.name)}". This is the best place to improve before optimising later parts of the funnel.`
+            : 'There is not enough stage movement yet to identify a meaningful constraint.'}</p>
+          <div class="activation-recommendation">
+            <strong>Recommended action</strong>
+            <p>${escapeHtml(bottleneck ? transitionRecommendation(bottleneck.from.key) : 'Wait for a larger cohort or inspect recent signups directly.')}</p>
+          </div>
+        </div>
+        <div class="activation-constraint-numbers">
+          <div class="activation-number-card"><strong>${bottleneck ? `${Number(bottleneck.dropoff || 0).toFixed(1)}%` : '-'}</strong><span>Drop-off at this stage</span></div>
+          <div class="activation-number-card"><strong>${lost.toLocaleString()}</strong><span>Businesses lost here</span></div>
+          <div class="activation-number-card"><strong>${escapeHtml(rangeValue === 'all' ? 'All time' : trendCopy(model, previousModel))}</strong><span>Bottleneck trend</span></div>
+        </div>
+      `;
+
+      activationFunnelEl.innerHTML = model.stages.map((stage) => {
+        const isBottleneck = bottleneck?.to.key === stage.key;
+        const progress = stage.index === 0 ? 100 : Math.max(0, Math.min(100, Number(stage.conversion || 0)));
+        const conversionText = stage.index === 0 ? 'Cohort start' : `${Number(stage.conversion || 0).toFixed(1)}% from previous`;
+        const dropoffText = stage.index === 0 ? 'No previous step' : `${Number(stage.dropoff || 0).toFixed(1)}% drop-off, ${Number(stage.dropoffCount || 0).toLocaleString()} lost`;
+        return `
+          <article class="activation-stage-card ${isBottleneck ? 'is-bottleneck' : ''}">
+            <div class="activation-stage-title">
+              <span class="activation-status ${escapeHtml(metricStatusClass(stage.status))}">${escapeHtml(stage.status)}</span>
+              <h4>${escapeHtml(stage.name)}</h4>
+              <p>${escapeHtml(stage.meaning)}</p>
+            </div>
+            <div>
+              <div class="activation-stage-count">${Number(stage.count || 0).toLocaleString()}</div>
+              <p>${escapeHtml(conversionText)}</p>
+            </div>
+            <div class="activation-stage-metrics">
+              <div class="activation-progress" aria-hidden="true" style="--progress:${progress}%"><span></span></div>
+              <p>${escapeHtml(dropoffText)}</p>
+              <p>${escapeHtml(stage.proxy)}</p>
+            </div>
+            <div class="activation-stage-recommendation">
+              <strong>What to do if this is the bottleneck</strong>
+              <p>${escapeHtml(stage.bottleneckAction)}</p>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      activationDrilldownsEl.innerHTML = model.stages.slice(0, -1).map((stage) => {
+        const nextStage = model.stages[stage.index + 1];
+        const stuckItems = stuckItemsForStage(model, stage.index);
+        return `
+          <details class="activation-drilldown-card" ${model.biggest?.from.key === stage.key ? 'open' : ''}>
+            <summary>
+              <div>
+                <h3>${escapeHtml(stage.shortName)} but not ${escapeHtml(nextStage.shortName)}</h3>
+                <p>${stuckItems.length.toLocaleString()} business${stuckItems.length === 1 ? '' : 'es'} currently stuck here.</p>
+              </div>
+            </summary>
+            <div class="activation-stuck-list">
+              ${stuckItems.length ? stuckItems.slice(0, 25).map((item) => `
+                <div class="activation-stuck-item">
+                  <div>
+                    <strong>${escapeHtml(item.business.name || 'Untitled business')}</strong>
+                    <span class="muted">${escapeHtml(item.location?.name || (item.business.locationCount > 1 ? 'Multiple locations' : 'No location yet'))}</span>
+                  </div>
+                  <div>
+                    <span>${escapeHtml(item.lastStage)} - signed up ${escapeHtml(formatDate(item.business.createdAt))}</span>
+                    <span class="muted">Last relevant event: ${escapeHtml(formatDate(item.lastDate))}</span>
+                    <span class="muted">Suggested action: ${escapeHtml(item.nextAction)}</span>
+                  </div>
+                  <button class="small-btn" type="button" data-business-id="${escapeHtml(item.business.id)}">Open account</button>
+                </div>
+              `).join('') : '<div class="activation-empty">No businesses are stuck at this stage for the selected cohort.</div>'}
+            </div>
+          </details>
+        `;
+      }).join('');
+    }
+
     const metricDefinitions = {
       signups: {
         name: 'Signups',
@@ -1920,6 +2557,7 @@
     }
 
     function render() {
+      renderActivationDashboard();
       renderMetrics();
       const businesses = Array.isArray(overview?.businesses) ? overview.businesses : [];
       const query = searchEl.value.trim().toLowerCase();
@@ -2231,6 +2869,11 @@
       currentPage = 1;
       render();
     });
+    activationRangeEl.addEventListener('change', renderActivationDashboard);
+    activationDrilldownsEl.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-business-id]');
+      if (button) openDetail(button.dataset.businessId);
+    });
     rowsEl.addEventListener('click', (event) => {
       const button = event.target.closest('[data-business-id]');
       if (button) openDetail(button.dataset.businessId);
@@ -2283,4 +2926,3 @@
   </script>
 </body>
 </html>
- 
