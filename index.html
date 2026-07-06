@@ -3519,15 +3519,13 @@
 		  line-height: 1.45;
 		}
 
-		.feedback-qr-link {
+		.feedback-page-header .feedback-qr-link {
+		  flex: 0 0 auto;
+		  width: auto;
 		  min-height: 40px;
 		  padding: 9px 12px;
-		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 44%, var(--ff-border));
-		  border-radius: 10px;
-		  background: color-mix(in oklab, var(--ff-surface) 94%, black);
-		  color: var(--ff-brand-2);
-		  font-weight: 800;
-		  text-decoration: none;
+		  align-self: flex-start;
+		  white-space: nowrap;
 		}
 
 		.feedback-toolbar {
@@ -3979,10 +3977,12 @@
 		    display: none;
 		  }
 
-		  .feedback-qr-link {
+		  .feedback-page-header .feedback-qr-link {
+		    width: auto;
 		    min-height: 32px;
 		    padding: 6px 9px;
-		    border-radius: 8px;
+		    align-self: center;
+		    margin-left: auto;
 		    font-size: 12px;
 		  }
 
@@ -5416,7 +5416,7 @@
                             <h2>Feedback</h2>
                             <p id="feedbackDashboardSubtitle">Private customer signal, grouped by mood, location, and time.</p>
                         </div>
-                        <button class="feedback-qr-link" type="button" onclick="handleDashboardQrCta()" title="Go to QR Codes">Need QR Codes?</button>
+                        <button class="location-action-link feedback-qr-link" type="button" onclick="handleDashboardQrCta()" title="Go to QR Codes">Need QR Codes?</button>
                     </div>
 
                     <div class="feedback-toolbar" aria-label="Feedback filters">
