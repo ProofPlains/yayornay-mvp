@@ -6435,6 +6435,7 @@
 			  loadSubscriptionPrices();
 			  modal?.classList.add('open');
 			  modal?.setAttribute('aria-hidden', 'false');
+			  resetOpenedDialogScroll(modal);
 			}
 
 			function closePricingModal() {
@@ -6506,6 +6507,7 @@
 			  if (message) message.textContent = `Taking you to Stripe to finish setting up ${tier.label}.`;
 			  if (screen) screen.style.display = 'block';
 			  currentView = 'checkout-redirect';
+			  scrollToTop();
 			}
 
 			async function startSubscriptionCheckout(tierKey, expectedUserId = currentUser?.userId) {
@@ -7619,6 +7621,7 @@
 		  hideLoader?.();
 		  currentView = 'welcome';
 		  populateLandingEmojiHero();
+		  scrollToTop();
 		}
 
 
@@ -7644,6 +7647,7 @@
             }
             screen.style.display = 'block';
             currentView = 'team-invite-account';
+            scrollToTop();
 
             if (!token) {
                 showError?.('teamInviteError', 'This invite link is missing its invite code.');
@@ -7717,6 +7721,7 @@
             }
             currentView = 'signup';
             clearFormErrors();
+            scrollToTop();
         }
 
 
@@ -7731,6 +7736,7 @@
             }
             currentView = 'login';
             clearFormErrors();
+            scrollToTop();
         }
 
         function showDemo() {
@@ -7756,6 +7762,7 @@
             updateCustomerLocationDisplay(window.demoAccount.locations);
             showDemoControls();
             currentView = 'customer-demo';
+            scrollToTop();
         }
 
         function hideAllScreens() {
@@ -7832,6 +7839,7 @@
 		  hideAllScreens();
 		  hideAdminControls();
 		  document.getElementById('customerView').style.display = 'block';
+		  scrollToTop();
 		
 		  currentLocation = locationId;
 		
@@ -9292,7 +9300,7 @@
 
 		function openGoogleRoutingSettingsFromQr() {
 		  const locationId = getSelectedQrTrackingLocationId();
-		  showSection('locations');
+		  showSection('locations', { scrollToTop: false });
 		  if (locationId) {
 		    expandedGoogleRoutingLocationId = locationId;
 		    updateLocationsList();
@@ -9853,7 +9861,7 @@
 		  const orderStatus = urlParams.get('qr_order');
 		  if (!orderStatus) return;
 
-		  showSection('qr');
+		  showSection('qr', { scrollToTop: false });
 		  const form = document.getElementById('qrOrderForm');
 		  const status = document.getElementById('qrOrderStatus');
 		  const qrSection = document.getElementById('qr');
@@ -10067,6 +10075,7 @@
             
             updateLocationSelects();
             showSection('Feedback');
+            scrollToTop();
         }
 
         function openNavDrawer() {
@@ -11586,7 +11595,7 @@
             openNavDrawer();
         }
 
-        function showSection(sectionName) {
+        function showSection(sectionName, options = {}) {
             if (sectionName === 'settings' && isOwnerDemoMode()) {
                 closeAccountMenu();
                 return;
@@ -11634,6 +11643,9 @@
             
             // Close the navigation drawer after selection (mobile UX)
             closeNavDrawer();
+            if (options.scrollToTop !== false) {
+                scrollToTop();
+            }
         }
 
         function toggleView() {
@@ -11647,6 +11659,7 @@
                     updateCustomerLocationDisplay(window.demoAccount.locations);
                     resetCustomerView();
                     currentView = 'customer-demo';
+                    scrollToTop();
                 } else {
                     // Real admin: switch to customer view
                     var FeedbackSelect = document.getElementById('FeedbackLocationSelect');
@@ -11662,6 +11675,7 @@
                     updateCustomerLocationDisplay(currentUser.locations);
                     showAdminControls();
                     currentView = 'customer';
+                    scrollToTop();
                 }
             } else {
                 // Customer view: switch back to admin
@@ -12055,11 +12069,22 @@
 		}
 		
 		// --- Modal controls ---
+		function resetOpenedDialogScroll(dialog) {
+		  if (!dialog) return;
+		  dialog.scrollTop = 0;
+		  dialog.scrollLeft = 0;
+		  dialog.querySelectorAll('.pricing-modal-card, .inner').forEach((el) => {
+		    el.scrollTop = 0;
+		    el.scrollLeft = 0;
+		  });
+		}
+
 		function showCommentModal(text) {
 		  const modal = document.getElementById('commentModal');
 		  const body  = document.getElementById('commentModalBody');
 		  setText(body, text && text.trim() ? text : 'No comment');
 		  modal.style.display = 'block';
+		  resetOpenedDialogScroll(modal);
 		  // focus close for accessibility
 		  document.getElementById('commentModalClose')?.focus();
 		}
@@ -12109,10 +12134,18 @@
 		  // Do both for cross-browser reliability
 		  document.body.scrollTop = 0;            // Safari
 		  document.documentElement.scrollTop = 0; // Chrome/Firefox/Edge
+		  document.querySelectorAll('.admin-content').forEach((el) => {
+		    el.scrollTop = 0;
+		    el.scrollLeft = 0;
+		  });
 		
 		  // One more nudge after layout settles (mobile)
 		  requestAnimationFrame(() => {
 		    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+		    document.querySelectorAll('.admin-content').forEach((el) => {
+		      el.scrollTop = 0;
+		      el.scrollLeft = 0;
+		    });
 		  });
 		}
 
@@ -12787,6 +12820,7 @@
 		  if (s) { s.style.display = 'none'; s.textContent = ''; }
 		  if (e) { e.style.display = 'none'; e.textContent = ''; }
 		  currentView = 'forgot';
+		  scrollToTop();
 		}
 		
 		async function handleRequestReset(event) {
@@ -12828,6 +12862,7 @@
 		  const e = document.getElementById('resetError');
 		  if (e) { e.style.display = 'none'; e.textContent = ''; }
 		  currentView = 'reset';
+		  scrollToTop();
 		}
 
 		async function showUnsubscribeAlerts(businessId) {
@@ -12836,6 +12871,7 @@
 		  const screen = document.getElementById('unsubscribeAlertsScreen');
 		  if (screen) screen.style.display = 'block';
 		  currentView = 'unsubscribe';
+		  scrollToTop();
 
 		  const statusEl = document.getElementById('unsubscribeStatus');
 		  if (statusEl) statusEl.textContent = businessId ? 'Updating your alert preferences…' : '';
@@ -13070,6 +13106,12 @@
 	      el.setAttribute('aria-hidden', 'false');
 	      backdrop.setAttribute('aria-hidden', 'false');
 	      body.classList.add('no-scroll');
+	      el.scrollTop = 0;
+	      el.scrollLeft = 0;
+	      el.querySelectorAll('.inner').forEach(inner => {
+	        inner.scrollTop = 0;
+	        inner.scrollLeft = 0;
+	      });
 	      const focusTarget = el.querySelector('.inner');
 	      focusTarget && focusTarget.focus();
 	      document.addEventListener('keydown', escListener);
