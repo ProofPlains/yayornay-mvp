@@ -3031,35 +3031,35 @@
 		  font-size: 13px;
 		  line-height: 1.4;
 		}
-		
+
 		.btn[disabled], .btn:disabled, .submit-btn[disabled], .submit-btn:disabled,
 		.btn-primary[disabled], .btn-primary:disabled {
 		  background: linear-gradient(135deg, var(--ff-brand-1), var(--ff-brand-2)) !important;
 		  color: var(--ff-text-on-brand) !important;
 		  opacity: .55; cursor: not-allowed;
 		}
-		
+
 		.stat-number, .stat-value { color: var(--ff-text) !important; }
 		.stat-label, .stat-caption { color: var(--ff-text-muted) !important; }
-		
+
 		a, .link-button { color: var(--ff-brand-1) !important; text-decoration: underline; }
 		a:hover, .link-button:hover { filter: brightness(1.08); text-decoration-thickness: 2px; }
-		
+
 		.admin-topbar, .nav-drawer, #accountDrawer.drawer, #accountDrawer {
 		  background: linear-gradient(135deg, var(--ff-brand-1) 0%, var(--ff-brand-2) 100%) !important;
 		  color: var(--ff-text-on-brand) !important;
 		}
-		
+
 		.container, .welcome-container, .signup-container, .login-container, #adminView, .stat-card {
 		  background: var(--ff-surface) !important;
 		  border: 1px solid var(--ff-border) !important;
 		  border-radius: var(--ff-radius-lg) !important;
 		  box-shadow: var(--ff-shadow) !important;
 		}
-		
+
 		table thead { background: color-mix(in oklab, var(--ff-surface) 88%, black) !important; }
 		table th { color: var(--ff-text) !important; }
-		
+
 		#customerView .emoji-btn {
 		  background: var(--ff-surface) !important;
 		  border: 3px solid var(--ff-border) !important;
@@ -3430,7 +3430,7 @@
 		  align-items:center;
 		  justify-content:center;
 		  border-radius:20px;
-		  
+
 		}
 
 		/* --- Compact stat chips --- */
@@ -3451,7 +3451,6 @@
 		  font-size:13px;
 		}
 
-		
 		.mood-score { font-size:42px; font-weight:900; line-height:1; }
 		.mood-sub { color: var(--ff-text-muted); margin-top:4px; font-size:13px; }
 		.emoji-bar {
@@ -3526,6 +3525,215 @@
 		  padding: 9px 12px;
 		  align-self: flex-start;
 		  white-space: nowrap;
+		}
+
+		.first-success-panel {
+		  position: relative;
+		  display: none;
+		  gap: 14px;
+		  padding: 16px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 42%, var(--ff-border));
+		  border-radius: 14px;
+		  background:
+		    radial-gradient(circle at top right, color-mix(in oklab, var(--ff-brand-2) 18%, transparent), transparent 36%),
+		    linear-gradient(135deg, color-mix(in oklab, var(--ff-surface) 98%, black), color-mix(in oklab, var(--ff-brand-1) 14%, var(--ff-surface)));
+		  box-shadow: var(--ff-shadow);
+		}
+
+		.first-success-panel.is-visible {
+		  display: grid;
+		}
+
+		.first-success-panel.is-minimized {
+		  grid-template-columns: minmax(0, 1fr) auto;
+		  align-items: center;
+		  padding: 14px 16px;
+		}
+
+		.first-success-panel.is-minimized .first-success-body,
+		.first-success-panel.is-minimized .first-success-progress,
+		.first-success-panel.is-minimized .first-success-preview,
+		.first-success-panel.is-minimized .first-success-tips,
+		.first-success-panel.is-minimized .first-success-secondary {
+		  display: none;
+		}
+
+		.first-success-top {
+		  display: flex;
+		  align-items: flex-start;
+		  justify-content: space-between;
+		  gap: 14px;
+		}
+
+		.first-success-kicker {
+		  margin: 0 0 6px;
+		  color: color-mix(in oklab, var(--ff-brand-2) 78%, white);
+		  font-size: 12px;
+		  font-weight: 900;
+		  text-transform: uppercase;
+		}
+
+		.first-success-title {
+		  margin: 0;
+		  color: var(--ff-text);
+		  font-size: 21px;
+		  line-height: 1.15;
+		}
+
+		.first-success-copy {
+		  margin: 7px 0 0;
+		  color: var(--ff-text-muted);
+		  font-size: 14px;
+		  line-height: 1.45;
+		  max-width: 760px;
+		}
+
+		.first-success-dismiss {
+		  position: absolute;
+		  top: 14px;
+		  right: 14px;
+		  width: 34px;
+		  height: 34px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 999px;
+		  background: color-mix(in oklab, var(--ff-surface) 92%, black);
+		  color: var(--ff-text-muted);
+		  cursor: pointer;
+		  font-size: 18px;
+		  line-height: 1;
+		}
+
+		.first-success-top {
+		  padding-right: 42px;
+		}
+
+		.first-success-progress {
+		  display: grid;
+		  grid-template-columns: repeat(5, minmax(0, 1fr));
+		  gap: 8px;
+		}
+
+		.first-success-step {
+		  display: grid;
+		  gap: 6px;
+		  min-height: 74px;
+		  padding: 10px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 10px;
+		  background: color-mix(in oklab, var(--ff-surface) 92%, black);
+		  color: var(--ff-text-muted);
+		}
+
+		.first-success-step.is-complete {
+		  border-color: color-mix(in oklab, #22c55e 62%, var(--ff-border));
+		  color: var(--ff-text);
+		}
+
+		.first-success-step.is-current {
+		  border-color: color-mix(in oklab, var(--ff-brand-2) 72%, var(--ff-border));
+		  background: color-mix(in oklab, var(--ff-brand-2) 16%, var(--ff-surface));
+		  color: var(--ff-text);
+		}
+
+		.first-success-step-dot {
+		  width: 20px;
+		  height: 20px;
+		  display: inline-grid;
+		  place-items: center;
+		  border-radius: 999px;
+		  background: color-mix(in oklab, var(--ff-border) 78%, transparent);
+		  color: var(--ff-text);
+		  font-size: 11px;
+		  font-weight: 900;
+		}
+
+		.first-success-step.is-complete .first-success-step-dot {
+		  background: #22c55e;
+		  color: #07120b;
+		}
+
+		.first-success-step strong {
+		  color: inherit;
+		  font-size: 13px;
+		  line-height: 1.25;
+		}
+
+		.first-success-step span {
+		  font-size: 12px;
+		  line-height: 1.35;
+		}
+
+		.first-success-actions,
+		.first-success-secondary {
+		  display: flex;
+		  align-items: center;
+		  gap: 10px;
+		  flex-wrap: wrap;
+		}
+
+		.first-success-actions .btn,
+		.first-success-secondary .btn {
+		  width: auto;
+		  margin-top: 0;
+		}
+
+		.first-success-secondary .btn {
+		  background: transparent;
+		  border: 1px solid var(--ff-border);
+		  color: var(--ff-text) !important;
+		}
+
+		.first-success-preview,
+		.first-success-tips {
+		  display: grid;
+		  gap: 8px;
+		  padding: 12px;
+		  border: 1px solid var(--ff-border);
+		  border-radius: 10px;
+		  background: color-mix(in oklab, var(--ff-surface) 92%, black);
+		  color: var(--ff-text-muted);
+		  font-size: 13px;
+		  line-height: 1.4;
+		}
+
+		.first-success-preview strong,
+		.first-success-tips strong {
+		  color: var(--ff-text);
+		}
+
+		.first-success-tips[hidden] {
+		  display: none;
+		}
+
+		.qr-preview-mode-banner {
+		  display: none;
+		  margin: 0 0 16px;
+		  padding: 14px 16px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 54%, var(--ff-border));
+		  border-radius: 12px;
+		  background: color-mix(in oklab, var(--ff-brand-2) 14%, var(--ff-surface));
+		  color: var(--ff-text);
+		  text-align: left;
+		  line-height: 1.4;
+		}
+
+		.qr-preview-mode-banner strong {
+		  display: block;
+		  margin-bottom: 4px;
+		}
+
+		.qr-preview-inline-notice {
+		  display: none;
+		  margin: -12px 0 22px;
+		  padding: 12px 14px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 48%, var(--ff-border));
+		  border-radius: 10px;
+		  background: color-mix(in oklab, var(--ff-brand-2) 12%, var(--ff-surface));
+		  color: var(--ff-text);
+		  font-size: 14px;
+		  font-weight: 700;
+		  line-height: 1.4;
+		  text-align: left;
 		}
 
 		.feedback-toolbar {
@@ -3986,6 +4194,34 @@
 		    font-size: 12px;
 		  }
 
+		  .first-success-panel,
+		  .first-success-panel.is-minimized {
+		    grid-template-columns: 1fr;
+		    padding: 14px;
+		    gap: 10px;
+		  }
+
+		  .first-success-title {
+		    font-size: 18px;
+		    max-width: 100%;
+		  }
+
+		  .first-success-progress {
+		    grid-template-columns: 1fr;
+		    gap: 6px;
+		  }
+
+		  .first-success-step {
+		    grid-template-columns: auto minmax(0, 1fr);
+		    min-height: 0;
+		    align-items: center;
+		    padding: 8px 10px;
+		  }
+
+		  .first-success-step span:last-child {
+		    display: none;
+		  }
+
 		  .feedback-toolbar {
 		    grid-template-columns: repeat(2, minmax(0, 1fr));
 		    gap: 6px;
@@ -4215,11 +4451,11 @@
 		  padding: 10px 12px;
 		  /* reserve space for caret so long labels don't collide */
 		  padding-right: 2.75rem;
-		
+
 		  font-size: 14px;
 		  line-height: 1.25;
 		  appearance: none;                 /* hide native arrow */
-		
+
 		  /* single crisp caret via inline SVG */
 		  background-repeat: no-repeat;
 		  background-position: right 0.9rem center;
@@ -4228,12 +4464,12 @@
 		<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'>\
 		<path d='M1 2.25l5 4.5 5-4.5' fill='none' stroke='%23ece8dc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>\
 		</svg>");
-		
+
 		  /* prevent wrap under the caret */
 		  white-space: nowrap;
 		  overflow: hidden;
 		  text-overflow: ellipsis;
-		
+
 		  transition: border-color .15s ease, box-shadow .15s ease;
 		}
 		select:focus, .form-group select:focus {
@@ -4253,7 +4489,7 @@
 
 
 
-		
+
 		/* === Owner app navigation shell === */
 		#adminView {
 		  max-width: 1400px;
@@ -5279,6 +5515,11 @@
             </div>
         </div>
         
+        <div id="qrPreviewModeBanner" class="qr-preview-mode-banner">
+            <strong>Preview mode</strong>
+            Submissions here will not appear in your dashboard.
+        </div>
+
         <button id="customerLogoutBtn" class="logout-btn" onclick="logout()" style="display: none;">Logout</button>
 
         <div class="header">
@@ -5291,6 +5532,9 @@
         <div class="feedback-section">
             <div class="feedback-question">
                 Please rate your experience with us today
+            </div>
+            <div id="qrPreviewInlineNotice" class="qr-preview-inline-notice">
+                Preview mode: you can test this page safely. Submissions here are not saved, emailed, or counted as real feedback.
             </div>
             
             <div class="emoji-buttons">
@@ -5309,7 +5553,7 @@
 					</div>
             </div>
             
-            <button class="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
+            <button id="submitFeedbackBtn" class="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
         </div>
         
        <div class="thank-you" id="thankYou">
@@ -5418,6 +5662,8 @@
                         </div>
                         <button class="location-action-link feedback-qr-link" type="button" onclick="handleDashboardQrCta()" title="Go to QR Codes">Need QR Codes?</button>
                     </div>
+
+                    <div id="firstSuccessPanel" class="first-success-panel" aria-live="polite"></div>
 
                     <div class="feedback-toolbar" aria-label="Feedback filters">
                         <label class="feedback-filter feedback-location-filter" for="FeedbackLocationSelect">
@@ -5750,11 +5996,11 @@
 					    </div>
 					  </form>
 					    <div id="qrPlacementStep" class="qr-placement-step" style="display:none;">
-					      <div class="qr-step-label"><strong>Step 3:</strong> <span id="qrPlacementHeading">Put your QR code where customers pause</span></div>
+					      <div class="qr-step-label"><strong>Step 3:</strong> <span id="qrPlacementHeading">Put your QR code where customers will see it</span></div>
 					      <p id="qrPlacementCopy" class="qr-placement-copy">Place it somewhere visible, easy to scan, and close to the moment your customer has just experienced your service.</p>
 					      <ul id="qrPlacementChecklist" class="qr-placement-checklist"></ul>
 					      <div class="qr-placement-actions">
-					        <a id="qrPlacementTestLink" class="btn" href="#" target="_blank" rel="noopener">Test QR code</a>
+					        <button id="qrPlacementFirstFeedbackLink" class="btn" type="button">Continue to First Feedback</button>
 					      </div>
 					      <div id="qrGoogleRoutingPrompt" class="qr-google-routing-prompt" hidden>
 					        <div>
@@ -7839,6 +8085,7 @@
 		  hideAllScreens();
 		  hideAdminControls();
 		  document.getElementById('customerView').style.display = 'block';
+		  syncQrPreviewModeBanner();
 		  scrollToTop();
 		
 		  currentLocation = locationId;
@@ -8037,6 +8284,8 @@
 			// also expose for console/debug
 			window.currentUser = currentUser;
 			window.currentLocation = currentLocation;
+			firstSuccessSignals = { loading: false, loaded: false, events: [], orders: [] };
+			firstSuccessLastStateKey = '';
 			currentUser.timezone = 'Europe/London';
 			currentUser.defaultLocationId = loc.id;
 
@@ -8191,6 +8440,8 @@
 			  teamInvites: [],
 			  locations: buildLocationsShape(locRows, fbRows)
 			};
+			firstSuccessSignals = { loading: false, loaded: false, events: [], orders: [] };
+			firstSuccessLastStateKey = '';
 			renderBranding();		  
 			
 		  currentLocation = (business.default_location_id && locRows.some(l => l.id === business.default_location_id))
@@ -8558,16 +8809,16 @@
         function updateCustomerLocationDisplay(locations) {
 		  const display = document.getElementById('customerLocationDisplay');
 		  const ty = document.getElementById('thankYouLocationDisplay');
-		
+
 		  // Base location name (from the passed map)
 		  const locationName = locations[currentLocation]?.name || 'Unknown Location';
-		
+
 		  // Prefix with business name when logged-in; empty when public/QR
 		  const businessName = currentUser?.businessName ? String(currentUser.businessName).trim() : '';
-		
+
 		  // Compose "Business Location" (no extra spaces if biz missing)
 		  const composed = [businessName, locationName].filter(Boolean).join(' ').trim();
-		
+
 		  if (display) display.textContent = composed;
 		  if (ty) ty.textContent = composed;
 		}
@@ -8577,7 +8828,7 @@
             document.querySelectorAll('.emoji-btn').forEach(function(btn) {
                 btn.classList.remove('selected');
             });
-            
+
             button.classList.add('selected');
             selectedSentiment = sentiment;
             document.querySelector('.submit-btn').classList.add('enabled');
@@ -8739,6 +8990,7 @@
 		
 		  const commentsEl = document.getElementById('additionalComments');
 		  const comments = (commentsEl?.value || '').trim() || null;
+		  const previewMode = isQrPreviewMode();
 		
 		  // Optimistic local object for UI/fallbacks
 		  const localItem = {
@@ -8775,7 +9027,7 @@
 		
 		    // 2) Only write to DB when the location is a real UUID and we’re not in demo
 		    const inDemo = (currentView === 'customer-demo') || (currentLocation === 'demo') || !!window.demoAccount;
-		    const canWrite = isUuid(currentLocation) && !inDemo;
+		    const canWrite = isUuid(currentLocation) && !inDemo && !previewMode;
 		
 		    if (canWrite) {
 		      const safeComments = comments ? comments.slice(0, 500) : null;
@@ -8813,24 +9065,37 @@
 		        currentUser.locations[currentLocation].feedback = arr;
 		        updateFeedback();
 		      }
-		    } else {
+		    } else if (!previewMode) {
 		      // Demo or non-UUID → local-only path (no DB write)
 		      const storageKey = 'feedback_' + currentLocation;
 		      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
 		      existing.push(localItem);
 		      localStorage.setItem(storageKey, JSON.stringify(existing));
 		      updateFeedback();
+		    } else {
+		      try {
+		        logEvent('qr_preview_test_completed', {
+		          locationId: isUuid(currentLocation) ? currentLocation : null,
+		          source: 'qr_preview',
+		          metadata: {
+		            sentiment: selectedSentiment,
+		            has_comment: Boolean(comments)
+		          }
+		        });
+		      } catch {}
 		    }
 		  } catch (e) {
 		    console.error(e);
-		    // Fallback on unexpected failures (saves locally)
-		    const storageKey = 'feedback_' + currentLocation;
-		    const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
-		    existing.push(localItem);
-		    localStorage.setItem(storageKey, JSON.stringify(existing));
-		    updateFeedback();
+		    if (!previewMode) {
+		      // Fallback on unexpected failures (saves locally)
+		      const storageKey = 'feedback_' + currentLocation;
+		      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+		      existing.push(localItem);
+		      localStorage.setItem(storageKey, JSON.stringify(existing));
+		      updateFeedback();
+		    }
 		
-		    alert(e.message || 'Could not submit feedback (saved locally, will not appear on dashboard).');
+		    alert(previewMode ? 'Preview completed, but no feedback was saved.' : (e.message || 'Could not submit feedback (saved locally, will not appear on dashboard).'));
 		  }
 		
 		  hideLoader(); // always hide before thank-you UI
@@ -8840,7 +9105,18 @@
 		  if (section) section.style.display = 'none';
 		  const thankYouDiv = document.getElementById('thankYou');
 		  if (thankYouDiv) thankYouDiv.style.display = 'block';
-		  renderPostFeedbackState(selectedSentiment, locationContext);
+		  if (previewMode && thankYouDiv) {
+		    thankYouDiv.innerHTML = `
+		      <h2>Preview works</h2>
+		      <p>This test was not saved to your dashboard. Your real QR code is ready for customers.</p>
+		      <div class="business-cta">
+		        <h3>Ready for real feedback</h3>
+		        <p>Place or share the normal QR code so customer responses appear in your dashboard.</p>
+		      </div>
+		    `;
+		  } else {
+		    renderPostFeedbackState(selectedSentiment, locationContext);
+		  }
 		
 		  if (currentView === 'customer-demo') {
 		    setTimeout(showDemoAdmin, 2000);
@@ -8862,6 +9138,33 @@
 		  const url = new URL(getAppBaseUrl());
 		  url.searchParams.set('location', locationId);
 		  return url.toString();
+		}
+
+		function getCustomerPreviewUrl(locationId) {
+		  const url = window.location.protocol === 'file:'
+		    ? new URL(window.location.href)
+		    : new URL(getCustomerFeedbackUrl(locationId));
+		  if (window.location.protocol === 'file:') {
+		    url.search = '';
+		    url.hash = '';
+		  }
+		  url.searchParams.set('location', locationId);
+		  url.searchParams.set('ff_test', '1');
+		  return url.toString();
+		}
+
+		function isQrPreviewMode() {
+		  return new URLSearchParams(window.location.search).get('ff_test') === '1';
+		}
+
+		function syncQrPreviewModeBanner() {
+		  const banner = document.getElementById('qrPreviewModeBanner');
+		  const inlineNotice = document.getElementById('qrPreviewInlineNotice');
+		  const submitButton = document.getElementById('submitFeedbackBtn');
+		  const previewMode = isQrPreviewMode();
+		  if (banner) banner.style.display = previewMode ? 'block' : 'none';
+		  if (inlineNotice) inlineNotice.style.display = previewMode ? 'block' : 'none';
+		  if (submitButton) submitButton.textContent = previewMode ? 'Submit preview' : 'Submit Feedback';
 		}
 
 		function getQrSignUrl(locationId) {
@@ -9194,16 +9497,15 @@
 		  const heading = document.getElementById('qrPlacementHeading');
 		  const copy = document.getElementById('qrPlacementCopy');
 		  const checklist = document.getElementById('qrPlacementChecklist');
-		  const testLink = document.getElementById('qrPlacementTestLink');
 		  if (!heading || !copy || !checklist) return;
 		  const context = qrStep2CompletionContext || {};
 		  let content = {
-		    heading: 'Put your QR code where customers pause',
+		    heading: 'Put your QR code where customers will see it',
 		    copy: 'Place it somewhere visible, easy to scan, and close to the moment your customer has just experienced your service.',
 		    items: [
 		      'Choose a visible spot where customers naturally pause.',
 		      'Keep the QR code flat, well-lit and easy to scan.',
-		      'Test it with your phone before relying on it.'
+		      'Make sure staff know what the QR code is for.'
 		    ]
 		  };
 
@@ -9214,7 +9516,7 @@
 		      items: [
 		        'Try tables, counters, bill folders, collection points or waiting areas.',
 		        'Keep each sign flat, visible and away from spills or clutter.',
-		        'Scan one after placing it to check the customer page opens correctly.'
+		        'Make sure staff know what the QR signs are for.'
 		      ]
 		    };
 		  } else if (context.type === 'diy_print') {
@@ -9224,7 +9526,7 @@
 		      items: [
 		        'Try a counter, wall, door, reception desk, table stand or payment area.',
 		        'Keep the sign flat, well-lit and easy to scan.',
-		        'Scan it once after placing it to check the customer page opens correctly.'
+		        'Make sure staff know what the QR sign is for.'
 		      ]
 		    };
 		  } else if (context.type === 'diy_download') {
@@ -9234,7 +9536,7 @@
 		      items: [
 		        'Use it in emails, menus, screens, receipts, social posts or team messages.',
 		        'Keep enough space around the QR code so it is easy to scan.',
-		        'Open or scan the image once before sharing it widely.'
+		        'Place it near the moment customers have just experienced your service.'
 		      ]
 		    };
 		  } else if (context.type === 'printed_order') {
@@ -9246,7 +9548,7 @@
 		        items: [
 		          'Place the insert where it will be seen as the parcel is opened.',
 		          'Keep one insert per parcel as part of your packing routine.',
-		          'Scan one insert before sending the first batch.'
+		          'Keep one spare insert aside so staff know what customers will see.'
 		        ]
 		      };
 		    } else if (productMix === 'both') {
@@ -9256,7 +9558,7 @@
 		        items: [
 		          'Use stickers for in-person spots like tables, bill folders, till points or service areas.',
 		          'Add one insert to each outgoing parcel.',
-		          'Scan one sticker and one insert before using the full batch.'
+		          'Keep one spare item aside so staff know what customers will see.'
 		        ]
 		      };
 		    } else {
@@ -9266,7 +9568,7 @@
 		        items: [
 		          'Try tables, counters, bill folders, till points or service areas.',
 		          'Keep each sticker visible, clean and easy to scan.',
-		          'Scan one sticker after placing it to check the customer page opens correctly.'
+		          'Keep one spare sticker aside so staff know what customers will see.'
 		        ]
 		      };
 		    }
@@ -9275,17 +9577,14 @@
 		  heading.textContent = content.heading;
 		  copy.textContent = content.copy;
 		  checklist.innerHTML = content.items.map((item) => `<li>${escapePricingHtml(item)}</li>`).join('');
-		  if (testLink) {
-		    const locationId = getSelectedQrTrackingLocationId();
-		    testLink.href = locationId ? getCustomerFeedbackUrl(locationId) : '#';
-		    testLink.style.display = locationId ? 'inline-flex' : 'none';
-		  }
 		  renderQrGoogleRoutingPrompt();
 		}
 
 		function renderQrGoogleRoutingPrompt() {
 		  const prompt = document.getElementById('qrGoogleRoutingPrompt');
 		  if (!prompt) return;
+		  prompt.hidden = true;
+		  return;
 		  const isDemoQrExperience = currentView === 'customer-demo'
 		    || currentView === 'admin-demo'
 		    || currentLocation === 'demo'
@@ -9882,6 +10181,11 @@
 		  setQrOrderBuilderOpen(!isSuccess);
 		  setQrDiyBuilderOpen(false);
 		  setQrStep2Completed(isSuccess, completionContext);
+		  if (isSuccess) markFirstSuccessLocalSignal('qr_material_action', {
+		    locationId: completionContext?.locationId || getSelectedQrTrackingLocationId(),
+		    materialType: completionContext?.type || 'printed_order',
+		    productMix: completionContext?.productMix || getQrOrderProductMix(completionContext?.items || [])
+		  });
 		  renderQrPrintQuote();
 		  renderQrStickyOrderSummary();
 
@@ -10304,6 +10608,473 @@
 		  }
 		}
 
+		const FIRST_SUCCESS_EVENT_TYPES = [
+		  'qr_generated',
+		  'qr_deployed',
+		  'qr_checkout_started',
+		  'qr_print_order_paid',
+		  'qr_print_order_submitted',
+		  'qr_print_order_in_production',
+		  'qr_print_order_shipped',
+		  'qr_print_order_completed',
+		  'onboarding_qr_placed_confirmed',
+		  'onboarding_completed'
+		];
+
+		let firstSuccessSignals = { loading: false, loaded: false, events: [], orders: [] };
+		let firstSuccessLastStateKey = '';
+
+		function getFirstSuccessStorageKey() {
+		  return currentUser?.businessId ? `ff_first_success_${currentUser.businessId}` : '';
+		}
+
+		function getFirstSuccessLocalState() {
+		  const key = getFirstSuccessStorageKey();
+		  if (!key) return {};
+		  try { return JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch { return {}; }
+		}
+
+		function setFirstSuccessLocalState(patch) {
+		  const key = getFirstSuccessStorageKey();
+		  if (!key) return {};
+		  const next = { ...getFirstSuccessLocalState(), ...patch, updatedAt: new Date().toISOString() };
+		  try { localStorage.setItem(key, JSON.stringify(next)); } catch {}
+		  return next;
+		}
+
+		function markFirstSuccessLocalSignal(signal, extra = {}) {
+		  if (!currentUser?.businessId) return;
+		  const patch = {};
+		  if (signal === 'qr_generated') patch.qrGeneratedAt = new Date().toISOString();
+		  if (signal === 'qr_material_action') {
+		    patch.qrMaterialActionAt = new Date().toISOString();
+		    if (extra.materialType) patch.qrMaterialType = extra.materialType;
+		    if (extra.materialLayout) patch.qrMaterialLayout = extra.materialLayout;
+		    if (extra.productMix) patch.qrProductMix = extra.productMix;
+		  }
+		  if (signal === 'qr_placed') patch.qrPlacedAt = new Date().toISOString();
+		  if (extra.locationId) patch.locationId = extra.locationId;
+		  setFirstSuccessLocalState(patch);
+		  updateFirstSuccessPanel();
+		}
+
+		async function loadFirstSuccessSignals() {
+		  if (!currentUser?.businessId || firstSuccessSignals.loading || firstSuccessSignals.loaded) return;
+		  firstSuccessSignals.loading = true;
+		  try {
+		    const [eventsResult, ordersResult] = await Promise.all([
+		      supabase
+		        .from('analytics_events')
+		        .select('event_type,location_id,source,metadata,created_at')
+		        .eq('business_id', currentUser.businessId)
+		        .in('event_type', FIRST_SUCCESS_EVENT_TYPES)
+		        .order('created_at', { ascending: false })
+		        .limit(80),
+		      supabase
+		        .from('qr_print_orders')
+		        .select('location_id,stripe_payment_status,fulfilment_status,created_at,metadata')
+		        .eq('business_id', currentUser.businessId)
+		        .order('created_at', { ascending: false })
+		        .limit(20)
+		    ]);
+		    if (!eventsResult.error) firstSuccessSignals.events = eventsResult.data || [];
+		    if (!ordersResult.error) firstSuccessSignals.orders = ordersResult.data || [];
+		    firstSuccessSignals.loaded = true;
+		  } catch (error) {
+		    console.warn('First Success signal load failed:', error?.message || error);
+		    firstSuccessSignals.loaded = true;
+		  } finally {
+		    firstSuccessSignals.loading = false;
+		    updateFirstSuccessPanel();
+		  }
+		}
+
+		function hasFirstSuccessEvent(type) {
+		  return (firstSuccessSignals.events || []).some((event) => event.event_type === type);
+		}
+
+		function getFirstSuccessFeedbackItems() {
+		  const items = [];
+		  Object.values(currentUser?.locations || {}).forEach((location) => {
+		    (location.feedback || []).forEach((item) => items.push(item));
+		  });
+		  return items.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+		}
+
+		function getFirstSuccessOrderStage() {
+		  const orders = firstSuccessSignals.orders || [];
+		  const events = firstSuccessSignals.events || [];
+		  if (orders.some((order) => ['completed', 'delivered'].includes(String(order.fulfilment_status || '').toLowerCase()))) return 'completed';
+		  if (orders.some((order) => String(order.fulfilment_status || '').toLowerCase() === 'shipped') || hasFirstSuccessEvent('qr_print_order_shipped')) return 'shipped';
+		  if (orders.some((order) => ['submitted', 'in_production'].includes(String(order.fulfilment_status || '').toLowerCase())) || events.some((event) => ['qr_print_order_submitted', 'qr_print_order_in_production'].includes(event.event_type))) return 'preparing';
+		  if (orders.some((order) => String(order.stripe_payment_status || '').toLowerCase() === 'paid') || hasFirstSuccessEvent('qr_print_order_paid')) return 'paid';
+		  return '';
+		}
+
+		function buildFirstSuccessState() {
+		  const local = getFirstSuccessLocalState();
+		  const feedbackItems = getFirstSuccessFeedbackItems();
+		  const firstFeedback = feedbackItems[0] || null;
+		  const orderStage = getFirstSuccessOrderStage();
+		  const qrReady = Boolean(local.qrGeneratedAt || hasFirstSuccessEvent('qr_generated'));
+		  const materialAction = Boolean(
+		    local.qrMaterialActionAt ||
+		    hasFirstSuccessEvent('qr_deployed') ||
+		    hasFirstSuccessEvent('qr_checkout_started') ||
+		    orderStage
+		  );
+		  const qrPlaced = Boolean(local.qrPlacedAt || hasFirstSuccessEvent('onboarding_qr_placed_confirmed'));
+		  const insightViewed = Boolean(local.firstFeedbackViewedAt || hasFirstSuccessEvent('onboarding_completed'));
+		  let stage = 'no-qr';
+		  if (qrReady) stage = 'qr-ready';
+		  if (materialAction) stage = orderStage && !['shipped', 'completed'].includes(orderStage) ? 'order-waiting' : 'material-ready';
+		  if (qrPlaced) stage = 'qr-placed';
+		  if (firstFeedback) stage = insightViewed ? 'complete' : 'first-feedback';
+		  return {
+		    stage,
+		    local,
+		    firstFeedback,
+		    orderStage,
+		    qrReady,
+		    materialAction,
+		    qrPlaced,
+		    insightViewed,
+		    tipsOpen: Boolean(local.tipsOpenedAt),
+		    minimized: false,
+		    dismissed: Boolean(local.dismissed) && Boolean(firstFeedback && insightViewed)
+		  };
+		}
+
+		function firstSuccessStepMarkup(state) {
+		  const completeIndex = {
+		    'no-qr': 0,
+		    'qr-ready': 1,
+		    'order-waiting': 2,
+		    'material-ready': 2,
+		    'qr-placed': 3,
+		    'first-feedback': 4,
+		    complete: 5
+		  }[state.stage] || 0;
+		  const currentIndex = Math.min(4, completeIndex);
+		  return [
+		    {
+		      pendingLabel: 'Create QR code',
+		      completeLabel: 'QR ready',
+		      pendingCopy: 'Create the link customers will scan.',
+		      completeCopy: 'Private feedback link created.'
+		    },
+		    {
+		      pendingLabel: 'Choose materials',
+		      completeLabel: 'Materials chosen',
+		      pendingCopy: 'Pick print, download, or delivery.',
+		      completeCopy: 'Print, download, or order selected.'
+		    },
+		    {
+		      pendingLabel: 'Place your QR',
+		      completeLabel: 'QR Placed',
+		      pendingCopy: 'Put it where customers will see it.',
+		      completeCopy: 'Confirmed in the real world.'
+		    },
+		    {
+		      pendingLabel: 'Wait for feedback',
+		      completeLabel: 'First feedback received',
+		      pendingCopy: 'A real customer response has not arrived yet.',
+		      completeCopy: 'A real customer response arrived.'
+		    },
+		    {
+		      pendingLabel: 'Review first feedback',
+		      completeLabel: 'Insight viewed',
+		      pendingCopy: 'Open the feedback list when it arrives.',
+		      completeCopy: 'You reviewed what customers shared.'
+		    }
+		  ].map((step, index) => {
+		    const complete = index < completeIndex;
+		    const current = index === currentIndex && state.stage !== 'complete';
+		    const label = complete ? step.completeLabel : step.pendingLabel;
+		    const copy = complete ? step.completeCopy : step.pendingCopy;
+		    return `
+		      <div class="first-success-step${complete ? ' is-complete' : ''}${current ? ' is-current' : ''}">
+		        <span class="first-success-step-dot">${complete ? '&#10003;' : index + 1}</span>
+		        <strong>${label}</strong>
+		        <span>${copy}</span>
+		      </div>
+		    `;
+		  }).join('');
+		}
+
+		function getFirstSuccessPlacementTips(state) {
+		  const local = state.local || {};
+		  const materialType = local.qrMaterialType || '';
+		  const productMix = local.qrProductMix || '';
+		  if (materialType === 'diy_download') {
+		    return [
+		      'Use the downloaded QR image where customers already see your messages: receipts, email templates, screens, menus, order updates, or social posts.',
+		      'Keep enough clear space around the QR code and place it close to the moment customers have just experienced your service.'
+		    ];
+		  }
+		  if (materialType === 'diy_print') {
+		    return [
+		      local.qrMaterialLayout === 'nine'
+		        ? 'Place the smaller printed QR signs at several natural pause points: tables, counters, bill folders, waiting areas, or collection points.'
+		        : 'Place the printed QR sign where customers naturally pause: a counter, wall, reception desk, table stand, or payment area.',
+		      'Keep the sign flat, well-lit, clean, and easy to scan. Make sure staff know what it is.'
+		    ];
+		  }
+		  if (materialType === 'printed_order' && productMix === 'inserts') {
+		    return [
+		      'Add one QR insert to each outgoing parcel where it will be seen as the parcel is opened.',
+		      'Make it part of the packing routine so every customer gets the same private feedback invitation.'
+		    ];
+		  }
+		  if (materialType === 'printed_order' && productMix === 'both') {
+		    return [
+		      'Use stickers for in-person pause points like tables, counters, bill folders, till points, or service areas.',
+		      'Add inserts to outgoing parcels so delivery customers get the same private feedback invitation.'
+		    ];
+		  }
+		  return [
+		    'Place QR materials where customers naturally pause: counters, tables, bill folders, waiting areas, takeaway bags, parcels, or service desks.',
+		    'Keep the code flat, clean, well-lit, and easy to scan. Make sure staff know what it is.'
+		  ];
+		}
+
+		function hasFirstSuccessGoogleReviewRoute() {
+		  return Object.values(currentUser?.locations || {}).some((location) =>
+		    location?.google_review_routing_enabled === true &&
+		    isValidGoogleReviewUrl(String(location?.google_review_url || '').trim())
+		  );
+		}
+
+		function getFirstSuccessViewModel(state) {
+		  const locationId = currentUser?.defaultLocationId || Object.keys(currentUser?.locations || {})[0] || '';
+		  const locationName = currentUser?.locations?.[locationId]?.name || 'your first location';
+		  const base = {
+		    kicker: 'First Feedback',
+		    title: 'Start collecting private customer feedback',
+		    copy: 'Create the QR code customers will scan, put it where customers will see it, then wait for the first real response to arrive.',
+		    primaryLabel: 'Create my QR code',
+		    primaryAction: 'create-qr',
+		    primaryClassName: 'btn',
+		    primaryDisabled: false,
+		    secondary: [],
+		    tips: false
+		  };
+		  if (state.stage === 'qr-ready') return {
+		    ...base,
+		    title: 'Choose how customers will find your QR code',
+		    copy: `Your ${escapePricingHtml(locationName)} QR code is ready. Pick the simplest way to put it where customers can scan it.`,
+		    primaryLabel: 'Choose QR materials',
+		    primaryAction: 'choose-materials'
+		  };
+		  if (state.stage === 'order-waiting') return {
+		    ...base,
+		    title: state.orderStage === 'shipped' ? 'Your QR kit is on the way' : 'Your QR kit is being prepared',
+		    copy: 'Printed QR materials do not count as placed until they arrive and you confirm they are in use.',
+		    primaryLabel: 'Print one now instead',
+		    primaryAction: 'print-now',
+		    secondary: state.tipsOpen ? [] : [{ label: 'See placement tips', action: 'tips', className: 'location-action-link feedback-qr-link' }]
+		  };
+		  if (state.stage === 'material-ready') return {
+		    ...base,
+		    title: 'Place it where customers will see it',
+		    copy: 'A QR code only starts working once customers can see it at the right moment.',
+		    primaryLabel: "I've placed my QR code",
+		    primaryAction: 'confirm-placed',
+		    secondary: state.tipsOpen ? [] : [{ label: 'See placement tips', action: 'tips', className: 'location-action-link feedback-qr-link' }]
+		  };
+		  if (state.stage === 'qr-placed') return {
+		    ...base,
+		    title: "You're one scan away from your first private customer signal",
+		    copy: 'Keep the QR visible and make sure staff know what it is.',
+		    primaryLabel: state.tipsOpen ? 'Placement tips shown' : 'See placement tips',
+		    primaryAction: state.tipsOpen ? 'none' : 'tips',
+		    primaryClassName: state.tipsOpen ? 'btn' : 'location-action-link feedback-qr-link',
+		    primaryDisabled: state.tipsOpen
+		  };
+		  if (state.stage === 'first-feedback') return {
+		    ...base,
+		    title: 'First feedback received - FlashFeedback is live in the real world',
+		    copy: 'This is the moment FlashFeedback starts working. Open the list below to see what your customer shared.',
+		    primaryLabel: 'Show in feedback list',
+		    primaryAction: 'view-feedback'
+		  };
+		  if (state.stage === 'complete') {
+		    const alertsOff = currentUser?.emailAlertsEnabled === false;
+		    const secondary = [];
+		    if (!hasFirstSuccessGoogleReviewRoute()) {
+		      secondary.push({
+		        label: 'Set up Google reviews',
+		        action: 'google-reviews',
+		        className: 'location-action-link feedback-qr-link'
+		      });
+		    }
+		    return {
+		      ...base,
+		      kicker: 'First Feedback Complete',
+		      title: 'First feedback complete',
+		      copy: "You have moved from setup to real customer signal. Get more QR codes or set up Google review routing when you're ready.",
+		      primaryLabel: alertsOff ? 'Turn on alerts' : 'Get more QR codes',
+		      primaryAction: alertsOff ? 'alerts' : 'order-more',
+		      secondary
+		    };
+		  }
+		  return base;
+		}
+
+		function firstSuccessCueMarkup(state) {
+		  if (state.stage !== 'first-feedback') return '';
+		  return `
+		    <div class="first-success-preview">
+		      <strong>Your first feedback is ready.</strong>
+		      <span>Jump to the feedback list to review the real customer response in context.</span>
+		    </div>
+		  `;
+		}
+
+		function renderFirstSuccessPanel() {
+		  const panel = document.getElementById('firstSuccessPanel');
+		  if (!panel) return;
+		  if (isDashboardDemoContext() || !currentUser?.businessId) {
+		    panel.className = 'first-success-panel';
+		    panel.innerHTML = '';
+		    return;
+		  }
+		  const state = buildFirstSuccessState();
+		  if (state.dismissed) {
+		    panel.className = 'first-success-panel';
+		    panel.innerHTML = '';
+		    return;
+		  }
+		  const model = getFirstSuccessViewModel(state);
+		  const secondary = (model.secondary || []).map((item) => {
+		    const className = item.className || 'btn';
+		    return `<button class="${escapePricingHtml(className)}" type="button" onclick="handleFirstSuccessAction('${item.action}')">${escapePricingHtml(item.label)}</button>`;
+		  }).join('');
+		  const placementTips = getFirstSuccessPlacementTips(state);
+		  const primaryClassName = model.primaryClassName || 'btn';
+		  const primaryDisabled = model.primaryDisabled ? ' disabled aria-disabled="true"' : '';
+		  const dismissButton = state.stage === 'complete'
+		    ? '<button class="first-success-dismiss" type="button" onclick="dismissFirstSuccessPanel()" aria-label="Dismiss First Feedback">x</button>'
+		    : '';
+		  panel.className = `first-success-panel is-visible${state.minimized ? ' is-minimized' : ''}`;
+		  panel.innerHTML = `
+		    <div class="first-success-top">
+		      <div>
+		        <p class="first-success-kicker">${escapePricingHtml(model.kicker)}</p>
+		        <h3 class="first-success-title">${model.title}</h3>
+		        <p class="first-success-copy">${escapePricingHtml(model.copy)}</p>
+		      </div>
+		      ${dismissButton}
+		    </div>
+		    <div class="first-success-body"></div>
+		    <div class="first-success-progress">${firstSuccessStepMarkup(state)}</div>
+		    ${firstSuccessCueMarkup(state)}
+		    <div id="firstSuccessTips" class="first-success-tips"${state.tipsOpen ? '' : ' hidden'}>
+		      <strong>Placement tips</strong>
+		      ${placementTips.map((tip) => `<span>${escapePricingHtml(tip)}</span>`).join('')}
+		    </div>
+		    <div class="first-success-actions">
+		      <button class="${escapePricingHtml(primaryClassName)}" type="button" onclick="handleFirstSuccessAction('${model.primaryAction}')"${primaryDisabled}>${escapePricingHtml(model.primaryLabel)}</button>
+		      ${state.minimized ? '<button class="btn" type="button" onclick="handleFirstSuccessAction(\'restore\')">Show path</button>' : ''}
+		    </div>
+		    ${secondary ? `<div class="first-success-secondary">${secondary}</div>` : ''}
+		  `;
+		  const stateKey = `${currentUser.businessId}:${state.stage}:${state.minimized ? 'mini' : 'full'}`;
+		  if (firstSuccessLastStateKey !== stateKey) {
+		    firstSuccessLastStateKey = stateKey;
+		    logEvent('onboarding_card_viewed', {
+		      source: 'first_success_dashboard',
+		      metadata: { stage: state.stage, minimized: state.minimized }
+		    });
+		  }
+		}
+
+		function updateFirstSuccessPanel() {
+		  renderFirstSuccessPanel();
+		  loadFirstSuccessSignals();
+		}
+
+		function dismissFirstSuccessPanel() {
+		  const state = buildFirstSuccessState();
+		  if (state.stage !== 'complete') return;
+		  const patch = { dismissed: true };
+		  setFirstSuccessLocalState(patch);
+		  logEvent('onboarding_dismissed', {
+		    source: 'first_success_dashboard',
+		    metadata: { stage: state.stage, dismissed: true }
+		  });
+		  renderFirstSuccessPanel();
+		}
+
+		function handleFirstSuccessAction(action) {
+		  const state = buildFirstSuccessState();
+		  if (action === 'none') return;
+		  logEvent('onboarding_cta_clicked', {
+		    source: 'first_success_dashboard',
+		    metadata: { action, stage: state.stage }
+		  });
+		  if (action === 'restore') {
+		    setFirstSuccessLocalState({ minimized: false });
+		    renderFirstSuccessPanel();
+		    return;
+		  }
+		  if (action === 'create-qr' || action === 'choose-materials' || action === 'print-now' || action === 'order-more') {
+		    showSection('qr');
+		    setTimeout(() => {
+		      if (action === 'print-now') showQrDiyPanel();
+		      const target = action === 'create-qr'
+		        ? document.getElementById('qrGenerateSignBtn')
+		        : document.querySelector('.qr-sign-action-step') || document.getElementById('qrGenerateSignBtn');
+		      target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+		      target?.focus?.({ preventScroll: true });
+		    }, 80);
+		    return;
+		  }
+		  if (action === 'confirm-placed') {
+		    const locationId = getSelectedQrTrackingLocationId();
+		    markFirstSuccessLocalSignal('qr_placed', { locationId });
+		    logEvent('onboarding_qr_placed_confirmed', {
+		      locationId,
+		      source: 'first_success_dashboard',
+		      metadata: { stage: state.stage }
+		    });
+		    return;
+		  }
+		  if (action === 'tips') {
+		    setFirstSuccessLocalState({ tipsOpenedAt: new Date().toISOString() });
+		    logEvent('onboarding_placement_tips_opened', {
+		      source: 'first_success_dashboard',
+		      metadata: { stage: state.stage }
+		    });
+		    renderFirstSuccessPanel();
+		    return;
+		  }
+		  if (action === 'view-feedback') {
+		    setFirstSuccessLocalState({ firstFeedbackViewedAt: new Date().toISOString() });
+		    logEvent('onboarding_completed', {
+		      locationId: state.firstFeedback?.location || null,
+		      source: 'first_success_dashboard',
+		      metadata: { stage: state.stage }
+		    });
+		    renderFirstSuccessPanel();
+		    document.getElementById('recentFeedbackList')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		    return;
+		  }
+		  if (action === 'alerts') {
+		    showSection('settings');
+		    setTimeout(() => document.getElementById('settingsEmailAlertsToggle')?.focus?.(), 100);
+		    return;
+		  }
+		  if (action === 'locations') {
+		    showSection('locations');
+		    setTimeout(() => document.getElementById('newLocationInput')?.focus?.(), 100);
+		    return;
+		  }
+		  if (action === 'google-reviews') {
+		    openGoogleRoutingSettingsFromQr();
+		  }
+		}
+
 		function setDashboardText(id, value) {
 		  const el = document.getElementById(id);
 		  if (el) el.textContent = value;
@@ -10720,6 +11491,7 @@
 			    // Recent list (unchanged)
 			    recentPage = 0;
 			    updateRecentFeedback(dashboardFeedback);
+			    updateFirstSuccessPanel();
         }
 
        function updateRecentFeedback(feedback) {
@@ -11585,6 +12357,7 @@
 		    locationId: selectedLocation,
 		    source: 'business_dashboard'
 		  });
+		  markFirstSuccessLocalSignal('qr_generated', { locationId: selectedLocation });
 
 		}
 
@@ -11715,6 +12488,8 @@
 		  handleFeedbackFilterChanged,
 		  handleDashboardQrCta,
 		  handleDashboardEmptyStateCta,
+		  handleFirstSuccessAction,
+		  dismissFirstSuccessPanel,
 		  toggleDashboardQuickFilter,
 		  toggleDashboardMoodFilter,
 		  openFeedbackHistoryUpgrade,
@@ -12443,6 +13218,12 @@
 		  setQrDiyBuilderOpen(false);
 		  setQrOrderBuilderOpen(false);
 		  setQrStep2Completed(true, context);
+		  markFirstSuccessLocalSignal('qr_material_action', {
+		    locationId: context.locationId || getSelectedQrTrackingLocationId(),
+		    materialType: context.type,
+		    materialLayout: context.layout,
+		    productMix: context.productMix
+		  });
 		  document.getElementById('qrPlacementStep')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}
 
@@ -12762,6 +13543,10 @@
 		    document.getElementById('qrOrderSubmit')?.click();
 		  });
 		  document.getElementById('qrGoogleRoutingPromptBtn')?.addEventListener('click', openGoogleRoutingSettingsFromQr);
+		  document.getElementById('qrPlacementFirstFeedbackLink')?.addEventListener('click', () => {
+		    showSection('Feedback', { scrollToTop: false });
+		    setTimeout(() => document.getElementById('firstSuccessPanel')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }), 80);
+		  });
 		  document.getElementById('qrKitEncounter')?.addEventListener('change', () => {
 		    resetQrKitRecommendation();
 		    renderQrKitVolumeFields();
