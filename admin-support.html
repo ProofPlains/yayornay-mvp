@@ -804,6 +804,125 @@
     }
     .qr-print-order-meta .badge { white-space: nowrap; }
     .qr-print-order-card a { color: var(--brand); }
+    .order-rescue-dashboard {
+      display: grid;
+      gap: 16px;
+    }
+    .order-rescue-summary {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .order-rescue-stat,
+    .order-rescue-card,
+    .order-detail-block {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+    }
+    .order-rescue-stat {
+      padding: 12px;
+      min-width: 0;
+    }
+    .order-rescue-stat strong {
+      display: block;
+      color: var(--brand);
+      font-size: 26px;
+      line-height: 1;
+    }
+    .order-rescue-stat span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+    .order-rescue-toolbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) repeat(4, minmax(130px, 170px));
+      gap: 10px;
+      align-items: end;
+    }
+    .order-rescue-toolbar label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .order-rescue-toolbar input,
+    .order-rescue-toolbar select {
+      width: 100%;
+      min-height: 40px;
+      padding: 0 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--text);
+    }
+    .order-rescue-list {
+      display: grid;
+      gap: 10px;
+    }
+    .order-rescue-card {
+      display: grid;
+      gap: 10px;
+      padding: 13px;
+    }
+    .order-rescue-card.needs-attention {
+      border-color: rgba(239,68,68,.58);
+      background: rgba(239,68,68,.11);
+    }
+    .order-rescue-card-header,
+    .order-rescue-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .order-rescue-title {
+      display: grid;
+      gap: 3px;
+    }
+    .order-rescue-title strong {
+      font-size: 16px;
+    }
+    .order-rescue-meta,
+    .order-detail-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .order-rescue-next {
+      padding: 9px 10px;
+      border-radius: 8px;
+      background: rgba(184,138,255,.10);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .order-detail-block {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+    }
+    .order-detail-block h3 {
+      font-size: 16px;
+    }
+    .order-debug {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-height: 360px;
+      overflow: auto;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: 12px;
+    }
     .qr-sign-panel {
       display: none;
       margin-top: 14px;
@@ -832,7 +951,7 @@
 
     @media (max-width: 720px) {
       header, .intro { display: grid; }
-      .toolbar, .grid, .metric-grid, .metrics-hero, .activation-constraint-card, .activation-stage-card, .activation-stuck-item { grid-template-columns: 1fr; }
+      .toolbar, .grid, .metric-grid, .metrics-hero, .activation-constraint-card, .activation-stage-card, .activation-stuck-item, .order-rescue-summary, .order-rescue-toolbar { grid-template-columns: 1fr; }
       .list-item-header, .qr-sign-toolbar { display: grid; }
       .header-actions { justify-content: start; }
       .metrics-hero-value { text-align: left; }
@@ -874,6 +993,7 @@
     <div class="console-tabs" role="tablist" aria-label="Support console sections">
       <button class="console-tab active" type="button" role="tab" id="activationTab" aria-selected="true" aria-controls="activationPanel" data-console-tab="activation">Activation Drop-off</button>
       <button class="console-tab" type="button" role="tab" id="metricsTab" aria-selected="false" aria-controls="metricsPanel" data-console-tab="metrics" tabindex="-1">Metrics Dashboard</button>
+      <button class="console-tab" type="button" role="tab" id="orderRescueTab" aria-selected="false" aria-controls="orderRescuePanel" data-console-tab="orders" tabindex="-1">Order Rescue</button>
       <button class="console-tab" type="button" role="tab" id="businessTab" aria-selected="false" aria-controls="businessPanel" data-console-tab="business" tabindex="-1">Business Support Overview</button>
     </div>
 
@@ -968,6 +1088,67 @@
         </details>
 
         <p class="metrics-note">FlashFeedback creates value when it turns silent customer experiences into private, visible, actionable signals for businesses. These metrics track whether that loop is working: businesses sign up, deploy QR codes, customers submit feedback, businesses view it, and some businesses upgrade because the value is clear.</p>
+      </section>
+    </section>
+
+    <section id="orderRescuePanel" class="console-tab-panel" role="tabpanel" aria-labelledby="orderRescueTab" hidden>
+      <div class="intro">
+        <div>
+          <h2>Order Rescue</h2>
+          <p class="muted">QR sticker and insert orders that may need founder follow-up.</p>
+        </div>
+      </div>
+
+      <section class="order-rescue-dashboard" aria-label="QR print order rescue dashboard">
+        <div id="orderRescueSummary" class="order-rescue-summary"></div>
+        <div class="order-rescue-toolbar">
+          <label>
+            Search
+            <input id="orderSearchInput" type="search" placeholder="Business, owner, order, Stripe, Prodigi, postcode">
+          </label>
+          <label>
+            Status
+            <select id="orderStatusFilter">
+              <option value="all">All statuses</option>
+              <option value="needs_attention">Needs attention</option>
+              <option value="paid">Paid</option>
+              <option value="unpaid">Unpaid</option>
+              <option value="fulfilled">Fulfilled</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </label>
+          <label>
+            Product
+            <select id="orderProductFilter">
+              <option value="all">All products</option>
+              <option value="stickers">Stickers</option>
+              <option value="inserts">Inserts</option>
+              <option value="both">Both</option>
+            </select>
+          </label>
+          <label>
+            Fulfilment
+            <select id="orderFulfilmentFilter">
+              <option value="all">All fulfilment</option>
+              <option value="not_sent">Not sent</option>
+              <option value="pending">Pending</option>
+              <option value="in_production">In production</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="failed">Failed</option>
+              <option value="unknown">Unknown</option>
+            </select>
+          </label>
+          <label>
+            Country
+            <select id="orderCountryFilter">
+              <option value="all">All countries</option>
+            </select>
+          </label>
+        </div>
+        <div id="orderRescueStatus" class="status"></div>
+        <div id="orderRescueList" class="order-rescue-list"></div>
+        <div id="orderRescueEmpty" class="empty">No QR print orders yet.</div>
       </section>
     </section>
 
@@ -1066,6 +1247,7 @@
     const activationFunnelEl = document.getElementById('activationFunnel');
     const activationDrilldownsEl = document.getElementById('activationDrilldowns');
     const metricsPanelEl = document.getElementById('metricsPanel');
+    const orderRescuePanelEl = document.getElementById('orderRescuePanel');
     const businessPanelEl = document.getElementById('businessPanel');
     const weeklyActiveHeroEl = document.getElementById('weeklyActiveHero');
     const metricsFunnelFlowEl = document.getElementById('metricsFunnelFlow');
@@ -1077,6 +1259,15 @@
     const dashboardEngagementMetricCardsEl = document.getElementById('dashboardEngagementMetricCards');
     const postFeedbackMetricCardsEl = document.getElementById('postFeedbackMetricCards');
     const monetisationMetricCardsEl = document.getElementById('monetisationMetricCards');
+    const orderRescueSummaryEl = document.getElementById('orderRescueSummary');
+    const orderRescueStatusEl = document.getElementById('orderRescueStatus');
+    const orderRescueListEl = document.getElementById('orderRescueList');
+    const orderRescueEmptyEl = document.getElementById('orderRescueEmpty');
+    const orderSearchEl = document.getElementById('orderSearchInput');
+    const orderStatusFilterEl = document.getElementById('orderStatusFilter');
+    const orderProductFilterEl = document.getElementById('orderProductFilter');
+    const orderFulfilmentFilterEl = document.getElementById('orderFulfilmentFilter');
+    const orderCountryFilterEl = document.getElementById('orderCountryFilter');
     const rowsPerPage = 10;
     let currentPage = 1;
     const searchEl = document.getElementById('searchInput');
@@ -1088,6 +1279,7 @@
       const panels = {
         activation: activationPanelEl,
         metrics: metricsPanelEl,
+        orders: orderRescuePanelEl,
         business: businessPanelEl
       };
       const selectedTab = panels[tabName] ? tabName : 'activation';
@@ -1231,6 +1423,149 @@
 
     function qrPrintFulfilmentTone(status) {
       return ['failed', 'needs_attention'].includes(status) ? 'disabled' : 'enabled';
+    }
+
+    function cleanValue(value, fallback = 'Not recorded') {
+      const text = String(value ?? '').trim();
+      return text || fallback;
+    }
+
+    function productMixFromItems(items, productType = '') {
+      const types = new Set((Array.isArray(items) ? items : [])
+        .map((item) => item.product_type || item.productType)
+        .filter(Boolean));
+      if (!types.size && productType) types.add(productType);
+      const hasStickers = types.has('qr_sticker');
+      const hasInserts = types.has('qr_insert');
+      if (hasStickers && hasInserts) return 'both';
+      if (hasInserts) return 'inserts';
+      return 'stickers';
+    }
+
+    function productMixLabel(mix) {
+      return mix === 'both' ? 'Stickers + inserts' : mix === 'inserts' ? 'Inserts' : 'Stickers';
+    }
+
+    function normaliseFulfilmentBucket(order) {
+      const status = String(order.fulfilmentStatus || order.prodigiStatus || '').toLowerCase();
+      if (['failed', 'needs_attention'].includes(status)) return 'failed';
+      if (['in_production', 'production'].includes(status)) return 'in_production';
+      if (['shipped', 'dispatched'].includes(status)) return 'shipped';
+      if (['completed', 'delivered'].includes(status)) return 'delivered';
+      if (['prodigi_submitted', 'submitted', 'paid'].includes(status)) return 'pending';
+      if (!order.prodigiOrderId) return 'not_sent';
+      return 'unknown';
+    }
+
+    function notificationLabel(order) {
+      const status = String(order.internalEmailStatus || '').toLowerCase();
+      if (status === 'sent') return 'Internal email sent';
+      if (status === 'failed') return 'Internal email failed';
+      if (status === 'not_applicable') return 'Internal email not applicable';
+      return 'Internal email not tracked';
+    }
+
+    function notificationTone(order) {
+      const status = String(order.internalEmailStatus || '').toLowerCase();
+      return status === 'failed' ? 'disabled' : status === 'sent' ? 'enabled' : '';
+    }
+
+    function hasMissingDelivery(order) {
+      return !order.deliveryContact || !order.addressLine1 || !order.city || !order.postcode || !(order.countryCode || order.country);
+    }
+
+    function classifyOrder(order) {
+      const payment = String(order.stripePaymentStatus || '').toLowerCase();
+      const fulfilment = String(order.fulfilmentStatus || '').toLowerCase();
+      const prodigiStatus = String(order.prodigiStatus || '').toLowerCase();
+      const emailStatus = String(order.internalEmailStatus || '').toLowerCase();
+      const missingDelivery = hasMissingDelivery(order);
+      const paid = payment === 'paid';
+      const cancelled = ['cancelled', 'canceled', 'expired'].includes(payment) || ['cancelled', 'canceled', 'refunded'].includes(fulfilment);
+
+      if (fulfilment === 'refunded' || payment === 'refunded') {
+        return { label: 'Refunded', bucket: 'cancelled', priority: 90, nextAction: 'No action needed unless the customer asks for help.', needsAttention: false };
+      }
+      if (cancelled) {
+        return { label: 'Cancelled', bucket: 'cancelled', priority: 88, nextAction: 'No fulfilment action needed.', needsAttention: false };
+      }
+      if (missingDelivery && paid) {
+        return { label: 'Missing delivery details', bucket: 'needs_attention', priority: 1, nextAction: 'Investigate missing address before fulfilment.', needsAttention: true };
+      }
+      if (['failed', 'needs_attention'].includes(fulfilment) || prodigiStatus === 'failed') {
+        return { label: fulfilment === 'needs_attention' ? 'Needs attention' : 'Prodigi failed', bucket: 'needs_attention', priority: 2, nextAction: 'Check Prodigi dashboard and create or retry manually only if safe.', needsAttention: true };
+      }
+      if (paid && !order.prodigiOrderId) {
+        return { label: 'Paid / not sent to Prodigi', bucket: 'needs_attention', priority: 3, nextAction: 'Create or retry Prodigi order manually after checking for duplicates.', needsAttention: true };
+      }
+      if (paid && emailStatus === 'failed') {
+        return { label: 'Needs attention', bucket: 'needs_attention', priority: 4, nextAction: 'Internal email failed - check notification and send a customer update if needed.', needsAttention: true };
+      }
+      if (!paid && order.stripeSessionId) {
+        return { label: 'Checkout started / not paid', bucket: 'unpaid', priority: 55, nextAction: 'Check Stripe payment before fulfilling.', needsAttention: false };
+      }
+      if (!paid) {
+        return { label: 'Unknown', bucket: 'unpaid', priority: 70, nextAction: 'Wait for payment or check Stripe if the customer reports an issue.', needsAttention: false };
+      }
+      if (['completed', 'delivered'].includes(fulfilment)) {
+        return { label: 'Delivered', bucket: 'fulfilled', priority: 85, nextAction: 'No action needed.', needsAttention: false };
+      }
+      if (fulfilment === 'shipped') {
+        return { label: 'Shipped', bucket: 'fulfilled', priority: 82, nextAction: 'Wait for delivery update.', needsAttention: false };
+      }
+      if (fulfilment === 'in_production') {
+        return { label: 'In production', bucket: 'fulfilled', priority: 78, nextAction: 'Wait for fulfilment update.', needsAttention: false };
+      }
+      if (order.prodigiOrderId) {
+        return { label: 'Sent to Prodigi', bucket: 'paid', priority: 40, nextAction: 'Check Prodigi dashboard if no update arrives.', needsAttention: false };
+      }
+      return { label: 'Paid / fulfilment pending', bucket: 'paid', priority: 35, nextAction: 'Wait briefly, then check Prodigi if it stays pending.', needsAttention: false };
+    }
+
+    function flattenQrOrders() {
+      const businesses = Array.isArray(overview?.businesses) ? overview.businesses : [];
+      return businesses.flatMap((business) => {
+        const owner = (business.users || []).find((user) => user.role === 'owner') || (business.users || [])[0] || {};
+        return (business.qrPrintOrders || []).map((order) => {
+          const kitItems = Array.isArray(order.kitItems) && order.kitItems.length
+            ? order.kitItems
+            : [{ product_type: order.productType, product_name: order.productName, quantity: order.quantity, prodigi_sku: order.prodigiSku }];
+          const productMix = productMixFromItems(kitItems, order.productType);
+          const rescue = classifyOrder(order);
+          return {
+            ...order,
+            businessId: business.id,
+            businessName: business.name,
+            ownerName: business.ownerName,
+            ownerEmail: order.ownerEmail || owner.email || '',
+            stripeCustomerId: business.stripeCustomerId || '',
+            subscriptionTestMode: business.subscriptionTestMode === true,
+            kitItems,
+            productMix,
+            rescue,
+            fulfilmentBucket: normaliseFulfilmentBucket(order),
+            location: (business.locations || []).find((location) => location.id === order.locationId) || null,
+          };
+        });
+      }).sort((a, b) => (a.rescue.priority - b.rescue.priority) || (new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
+    }
+
+    function orderSearchText(order) {
+      return [
+        order.id,
+        order.businessName,
+        order.ownerName,
+        order.ownerEmail,
+        order.locationName,
+        order.stripeSessionId,
+        order.stripePaymentIntentId,
+        order.prodigiOrderId,
+        order.postcode,
+        order.deliveryContact,
+        order.country,
+        order.deliveryMethod,
+        order.kitItems.map((item) => [item.product_name, item.prodigi_sku, item.product_type].join(' ')).join(' ')
+      ].filter(Boolean).join(' ').toLowerCase();
     }
 
     function customerFeedbackUrl(locationId) {
@@ -2515,6 +2850,81 @@
       );
     }
 
+    function renderOrderRescue() {
+      if (!orderRescueSummaryEl) return;
+      const orders = flattenQrOrders();
+      const summary = {
+        attention: orders.filter((order) => order.rescue.needsAttention).length,
+        paidNotFulfilled: orders.filter((order) => order.stripePaymentStatus === 'paid' && !['completed', 'delivered', 'shipped'].includes(String(order.fulfilmentStatus || '').toLowerCase())).length,
+        prodigiRisk: orders.filter((order) => ['failed', 'unknown', 'not_sent'].includes(order.fulfilmentBucket) && order.stripePaymentStatus === 'paid').length,
+        active: orders.filter((order) => ['in_production', 'shipped', 'delivered'].includes(order.fulfilmentBucket)).length,
+        cancelled: orders.filter((order) => ['cancelled', 'unpaid'].includes(order.rescue.bucket)).length,
+      };
+      orderRescueSummaryEl.innerHTML = `
+        <div class="order-rescue-stat"><strong>${summary.attention}</strong><span>Needs attention</span></div>
+        <div class="order-rescue-stat"><strong>${summary.paidNotFulfilled}</strong><span>Paid but not fulfilled</span></div>
+        <div class="order-rescue-stat"><strong>${summary.prodigiRisk}</strong><span>Prodigi failed or unknown</span></div>
+        <div class="order-rescue-stat"><strong>${summary.active}</strong><span>In production / shipped / delivered</span></div>
+        <div class="order-rescue-stat"><strong>${summary.cancelled}</strong><span>Cancelled / unpaid</span></div>
+      `;
+
+      const countries = [...new Set(orders.map((order) => order.country || order.countryCode).filter(Boolean))].sort();
+      const currentCountry = orderCountryFilterEl.value || 'all';
+      orderCountryFilterEl.innerHTML = '<option value="all">All countries</option>' + countries.map((country) => `<option value="${escapeHtml(country)}">${escapeHtml(country)}</option>`).join('');
+      orderCountryFilterEl.value = countries.includes(currentCountry) ? currentCountry : 'all';
+
+      const query = orderSearchEl.value.trim().toLowerCase();
+      const statusFilter = orderStatusFilterEl.value;
+      const productFilter = orderProductFilterEl.value;
+      const fulfilmentFilter = orderFulfilmentFilterEl.value;
+      const countryFilter = orderCountryFilterEl.value;
+      const filtered = orders.filter((order) =>
+        (!query || orderSearchText(order).includes(query)) &&
+        (statusFilter === 'all' || order.rescue.bucket === statusFilter || (statusFilter === 'paid' && order.stripePaymentStatus === 'paid')) &&
+        (productFilter === 'all' || order.productMix === productFilter) &&
+        (fulfilmentFilter === 'all' || order.fulfilmentBucket === fulfilmentFilter) &&
+        (countryFilter === 'all' || order.country === countryFilter || order.countryCode === countryFilter)
+      );
+
+      orderRescueListEl.innerHTML = filtered.map((order) => {
+        const itemText = order.kitItems.map((item) => `${Number(item.quantity || 0).toLocaleString()} ${item.product_name || item.productName || 'QR item'}`).join(' + ');
+        return `
+          <article class="order-rescue-card ${order.rescue.needsAttention ? 'needs-attention' : ''}">
+            <div class="order-rescue-card-header">
+              <div class="order-rescue-title">
+                <strong>${escapeHtml(order.businessName || 'Unknown business')}</strong>
+                <span class="muted">${escapeHtml(order.locationName || 'Unknown location')} - ${escapeHtml(formatDate(order.createdAt))}</span>
+              </div>
+              <span class="badge ${order.rescue.needsAttention ? 'disabled' : 'enabled'}">${escapeHtml(order.rescue.label)}</span>
+            </div>
+            <div class="order-rescue-meta">
+              <span class="badge enabled">${escapeHtml(productMixLabel(order.productMix))}</span>
+              <span class="badge enabled">${escapeHtml(itemText || 'No items recorded')}</span>
+              <span class="badge ${order.stripePaymentStatus === 'paid' ? 'enabled' : 'disabled'}">Stripe: ${escapeHtml(order.stripePaymentStatus || 'Unknown')}</span>
+              <span class="badge ${qrPrintFulfilmentTone(order.fulfilmentStatus)}">Prodigi: ${escapeHtml(order.prodigiOrderId || qrPrintFulfilmentLabel(order.fulfilmentStatus))}</span>
+              <span class="badge ${notificationTone(order)}">${escapeHtml(notificationLabel(order))}</span>
+            </div>
+            <div class="muted">${escapeHtml(order.ownerEmail || 'No owner email')} - ${escapeHtml(order.deliveryMethod || 'Delivery')} - ${escapeHtml([order.country || order.countryCode, order.postcode].filter(Boolean).join(' ') || 'No delivery postcode')}</div>
+            <div class="order-rescue-next"><strong>Next action:</strong> ${escapeHtml(order.rescue.nextAction)}</div>
+            <div class="order-rescue-actions">
+              <div class="muted">${escapeHtml(formatSupportMoney(order.customerTotalAmount, order.currency))} - Order ${escapeHtml(order.id || 'not recorded')}</div>
+              <div class="order-detail-actions">
+                <button class="small-btn" type="button" data-order-id="${escapeHtml(order.id)}">Open details</button>
+                <button class="small-btn" type="button" data-open-business-id="${escapeHtml(order.businessId)}">Open business</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      orderRescueEmptyEl.textContent = orders.length ? 'No orders match the current filters.' : 'No QR print orders yet.';
+      orderRescueEmptyEl.style.display = filtered.length === 0 ? 'block' : 'none';
+      orderRescueStatusEl.textContent = overview
+        ? `${filtered.length} of ${orders.length} QR print orders shown. Risky orders are sorted first.`
+        : 'Loading orders...';
+      orderRescueStatusEl.classList.remove('error');
+    }
+
     async function loadOverview() {
       rowsEl.innerHTML = '';
       emptyEl.style.display = 'none';
@@ -2559,6 +2969,7 @@
     function render() {
       renderActivationDashboard();
       renderMetrics();
+      renderOrderRescue();
       const businesses = Array.isArray(overview?.businesses) ? overview.businesses : [];
       const query = searchEl.value.trim().toLowerCase();
       const alertsFilter = alertsEl.value;
@@ -2663,6 +3074,183 @@
       setQrRequestStatus(`QR sign generated for ${business.name || 'business'} - ${location.name || 'location'}.`);
     }
 
+    function detailField(label, value) {
+      return `<div class="field"><span>${escapeHtml(label)}</span>${escapeHtml(cleanValue(value))}</div>`;
+    }
+
+    function detailCopyButton(label, value) {
+      const text = String(value || '').trim();
+      if (!text) return '';
+      return `<button class="small-btn" type="button" data-copy-value="${escapeHtml(text)}">${escapeHtml(label)}</button>`;
+    }
+
+    function stripeDashboardUrl(id, type = 'payments') {
+      const value = String(id || '').trim();
+      if (!value) return '';
+      if (value.startsWith('cs_')) return `https://dashboard.stripe.com/payments?query=${encodeURIComponent(value)}`;
+      if (value.startsWith('pi_')) return `https://dashboard.stripe.com/payments/${encodeURIComponent(value)}`;
+      if (value.startsWith('cus_')) return `https://dashboard.stripe.com/customers/${encodeURIComponent(value)}`;
+      return `https://dashboard.stripe.com/${type}?query=${encodeURIComponent(value)}`;
+    }
+
+    function openOrderDetail(orderId) {
+      const order = flattenQrOrders().find((item) => item.id === orderId);
+      if (!order) return;
+      const feedbackUrl = order.locationId ? customerFeedbackUrl(order.locationId) : '';
+      const addressLines = [
+        order.deliveryContact,
+        order.addressLine1,
+        order.addressLine2,
+        order.city,
+        order.postcode,
+        order.country || order.countryCode,
+      ].filter(Boolean);
+      const itemRows = order.kitItems.map((item) => `
+        <div class="list-item">
+          <div class="list-item-header">
+            <div>
+              <strong>${escapeHtml(item.product_name || item.productName || 'QR item')}</strong>
+              <div class="muted">${escapeHtml(item.product_type || item.productType || 'Unknown product')} - SKU ${escapeHtml(item.prodigi_sku || item.prodigiSku || 'Not recorded')}</div>
+            </div>
+            <span class="badge enabled">${escapeHtml(Number(item.quantity || 0).toLocaleString())}</span>
+          </div>
+        </div>
+      `).join('');
+      const stripeSessionUrl = stripeDashboardUrl(order.stripeSessionId, 'payments');
+      const stripePaymentUrl = stripeDashboardUrl(order.stripePaymentIntentId, 'payments');
+
+      drawerEl.innerHTML = `
+        <div class="drawer-header">
+          <div>
+            <h2>${escapeHtml(order.rescue.label)}</h2>
+            <p class="muted">${escapeHtml(order.businessName || 'Unknown business')} - ${escapeHtml(order.locationName || 'Unknown location')}</p>
+          </div>
+          <button class="close" type="button" id="closeDrawer" aria-label="Close">x</button>
+        </div>
+        <div class="section">
+          <div class="order-rescue-next"><strong>Next action:</strong> ${escapeHtml(order.rescue.nextAction)}</div>
+          <div class="order-detail-actions">
+            <button class="small-btn" type="button" data-open-business-id="${escapeHtml(order.businessId)}">Open business</button>
+            ${order.locationId ? `<button class="small-btn" type="button" data-qr-business-id="${escapeHtml(order.businessId)}" data-qr-location-id="${escapeHtml(order.locationId)}">Generate sign</button>` : ''}
+            ${detailCopyButton('Copy owner email', order.ownerEmail)}
+            ${detailCopyButton('Copy address', addressLines.join('\n'))}
+            ${detailCopyButton('Copy QR URL', feedbackUrl)}
+            ${detailCopyButton('Copy Stripe session', order.stripeSessionId)}
+            ${detailCopyButton('Copy Prodigi ID', order.prodigiOrderId)}
+            ${stripeSessionUrl ? `<a class="small-btn" href="${escapeHtml(stripeSessionUrl)}" target="_blank" rel="noopener noreferrer">Open Stripe</a>` : ''}
+            ${order.trackingUrl ? `<a class="small-btn" href="${escapeHtml(order.trackingUrl)}" target="_blank" rel="noopener noreferrer">Open tracking</a>` : ''}
+          </div>
+          <div id="qrSignPanel" class="qr-sign-panel">
+            <div class="qr-sign-toolbar">
+              <div>
+                <strong id="qrSignTitle">QR sign</strong>
+                <div id="qrSignUrl" class="muted"></div>
+              </div>
+              <button class="small-btn" type="button" id="qrSignDownload" disabled>Download PNG</button>
+            </div>
+            <img id="qrSignPreview" class="qr-sign-preview" alt="Generated QR sign preview" style="display:none;">
+          </div>
+        </div>
+        <div class="section">
+          <div class="order-detail-block">
+            <h3>Business</h3>
+            <div class="grid">
+              ${detailField('Business', order.businessName)}
+              ${detailField('Business ID', order.businessId)}
+              ${detailField('Owner', order.ownerName)}
+              ${detailField('Owner email', order.ownerEmail)}
+              ${detailField('Location', order.locationName)}
+              ${detailField('Location ID', order.locationId)}
+              ${detailField('Customer feedback URL', feedbackUrl)}
+              ${detailField('QR sign/artwork URL', order.artworkUrl)}
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="order-detail-block">
+            <h3>Order</h3>
+            <div class="grid">
+              ${detailField('Internal order ID', order.id)}
+              ${detailField('Product mix', productMixLabel(order.productMix))}
+              ${detailField('Delivery method', order.deliveryMethod)}
+              ${detailField('Customer total', formatSupportMoney(order.customerTotalAmount, order.currency))}
+              ${detailField('Currency', order.currency)}
+              ${detailField('Created', formatDate(order.createdAt))}
+              ${detailField('Updated', formatDate(order.updatedAt))}
+              ${detailField('Notes', order.notes)}
+            </div>
+            <div class="list">${itemRows || '<div class="muted">No line items recorded.</div>'}</div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="order-detail-block">
+            <h3>Delivery</h3>
+            <div class="grid">
+              ${detailField('Contact', order.deliveryContact)}
+              ${detailField('Address line 1', order.addressLine1)}
+              ${detailField('Address line 2', order.addressLine2)}
+              ${detailField('City', order.city)}
+              ${detailField('Postcode', order.postcode)}
+              ${detailField('Country', order.country || order.countryCode)}
+              ${detailField('Courier option', order.shippingMethod)}
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="order-detail-block">
+            <h3>Stripe</h3>
+            <div class="grid">
+              ${detailField('Checkout session ID', order.stripeSessionId)}
+              ${detailField('Payment intent ID', order.stripePaymentIntentId)}
+              ${detailField('Stripe customer ID', order.stripeCustomerId)}
+              ${detailField('Payment status', order.stripePaymentStatus || 'Unknown')}
+              ${detailField('Amount paid', formatSupportMoney(order.customerTotalAmount, order.currency))}
+              ${detailField('Mode/environment', order.subscriptionTestMode ? 'Test/sandbox' : 'Not recorded')}
+            </div>
+            <div class="order-detail-actions">
+              ${stripeSessionUrl ? `<a class="small-btn" href="${escapeHtml(stripeSessionUrl)}" target="_blank" rel="noopener noreferrer">Open checkout in Stripe</a>` : ''}
+              ${stripePaymentUrl ? `<a class="small-btn" href="${escapeHtml(stripePaymentUrl)}" target="_blank" rel="noopener noreferrer">Open payment in Stripe</a>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="order-detail-block">
+            <h3>Prodigi</h3>
+            <div class="grid">
+              ${detailField('Prodigi order ID', order.prodigiOrderId)}
+              ${detailField('Prodigi SKU(s)', order.kitItems.map((item) => item.prodigi_sku || item.prodigiSku).filter(Boolean).join(' + '))}
+              ${detailField('Fulfilment status', qrPrintFulfilmentLabel(order.fulfilmentStatus))}
+              ${detailField('Prodigi status', order.prodigiStatus)}
+              ${detailField('Shipping/tracking reference', order.shipmentReference)}
+              ${detailField('Tracking URL', order.trackingUrl)}
+              ${detailField('Last fulfilment update', order.updatedAt)}
+              ${detailField('Error/message', order.errorMessage)}
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="order-detail-block">
+            <h3>Internal notification</h3>
+            <div class="grid">
+              ${detailField('Email state', notificationLabel(order))}
+              ${detailField('Sent timestamp', order.internalEmailSentAt)}
+              ${detailField('Subject', order.internalEmailSubject)}
+              ${detailField('Failure/error', order.internalEmailError)}
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <details class="order-detail-block">
+            <summary>Debug details</summary>
+            <pre class="order-debug">${escapeHtml(JSON.stringify(order, null, 2))}</pre>
+          </details>
+        </div>
+      `;
+      overlayEl.classList.add('open');
+      drawerEl.classList.add('open');
+      document.getElementById('closeDrawer').addEventListener('click', closeDetail);
+    }
+
     function openDetail(id) {
       const business = (overview?.businesses || []).find((item) => item.id === id);
       if (!business) return;
@@ -2752,12 +3340,16 @@
                     <span class="badge enabled">${escapeHtml(order.deliveryMethod || 'Delivery')}</span>
                     <span class="badge enabled">${escapeHtml(formatSupportMoney(order.customerTotalAmount, order.currency))}</span>
                     <span class="badge ${order.stripePaymentStatus === 'paid' ? 'enabled' : 'disabled'}">Stripe: ${escapeHtml(order.stripePaymentStatus || '-')}</span>
+                    <span class="badge ${notificationTone(order)}">${escapeHtml(notificationLabel(order))}</span>
                   </div>
                   <div class="muted">${escapeHtml(kitItems.map((item) => item.prodigi_sku || '-').join(' + '))} - Prodigi ${escapeHtml(order.prodigiOrderId || 'not submitted yet')}</div>
                   ${order.trackingUrl ? `<div><a href="${escapeHtml(order.trackingUrl)}" target="_blank" rel="noopener noreferrer">Open tracking link</a></div>` : ''}
                   ${order.errorMessage ? `<div class="simulation-status error">${escapeHtml(order.errorMessage)}</div>` : ''}
                   ${order.artworkDeletedAt ? `<div class="muted">Artwork removed automatically on ${escapeHtml(formatDate(order.artworkDeletedAt))}</div>` : ''}
                   <div class="muted">Deliver to ${escapeHtml(order.deliveryContact || '-')} - ${escapeHtml(order.city || '')} ${escapeHtml(order.postcode || '')}</div>
+                  <div class="order-detail-actions">
+                    <button class="small-btn" type="button" data-order-id="${escapeHtml(order.id)}">Open details</button>
+                  </div>
                 </div>
               `;
             }).join('') : '<div class="muted">No QR print orders yet.</div>'}
@@ -2869,6 +3461,21 @@
       currentPage = 1;
       render();
     });
+    [orderSearchEl, orderStatusFilterEl, orderProductFilterEl, orderFulfilmentFilterEl, orderCountryFilterEl].forEach((control) => {
+      control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', renderOrderRescue);
+    });
+    orderRescueListEl.addEventListener('click', (event) => {
+      const orderButton = event.target.closest('[data-order-id]');
+      if (orderButton) {
+        openOrderDetail(orderButton.dataset.orderId);
+        return;
+      }
+      const businessButton = event.target.closest('[data-open-business-id]');
+      if (businessButton) {
+        switchConsoleTab('business');
+        openDetail(businessButton.dataset.openBusinessId);
+      }
+    });
     activationRangeEl.addEventListener('change', renderActivationDashboard);
     activationDrilldownsEl.addEventListener('click', (event) => {
       const button = event.target.closest('[data-business-id]');
@@ -2914,6 +3521,29 @@
           simulationButton.dataset.simulationBusinessId,
           simulationButton
         );
+        return;
+      }
+      const orderButton = event.target.closest('[data-order-id]');
+      if (orderButton) {
+        openOrderDetail(orderButton.dataset.orderId);
+        return;
+      }
+      const businessButton = event.target.closest('[data-open-business-id]');
+      if (businessButton) {
+        switchConsoleTab('business');
+        openDetail(businessButton.dataset.openBusinessId);
+        return;
+      }
+      const copyButton = event.target.closest('[data-copy-value]');
+      if (copyButton) {
+        const value = copyButton.dataset.copyValue || '';
+        navigator.clipboard?.writeText(value)
+          .then(() => {
+            const original = copyButton.textContent;
+            copyButton.textContent = 'Copied';
+            setTimeout(() => { copyButton.textContent = original; }, 1200);
+          })
+          .catch(() => alert(value));
         return;
       }
       const button = event.target.closest('[data-qr-location-id]');
