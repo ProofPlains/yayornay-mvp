@@ -839,7 +839,7 @@
     }
     .order-rescue-toolbar {
       display: grid;
-      grid-template-columns: minmax(220px, 1fr) repeat(4, minmax(130px, 170px));
+      grid-template-columns: minmax(220px, 1fr) repeat(5, minmax(130px, 170px));
       gap: 10px;
       align-items: end;
     }
@@ -1145,6 +1145,14 @@
               <option value="all">All countries</option>
             </select>
           </label>
+          <label>
+            Sort
+            <select id="orderSortSelect">
+              <option value="risk">Risk first</option>
+              <option value="created_desc">Newest created</option>
+              <option value="created_asc">Oldest created</option>
+            </select>
+          </label>
         </div>
         <div id="orderRescueStatus" class="status"></div>
         <div id="orderRescueList" class="order-rescue-list"></div>
@@ -1268,6 +1276,7 @@
     const orderProductFilterEl = document.getElementById('orderProductFilter');
     const orderFulfilmentFilterEl = document.getElementById('orderFulfilmentFilter');
     const orderCountryFilterEl = document.getElementById('orderCountryFilter');
+    const orderSortEl = document.getElementById('orderSortSelect');
     const rowsPerPage = 10;
     let currentPage = 1;
     const searchEl = document.getElementById('searchInput');
@@ -1547,7 +1556,23 @@
             location: (business.locations || []).find((location) => location.id === order.locationId) || null,
           };
         });
-      }).sort((a, b) => (a.rescue.priority - b.rescue.priority) || (new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()));
+      });
+    }
+
+    function orderCreatedTime(order) {
+      const time = new Date(order.createdAt || 0).getTime();
+      return Number.isFinite(time) ? time : 0;
+    }
+
+    function sortQrOrders(orders, sortMode) {
+      const sorted = [...orders];
+      if (sortMode === 'created_desc') {
+        return sorted.sort((a, b) => orderCreatedTime(b) - orderCreatedTime(a));
+      }
+      if (sortMode === 'created_asc') {
+        return sorted.sort((a, b) => orderCreatedTime(a) - orderCreatedTime(b));
+      }
+      return sorted.sort((a, b) => (a.rescue.priority - b.rescue.priority) || (orderCreatedTime(b) - orderCreatedTime(a)));
     }
 
     function orderSearchText(order) {
@@ -2878,13 +2903,14 @@
       const productFilter = orderProductFilterEl.value;
       const fulfilmentFilter = orderFulfilmentFilterEl.value;
       const countryFilter = orderCountryFilterEl.value;
-      const filtered = orders.filter((order) =>
+      const sortMode = orderSortEl.value;
+      const filtered = sortQrOrders(orders.filter((order) =>
         (!query || orderSearchText(order).includes(query)) &&
         (statusFilter === 'all' || order.rescue.bucket === statusFilter || (statusFilter === 'paid' && order.stripePaymentStatus === 'paid')) &&
         (productFilter === 'all' || order.productMix === productFilter) &&
         (fulfilmentFilter === 'all' || order.fulfilmentBucket === fulfilmentFilter) &&
         (countryFilter === 'all' || order.country === countryFilter || order.countryCode === countryFilter)
-      );
+      ), sortMode);
 
       orderRescueListEl.innerHTML = filtered.map((order) => {
         const itemText = order.kitItems.map((item) => `${Number(item.quantity || 0).toLocaleString()} ${item.product_name || item.productName || 'QR item'}`).join(' + ');
@@ -2920,7 +2946,7 @@
       orderRescueEmptyEl.textContent = orders.length ? 'No orders match the current filters.' : 'No QR print orders yet.';
       orderRescueEmptyEl.style.display = filtered.length === 0 ? 'block' : 'none';
       orderRescueStatusEl.textContent = overview
-        ? `${filtered.length} of ${orders.length} QR print orders shown. Risky orders are sorted first.`
+        ? `${filtered.length} of ${orders.length} QR print orders shown. ${sortMode === 'created_desc' ? 'Newest orders are first.' : sortMode === 'created_asc' ? 'Oldest orders are first.' : 'Risky orders are first.'}`
         : 'Loading orders...';
       orderRescueStatusEl.classList.remove('error');
     }
@@ -3461,7 +3487,7 @@
       currentPage = 1;
       render();
     });
-    [orderSearchEl, orderStatusFilterEl, orderProductFilterEl, orderFulfilmentFilterEl, orderCountryFilterEl].forEach((control) => {
+    [orderSearchEl, orderStatusFilterEl, orderProductFilterEl, orderFulfilmentFilterEl, orderCountryFilterEl, orderSortEl].forEach((control) => {
       control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', renderOrderRescue);
     });
     orderRescueListEl.addEventListener('click', (event) => {
