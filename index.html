@@ -1443,10 +1443,10 @@
 		  place-items: center;
 		  min-height: 22px;
 		  padding: 3px 9px;
-		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 38%, var(--ff-border));
+		  border: 1px solid color-mix(in oklab, #22c55e 62%, var(--ff-border));
 		  border-radius: 999px;
-		  background: color-mix(in oklab, var(--ff-brand-2) 18%, transparent);
-		  color: var(--ff-text);
+		  background: color-mix(in oklab, #22c55e 18%, transparent);
+		  color: color-mix(in oklab, #22c55e 76%, var(--ff-text));
 		  font-size: 11px;
 		  font-weight: 900;
 		  letter-spacing: .06em;
@@ -1479,8 +1479,8 @@
 		  display: inline-grid;
 		  place-items: center;
 		  border-radius: 999px;
-		  background: color-mix(in oklab, var(--ff-brand-2) 28%, transparent);
-		  color: var(--ff-text);
+		  background: #22c55e;
+		  color: #07120b;
 		  font-weight: 900;
 		}
 
@@ -9496,6 +9496,7 @@
 		  const insertAmount = Number(option.insert_customer_total_amount ?? option.insertCustomerTotalAmount ?? (!hasStickerItem ? option.customer_total_amount : 0));
 		  if (!insertAmount) return '';
 		  const costPerParcel = Math.ceil(insertAmount / insertQuantity);
+		  if (costPerParcel > 79) return '';
 		  const helper = hasStickerItem
 		    ? 'Approximate QR insert cost per outgoing parcel. Stickers are not included in this figure.'
 		    : 'Approximate cost when you include one QR insert in each outgoing parcel.';
