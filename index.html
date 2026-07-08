@@ -5272,7 +5272,7 @@
 				<div class="ff-grid-3">
 					<div class="ff-tile">
 						<h3>Printed QR kits</h3>
-						<p>Order ready-to-use QR materials for in-person touchpoints and customer parcels.</p>
+						<p>Order ready-to-use QR codes for in-person touchpoints and customer parcels.</p>
 					</div>
 					<div class="ff-tile">
 						<h3>QR stickers</h3>
@@ -8514,13 +8514,12 @@
 			  return;
 			}
 
-			// 6) Open the existing admin UI for Free signups.
+			// 6) Open the admin UI on Feedback so the First Feedback path guides setup.
 			showAdminDashboard();
 
-			// === Onboarding: land on QR generator immediately and pre-populate ===
+			// === Onboarding: land on Feedback and keep the QR dropdown pre-populated ===
 			try {
-			  // show the QR section
-			  showSection('qr');
+			  showSection('Feedback');
 			
 			  // pre-select the newly created location in the QR dropdown
 			  const sel = document.getElementById('qrLocationSelect');
@@ -8530,7 +8529,7 @@
 			
 			  resetQrSignUI();
 			} catch (e) {
-			  console.warn('onboarding→QR jump failed:', e?.message || e);
+			  console.warn('onboarding feedback landing failed:', e?.message || e);
 			}
 
 			  
@@ -11107,7 +11106,7 @@
 		    ];
 		  }
 		  return [
-		    'Place QR materials where customers naturally pause: counters, tables, bill folders, waiting areas, takeaway bags, parcels, or service desks.',
+		    'Place QR codes where customers naturally pause: counters, tables, bill folders, waiting areas, takeaway bags, parcels, or service desks.',
 		    'Keep the code flat, clean, well-lit, and easy to scan. Make sure staff know what it is.'
 		  ];
 		}
@@ -11158,10 +11157,17 @@
 		  if (state.stage === 'order-waiting') return {
 		    ...base,
 		    title: state.orderStage === 'shipped' ? 'Your QR kit is on the way' : 'Your QR kit is being prepared',
-		    copy: 'You can confirm placement once your delivered QR kit is in use. Want to start sooner? Print a QR code now and place it where customers will see it.',
+		    copy: "When your QR codes arrive, come back here and confirm that you've placed them. Want to start sooner? Print a QR code now and place it where customers will see it.",
 		    primaryLabel: 'Print one now instead',
 		    primaryAction: 'print-now',
-		    secondary: [firstSuccessTipsToggle(state)]
+		    secondary: [
+		      {
+		        label: "I've placed my QR code",
+		        action: 'confirm-placed',
+		        className: 'location-action-link feedback-qr-link'
+		      },
+		      firstSuccessTipsToggle(state)
+		    ]
 		  };
 		  if (state.stage === 'feedback-before-placement') {
 		    const waitingForOrder = state.orderStage && !['shipped', 'completed'].includes(state.orderStage);
@@ -11169,11 +11175,20 @@
 		      ...base,
 		      title: 'A customer response is in',
 		      copy: waitingForOrder
-		        ? 'Your delivered QR kit is still in progress. Once it arrives, confirm placement - or print a QR code now if you want to keep collecting feedback while you wait.'
+		        ? "Your QR kit is still in progress. If it has arrived, confirm placement here. If not, you can print a QR code now to keep collecting feedback while you wait."
 		        : 'Confirm your QR code is placed where customers will see it, so future responses keep coming in.',
 		      primaryLabel: waitingForOrder ? 'Print one now instead' : "I've placed my QR code",
 		      primaryAction: waitingForOrder ? 'print-now' : 'confirm-placed',
-		      secondary: [firstSuccessTipsToggle(state)]
+		      secondary: waitingForOrder
+		        ? [
+		            {
+		              label: "I've placed my QR code",
+		              action: 'confirm-placed',
+		              className: 'location-action-link feedback-qr-link'
+		            },
+		            firstSuccessTipsToggle(state)
+		          ]
+		        : [firstSuccessTipsToggle(state)]
 		    };
 		  }
 		  if (state.stage === 'material-ready') return {
