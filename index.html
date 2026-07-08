@@ -9613,6 +9613,10 @@
 		  const context = qrStep2CompletionContext || {};
 		  if (context.type === 'printed_order') {
 		    const summary = formatQrCompletedItemSummary(context.items || qrPrintQuoteState.items);
+		    return summary ? `Payment received - QR kit ordered: ${summary}` : 'Payment received - QR kit ordered';
+		  }
+		  if (context.type === 'printed_order') {
+		    const summary = formatQrCompletedItemSummary(context.items || qrPrintQuoteState.items);
 		    return summary ? `QR kit ordered — ${summary}` : 'QR kit ordered';
 		  }
 		  if (context.type === 'diy_print') {
@@ -9878,7 +9882,29 @@
 		  if (isOpen) setQrStep2Completed(false);
 		}
 
-		function showQrDiyPanel() {
+		async function ensureQrSignGeneratedForDiy() {
+		  const existingSign = document.querySelector('#signImageContainer img');
+		  if (existingSign?.src) {
+		    syncQrPreviewImages();
+		    return true;
+		  }
+		  const status = document.getElementById('qrPrintCopiesStatus');
+		  if (status) status.textContent = 'Preparing your QR sign...';
+		  try {
+		    await generateSign();
+		    const generatedSign = document.querySelector('#signImageContainer img');
+		    syncQrPreviewImages();
+		    if (status) status.textContent = '';
+		    return Boolean(generatedSign?.src);
+		  } catch (error) {
+		    if (status) status.textContent = error?.message || 'Could not prepare your QR sign.';
+		    return false;
+		  }
+		}
+
+		async function showQrDiyPanel() {
+		  const hasSign = await ensureQrSignGeneratedForDiy();
+		  if (!hasSign) return;
 		  hideQrOrderForm();
 		  setQrDiyBuilderOpen(true);
 		  syncQrPreviewImages();
@@ -10409,22 +10435,26 @@
 
 		  if (qrSection) {
 		    document.getElementById('qrOrderReturnBanner')?.remove();
-		    const banner = document.createElement('div');
-		    banner.id = 'qrOrderReturnBanner';
-		    banner.setAttribute('role', 'status');
-		    banner.style.cssText = [
-		      'margin:0 0 16px 0',
-		      'padding:14px 16px',
-		      'border-radius:10px',
-		      'font-weight:700',
-		      'line-height:1.35',
-		      `color:${isSuccess ? '#065f46' : '#92400e'}`,
-		      `background:${isSuccess ? '#d1fae5' : '#fef3c7'}`,
-		      `border:1px solid ${isSuccess ? '#10b981' : '#f59e0b'}`
-		    ].join(';');
-		    banner.textContent = message;
-		    qrSection.insertBefore(banner, qrSection.firstChild);
-		    (isSuccess ? document.getElementById('qrPlacementStep') || banner : banner).scrollIntoView({ behavior: 'smooth', block: 'start' });
+		    if (isSuccess) {
+		      document.getElementById('qrPlacementStep')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		    } else {
+		      const banner = document.createElement('div');
+		      banner.id = 'qrOrderReturnBanner';
+		      banner.setAttribute('role', 'status');
+		      banner.style.cssText = [
+		        'margin:0 0 16px 0',
+		        'padding:14px 16px',
+		        'border-radius:10px',
+		        'font-weight:700',
+		        'line-height:1.35',
+		        `color:${isSuccess ? '#065f46' : '#92400e'}`,
+		        `background:${isSuccess ? '#d1fae5' : '#fef3c7'}`,
+		        `border:1px solid ${isSuccess ? '#10b981' : '#f59e0b'}`
+		      ].join(';');
+		      banner.textContent = message;
+		      qrSection.insertBefore(banner, qrSection.firstChild);
+		      banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		    }
 		  }
 
 		  urlParams.delete('qr_order');
@@ -10930,6 +10960,7 @@
 		  const feedbackItems = getFirstSuccessFeedbackItems();
 		  const firstFeedback = feedbackItems[0] || null;
 		  const orderStage = getFirstSuccessOrderStage();
+		  const hasDiyQrReady = ['diy_print', 'diy_download'].includes(String(local.qrMaterialType || ''));
 		  const qrReady = Boolean(local.qrGeneratedAt || hasFirstSuccessEvent('qr_generated') || firstFeedback);
 		  const materialAction = Boolean(
 		    local.qrMaterialActionAt ||
@@ -10941,7 +10972,7 @@
 		  const insightViewed = Boolean(local.firstFeedbackViewedAt || hasFirstSuccessEvent('onboarding_completed'));
 		  let stage = 'no-qr';
 		  if (qrReady) stage = 'qr-ready';
-		  if (materialAction) stage = orderStage && !['shipped', 'completed'].includes(orderStage) ? 'order-waiting' : 'material-ready';
+		  if (materialAction) stage = orderStage && !hasDiyQrReady && !['shipped', 'completed'].includes(orderStage) ? 'order-waiting' : 'material-ready';
 		  if (qrPlaced) stage = 'qr-placed';
 		  if (firstFeedback && !materialAction) stage = 'feedback-before-materials';
 		  else if (firstFeedback && !qrPlaced) stage = 'feedback-before-placement';
@@ -10997,18 +11028,19 @@
 		}
 
 		function firstSuccessStepMarkup(state, model, placementTips) {
+		  const waitingForDeliveredKit = state.orderStage && !['shipped', 'completed'].includes(state.orderStage) && !['diy_print', 'diy_download'].includes(String(state.local?.qrMaterialType || ''));
 		  const steps = [
 		    {
 		      pendingLabel: 'Get QR codes',
-		      completeLabel: 'QR codes ready',
+		      completeLabel: waitingForDeliveredKit ? 'QR kit ordered' : 'QR codes ready',
 		      pendingCopy: 'Create, print, download, or order QR codes.',
-		      completeCopy: 'QR code created and material path started.',
+		      completeCopy: waitingForDeliveredKit ? 'Your paid QR kit is being prepared.' : 'Your QR code is ready to print, download, or use.',
 		      complete: state.qrReady && state.materialAction
 		    },
 		    {
 		      pendingLabel: 'Place your QR',
 		      completeLabel: 'QR Placed',
-		      pendingCopy: 'Place your QR code where customers can see it.',
+		      pendingCopy: waitingForDeliveredKit ? 'Place your delivered kit when it arrives, or print one now to start sooner.' : 'Place your QR code where customers can see it.',
 		      completeCopy: 'Confirmed in the real world.',
 		      complete: state.qrPlaced
 		    },
@@ -11126,7 +11158,7 @@
 		  if (state.stage === 'order-waiting') return {
 		    ...base,
 		    title: state.orderStage === 'shipped' ? 'Your QR kit is on the way' : 'Your QR kit is being prepared',
-		    copy: 'Printed QR materials do not count as placed until they arrive and you confirm they are in use.',
+		    copy: 'You can confirm placement once your delivered QR kit is in use. Want to start sooner? Print a QR code now and place it where customers will see it.',
 		    primaryLabel: 'Print one now instead',
 		    primaryAction: 'print-now',
 		    secondary: [firstSuccessTipsToggle(state)]
@@ -11137,7 +11169,7 @@
 		      ...base,
 		      title: 'A customer response is in',
 		      copy: waitingForOrder
-		        ? 'Your QR materials are still in progress. Once they arrive, confirm placement so future customers can find the QR code reliably.'
+		        ? 'Your delivered QR kit is still in progress. Once it arrives, confirm placement - or print a QR code now if you want to keep collecting feedback while you wait.'
 		        : 'Confirm your QR code is placed where customers will see it, so future responses keep coming in.',
 		      primaryLabel: waitingForOrder ? 'Print one now instead' : "I've placed my QR code",
 		      primaryAction: waitingForOrder ? 'print-now' : 'confirm-placed',
@@ -11297,9 +11329,11 @@
 		  }
 		  if (action === 'print-now' || action === 'order-more') {
 		    showSection('qr');
-		    setTimeout(() => {
-		      if (action === 'print-now') showQrDiyPanel();
-		      const target = document.querySelector('.qr-sign-action-step') || document.getElementById('qrGenerateSignBtn');
+		    setTimeout(async () => {
+		      if (action === 'print-now') await showQrDiyPanel();
+		      const target = action === 'print-now'
+		        ? document.getElementById('qrDiyPanel') || document.querySelector('.qr-sign-action-step')
+		        : document.querySelector('.qr-sign-action-step') || document.getElementById('qrGenerateSignBtn');
 		      target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
 		      target?.focus?.({ preventScroll: true });
 		    }, 80);
