@@ -2315,6 +2315,62 @@
 		  border-color: color-mix(in oklab, var(--ff-brand-2) 76%, var(--ff-border));
 		  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 3px color-mix(in oklab, var(--ff-brand-2) 12%, transparent);
 		}
+		.qr-kit-stepper {
+		  display: inline-grid;
+		  grid-template-columns: 38px minmax(42px, auto) 38px;
+		  align-items: center;
+		  justify-self: center;
+		  min-height: 36px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 68%, var(--ff-border));
+		  border-radius: 999px;
+		  background:
+		    linear-gradient(135deg, color-mix(in oklab, var(--ff-brand-2) 16%, transparent), transparent 58%),
+		    color-mix(in oklab, var(--ff-surface) 95%, black);
+		  color: var(--ff-text);
+		  overflow: hidden;
+		  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 0 0 1px rgba(139,92,246,.10), 0 10px 24px rgba(0,0,0,.18);
+		}
+		.qr-kit-stepper-button {
+		  width: 38px;
+		  height: 36px;
+		  min-height: 36px;
+		  padding: 0;
+		  border: 0;
+		  border-radius: 0;
+		  background: transparent;
+		  color: color-mix(in oklab, var(--ff-brand-1) 78%, white);
+		  box-shadow: none;
+		  display: inline-grid;
+		  place-items: center;
+		  font-size: 21px;
+		  font-weight: 900;
+		  line-height: 1;
+		  cursor: pointer;
+		}
+		.qr-kit-stepper-button:hover,
+		.qr-kit-stepper-button:focus {
+		  background: color-mix(in oklab, var(--ff-brand-2) 22%, transparent);
+		  color: var(--ff-text);
+		  transform: none;
+		  box-shadow: none;
+		}
+		.qr-kit-stepper-button:focus-visible {
+		  outline: 2px solid color-mix(in oklab, var(--ff-brand-1) 80%, white);
+		  outline-offset: -3px;
+		}
+		.qr-kit-stepper-button svg {
+		  width: 17px;
+		  height: 17px;
+		  stroke-width: 2.8;
+		}
+		.qr-kit-stepper-value {
+		  min-width: 34px;
+		  padding: 0 4px;
+		  text-align: center;
+		  font-weight: 900;
+		  font-size: 15px;
+		  line-height: 1;
+		}
 		.qr-kit-edit-hint {
 		  color: var(--ff-text-muted);
 		  font-size: 11px;
@@ -9535,15 +9591,22 @@
 		function normalizeQrKitQuantity(productType, quantity) {
 		  const product = QR_PRINT_PRODUCTS[productType] || QR_PRINT_PRODUCTS.qr_sticker;
 		  const increment = Math.max(1, Number(product.quantityIncrement || 1));
-		  const rounded = Math.ceil((Number(quantity || 0) - 1e-9) / increment) * increment;
-		  return Math.max(increment, rounded);
+		  const numeric = Math.max(0, Number(quantity || 0));
+		  if (numeric <= 0) return 0;
+		  return Math.ceil((numeric - 1e-9) / increment) * increment;
 		}
 
 		function isQrKitItemQuantityValid(item) {
 		  const product = QR_PRINT_PRODUCTS[item.product_type];
 		  const increment = Math.max(1, Number(product?.quantityIncrement || 1));
 		  const quantity = Number(item.quantity);
-		  return Number.isInteger(quantity) && quantity >= increment && quantity % increment === 0;
+		  return Number.isInteger(quantity) && quantity >= 0 && quantity % increment === 0;
+		}
+
+		function getOrderableQrKitItems() {
+		  return (qrPrintQuoteState.items || [])
+		    .filter((item) => Number(item.quantity || 0) > 0)
+		    .map((item) => ({ ...item, quantity: normalizeQrKitQuantity(item.product_type, item.quantity) }));
 		}
 
 		function hasFreshQrKitRecommendation() {
@@ -9685,12 +9748,13 @@
 
 		function rememberQrOrderCompletionContext() {
 		  const { locationId, locationName } = getSelectedQrOrderLocation();
+		  const orderableItems = getOrderableQrKitItems();
 		  try {
 		    localStorage.setItem('ff_last_qr_order_context', JSON.stringify({
 		      type: 'printed_order',
 		      locationId,
 		      locationName,
-		      items: qrPrintQuoteState.items.map((item) => ({
+		      items: orderableItems.map((item) => ({
 		        product_type: item.product_type,
 		        quantity: Number(item.quantity || 0)
 		      })),
@@ -10052,7 +10116,14 @@
 		    const imageAlt = item.product_type === 'qr_insert'
 		      ? 'QR insert being added to a parcel'
 		      : 'Stack of glossy QR stickers';
-		    return `<div class="qr-kit-item"><div class="qr-kit-visual"><img src="${imageSrc}" alt="${escapePricingHtml(imageAlt)}" loading="lazy"></div><div class="qr-kit-copy"><strong>${escapePricingHtml(product?.productName || item.product_type)}</strong><span>${escapePricingHtml(product?.helper || '')}</span></div><div class="qr-kit-quantity"><label class="qr-kit-quantity-label" for="qrKitQty-${escapePricingHtml(item.product_type)}">Edit quantity</label><input id="qrKitQty-${escapePricingHtml(item.product_type)}" class="qr-kit-field" type="number" min="${increment}" step="${increment}" data-qr-kit-quantity="${item.product_type}" value="${Number(item.quantity)}" aria-label="${escapePricingHtml(product?.productName || item.product_type)} quantity"><span class="qr-kit-edit-hint">You can change this</span></div></div>`;
+		    const quantity = normalizeQrKitQuantity(item.product_type, item.quantity);
+		    const decrementIcon = quantity <= increment
+		      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 6l1 15h10l1-15"></path></svg>'
+		      : '&minus;';
+		    const decrementLabel = quantity <= increment ? `Remove ${product?.productName || item.product_type}` : `Decrease ${product?.productName || item.product_type} quantity`;
+		    const incrementLabel = `Increase ${product?.productName || item.product_type} quantity by ${increment}`;
+		    const hint = increment > 1 ? `Changes in ${increment}s` : 'Changes one at a time';
+		    return `<div class="qr-kit-item"><div class="qr-kit-visual"><img src="${imageSrc}" alt="${escapePricingHtml(imageAlt)}" loading="lazy"></div><div class="qr-kit-copy"><strong>${escapePricingHtml(product?.productName || item.product_type)}</strong><span>${escapePricingHtml(product?.helper || '')}</span></div><div class="qr-kit-quantity"><div class="qr-kit-quantity-label" id="qrKitQtyLabel-${escapePricingHtml(item.product_type)}">Edit quantity</div><div class="qr-kit-stepper" role="group" aria-labelledby="qrKitQtyLabel-${escapePricingHtml(item.product_type)}"><button class="qr-kit-stepper-button" type="button" data-qr-kit-step="${escapePricingHtml(item.product_type)}" data-step-direction="down" aria-label="${escapePricingHtml(decrementLabel)}">${decrementIcon}</button><span class="qr-kit-stepper-value" aria-live="polite">${quantity}</span><button class="qr-kit-stepper-button" type="button" data-qr-kit-step="${escapePricingHtml(item.product_type)}" data-step-direction="up" aria-label="${escapePricingHtml(incrementLabel)}">+</button></div><span class="qr-kit-edit-hint">${escapePricingHtml(hint)}</span></div></div>`;
 		  }).join('') + `<div class="settings-helper">${helperParts.join(' ')}</div>`;
 		}
 
@@ -10101,7 +10172,9 @@
 		  const postcode = (document.getElementById('qrOrderPostcode')?.value || '').trim();
 		  const country = (document.getElementById('qrOrderCountry')?.value || '').trim();
 		  const signImage = document.querySelector('#signImageContainer img');
+		  const orderableItems = getOrderableQrKitItems();
 		  const hasValidKit = hasFreshQrKitRecommendation()
+		    && orderableItems.length > 0
 		    && qrPrintQuoteState.items.every(isQrKitItemQuantityValid);
 		  return Boolean(
 		    currentUser?.businessId
@@ -10161,9 +10234,12 @@
 		  const startingPrice = document.getElementById('qrOrderStartingPrice');
 		  const status = document.getElementById('qrOrderStatus');
 		  const option = getSelectedQrPrintOption();
+		  const orderableItems = getOrderableQrKitItems();
 		  if (startingPrice) {
 		    startingPrice.innerHTML = !hasFreshQrKitRecommendation()
 		      ? 'Tell us where they go'
+		      : !orderableItems.length
+		      ? '£0.00 total'
 		      : qrPrintQuoteState.loading
 		      ? qrPriceLoadingMarkup('Loading price')
 		      : option
@@ -10171,7 +10247,14 @@
 		        : 'Price pending';
 		  }
 		  if (summary) {
-		    if (qrPrintQuoteState.loading) {
+		    if (hasFreshQrKitRecommendation() && !orderableItems.length) {
+		      summary.innerHTML = `
+		        ${qrPrintQuoteState.items.map((item) => `<div class="qr-price-row"><span class="qr-price-label">${Number(item.quantity)} ${escapePricingHtml(QR_PRINT_PRODUCTS[item.product_type]?.productName || 'QR items')}</span></div>`).join('')}
+		        <div class="qr-price-row"><span class="qr-price-label">QR kit and print</span><span class="qr-price-value">£0.00</span></div>
+		        <div class="qr-price-row"><span class="qr-price-label">Delivery</span><span class="qr-price-value">£0.00</span></div>
+		        <div class="qr-price-row qr-price-total"><span class="qr-price-label">Total today</span><span class="qr-price-value">£0.00</span></div>
+		      `;
+		    } else if (qrPrintQuoteState.loading) {
 		      summary.innerHTML = qrPriceLoadingMarkup('Loading price');
 		    } else if (qrPrintQuoteState.error) {
 		      summary.textContent = qrPrintQuoteState.error;
@@ -10207,6 +10290,17 @@
 		    renderQrPrintQuote();
 		    return;
 		  }
+		  const orderableItems = getOrderableQrKitItems();
+		  if (!orderableItems.length) {
+		    clearTimeout(qrPrintQuoteTimer);
+		    qrPrintQuoteRequestId += 1;
+		    qrPrintQuoteState.orderId = null;
+		    qrPrintQuoteState.options = [];
+		    qrPrintQuoteState.error = '';
+		    qrPrintQuoteState.loading = false;
+		    renderQrPrintQuote();
+		    return;
+		  }
 		  const { locationId, locationName } = getSelectedQrOrderLocation();
 		  if (!locationId) return;
 		  const contactName = (document.getElementById('qrOrderName')?.value || '').trim();
@@ -10231,7 +10325,7 @@
 		      },
 		      body: JSON.stringify({
 		        order_id: qrPrintQuoteState.orderId,
-		        items: qrPrintQuoteState.items,
+		        items: orderableItems,
 		        business_id: currentUser.businessId,
 		        business_name: currentUser.businessName || null,
 		        owner_name: currentUser.userName || currentUser.ownerName || null,
@@ -10273,6 +10367,15 @@
 		function scheduleQrPrintQuoteRefresh(delay = 250) {
 		  if (!hasFreshQrKitRecommendation()) return;
 		  clearTimeout(qrPrintQuoteTimer);
+		  if (!getOrderableQrKitItems().length) {
+		    qrPrintQuoteRequestId += 1;
+		    qrPrintQuoteState.orderId = null;
+		    qrPrintQuoteState.options = [];
+		    qrPrintQuoteState.loading = false;
+		    qrPrintQuoteState.error = '';
+		    renderQrPrintQuote();
+		    return;
+		  }
 		  qrPrintQuoteState.loading = true;
 		  qrPrintQuoteState.error = '';
 		  renderQrPrintQuote();
@@ -10353,6 +10456,19 @@
 		  const sticker = qrPrintQuoteState.items.find((item) => item.product_type === 'qr_sticker');
 		  if (!sticker) return;
 		  sticker.quantity = Math.max(1, sticker.quantity + change);
+		  renderQrKitRecommendation();
+		  scheduleQrPrintQuoteRefresh();
+		}
+
+		function updateQrKitItemQuantity(productType, direction) {
+		  const item = qrPrintQuoteState.items.find((candidate) => candidate.product_type === productType);
+		  if (!item) return;
+		  const product = QR_PRINT_PRODUCTS[productType] || QR_PRINT_PRODUCTS.qr_sticker;
+		  const increment = Math.max(1, Number(product.quantityIncrement || 1));
+		  const current = normalizeQrKitQuantity(productType, item.quantity);
+		  item.quantity = direction === 'up'
+		    ? current + increment
+		    : Math.max(0, current - increment);
 		  renderQrKitRecommendation();
 		  scheduleQrPrintQuoteRefresh();
 		}
@@ -10473,7 +10589,8 @@
 
 		  const submitBtn = document.getElementById('qrOrderSubmit');
 		  const status = document.getElementById('qrOrderStatus');
-		  const quantity = qrPrintQuoteState.items.reduce((total, item) => total + Number(item.quantity || 0), 0);
+		  const orderableItems = getOrderableQrKitItems();
+		  const quantity = orderableItems.reduce((total, item) => total + Number(item.quantity || 0), 0);
 		  const contactName = (document.getElementById('qrOrderName')?.value || '').trim();
 		  const addressLine1 = (document.getElementById('qrOrderAddress1')?.value || '').trim();
 		  const addressLine2 = (document.getElementById('qrOrderAddress2')?.value || '').trim();
@@ -10554,8 +10671,8 @@
 		    rememberQrOrderCompletionContext();
 		    try {
 		      logEvent('qr_checkout_started', getQrJourneyContext({
-		        product_mix: getQrOrderProductMix(qrPrintQuoteState.items),
-		        items: qrPrintQuoteState.items,
+		        product_mix: getQrOrderProductMix(orderableItems),
+		        items: orderableItems,
 		        delivery_method: selectedQuote.delivery_method,
 		        order_id: qrPrintQuoteState.orderId,
 		        customer_total_amount: selectedQuote.customer_total_amount,
@@ -13920,13 +14037,10 @@
 		  document.getElementById('qrKitVolumeFields')?.addEventListener('input', resetQrKitRecommendation);
 		  document.getElementById('qrKitVolumeFields')?.addEventListener('keydown', handleQrKitVolumeKeydown);
 		  document.getElementById('qrKitRecommend')?.addEventListener('click', recommendQrKit);
-		  document.getElementById('qrKitRecommendation')?.addEventListener('input', (event) => {
-		    const input = event.target.closest('[data-qr-kit-quantity]');
-		    if (!input) return;
-		    const item = qrPrintQuoteState.items.find((candidate) => candidate.product_type === input.dataset.qrKitQuantity);
-		    if (!item) return;
-		    item.quantity = normalizeQrKitQuantity(item.product_type, input.value);
-		    scheduleQrPrintQuoteRefresh();
+		  document.getElementById('qrKitRecommendation')?.addEventListener('click', (event) => {
+		    const button = event.target.closest('[data-qr-kit-step]');
+		    if (!button) return;
+		    updateQrKitItemQuantity(button.dataset.qrKitStep, button.dataset.stepDirection || 'up');
 		  });
 		  document.getElementById('qrOrderDeliveryOptions')?.addEventListener('click', (event) => {
 		    const button = event.target.closest('[data-qr-delivery-method]');
