@@ -3433,6 +3433,7 @@
               <div class="list-item">
                 <strong>${escapeHtml(feedback.sentiment || 'Feedback')}</strong>
                 <div class="muted">${escapeHtml(feedback.locationName || 'Unknown location')} - ${escapeHtml(formatDate(feedback.submittedAt))}${feedback.hasComment ? ' - includes comment' : ''}</div>
+                ${renderFeedbackAnomalyNote(feedback)}
               </div>
             `).join('') : '<div class="muted">No feedback found.</div>'}
           </div>
@@ -3453,6 +3454,23 @@
     function closeDetail() {
       overlayEl.classList.remove('open');
       drawerEl.classList.remove('open');
+    }
+
+    function formatAnomalyFlag(flag) {
+      const labels = {
+        repeated_device_1h: 'Repeated device, 1h',
+        repeated_device_24h: 'Repeated device, 24h',
+        location_spike_10m: 'Location spike, 10m',
+        location_spike_1h: 'Location spike, 1h',
+        positive_spike_1h: 'Positive spike, 1h'
+      };
+      return labels[flag] || String(flag || '').replaceAll('_', ' ');
+    }
+
+    function renderFeedbackAnomalyNote(feedback) {
+      const flags = Array.isArray(feedback.anomalyFlags) ? feedback.anomalyFlags : [];
+      if (!flags.length) return '';
+      return `<div class="muted">Quiet anomaly signal: ${flags.map((flag) => escapeHtml(formatAnomalyFlag(flag))).join(', ')}</div>`;
     }
 
     loginFormEl.addEventListener('submit', handleLogin);
