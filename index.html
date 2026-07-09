@@ -7663,7 +7663,10 @@
 		      sentiment: fb.sentiment,            // 'very-happy' | 'happy' | ...
 		      timestamp: fb.submitted_at,         // ISO string from DB
 		      location: fb.location_id,           // keep same field name your UI uses
-		      comments: fb.comments ?? null
+		      comments: fb.comments ?? null,
+		      anomaly_flags: Array.isArray(fb.anomaly_flags) ? fb.anomaly_flags : [],
+		      anomaly_score: Number(fb.anomaly_score) || 0,
+		      anomaly_metadata: fb.anomaly_metadata || {}
 		    });
 		  }
 		  return map;
@@ -7973,6 +7976,7 @@
         // Initialize app (session-aware + safe fallback)
 		document.addEventListener('DOMContentLoaded', async () => {
 		  populateTimezoneSelect();
+		  document.addEventListener('visibilitychange', handleFeedbackPollingVisibilityChange);
 
 		  const urlParams = new URLSearchParams(window.location.search);
 		  const locationId = urlParams.get('location');
@@ -9027,6 +9031,7 @@
 			}
 
         async function logout() {
+		  stopFeedbackPolling();
 		  // Close drawer + restore scrolling (mobile safety)
 		  try { closeNavDrawer(); } catch {}
 		  try { closeAccountMenu(); } catch {}	
@@ -9253,6 +9258,33 @@
 		  if (ownerOnboardingShown) trackPostFeedbackEvent('owner_onboarding_block_shown', trackingContext);
 		}
 
+		function getFeedbackDeviceKey() {
+		  const storageKey = 'ff_feedback_device_key';
+		  try {
+		    const existing = localStorage.getItem(storageKey);
+		    if (existing) return existing;
+		    const generated = crypto?.randomUUID ? crypto.randomUUID() : `ff-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+		    localStorage.setItem(storageKey, generated);
+		    return generated;
+		  } catch {
+		    return null;
+		  }
+		}
+
+		function buildFeedbackClientContext() {
+		  const viewport = {
+		    width: Math.max(0, Number(window.innerWidth) || 0),
+		    height: Math.max(0, Number(window.innerHeight) || 0)
+		  };
+		  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+		  return {
+		    source: isQrPreviewMode() ? 'qr_preview' : 'customer_qr',
+		    timezone,
+		    language: navigator.language || null,
+		    viewport
+		  };
+		}
+
 		
        async function submitFeedback() {
 		  if (!selectedSentiment) return;
@@ -9260,13 +9292,19 @@
 		  const commentsEl = document.getElementById('additionalComments');
 		  const comments = (commentsEl?.value || '').trim() || null;
 		  const previewMode = isQrPreviewMode();
+		  const deviceKey = getFeedbackDeviceKey();
+		  const clientContext = buildFeedbackClientContext();
 		
 		  // Optimistic local object for UI/fallbacks
 		  const localItem = {
 		    sentiment: selectedSentiment,
 		    timestamp: new Date().toISOString(),
 		    location: currentLocation,
-		    comments
+		    comments,
+		    device_key: deviceKey,
+		    client_context: clientContext,
+		    anomaly_flags: [],
+		    anomaly_score: 0
 		  };
 		
 		  showLoader();
@@ -9300,14 +9338,27 @@
 		
 		    if (canWrite) {
 		      const safeComments = comments ? comments.slice(0, 500) : null;
-		
-		      const { error } = await supabase
+
+		      const feedbackPayload = {
+		        location_id: currentLocation,
+		        sentiment: selectedSentiment,
+		        comments: safeComments,
+		        device_key: deviceKey,
+		        client_context: clientContext
+		      };
+		      let { error } = await supabase
 		        .from('feedback')
-		        .insert({
-		          location_id: currentLocation,
-		          sentiment: selectedSentiment,
-		          comments: safeComments
-		        }, { returning: 'minimal' });
+		        .insert(feedbackPayload, { returning: 'minimal' });
+		      if (error && /device_key|client_context|schema cache/i.test(String(error.message || ''))) {
+		        const { error: retryError } = await supabase
+		          .from('feedback')
+		          .insert({
+		            location_id: currentLocation,
+		            sentiment: selectedSentiment,
+		            comments: safeComments
+		          }, { returning: 'minimal' });
+		        error = retryError;
+		      }
 		
 		      if (error) throw error;
 		
@@ -9329,7 +9380,11 @@
 		          sentiment: localItem.sentiment,
 		          timestamp: ts,
 		          location: currentLocation,
-		          comments: localItem.comments
+		          comments: localItem.comments,
+		          device_key: localItem.device_key,
+		          client_context: localItem.client_context,
+		          anomaly_flags: localItem.anomaly_flags,
+		          anomaly_score: localItem.anomaly_score
 		        });
 		        currentUser.locations[currentLocation].feedback = arr;
 		        updateFeedback();
@@ -11846,7 +11901,7 @@
 		  return loaded;
 		}
 
-        function updateFeedback() {
+        function updateFeedback(options = {}) {
 			    renderFeedbackHistoryNotice();
 			    syncFeedbackDashboardPlanControls();
                 var locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
@@ -11937,7 +11992,7 @@
 			    });
 			
 			    // Recent list (unchanged)
-			    recentPage = 0;
+			    if (options.preserveRecentPage !== true) recentPage = 0;
 			    updateRecentFeedback(dashboardFeedback);
 			    updateFirstSuccessPanel();
         }
@@ -12861,6 +12916,7 @@
 					break;
 
             }
+            syncFeedbackPolling();
             
             // Close the navigation drawer after selection (mobile UX)
             closeNavDrawer();
@@ -13179,7 +13235,67 @@
 
 			
 		// ---- Optional: Refresh feedback from server after login ----
-		async function refreshFeedbackFromServer() {
+		const FEEDBACK_POLL_INTERVAL_MS = 45000;
+		const FEEDBACK_POLL_RESUME_DELAY_MS = 1500;
+		let feedbackPollTimer = null;
+		let feedbackPollInFlight = false;
+
+		function isFeedbackPollingAllowed() {
+		  return currentView === 'admin' &&
+		    currentUser?.businessId &&
+		    !isDashboardDemoContext() &&
+		    document.hidden !== true &&
+		    document.getElementById('Feedback')?.classList.contains('active');
+		}
+
+		function stopFeedbackPolling() {
+		  if (feedbackPollTimer) {
+		    clearTimeout(feedbackPollTimer);
+		    feedbackPollTimer = null;
+		  }
+		}
+
+		function scheduleFeedbackPolling(delayMs = FEEDBACK_POLL_INTERVAL_MS) {
+		  stopFeedbackPolling();
+		  if (!isFeedbackPollingAllowed()) return;
+		  feedbackPollTimer = setTimeout(runFeedbackPoll, delayMs);
+		}
+
+		function syncFeedbackPolling() {
+		  if (isFeedbackPollingAllowed()) {
+		    scheduleFeedbackPolling();
+		  } else {
+		    stopFeedbackPolling();
+		  }
+		}
+
+		function handleFeedbackPollingVisibilityChange() {
+		  if (document.hidden) {
+		    stopFeedbackPolling();
+		    return;
+		  }
+		  if (isFeedbackPollingAllowed()) {
+		    scheduleFeedbackPolling(FEEDBACK_POLL_RESUME_DELAY_MS);
+		  }
+		}
+
+		async function runFeedbackPoll() {
+		  stopFeedbackPolling();
+		  if (!isFeedbackPollingAllowed()) return;
+		  if (feedbackPollInFlight) {
+		    scheduleFeedbackPolling();
+		    return;
+		  }
+		  feedbackPollInFlight = true;
+		  try {
+		    await refreshFeedbackFromServer({ preserveRecentPage: true });
+		  } finally {
+		    feedbackPollInFlight = false;
+		    scheduleFeedbackPolling();
+		  }
+		}
+
+		async function refreshFeedbackFromServer(options = {}) {
 		  if (!currentUser?.businessId) return;
 
 		  let historyResult;
@@ -13210,11 +13326,14 @@
 		        sentiment: r.sentiment,
 		        timestamp: r.submitted_at,
 		        location: r.location_id,
-		        comments: r.comments
+		        comments: r.comments,
+		        anomaly_flags: Array.isArray(r.anomaly_flags) ? r.anomaly_flags : [],
+		        anomaly_score: Number(r.anomaly_score) || 0,
+		        anomaly_metadata: r.anomaly_metadata || {}
 		      });
 		    }
 		  }
-		  updateFeedback();
+		  updateFeedback({ preserveRecentPage: options.preserveRecentPage === true });
 		  return true;
 		}
 		
