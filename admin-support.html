@@ -2000,6 +2000,25 @@
       return body;
     }
 
+    async function toggleIntegrationTestMode(businessId, enabled, button) {
+      const label = enabled ? 'route this business through Stripe/Prodigi sandbox?' : 'return this business to live Stripe/Prodigi routing?';
+      if (!window.confirm(`Are you sure you want to ${label}`)) return;
+      if (button) button.disabled = true;
+      try {
+        await runSupportMutation('set_integration_test_mode', {
+          business_id: businessId,
+          enabled
+        });
+        const business = (overview?.businesses || []).find((item) => item.id === businessId);
+        if (business) business.integrationTestMode = enabled;
+        openDetail(businessId);
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Could not update integration routing.');
+        if (button) button.disabled = false;
+      }
+    }
+
     function searchText(business) {
       const qrPrintOrderText = (business.qrPrintOrders || []).map((order) => [
         order.productName,
@@ -2010,6 +2029,7 @@
         order.locationName
       ].filter(Boolean).join(' ')).join(' ');
       return [business.name, business.ownerName, business.ownerUserId, business.industry, business.businessType, planLabel(business.pricingTier), business.subscriptionStatus, business.subscriptionTestMode ? 'test subscription' : '', qrPrintOrderText]
+        .concat(business.integrationTestMode ? ['sandbox integrations', 'test integrations'] : [])
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
@@ -3315,10 +3335,21 @@
             <div class="field"><span>Owner user id</span>${escapeHtml(business.ownerUserId || '-')}</div>
             <div class="field"><span>Plan</span>${escapeHtml(planLabel(business.pricingTier))}</div>
             <div class="field"><span>Subscription</span>${escapeHtml(subscriptionStatusLabel(business.subscriptionStatus, business.subscriptionComped, business.subscriptionTestMode))}</div>
+            <div class="field"><span>Integration routing</span>${business.integrationTestMode ? 'Sandbox/test' : 'Live production'}</div>
             <div class="field"><span>Timezone</span>${escapeHtml(business.timezone || '-')}</div>
             <div class="field"><span>Email alerts</span>${business.emailAlertsEnabled !== false ? 'Enabled' : 'Disabled'}</div>
             <div class="field"><span>Created</span>${escapeHtml(formatDate(business.createdAt))}</div>
             <div class="field"><span>Latest feedback</span>${escapeHtml(formatDate(business.latestFeedbackAt))}</div>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Integration Routing</h3>
+          <div class="simulation-panel">
+            <div class="simulation-status ${business.integrationTestMode ? '' : 'success'}">${business.integrationTestMode ? 'This business is routed through Stripe test mode and Prodigi sandbox.' : 'This business is routed through live Stripe and live Prodigi.'}</div>
+            <div class="simulation-actions">
+              <button class="small-btn" type="button" data-integration-test-mode="${business.integrationTestMode ? 'false' : 'true'}" data-integration-business-id="${escapeHtml(business.id)}">${business.integrationTestMode ? 'Use live integrations' : 'Use sandbox integrations'}</button>
+            </div>
+            <div class="muted">Use this only for deliberate support testing. Sandbox routing means payments and print orders for this business are not real.</div>
           </div>
         </div>
         <div class="section">
@@ -3564,6 +3595,15 @@
           simulationButton.dataset.simulationAction,
           simulationButton.dataset.simulationBusinessId,
           simulationButton
+        );
+        return;
+      }
+      const integrationButton = event.target.closest('[data-integration-test-mode]');
+      if (integrationButton) {
+        toggleIntegrationTestMode(
+          integrationButton.dataset.integrationBusinessId,
+          integrationButton.dataset.integrationTestMode === 'true',
+          integrationButton
         );
         return;
       }
