@@ -6553,6 +6553,7 @@
 			let pricingModalSelectedLocations = new Set();
 			let pricingModalPendingAction = null;
 			let subscriptionPricesLoaded = false;
+			let subscriptionPricesLoadedFor = null;
 			let pendingUpgradePayment = null;
 			try {
 			  pendingUpgradePayment = JSON.parse(sessionStorage.getItem('ffPendingUpgradePayment') || 'null');
@@ -6721,13 +6722,18 @@
 			}
 
 			async function loadSubscriptionPrices() {
-			  if (subscriptionPricesLoaded) return;
-			  subscriptionPricesLoaded = true;
+			  const priceContextKey = currentUser?.businessId
+			    ? `${currentUser.businessId}:${currentUser.integrationTestMode ? 'sandbox' : 'production'}`
+			    : 'public';
+			  if (subscriptionPricesLoaded && subscriptionPricesLoadedFor === priceContextKey) return;
 			  try {
-			    const response = await fetch(`${SUPABASE_URL}/functions/v1/get-subscription-prices`, {
+			    const { data: { session } } = await supabase.auth.getSession();
+			    const url = new URL(`${SUPABASE_URL}/functions/v1/get-subscription-prices`);
+			    if (currentUser?.businessId && session?.access_token) url.searchParams.set('business_id', currentUser.businessId);
+			    const response = await fetch(url.toString(), {
 			      headers: {
 			        'apikey': SUPABASE_ANON_KEY,
-			        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+			        'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`
 			      }
 			    });
 			    const body = await response.json().catch(() => ({}));
@@ -6739,6 +6745,8 @@
 			      }
 			    }
 			    renderPricingModalOptions();
+			    subscriptionPricesLoaded = true;
+			    subscriptionPricesLoadedFor = priceContextKey;
 			  } catch (error) {
 			    console.warn('Subscription prices unavailable', error);
 			  }
@@ -8544,6 +8552,7 @@
 			  subscriptionStatus: 'none',
 			  subscriptionComped: false,
 			  subscriptionTestMode: false,
+			  integrationTestMode: false,
 			  pendingPricingTier: null,
 			  planChangeEffectiveAt: null,
 			  stripeSubscriptionScheduleId: null,
@@ -8687,7 +8696,7 @@
 		  const fbRows = historyResult.feedback;
 		
 		  // 5) Set state
-		  currentUser = {
+		    currentUser = {
 			  userId: user.id,
 			  role: businessRole,
 			  businessId: business.id,
@@ -8703,6 +8712,7 @@
 			  subscriptionStatus: business.subscription_status || 'none',
 			  subscriptionComped: business.subscription_comped === true,
 			  subscriptionTestMode: business.subscription_test_mode === true,
+			  integrationTestMode: business.integration_test_mode === true,
 			  pendingPricingTier: business.pending_pricing_tier || null,
 			  planChangeEffectiveAt: business.plan_change_effective_at || null,
 			  stripeSubscriptionScheduleId: business.stripe_subscription_schedule_id || null,
@@ -13038,7 +13048,7 @@
 		  // Pull fresh business row (ensures we reflect external changes too)
 		  const { data: biz, error } = await supabase
 		    .from('businesses')
-		    .select('id,name,owner_name,timezone,default_location_id,logo_url,industry,business_type,email_alerts_enabled,pricing_tier,subscription_status,subscription_comped,subscription_test_mode,pending_pricing_tier,plan_change_effective_at,stripe_subscription_schedule_id')
+		    .select('id,name,owner_name,timezone,default_location_id,logo_url,industry,business_type,email_alerts_enabled,pricing_tier,subscription_status,subscription_comped,subscription_test_mode,integration_test_mode,pending_pricing_tier,plan_change_effective_at,stripe_subscription_schedule_id')
 		    .eq('id', currentUser.businessId)
 		    .single();
 		  if (error) {
@@ -13060,6 +13070,7 @@
 		  currentUser.subscriptionStatus = biz.subscription_status || 'none';
 		  currentUser.subscriptionComped = biz.subscription_comped === true;
 		  currentUser.subscriptionTestMode = biz.subscription_test_mode === true;
+		  currentUser.integrationTestMode = biz.integration_test_mode === true;
 		  currentUser.pendingPricingTier = biz.pending_pricing_tier || null;
 		  currentUser.planChangeEffectiveAt = biz.plan_change_effective_at || null;
 		  currentUser.stripeSubscriptionScheduleId = biz.stripe_subscription_schedule_id || null;
