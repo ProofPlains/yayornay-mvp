@@ -184,6 +184,26 @@
             box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
         }
 
+        .reply-request-panel {
+            display: none;
+            margin: -8px 0 25px;
+            padding: 14px;
+            text-align: left;
+            border: 1px solid var(--ff-border);
+            border-radius: 12px;
+            background: color-mix(in oklab, var(--ff-surface) 94%, var(--ff-brand-1));
+        }
+        .reply-request-choice { display:flex; gap:10px; align-items:flex-start; color:var(--ff-text); font-weight:800; cursor:pointer; }
+        .reply-request-choice input { width:18px; height:18px; margin-top:1px; accent-color:var(--ff-brand-1); }
+        .reply-request-fields { display:none; margin-top:14px; }
+        .reply-request-fields.is-open { display:block; }
+        .reply-request-fields label { display:block; margin-bottom:6px; color:var(--ff-text); font-size:13px; font-weight:800; }
+        .reply-request-fields input { width:100%; min-height:44px; padding:11px 12px; border:1px solid var(--ff-border); border-radius:10px; background:var(--ff-surface); color:var(--ff-text); }
+        .reply-request-fields input:focus { outline:3px solid color-mix(in oklab, var(--ff-brand-1) 35%, transparent); border-color:var(--ff-brand-1); }
+        .reply-request-helper { margin:7px 0 0; color:var(--ff-text-muted); font-size:12px; line-height:1.45; }
+        .reply-request-error { min-height:18px; margin-top:6px; color:#fca5a5; font-size:12px; font-weight:700; }
+        .reply-confirmation { margin:18px 0 0; padding:14px; border:1px solid rgba(167,139,250,.45); border-radius:10px; background:rgba(124,58,237,.1); color:var(--ff-text); }
+
         .emoji-buttons {
             display: flex;
             justify-content: space-between;
@@ -3895,6 +3915,7 @@
 		}
 
 		.feedback-toolbar {
+		  position: relative;
 		  display: grid;
 		  grid-template-columns: repeat(4, minmax(0, 1fr));
 		  gap: 10px;
@@ -3946,6 +3967,20 @@
 		  width: 16px;
 		  height: 16px;
 		}
+		.feedback-more-button { justify-content:center; width:100%; }
+		.feedback-filter-count { display:none; min-width:20px; height:20px; align-items:center; justify-content:center; border-radius:999px; background:var(--ff-brand-1); color:white; font-size:11px; }
+		.feedback-filter-count.is-visible { display:inline-flex; }
+		.feedback-more-panel { display:none; position:absolute; z-index:40; right:14px; top:calc(100% - 4px); width:min(330px, calc(100vw - 32px)); padding:16px; border:1px solid var(--ff-border); border-radius:12px; background:var(--ff-surface); box-shadow:var(--ff-shadow); }
+		.feedback-more-panel.is-open { display:grid; gap:14px; }
+		.feedback-more-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+		.feedback-more-heading strong { color:var(--ff-text); }
+		.feedback-filter-close { border:0; background:transparent; color:var(--ff-text-muted); cursor:pointer; font-size:20px; }
+		.feedback-more-panel .feedback-filter { font-size:12px; }
+		.feedback-active-filters { display:none; flex-wrap:wrap; gap:7px; margin-top:9px; }
+		.feedback-active-filters.has-filters { display:flex; }
+		.feedback-filter-chip { border:1px solid var(--ff-border); border-radius:999px; padding:6px 9px; background:color-mix(in oklab,var(--ff-surface) 92%,black); color:var(--ff-text); font-size:12px; cursor:pointer; }
+		.feedback-filter-clear { border:0; background:transparent; color:#c4b5fd; font-weight:800; cursor:pointer; }
+		.feedback-filter-backdrop { display:none; }
 
 		.feedback-summary-grid {
 		  display: grid;
@@ -4306,6 +4341,24 @@
 		  text-align: right;
 		  white-space: nowrap;
 		}
+		.reply-request-card { margin-top:10px; padding:11px; border:1px solid rgba(167,139,250,.38); border-radius:10px; background:rgba(124,58,237,.08); }
+		.reply-request-topline { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
+		.reply-status-badge { display:inline-flex; padding:4px 8px; border-radius:999px; background:#4c1d95; color:#f5f3ff; font-size:11px; font-weight:900; }
+		.reply-status-badge.is-progress { background:#1e3a8a; }
+		.reply-status-badge.is-resolved { background:#14532d; }
+		.reply-status-badge.is-expired { background:#374151; }
+		.reply-customer-email { margin-top:7px; color:var(--ff-text); font-size:13px; overflow-wrap:anywhere; }
+		.reply-workflow-meta { color:var(--ff-text-muted); font-size:12px; }
+		.reply-request-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:9px; }
+		.reply-request-actions button { min-height:34px; padding:7px 10px; border-radius:8px; border:1px solid var(--ff-border); background:var(--ff-surface); color:var(--ff-text); font-weight:800; cursor:pointer; }
+		.reply-request-actions .reply-primary { border:0; background:linear-gradient(135deg,var(--ff-brand-1),var(--ff-brand-2)); color:white; }
+		.reply-status-dialog { position:fixed; inset:0; z-index:1200; display:none; place-items:center; padding:18px; background:rgba(3,7,18,.72); }
+		.reply-status-dialog.is-open { display:grid; }
+		.reply-status-dialog-card { width:min(460px,100%); padding:22px; border:1px solid var(--ff-border); border-radius:16px; background:var(--ff-surface); box-shadow:var(--ff-shadow); }
+		.reply-status-dialog-card h3 { margin:0 0 8px; color:var(--ff-text); }
+		.reply-status-dialog-card p { margin:0 0 18px; }
+		.reply-status-dialog-actions { display:grid; gap:9px; }
+		.reply-status-dialog-actions button { width:100%; min-height:42px; border-radius:9px; border:1px solid var(--ff-border); background:color-mix(in oklab,var(--ff-surface) 92%,black); color:var(--ff-text); font-weight:800; cursor:pointer; }
 
 		.feedback-pill {
 		  display: inline-flex;
@@ -4501,6 +4554,8 @@
 		    font-size: 12px;
 		    border-radius: 8px;
 		  }
+		  .feedback-more-panel { position:fixed; left:0; right:0; top:auto; bottom:0; width:100%; max-height:75vh; overflow:auto; border-radius:18px 18px 0 0; padding:20px; z-index:1002; }
+		  .feedback-filter-backdrop.is-open { display:block; position:fixed; inset:0; z-index:1001; background:rgba(3,7,18,.68); }
 
 		  .feedback-summary-grid {
 		    display: grid;
@@ -5813,7 +5868,20 @@
                 <textarea id="additionalComments" placeholder="Optional comments..." rows="4" maxlength="500" aria-describedby="commentCounter"></textarea>
 					<div id="commentCounter" style="margin-top:6px;font-size:12px;color:#6b7280;">
 					  0 / 500
-					</div>
+				</div>
+            </div>
+
+            <div id="customerReplyRequestPanel" class="reply-request-panel">
+                <label class="reply-request-choice" for="customerReplyRequested">
+                    <input id="customerReplyRequested" type="checkbox" onchange="handleCustomerReplyRequestToggle()">
+                    <span>I’d like a reply from the team</span>
+                </label>
+                <div id="customerReplyRequestFields" class="reply-request-fields">
+                    <label for="customerReplyEmail">Email address</label>
+                    <input id="customerReplyEmail" type="email" inputmode="email" autocomplete="email" maxlength="254" placeholder="you@example.com" aria-describedby="customerReplyHelper customerReplyError">
+                    <p id="customerReplyHelper" class="reply-request-helper">We’ll share this with the team so they can reply about your feedback.</p>
+                    <div id="customerReplyError" class="reply-request-error" aria-live="polite"></div>
+                </div>
             </div>
             
             <button id="submitFeedbackBtn" class="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
@@ -5837,6 +5905,17 @@
 	<!-- Global loader overlay -->
 	<div id="globalLoader" class="loader-overlay">
 	  <div class="loader"></div>
+	</div>
+	<div id="replyStatusDialog" class="reply-status-dialog" role="dialog" aria-modal="true" aria-labelledby="replyStatusDialogTitle">
+	  <div class="reply-status-dialog-card">
+	    <h3 id="replyStatusDialogTitle">What’s the status of this reply request?</h3>
+	    <p>Keep FlashFeedback up to date so your team knows what still needs attention.</p>
+	    <div class="reply-status-dialog-actions">
+	      <button class="reply-primary" type="button" onclick="completePendingReplyStatus('resolve')">Resolved</button>
+	      <button type="button" onclick="completePendingReplyStatus('keep_in_progress')">Still in progress</button>
+	      <button type="button" onclick="completePendingReplyStatus('reset')">I haven’t replied</button>
+	    </div>
+	  </div>
 	</div>
 
 	
@@ -5956,11 +6035,21 @@
                                 <option value="very-sad">Angry</option>
                             </select>
                         </label>
-                        <label class="feedback-toggle" for="commentsOnlyToggle">
-                            <input id="commentsOnlyToggle" type="checkbox" />
-                            <span>Comments only</span>
-                        </label>
-                    </div>
+						<button id="feedbackMoreFiltersButton" class="feedback-toggle feedback-more-button" type="button" aria-expanded="false" aria-controls="feedbackMoreFiltersPanel" onclick="toggleFeedbackMoreFilters()">
+						    <span>More filters</span><span id="feedbackMoreFiltersCount" class="feedback-filter-count">0</span>
+						</button>
+						<div id="feedbackMoreFiltersPanel" class="feedback-more-panel" role="dialog" aria-modal="false" aria-labelledby="feedbackMoreFiltersTitle">
+						  <div class="feedback-more-heading"><strong id="feedbackMoreFiltersTitle">More filters</strong><button class="feedback-filter-close" type="button" aria-label="Close filters" onclick="closeFeedbackMoreFilters()">×</button></div>
+						  <label class="feedback-toggle" for="commentsOnlyToggle"><input id="commentsOnlyToggle" type="checkbox" /><span>Comments only</span></label>
+						  <label class="feedback-filter" for="feedbackReplyStatusFilter">Reply status
+						    <select id="feedbackReplyStatusFilter" onchange="handleFeedbackReplyStatusChanged()">
+						      <option value="all">All reply statuses</option><option value="requested">Reply requested</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option><option value="expired">Contact details expired</option>
+						    </select>
+						  </label>
+						</div>
+					</div>
+					<div id="feedbackFilterBackdrop" class="feedback-filter-backdrop" onclick="closeFeedbackMoreFilters()"></div>
+					<div id="feedbackActiveFilters" class="feedback-active-filters" aria-live="polite"></div>
 
                     <div id="feedbackHistoryNotice" class="history-limit-card" style="display:none;"></div>
 
@@ -6043,24 +6132,6 @@
 
 				
                 
-                <!-- Header row with total count + "comments only" filter -->
-				<div style="margin-top: 30px;">
-				  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px;">
-				    <h2 style="margin:0;">Feedback <span id="feedbackCount" style="opacity:.7;font-weight:500;">(0)</span></h2>
-				    <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer;">
-				      <input id="commentsOnlyToggle" type="checkbox" />
-				      <span>Show comments only</span>
-				    </label>
-				  </div>
-				
-				  <div id="feedbackHistoryNotice" class="history-limit-card" style="display:none;"></div>
-				  <div id="recentFeedbackList"></div>
-				  <div id="recentPagination" style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px;">
-				    <button id="recentPrev" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">‹ Prev</button>
-				    <span id="recentPageInfo" style="font-size:12px; color:#6b7280;">Page 1 of 1</span>
-				    <button id="recentNext" type="button" style="padding:6px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer;">Next ›</button>
-				  </div>
-				</div>
                 </div>
 
             </section>
@@ -6343,10 +6414,15 @@
 				  <div style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:20px;margin-bottom:20px;">
 				    <h3 style="margin-bottom:12px;">Email alerts</h3>
 				    <label class="settings-toggle">
-				      <input id="settingsEmailAlertsToggle" type="checkbox" onchange="handleEmailAlertsToggle(event)" />
-				      <span>Send me email alerts when new feedback arrives</span>
+				      <input id="settingsGeneralFeedbackAlertsToggle" type="checkbox" onchange="handleNotificationPreferencesToggle()" />
+				      <span>General feedback alerts</span>
 				    </label>
-				    <div class="settings-helper">We’ll email you right away with a link back to your dashboard.</div>
+				    <div class="settings-helper">Email me when feedback arrives without a reply request.</div>
+				    <label class="settings-toggle" style="margin-top:12px;">
+				      <input id="settingsReplyRequestAlertsToggle" type="checkbox" onchange="handleNotificationPreferencesToggle()" />
+				      <span>Reply-request alerts</span>
+				    </label>
+				    <div class="settings-helper">Email me when a customer asks the team to reply.</div>
 				    <div style="margin-top:8px;">
 				      <span id="settingsEmailAlertsStatus" style="color:#4b5563;"></span>
 				    </div>
@@ -7668,13 +7744,24 @@
 		  for (const fb of feedbackRows || []) {
 		    if (!map[fb.location_id]) continue; // ignore stray rows
 		    map[fb.location_id].feedback.push({
+		      id: fb.id,
 		      sentiment: fb.sentiment,            // 'very-happy' | 'happy' | ...
 		      timestamp: fb.submitted_at,         // ISO string from DB
 		      location: fb.location_id,           // keep same field name your UI uses
 		      comments: fb.comments ?? null,
 		      anomaly_flags: Array.isArray(fb.anomaly_flags) ? fb.anomaly_flags : [],
 		      anomaly_score: Number(fb.anomaly_score) || 0,
-		      anomaly_metadata: fb.anomaly_metadata || {}
+		      anomaly_metadata: fb.anomaly_metadata || {},
+		      reply_requested: fb.reply_requested === true,
+		      reply_status: fb.reply_status || null,
+		      customer_email: fb.customer_email || null,
+		      reply_started_by: fb.reply_started_by || null,
+		      reply_started_by_name: fb.reply_started_by_name || null,
+		      reply_started_at: fb.reply_started_at || null,
+		      reply_resolved_by: fb.reply_resolved_by || null,
+		      reply_resolved_by_name: fb.reply_resolved_by_name || null,
+		      reply_resolved_at: fb.reply_resolved_at || null,
+		      customer_email_erased_at: fb.customer_email_erased_at || null
 		    });
 		  }
 		  return map;
@@ -8273,6 +8360,7 @@
             document.getElementById('customerDemoNotice').style.display = 'block';
             
             resetCustomerView();
+			syncCustomerReplyRequestEligibility(false);
             
             window.demoAccount = {
                 userId: 'demo',
@@ -8342,6 +8430,11 @@
             });
             document.querySelector('.submit-btn').classList.remove('enabled');
             document.getElementById('additionalComments').value = '';
+			const replyRequested = document.getElementById('customerReplyRequested');
+			const replyEmail = document.getElementById('customerReplyEmail');
+			if (replyRequested) replyRequested.checked = false;
+			if (replyEmail) replyEmail.value = '';
+			handleCustomerReplyRequestToggle();
 			updateCommentCounter();
         }
 
@@ -8374,6 +8467,7 @@
 		
 		  // Look up the real location row (from public view)
 			const locRow = await getLocationById(locationId);
+			syncCustomerReplyRequestEligibility(locRow?.reply_requests_enabled === true);
 			
 			// If location is inactive, show “closed” message and stop
 			if (locRow && locRow.is_active === false) {
@@ -8547,7 +8641,8 @@
 			  ownerName,
 			  userName: ownerName,
 			  email,
-			  emailAlertsEnabled: true,
+			  generalFeedbackAlertsEnabled: true,
+			  replyRequestAlertsEnabled: true,
 			  pricingTier: 'free',
 			  subscriptionStatus: 'none',
 			  subscriptionComped: false,
@@ -8614,6 +8709,13 @@
 		}
 
 		async function loadBusinessForUser(user) {
+		  const { data: directMembership } = await supabase
+		    .from('business_users')
+		    .select('business_id,role,created_at,general_feedback_alerts_enabled,reply_request_alerts_enabled')
+		    .eq('user_id', user.id)
+		    .order('created_at', { ascending: true })
+		    .limit(1)
+		    .maybeSingle();
 		  let { data: ownedRows, error: ownedErr } = await supabase
 		    .from('businesses')
 		    .select('*')
@@ -8622,12 +8724,12 @@
 		    .limit(1);
 		  if (ownedErr) throw ownedErr;
 		  if (ownedRows && ownedRows[0]) {
-		    return { business: ownedRows[0], role: 'owner' };
+		    return { business: ownedRows[0], role: 'owner', membership: directMembership || null };
 		  }
 
 		  const { data: membershipRows, error: membershipErr } = await supabase
 		    .from('business_users')
-		    .select('business_id,role,created_at')
+		    .select('business_id,role,created_at,general_feedback_alerts_enabled,reply_request_alerts_enabled')
 		    .eq('user_id', user.id)
 		    .order('created_at', { ascending: true })
 		    .limit(1);
@@ -8641,7 +8743,7 @@
 		    .eq('id', membership.business_id)
 		    .single();
 		  if (businessErr) throw businessErr;
-		  return { business, role: membership.role || 'admin' };
+		  return { business, role: membership.role || 'admin', membership };
 		}
 
 		// Re-usable path after we know "user" is authenticated (fresh login or restored session)
@@ -8650,6 +8752,7 @@
 		  const loaded = await loadBusinessForUser(user);
 		  let business = loaded.business;
 		  let businessRole = loaded.role || 'owner';
+		  const notificationMembership = loaded.membership || null;
 		  if (!business) {
 		    try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
 		    currentUser = null;
@@ -8704,7 +8807,8 @@
 			  ownerName: business.owner_name || '',
 			  userName: user.user_metadata?.full_name || (businessRole === 'owner' ? business.owner_name || '' : ''),
 			  email: user.email || '',
-			  emailAlertsEnabled: business.email_alerts_enabled !== false,
+			  generalFeedbackAlertsEnabled: notificationMembership?.general_feedback_alerts_enabled ?? (business.email_alerts_enabled !== false),
+			  replyRequestAlertsEnabled: notificationMembership?.reply_request_alerts_enabled !== false,
 			  timezone: business.timezone || 'Europe/London',
 			  defaultLocationId: business.default_location_id || null,
 			  logoUrl: business.logo_url || '',
@@ -8744,7 +8848,9 @@
 		  updateLocationSelects();
 		  updateLocationsList();
 		  updateFeedback();
-		}
+		  setTimeout(maybeShowPendingReplyStatus, 300);
+		  setTimeout(openLinkedReplyRequest, 350);
+        }
 
 		}
 
@@ -9206,7 +9312,7 @@
 		  `;
 		}
 
-		function renderPostFeedbackState(sentiment, locationContext = null) {
+		function renderPostFeedbackState(sentiment, locationContext = null, maskedReplyEmail = null) {
 		  const thankYouDiv = document.getElementById('thankYou');
 		  if (!thankYouDiv) return;
 		  const routing = getGoogleReviewRoutingState(locationContext);
@@ -9258,6 +9364,7 @@
 		  thankYouDiv.innerHTML = `
 		    <div id="postFeedbackContent" class="post-feedback-panel">
 		      ${bodyHtml}
+		      ${maskedReplyEmail ? `<div class="reply-confirmation">The team can reply to <strong>${escapePricingHtml(maskedReplyEmail)}</strong>.</div>` : ''}
 		      ${ownerOnboardingShown ? renderOwnerOnboardingBlock(googleReviewCtaShown) : ''}
 		    </div>
 		  `;
@@ -9295,12 +9402,28 @@
 		  };
 		}
 
+		function maskCustomerEmail(value) {
+		  const parts = String(value || '').split('@');
+		  if (parts.length !== 2 || !parts[0] || !parts[1]) return 'your email address';
+		  return `${parts[0].slice(0, 1)}${'•'.repeat(Math.max(3, Math.min(6, parts[0].length - 1)))}@${parts[1]}`;
+		}
+
 		
        async function submitFeedback() {
 		  if (!selectedSentiment) return;
 		
 		  const commentsEl = document.getElementById('additionalComments');
 		  const comments = (commentsEl?.value || '').trim() || null;
+		  const replyPanelVisible = document.getElementById('customerReplyRequestPanel')?.style.display !== 'none';
+		  const replyRequested = replyPanelVisible && document.getElementById('customerReplyRequested')?.checked === true;
+		  const replyEmailEl = document.getElementById('customerReplyEmail');
+		  const replyEmail = (replyEmailEl?.value || '').trim().toLowerCase();
+		  const replyError = document.getElementById('customerReplyError');
+		  if (replyRequested && (!replyEmailEl?.checkValidity() || replyEmail.length > 254)) {
+		    if (replyError) replyError.textContent = 'Enter a valid email address.';
+		    replyEmailEl?.focus();
+		    return;
+		  }
 		  const previewMode = isQrPreviewMode();
 		  const deviceKey = getFeedbackDeviceKey();
 		  const clientContext = buildFeedbackClientContext();
@@ -9318,7 +9441,10 @@
 		  };
 		
 		  showLoader();
+		  document.getElementById('submitFeedbackBtn')?.setAttribute('disabled', 'disabled');
 		  let locationContext = null;
+		  let maskedReplyEmail = replyRequested ? maskCustomerEmail(replyEmail) : null;
+		  let submissionFailed = false;
 		  try {
 		    // 1) On public QR view, hydrate display name (but skip for demo)
 		    let businessId = currentUser?.businessId || null;
@@ -9354,33 +9480,19 @@
 		        sentiment: selectedSentiment,
 		        comments: safeComments,
 		        device_key: deviceKey,
-		        client_context: clientContext
+		        client_context: clientContext,
+		        reply_requested: replyRequested,
+		        customer_email: replyRequested ? replyEmail : null,
+		        dashboard_url: getDashboardUrl()
 		      };
-		      let { error } = await supabase
-		        .from('feedback')
-		        .insert(feedbackPayload, { returning: 'minimal' });
-		      if (error && /device_key|client_context|schema cache/i.test(String(error.message || ''))) {
-		        const { error: retryError } = await supabase
-		          .from('feedback')
-		          .insert({
-		            location_id: currentLocation,
-		            sentiment: selectedSentiment,
-		            comments: safeComments
-		          }, { returning: 'minimal' });
-		        error = retryError;
-		      }
-		
-		      if (error) throw error;
-		
-		      const alertBusinessId = currentUser?.businessId || businessId || locationContext?.business_id;
-		      const alertLocationName = locationContext?.name || currentUser?.locations?.[currentLocation]?.name || null;
-		      sendFeedbackAlertEmail({
-		        businessId: alertBusinessId,
-		        locationId: currentLocation,
-		        locationName: alertLocationName,
-		        sentiment: selectedSentiment,
-		        comments: safeComments
+		      const response = await fetch(`${SUPABASE_URL}/functions/v1/submit-feedback`, {
+		        method: 'POST',
+		        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+		        body: JSON.stringify(feedbackPayload)
 		      });
+		      const result = await response.json().catch(() => ({}));
+		      if (!response.ok) throw new Error(result.error || 'Could not save feedback. Please try again.');
+		      maskedReplyEmail = result.masked_email || maskedReplyEmail;
 		
 		      // Mirror in-memory state for instant UI if logged in
 		      const ts = localItem.timestamp;
@@ -9420,7 +9532,7 @@
 		    }
 		  } catch (e) {
 		    console.error(e);
-		    if (!previewMode) {
+		    if (!previewMode && !isUuid(currentLocation)) {
 		      // Fallback on unexpected failures (saves locally)
 		      const storageKey = 'feedback_' + currentLocation;
 		      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -9429,10 +9541,13 @@
 		      updateFeedback();
 		    }
 		
-		    alert(previewMode ? 'Preview completed, but no feedback was saved.' : (e.message || 'Could not submit feedback (saved locally, will not appear on dashboard).'));
+		    submissionFailed = !previewMode;
+		    alert(previewMode ? 'Preview completed, but no feedback was saved.' : (e.message || 'Could not submit feedback. Please try again.'));
 		  }
 		
 		  hideLoader(); // always hide before thank-you UI
+		  document.getElementById('submitFeedbackBtn')?.removeAttribute('disabled');
+		  if (submissionFailed) return;
 		
 		  // 4) Thank-you UI
 		  const section = document.querySelector('.feedback-section');
@@ -9449,7 +9564,7 @@
 		      </div>
 		    `;
 		  } else {
-		    renderPostFeedbackState(selectedSentiment, locationContext);
+		    renderPostFeedbackState(selectedSentiment, locationContext, maskedReplyEmail);
 		  }
 		
 		  if (currentView === 'customer-demo') {
@@ -9501,6 +9616,43 @@
 		  if (submitButton) submitButton.textContent = previewMode ? 'Submit preview' : 'Submit Feedback';
 		}
 
+		function syncCustomerReplyRequestEligibility(enabled) {
+		  const panel = document.getElementById('customerReplyRequestPanel');
+		  const checkbox = document.getElementById('customerReplyRequested');
+		  const email = document.getElementById('customerReplyEmail');
+		  const allowed = enabled === true;
+		  if (panel) panel.style.display = allowed ? 'block' : 'none';
+		  if (allowed && isUuid(currentLocation) && !isQrPreviewMode()) {
+		    const seenKey = `ffReplyOptionShown:${currentLocation}`;
+		    try {
+		      if (!sessionStorage.getItem(seenKey)) {
+		        sessionStorage.setItem(seenKey, '1');
+		        fetch(`${SUPABASE_URL}/functions/v1/track-reply-option-shown`, {
+		          method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${SUPABASE_ANON_KEY}`},
+		          body:JSON.stringify({ location_id:currentLocation })
+		        }).catch(() => {});
+		      }
+		    } catch {}
+		  }
+		  if (!allowed) {
+		    if (checkbox) checkbox.checked = false;
+		    if (email) email.value = '';
+		  }
+		  handleCustomerReplyRequestToggle();
+		}
+
+		function handleCustomerReplyRequestToggle() {
+		  const checkbox = document.getElementById('customerReplyRequested');
+		  const fields = document.getElementById('customerReplyRequestFields');
+		  const email = document.getElementById('customerReplyEmail');
+		  const error = document.getElementById('customerReplyError');
+		  const open = checkbox?.checked === true && document.getElementById('customerReplyRequestPanel')?.style.display !== 'none';
+		  fields?.classList.toggle('is-open', open);
+		  if (email) email.required = open;
+		  if (error) error.textContent = '';
+		  if (open) setTimeout(() => email?.focus(), 0);
+		}
+
 		function getQrSignUrl(locationId) {
 		  const adminSupportBase = window.location.protocol === 'file:'
 		    ? new URL('admin-support.html', window.location.href)
@@ -9523,53 +9675,6 @@
 		    }));
 		  } catch (e) {
 		    console.warn('Could not store local QR sign request:', e?.message || e);
-		  }
-		}
-
-		async function sendFeedbackAlertEmail({ businessId, locationId, locationName, sentiment, comments }) {
-		  if (!businessId || !locationId) return;
-		  if (currentUser?.businessId === businessId && currentUser?.emailAlertsEnabled === false) return;
-
-		  const dashboardUrl = getDashboardUrl();
-		  const unsubscribeUrl = `${dashboardUrl}?unsubscribe=feedback&business=${encodeURIComponent(businessId)}`;
-		  const subject = 'FlashFeedback: New feedback received';
-		  const textBody = `You received new feedback. View it here: ${dashboardUrl}\n\nUnsubscribe: ${unsubscribeUrl}`;
-		  const htmlBody = `
-		    <div style="font-family:Inter,system-ui,sans-serif; font-size:16px; color:#0b1020;">
-		      <p>You received new feedback. View it <a href="${dashboardUrl}" style="color:#7c3aed;">here</a>.</p>
-		      <p style="margin-top:16px;">
-		        <a href="${unsubscribeUrl}" style="color:#6b7280; font-size:13px;">Unsubscribe from feedback alerts</a>
-		      </p>
-		    </div>
-		  `;
-
-		  try {
-		    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-feedback-alert`, {
-		      method: 'POST',
-		      headers: {
-		        'Content-Type': 'application/json',
-		        'apikey': SUPABASE_ANON_KEY,
-		        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
-		      },
-		      body: JSON.stringify({
-		        business_id: businessId,
-		        location_id: locationId,
-		        location_name: locationName || null,
-		        sentiment,
-		        comments,
-		        subject,
-		        text: textBody,
-		        html: htmlBody,
-		        dashboard_url: dashboardUrl,
-		        unsubscribe_url: unsubscribeUrl
-		      })
-		    });
-
-		    if (!res.ok) {
-		      console.warn('feedback alert email failed:', res.status, await res.text());
-		    }
-		  } catch (e) {
-		    console.warn('feedback alert email exception:', e?.message || e);
 		  }
 		}
 
@@ -10975,6 +11080,7 @@
 		function applyDashboardFeedbackFilters(feedback) {
 		  const sentimentFilter = document.getElementById('feedbackSentimentFilter')?.value || 'all';
 		  const commentsOnly = document.getElementById('commentsOnlyToggle')?.checked === true;
+		  const replyStatus = document.getElementById('feedbackReplyStatusFilter')?.value || 'all';
 		  let filtered = feedback || [];
 		  if (sentimentFilter === 'needs-attention') {
 		    filtered = filtered.filter((item) => isAttentionSentiment(item?.sentiment));
@@ -10984,7 +11090,64 @@
 		  if (commentsOnly) {
 		    filtered = filtered.filter((item) => item?.comments && item.comments.trim());
 		  }
+		  if (replyStatus !== 'all') filtered = filtered.filter((item) => item?.reply_status === replyStatus);
 		  return filtered;
+		}
+
+		function toggleFeedbackMoreFilters() {
+		  const panel = document.getElementById('feedbackMoreFiltersPanel');
+		  const shouldOpen = !panel?.classList.contains('is-open');
+		  shouldOpen ? openFeedbackMoreFilters() : closeFeedbackMoreFilters();
+		}
+		function openFeedbackMoreFilters() {
+		  const panel = document.getElementById('feedbackMoreFiltersPanel');
+		  panel?.classList.add('is-open');
+		  panel?.setAttribute('aria-modal', String(window.matchMedia?.('(max-width: 640px)')?.matches === true));
+		  document.getElementById('feedbackFilterBackdrop')?.classList.add('is-open');
+		  document.getElementById('feedbackMoreFiltersButton')?.setAttribute('aria-expanded', 'true');
+		  document.getElementById('commentsOnlyToggle')?.focus();
+		}
+		function closeFeedbackMoreFilters() {
+		  document.getElementById('feedbackMoreFiltersPanel')?.classList.remove('is-open');
+		  document.getElementById('feedbackFilterBackdrop')?.classList.remove('is-open');
+		  document.getElementById('feedbackMoreFiltersButton')?.setAttribute('aria-expanded', 'false');
+		}
+		document.addEventListener('keydown', (event) => {
+		  if (event.key === 'Escape' && document.getElementById('feedbackMoreFiltersPanel')?.classList.contains('is-open')) {
+		    closeFeedbackMoreFilters(); document.getElementById('feedbackMoreFiltersButton')?.focus();
+		  }
+		});
+		function handleFeedbackReplyStatusChanged() {
+		  recentPage = 0;
+		  handleFeedbackFilterChanged('reply_status');
+		  syncFeedbackSecondaryFilters();
+		}
+		function clearFeedbackSecondaryFilter(key) {
+		  if (key === 'comments') document.getElementById('commentsOnlyToggle').checked = false;
+		  if (key === 'reply') document.getElementById('feedbackReplyStatusFilter').value = 'all';
+		  recentPage = 0;
+		  handleFeedbackFilterChanged(key === 'comments' ? 'comments_only' : 'reply_status');
+		  syncFeedbackSecondaryFilters();
+		}
+		function clearFeedbackSecondaryFilters() {
+		  document.getElementById('commentsOnlyToggle').checked = false;
+		  document.getElementById('feedbackReplyStatusFilter').value = 'all';
+		  recentPage = 0; handleFeedbackFilterChanged('secondary_clear'); syncFeedbackSecondaryFilters();
+		}
+		function syncFeedbackSecondaryFilters() {
+		  const comments = document.getElementById('commentsOnlyToggle')?.checked === true;
+		  const statusSelect = document.getElementById('feedbackReplyStatusFilter');
+		  const reply = statusSelect?.value || 'all';
+		  const count = Number(comments) + Number(reply !== 'all');
+		  const badge = document.getElementById('feedbackMoreFiltersCount');
+		  if (badge) { badge.textContent = String(count); badge.classList.toggle('is-visible', count > 0); }
+		  const chips = document.getElementById('feedbackActiveFilters');
+		  if (!chips) return;
+		  const parts = [];
+		  if (comments) parts.push('<button class="feedback-filter-chip" type="button" onclick="clearFeedbackSecondaryFilter(\'comments\')">Comments only ×</button>');
+		  if (reply !== 'all') parts.push(`<button class="feedback-filter-chip" type="button" onclick="clearFeedbackSecondaryFilter('reply')">${escapePricingHtml(statusSelect?.selectedOptions?.[0]?.textContent || 'Reply status')} ×</button>`);
+		  if (count) parts.push('<button class="feedback-filter-clear" type="button" onclick="clearFeedbackSecondaryFilters()">Clear</button>');
+		  chips.innerHTML = parts.join(''); chips.classList.toggle('has-filters', count > 0);
 		}
 
 		function formatFeedbackRelativeTime(timestamp) {
@@ -11398,11 +11561,18 @@
 		    primaryAction: 'view-feedback'
 		  };
 		  if (state.stage === 'complete') {
-		    const alertsOff = currentUser?.emailAlertsEnabled === false;
+		    const generalAlertsOn = currentUser?.generalFeedbackAlertsEnabled !== false;
+		    const replyAlertsOn = currentUser?.replyRequestAlertsEnabled !== false;
+		    const alertsOff = !generalAlertsOn && !replyAlertsOn;
 		    const googleReviewsConfigured = hasFirstSuccessGoogleReviewRoute();
-		    const notificationCopy = alertsOff
-		      ? "Turn on email alerts so new feedback brings you back at the right moment. This dashboard will help you spot patterns as responses build up, catch issues early, and keep the loop going."
-		      : "You'll get an email when new feedback arrives, and this dashboard will help you spot patterns as responses build up. Come back regularly to see what customers are telling you, catch issues early, and keep the loop going.";
+		    const notificationLead = alertsOff
+		      ? 'Turn on email alerts so new feedback brings you back at the right moment.'
+		      : generalAlertsOn && replyAlertsOn
+		        ? "You'll get an email when new feedback arrives."
+		        : replyAlertsOn
+		          ? "You'll get an email when a customer requests a reply."
+		          : "You'll get an email when general feedback arrives.";
+		    const notificationCopy = `${notificationLead} This dashboard will help you spot patterns as responses build up, catch issues early, and keep the loop going.`;
 		    const secondary = [
 		      {
 		        label: googleReviewsConfigured ? 'Manage Google reviews' : 'Optional: set up Google reviews',
@@ -11574,7 +11744,7 @@
 		  }
 		  if (action === 'alerts') {
 		    showSection('settings');
-		    setTimeout(() => document.getElementById('settingsEmailAlertsToggle')?.focus?.(), 100);
+		    setTimeout(() => document.getElementById('settingsGeneralFeedbackAlertsToggle')?.focus?.(), 100);
 		    return;
 		  }
 		  if (action === 'locations') {
@@ -11631,6 +11801,7 @@
 		  if (type === 'comments') {
 		    const toggle = document.getElementById('commentsOnlyToggle');
 		    if (toggle) toggle.checked = !toggle.checked;
+		    syncFeedbackSecondaryFilters();
 		    handleFeedbackFilterChanged('comments_only');
 		    return;
 		  }
@@ -11716,14 +11887,15 @@
 		  recentPage = 0;
 		  updateFeedback();
 		  const sentimentValue = document.getElementById('feedbackSentimentFilter')?.value || 'all';
-		  logDashboardEvent(filterName === 'sentiment' && sentimentValue === 'needs-attention'
+		  logDashboardEvent(filterName === 'reply_status' ? 'reply_request_filter_used' : filterName === 'sentiment' && sentimentValue === 'needs-attention'
 		    ? 'dashboard_attention_filter_used'
 		    : 'dashboard_filter_changed', {
 		      filter: filterName,
 		      location: document.getElementById('FeedbackLocationSelect')?.value || 'all',
 		      date_range: document.getElementById('feedbackDateRange')?.value || '30',
 		      sentiment: sentimentValue,
-		      comments_only: document.getElementById('commentsOnlyToggle')?.checked === true
+		      comments_only: document.getElementById('commentsOnlyToggle')?.checked === true,
+		      reply_status: document.getElementById('feedbackReplyStatusFilter')?.value || 'all'
 		    });
 		}
 
@@ -12944,7 +13116,8 @@
                     document.getElementById('customerDemoNotice').style.display = 'block';
                     showDemoControls();
                     updateCustomerLocationDisplay(window.demoAccount.locations);
-                    resetCustomerView();
+				    resetCustomerView();
+				    syncCustomerReplyRequestEligibility(false);
                     currentView = 'customer-demo';
                     scrollToTop();
                 } else {
@@ -12959,6 +13132,7 @@
                     hideAllScreens();
                     document.getElementById('customerView').style.display = 'block';
                     resetCustomerView();
+					syncCustomerReplyRequestEligibility(['growth', 'pro'].includes(currentUser?.pricingTier));
                     updateCustomerLocationDisplay(currentUser.locations);
                     showAdminControls();
                     currentView = 'customer';
@@ -12985,6 +13159,7 @@
 		  handleLogin,
 		  selectSentiment,
 		  submitFeedback,
+		  handleCustomerReplyRequestToggle,
 		  trackPostFeedbackEvent,
 		  toggleView,
 		  openNavDrawer,
@@ -13000,6 +13175,12 @@
 		  updateLocationsList,
 		  updateFeedback,
 		  handleFeedbackFilterChanged,
+		  toggleFeedbackMoreFilters,
+		  closeFeedbackMoreFilters,
+		  handleFeedbackReplyStatusChanged,
+		  clearFeedbackSecondaryFilter,
+		  clearFeedbackSecondaryFilters,
+		  completePendingReplyStatus,
 		  handleDashboardQrCta,
 		  handleDashboardEmptyStateCta,
 		  handleFirstSuccessAction,
@@ -13018,7 +13199,7 @@
 		  loadSettings,
 		  saveProfileSettings,
 		  saveBusinessSettings,
-		  handleEmailAlertsToggle,
+		  handleNotificationPreferencesToggle,
 		  handleChangePassword,
 		  signOutEverywhere,
 		  openAccountMenu,
@@ -13065,7 +13246,14 @@
 		  currentUser.logoUrl         = biz.logo_url || '';
 		  currentUser.industry = biz.industry || '';
 		  currentUser.businessType = biz.business_type || '';
-		  currentUser.emailAlertsEnabled = biz.email_alerts_enabled !== false;
+		  const { data: notificationMembership } = await supabase
+		    .from('business_users')
+		    .select('general_feedback_alerts_enabled,reply_request_alerts_enabled')
+		    .eq('business_id', currentUser.businessId)
+		    .eq('user_id', currentUser.userId)
+		    .maybeSingle();
+		  currentUser.generalFeedbackAlertsEnabled = notificationMembership?.general_feedback_alerts_enabled ?? (biz.email_alerts_enabled !== false);
+		  currentUser.replyRequestAlertsEnabled = notificationMembership?.reply_request_alerts_enabled !== false;
 		  currentUser.pricingTier = biz.pricing_tier || 'free';
 		  currentUser.subscriptionStatus = biz.subscription_status || 'none';
 		  currentUser.subscriptionComped = biz.subscription_comped === true;
@@ -13104,8 +13292,10 @@
 		  document.getElementById('settingsLogoUrl').value = currentUser.logoUrl || '';
 		  document.getElementById('settingsIndustry').value = biz.industry || '';
 		  document.getElementById('settingsBusinessType').value = biz.business_type || '';
-		  const emailToggle = document.getElementById('settingsEmailAlertsToggle');
-		  if (emailToggle) emailToggle.checked = currentUser.emailAlertsEnabled !== false;
+		  const generalAlertToggle = document.getElementById('settingsGeneralFeedbackAlertsToggle');
+		  const replyAlertToggle = document.getElementById('settingsReplyRequestAlertsToggle');
+		  if (generalAlertToggle) generalAlertToggle.checked = currentUser.generalFeedbackAlertsEnabled !== false;
+		  if (replyAlertToggle) replyAlertToggle.checked = currentUser.replyRequestAlertsEnabled !== false;
 
 		
 		  // Locations dropdown in Settings
@@ -13183,8 +13373,9 @@
 		  setTimeout(() => status.textContent = '', 1500);
 		}
 
-		async function handleEmailAlertsToggle(event) {
-		  const enabled = !!event?.target?.checked;
+		async function handleNotificationPreferencesToggle() {
+		  const generalEnabled = document.getElementById('settingsGeneralFeedbackAlertsToggle')?.checked === true;
+		  const replyEnabled = document.getElementById('settingsReplyRequestAlertsToggle')?.checked === true;
 		  const status = document.getElementById('settingsEmailAlertsStatus');
 		  if (!currentUser?.businessId) {
 		    if (status) status.textContent = 'Please log in to update alerts.';
@@ -13194,20 +13385,25 @@
 		  if (status) status.textContent = 'Saving...';
 		  try {
 		    await callBusinessSettingsApi({
-		      action: 'email_alerts',
+		      action: 'notification_preferences',
 		      business_id: currentUser.businessId,
-		      email_alerts_enabled: enabled
+		      general_feedback_alerts_enabled: generalEnabled,
+		      reply_request_alerts_enabled: replyEnabled
 		    });
 		  } catch (error) {
 		    console.error(error);
 		    if (status) status.textContent = error.message || 'Error saving alerts';
-		    if (event?.target) event.target.checked = !enabled;
+		    const general = document.getElementById('settingsGeneralFeedbackAlertsToggle');
+		    const reply = document.getElementById('settingsReplyRequestAlertsToggle');
+		    if (general) general.checked = currentUser.generalFeedbackAlertsEnabled !== false;
+		    if (reply) reply.checked = currentUser.replyRequestAlertsEnabled !== false;
 		    return;
 		  }
 
-		  currentUser.emailAlertsEnabled = enabled;
+		  currentUser.generalFeedbackAlertsEnabled = generalEnabled;
+		  currentUser.replyRequestAlertsEnabled = replyEnabled;
 		  if (status) {
-		    status.textContent = enabled ? 'Email alerts enabled ✓' : 'Email alerts disabled ✓';
+		    status.textContent = 'Email alert preferences saved ✓';
 		    setTimeout(() => { status.textContent = ''; }, 2000);
 		  }
 		}
@@ -13334,13 +13530,24 @@
 		  for (const r of rows) {
 		    if (currentUser.locations?.[r.location_id]) {
 		      currentUser.locations[r.location_id].feedback.push({
+		        id: r.id,
 		        sentiment: r.sentiment,
 		        timestamp: r.submitted_at,
 		        location: r.location_id,
 		        comments: r.comments,
 		        anomaly_flags: Array.isArray(r.anomaly_flags) ? r.anomaly_flags : [],
 		        anomaly_score: Number(r.anomaly_score) || 0,
-		        anomaly_metadata: r.anomaly_metadata || {}
+		        anomaly_metadata: r.anomaly_metadata || {},
+		        reply_requested: r.reply_requested === true,
+		        reply_status: r.reply_status || null,
+		        customer_email: r.customer_email || null,
+		        reply_started_by: r.reply_started_by || null,
+		        reply_started_by_name: r.reply_started_by_name || null,
+		        reply_started_at: r.reply_started_at || null,
+		        reply_resolved_by: r.reply_resolved_by || null,
+		        reply_resolved_by_name: r.reply_resolved_by_name || null,
+		        reply_resolved_at: r.reply_resolved_at || null,
+		        customer_email_erased_at: r.customer_email_erased_at || null
 		      });
 		    }
 		  }
@@ -13364,7 +13571,7 @@
 		  if (!id) return null;
 		  const { data, error } = await supabase
 		    .from('location_public')
-		    .select('location_id, location_name, business_id, business_name, is_active, google_review_url, google_review_routing_enabled')
+		    .select('location_id, location_name, business_id, business_name, is_active, google_review_url, google_review_routing_enabled, reply_requests_enabled')
 		    .eq('location_id', id)
 		    .maybeSingle();
 		
@@ -13382,7 +13589,8 @@
 		    is_active: data.is_active,
 		    business_name: data.business_name,
 		    google_review_url: data.google_review_url || '',
-		    google_review_routing_enabled: data.google_review_routing_enabled === true
+		    google_review_routing_enabled: data.google_review_routing_enabled === true,
+		    reply_requests_enabled: data.reply_requests_enabled === true
 		  };
 		}
 
@@ -13523,14 +13731,16 @@
 		
 		  const commentsOnly = document.getElementById('commentsOnlyToggle')?.checked;
 		  const sentimentFilter = document.getElementById('feedbackSentimentFilter')?.value || 'all';
+		  const replyStatus = document.getElementById('feedbackReplyStatusFilter')?.value || 'all';
 		  const filtered = sentimentFilter === 'all'
 		    ? base
 		    : sentimentFilter === 'needs-attention'
 		      ? base.filter(it => isAttentionSentiment(it?.sentiment))
 		      : base.filter(it => it?.sentiment === sentimentFilter);
-		  return commentsOnly
+		  const withComments = commentsOnly
 		    ? filtered.filter(it => it?.comments && it.comments.trim())
 		    : filtered;
+		  return replyStatus === 'all' ? withComments : withComments.filter(it => it?.reply_status === replyStatus);
 		}
 
 		
@@ -13538,6 +13748,7 @@
 		document.getElementById('commentsOnlyToggle')?.addEventListener('change', () => {
 		  recentPage = 0;           // 0-based index avoids off-by-one after toggling
 		  handleFeedbackFilterChanged('comments_only');
+		  syncFeedbackSecondaryFilters();
 		});
 
 
@@ -13589,6 +13800,108 @@
 		  document.getElementById('firstSuccessPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}
 
+		const REPLY_STATUS_PENDING_KEY = 'ffPendingReplyStatus';
+		let replyStatusPromptShownFor = null;
+		async function callReplyWorkflowApi(feedbackId, action, expectedStatus) {
+		  const { data: { session } } = await supabase.auth.getSession();
+		  if (!session?.access_token) throw new Error('Please sign in again.');
+		  const response = await fetch(`${SUPABASE_URL}/functions/v1/update-reply-request`, {
+		    method: 'POST',
+		    headers: { 'Content-Type':'application/json', 'apikey':SUPABASE_ANON_KEY, 'Authorization':`Bearer ${session.access_token}` },
+		    body: JSON.stringify({ feedback_id: feedbackId, action, expected_status: expectedStatus })
+		  });
+		  const body = await response.json().catch(() => ({}));
+		  if (!response.ok) throw new Error(body.error || 'Could not update this reply request.');
+		  return body;
+		}
+		function findDashboardFeedback(feedbackId) {
+		  for (const location of Object.values(currentUser?.locations || {})) {
+		    const item = (location.feedback || []).find((entry) => entry.id === feedbackId);
+		    if (item) return item;
+		  }
+		  return null;
+		}
+		function openLinkedReplyRequest() {
+		  const url = new URL(window.location.href);
+		  const feedbackId = url.searchParams.get('reply_request');
+		  if (!feedbackId || !findDashboardFeedback(feedbackId)) return;
+		  const source = url.searchParams.get('reply_source') || 'alert';
+		  if (source === 'reminder') logDashboardEvent('reply_request_reminder_opened', { feedback_id: feedbackId });
+		  else logDashboardEvent('reply_request_dashboard_viewed', { feedback_id: feedbackId, source });
+		  showSection('Feedback', { scrollToTop: false });
+		  const item = findDashboardFeedback(feedbackId);
+		  const statusFilter = document.getElementById('feedbackReplyStatusFilter');
+		  if (statusFilter && item?.reply_status) statusFilter.value = item.reply_status;
+		  syncFeedbackSecondaryFilters(); updateFeedback();
+		  setTimeout(() => document.querySelector(`[data-feedback-id="${CSS.escape(feedbackId)}"]`)?.scrollIntoView({ behavior:'smooth', block:'center' }), 100);
+		  url.searchParams.delete('reply_request'); url.searchParams.delete('reply_source');
+		  history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+		}
+		function applyReplyWorkflowResult(feedbackId, result) {
+		  const item = findDashboardFeedback(feedbackId);
+		  if (!item || !result?.feedback) return;
+		  Object.assign(item, result.feedback);
+		  if (result.feedback.reply_started_by === result.actor?.id) item.reply_started_by_name = result.actor.name;
+		  if (result.feedback.reply_resolved_by === result.actor?.id) item.reply_resolved_by_name = result.actor.name;
+		  updateFeedback({ preserveRecentPage: true });
+		}
+		async function emailReplyRequest(feedbackId) {
+		  const item = findDashboardFeedback(feedbackId);
+		  if (!item?.customer_email) return showToast?.('Customer contact details are no longer available.', 'error');
+		  try {
+		    const result = await callReplyWorkflowApi(feedbackId, 'start', item.reply_status);
+		    applyReplyWorkflowResult(feedbackId, result);
+		    const pending = { feedbackId, createdAt: Date.now() };
+		    localStorage.setItem(REPLY_STATUS_PENDING_KEY, JSON.stringify(pending));
+		    replyStatusPromptShownFor = null;
+		    const locationName = currentUser?.locations?.[item.location]?.name || currentUser?.businessName || 'your recent visit';
+		    const subject = `Following up on your feedback for ${locationName}`;
+		    const body = `Hello,\n\nThank you for sharing your feedback with ${currentUser?.businessName || 'our team'}. I’m getting in touch because you asked us to reply.\n\nKind regards,`;
+		    window.location.href = `mailto:${encodeURIComponent(item.customer_email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+		  } catch (error) { showToast?.(error.message || 'Could not start this reply.', 'error'); }
+		}
+		function getPendingReplyStatus() {
+		  try {
+		    const pending = JSON.parse(localStorage.getItem(REPLY_STATUS_PENDING_KEY) || 'null');
+		    if (!pending?.feedbackId) return null;
+		    return pending;
+		  } catch { return null; }
+		}
+		function maybeShowPendingReplyStatus() {
+		  if (currentView !== 'admin' || document.visibilityState === 'hidden') return;
+		  const pending = getPendingReplyStatus();
+		  if (!pending || replyStatusPromptShownFor === pending.feedbackId) return;
+		  const item = findDashboardFeedback(pending.feedbackId);
+		  if (!item || item.reply_status !== 'in_progress') { localStorage.removeItem(REPLY_STATUS_PENDING_KEY); return; }
+		  replyStatusPromptShownFor = pending.feedbackId;
+		  const dialog = document.getElementById('replyStatusDialog');
+		  dialog?.classList.add('is-open');
+		  dialog?.querySelector('button')?.focus();
+		  logDashboardEvent('reply_request_status_prompted', { feedback_id: pending.feedbackId });
+		}
+		async function completePendingReplyStatus(action) {
+		  const pending = getPendingReplyStatus();
+		  if (!pending) return;
+		  const item = findDashboardFeedback(pending.feedbackId);
+		  try {
+		    const result = await callReplyWorkflowApi(pending.feedbackId, action, item?.reply_status || 'in_progress');
+		    applyReplyWorkflowResult(pending.feedbackId, result);
+		    localStorage.removeItem(REPLY_STATUS_PENDING_KEY);
+		    document.getElementById('replyStatusDialog')?.classList.remove('is-open');
+		    replyStatusPromptShownFor = null;
+		  } catch (error) { showToast?.(error.message || 'Could not update this request.', 'error'); }
+		}
+		async function updateReplyRequestStatus(feedbackId, action) {
+		  const item = findDashboardFeedback(feedbackId);
+		  try {
+		    const result = await callReplyWorkflowApi(feedbackId, action, item?.reply_status || null);
+		    applyReplyWorkflowResult(feedbackId, result);
+		  } catch (error) { showToast?.(error.message || 'Could not update this request.', 'error'); }
+		}
+		document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(maybeShowPendingReplyStatus, 250); });
+		window.addEventListener('focus', () => setTimeout(maybeShowPendingReplyStatus, 250));
+		window.addEventListener('pageshow', () => setTimeout(maybeShowPendingReplyStatus, 250));
+
 		function renderDashboardRecentPage({ container, src, totalPages, start, pageItems }) {
 		  const locations = currentUser ? currentUser.locations : (window.demoAccount ? window.demoAccount.locations : {});
 
@@ -13605,6 +13918,7 @@
 		    const meta = getSentimentMeta(item.sentiment);
 		    const row = document.createElement('div');
 		    row.className = `feedback-row-card${meta.attention ? ' needs-attention' : ''}`;
+		    if (item.id) row.setAttribute('data-feedback-id', item.id);
 		    if (firstSuccessFeedbackMatches(item)) row.classList.add('is-first-success-highlight');
 
 		    const left = document.createElement('span');
@@ -13660,6 +13974,40 @@
 		      empty.className = 'feedback-pill';
 		      empty.textContent = 'Mood only';
 		      middle.appendChild(empty);
+		    }
+		    if (item.reply_requested) {
+		      const replyCard = document.createElement('div');
+		      replyCard.className = 'reply-request-card';
+		      const top = document.createElement('div'); top.className = 'reply-request-topline';
+		      const badge = document.createElement('span'); badge.className = 'reply-status-badge';
+		      const labels = { requested:'Reply requested', in_progress:'Reply in progress', resolved:'Resolved', expired:'Contact details expired' };
+		      badge.textContent = labels[item.reply_status] || 'Reply requested';
+		      if (item.reply_status === 'in_progress') badge.classList.add('is-progress');
+		      if (item.reply_status === 'resolved') badge.classList.add('is-resolved');
+		      if (item.reply_status === 'expired') badge.classList.add('is-expired');
+		      top.appendChild(badge); replyCard.appendChild(top);
+		      if (item.customer_email) {
+		        const email = document.createElement('div'); email.className = 'reply-customer-email'; email.textContent = item.customer_email; replyCard.appendChild(email);
+		      }
+		      const actor = item.reply_status === 'resolved'
+		        ? (item.reply_resolved_by_name ? `Resolved by ${item.reply_resolved_by_name} · ${formatFeedbackExactTime(item.reply_resolved_at)}` : '')
+		        : item.reply_status === 'in_progress' && item.reply_started_by_name
+		          ? `Started by ${item.reply_started_by_name} · ${formatFeedbackExactTime(item.reply_started_at)}` : '';
+		      if (actor) { const metaEl = document.createElement('div'); metaEl.className = 'reply-workflow-meta'; metaEl.textContent = actor; replyCard.appendChild(metaEl); }
+		      const actions = document.createElement('div'); actions.className = 'reply-request-actions';
+		      if (item.customer_email && ['requested','in_progress'].includes(item.reply_status)) {
+		        const emailBtn = document.createElement('button'); emailBtn.type = 'button'; emailBtn.className = 'reply-primary';
+		        emailBtn.textContent = item.reply_status === 'in_progress' ? 'Email customer again' : 'Email customer';
+		        emailBtn.addEventListener('click', () => emailReplyRequest(item.id)); actions.appendChild(emailBtn);
+		      }
+		      if (item.reply_status === 'in_progress') {
+		        const resolve = document.createElement('button'); resolve.type='button'; resolve.textContent='Mark resolved'; resolve.addEventListener('click', () => updateReplyRequestStatus(item.id, 'resolve')); actions.appendChild(resolve);
+		      }
+		      if (item.reply_status === 'resolved') {
+		        const reopen = document.createElement('button'); reopen.type='button'; reopen.textContent='Reopen'; reopen.addEventListener('click', () => updateReplyRequestStatus(item.id, 'reopen')); actions.appendChild(reopen);
+		      }
+		      if (actions.children.length) replyCard.appendChild(actions);
+		      middle.appendChild(replyCard);
 		    }
 
 		    const right = document.createElement('span');
@@ -14274,15 +14622,18 @@
 		  if (!businessId) return;
 
 		  try {
-		    const { error } = await supabase
-		      .from('businesses')
-		      .update({ email_alerts_enabled: false })
-		      .eq('id', businessId);
-		    if (error) throw error;
+		    if (!currentUser?.businessId || currentUser.businessId !== businessId) throw new Error('Sign in required');
+		    await callBusinessSettingsApi({
+		      action: 'notification_preferences', business_id: businessId,
+		      general_feedback_alerts_enabled: false, reply_request_alerts_enabled: false
+		    });
 		    if (currentUser?.businessId === businessId) {
-		      currentUser.emailAlertsEnabled = false;
-		      const toggle = document.getElementById('settingsEmailAlertsToggle');
-		      if (toggle) toggle.checked = false;
+		      currentUser.generalFeedbackAlertsEnabled = false;
+		      currentUser.replyRequestAlertsEnabled = false;
+		      const generalToggle = document.getElementById('settingsGeneralFeedbackAlertsToggle');
+		      const replyToggle = document.getElementById('settingsReplyRequestAlertsToggle');
+		      if (generalToggle) generalToggle.checked = false;
+		      if (replyToggle) replyToggle.checked = false;
 		    }
 		    if (statusEl) statusEl.textContent = 'Alert emails have been turned off.';
 		  } catch (e) {
@@ -14448,15 +14799,16 @@
 	  <div class="handle" aria-hidden="true"></div>
 	  <div class="inner" tabindex="-1">
 	    <h2 id="sheet-privacy-title">Privacy Policy</h2>
-	    <p class="meta"><strong>Last updated:</strong> 20 October 2025</p>
+	    <p class="meta"><strong>Last updated:</strong> 15 July 2026</p>
 	    <p class="meta"><strong>Operator:</strong> FlashFeedback (independent creator)</p>
 	    <p class="meta"><strong>Contact:</strong> contact@flashfeedback.co.uk</p>
 	
 	    <p>FlashFeedback helps businesses collect quick, private feedback from customers. This Privacy Policy explains what information we collect, how it’s used, and your rights under the UK GDPR and South Africa’s POPIA laws.</p>
 	    <p><strong>Information we collect:</strong> feedback ratings, optional comments or contact details, business account details, and limited technical data.</p>
 	    <p><strong>Use of information:</strong> to provide the service, improve performance, and contact users only if requested. We never sell or share your data with advertisers.</p>
+	    <p><strong>Reply requests:</strong> if you ask a business to reply, your email address is shared securely with that business’s authorised owners and Admins solely so they can respond to your feedback. Alert emails show only a masked address.</p>
 	    <p><strong>Legal basis:</strong> consent (POPIA) and legitimate interest (UK GDPR).</p>
-	    <p><strong>Data storage:</strong> hosted securely on Supabase; retained as long as necessary; deletion available upon request.</p>
+	    <p><strong>Data storage:</strong> hosted securely on Supabase. Reply-request email addresses are erased 30 days after the request is resolved or 180 days after submission if it remains unresolved. Feedback may remain after the address is erased, and plan downgrades may hide older feedback without deleting it. Earlier deletion is available upon request.</p>
 	    <p><strong>Access:</strong> only the business owning the location can view feedback.</p>
 	    <p><strong>Your rights:</strong> access, correction, and deletion via <em>contact@flashfeedback.co.uk</em>.</p>
 	
