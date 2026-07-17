@@ -1071,6 +1071,25 @@
           <div class="metric-grid" id="dashboardEngagementMetricCards"></div>
         </details>
 
+        <details class="metrics-section" open>
+          <summary class="metrics-section-heading">
+            <h3 id="replyRequestMetricsTitle">Customer reply-request funnel</h3>
+            <p>Whether a customer's request reaches the team, receives ownership, and is resolved.</p>
+          </summary>
+          <p class="metrics-note" id="replyRequestSummary"></p>
+          <div class="funnel-flow" id="replyRequestFunnelFlow" aria-label="Customer reply-request funnel"></div>
+          <div id="replyRequestGuidance"></div>
+          <details class="activation-drilldown-card">
+            <summary>
+              <div>
+                <h3>Privacy-safe recent reply requests</h3>
+                <p>Use this to verify workflow states without exposing full customer contact details.</p>
+              </div>
+            </summary>
+            <div class="activation-stuck-list" id="replyRequestRecent"></div>
+          </details>
+        </details>
+
         <details class="metrics-section">
           <summary class="metrics-section-heading">
             <h3 id="postFeedbackMetricsTitle">Google routing vs owner onboarding</h3>
@@ -1265,6 +1284,10 @@
     const engagementMetricCardsEl = document.getElementById('engagementMetricCards');
     const dashboardEngagementSummaryEl = document.getElementById('dashboardEngagementSummary');
     const dashboardEngagementMetricCardsEl = document.getElementById('dashboardEngagementMetricCards');
+    const replyRequestSummaryEl = document.getElementById('replyRequestSummary');
+    const replyRequestFunnelFlowEl = document.getElementById('replyRequestFunnelFlow');
+    const replyRequestGuidanceEl = document.getElementById('replyRequestGuidance');
+    const replyRequestRecentEl = document.getElementById('replyRequestRecent');
     const postFeedbackMetricCardsEl = document.getElementById('postFeedbackMetricCards');
     const monetisationMetricCardsEl = document.getElementById('monetisationMetricCards');
     const orderRescueSummaryEl = document.getElementById('orderRescueSummary');
@@ -2739,6 +2762,100 @@
       `;
     }
 
+    function renderReplyRequestMetrics(metric = {}) {
+      if (!replyRequestFunnelFlowEl || !replyRequestSummaryEl || !replyRequestGuidanceEl || !replyRequestRecentEl) return;
+      const number = (value) => Math.max(0, Number(value) || 0);
+      const rateText = (value) => Number.isFinite(Number(value)) ? `${Number(value).toFixed(1)}%` : 'Not enough data';
+      const durationText = (value) => {
+        const hours = Number(value);
+        if (!Number.isFinite(hours)) return 'Not enough data';
+        if (hours < 1) return `${Math.max(1, Math.round(hours * 60))} min`;
+        if (hours < 48) return `${hours.toFixed(1)} hr`;
+        return `${(hours / 24).toFixed(1)} days`;
+      };
+      const stages = [
+        { key: 'requestsSaved', label: 'Reply requested', value: number(metric.requestsSaved), action: 'Confirm the reply option is visible at eligible locations and that customers understand the consent copy.' },
+        { key: 'alertsDelivered', label: 'Alert delivered', value: number(metric.alertsDelivered), action: 'Check Resend delivery, function logs, and whether at least one owner/admin has reply-request alerts enabled.' },
+        { key: 'dashboardViewed', label: 'Viewed securely', value: number(metric.dashboardViewed), action: 'Check that the alert CTA is prominent, works after login, and opens the correct feedback record.' },
+        { key: 'emailClicked', label: 'Reply started', value: number(metric.emailClicked), action: 'Check whether responsibility and the Email customer action are obvious enough on the feedback record.' },
+        { key: 'resolved', label: 'Resolved', value: number(metric.resolved), action: 'Check reminders, status-prompt clarity, team ownership, and whether users understand when to mark a request resolved.' }
+      ];
+      const transitions = stages.slice(1).map((stage, index) => {
+        const previous = stages[index];
+        const conversion = previous.value ? Math.round((stage.value / previous.value) * 1000) / 10 : null;
+        const lost = Math.max(0, previous.value - stage.value);
+        return { from: previous, to: stage, conversion, lost, dropRate: previous.value ? (lost / previous.value) * 100 : null };
+      });
+      const biggest = transitions
+        .filter((item) => item.dropRate !== null)
+        .sort((a, b) => Number(b.dropRate) - Number(a.dropRate))[0] || null;
+
+      replyRequestFunnelFlowEl.innerHTML = stages.map((stage, index) => `
+        ${index ? '<div class="funnel-arrow" aria-hidden="true">&rarr;</div>' : ''}
+        <div class="funnel-stage">
+          <strong>${stage.value.toLocaleString()}</strong>
+          <span>${escapeHtml(stage.label)}</span>
+          ${index ? `<span>${escapeHtml(rateText(transitions[index - 1].conversion))} from previous stage</span>` : '<span>Unique saved requests</span>'}
+        </div>
+      `).join('');
+
+      const requestCount = stages[0].value;
+      const workload = number(metric.currentRequested) + number(metric.currentInProgress);
+      const deliverySentence = requestCount
+        ? `${rateText(metric.alertDeliveryRate)} reached at least one team member, ${rateText(metric.dashboardViewRate)} were viewed securely, ${rateText(metric.emailStartRate)} had a reply started, and ${rateText(metric.resolutionRate)} were resolved.`
+        : 'No reply requests have been recorded yet.';
+      const bottleneckSentence = biggest
+        ? `The largest observed drop is ${biggest.from.label} to ${biggest.to.label}: ${biggest.lost.toLocaleString()} request${biggest.lost === 1 ? '' : 's'} did not reach the next tracked stage (${rateText(biggest.conversion)} conversion).`
+        : 'There is not enough stage movement yet to identify a reliable bottleneck.';
+      replyRequestSummaryEl.textContent = `${deliverySentence} ${bottleneckSentence} Current unresolved workload: ${workload.toLocaleString()} (${number(metric.currentRequested).toLocaleString()} requested, ${number(metric.currentInProgress).toLocaleString()} in progress). Median time to start: ${durationText(metric.medianHoursToEmailStart)}; median time to resolve: ${durationText(metric.medianHoursToResolve)}.`;
+
+      const qualityWarnings = [];
+      if (number(metric.alertsFailed)) qualityWarnings.push(`${number(metric.alertsFailed).toLocaleString()} request alert${number(metric.alertsFailed) === 1 ? '' : 's'} failed.`);
+      if (number(metric.remindersSent)) qualityWarnings.push(`${number(metric.remindersSent).toLocaleString()} 24-hour reminder${number(metric.remindersSent) === 1 ? '' : 's'} sent.`);
+      if (number(metric.expiryWarningsSent)) qualityWarnings.push(`${number(metric.expiryWarningsSent).toLocaleString()} expiry warning${number(metric.expiryWarningsSent) === 1 ? '' : 's'} sent.`);
+      if (number(metric.emailsErased)) qualityWarnings.push(`${number(metric.emailsErased).toLocaleString()} customer address${number(metric.emailsErased) === 1 ? '' : 'es'} erased under retention rules.`);
+      if (number(metric.reopened)) qualityWarnings.push(`${number(metric.reopened).toLocaleString()} resolved request${number(metric.reopened) === 1 ? ' was' : 's were'} reopened.`);
+
+      replyRequestGuidanceEl.innerHTML = `
+        <div class="activation-constraint-card">
+          <div>
+            <div class="metric-eyebrow">How to use this funnel</div>
+            <h3>${biggest ? `${escapeHtml(biggest.from.label)} to ${escapeHtml(biggest.to.label)}` : 'Watch for the first repeatable drop-off'}</h3>
+            <p>Read left to right. Counts use unique feedback IDs, not email addresses or comments. A stage may be undercounted if tracking was introduced after some requests already existed, so compare trends and repeated patterns rather than treating a small early sample as definitive.</p>
+            <p>${escapeHtml(qualityWarnings.length ? qualityWarnings.join(' ') : 'No reminder, expiry, erasure, reopen, or alert-failure signals have been recorded yet.')}</p>
+          </div>
+          <div class="activation-recommendation">
+            <strong>What to do next</strong>
+            <p>${escapeHtml(biggest ? biggest.to.action : 'Complete several real test journeys, then revisit this section. Investigate a stage only when the same drop-off persists across multiple requests or businesses.')}</p>
+          </div>
+        </div>
+      `;
+
+      const recent = (overview?.businesses || []).flatMap((business) =>
+        (business.recentFeedback || [])
+          .filter((item) => item.replyRequested)
+          .map((item) => ({ ...item, businessId: business.id, businessName: business.name }))
+      ).sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()).slice(0, 30);
+      const statusLabel = (status) => ({ requested: 'Reply requested', in_progress: 'In progress', resolved: 'Resolved', expired: 'Contact details expired' }[status] || 'Unknown');
+      replyRequestRecentEl.innerHTML = recent.length ? recent.map((item) => `
+        <div class="activation-stuck-item">
+          <div>
+            <strong>${escapeHtml(item.businessName || 'Untitled business')}</strong>
+            <span class="muted">${escapeHtml(item.locationName || 'Unknown location')} - ${escapeHtml(formatDate(item.submittedAt))}</span>
+          </div>
+          <div>
+            <span>${escapeHtml(statusLabel(item.replyStatus))}</span>
+            <span class="muted">Contact: ${escapeHtml(item.maskedCustomerEmail || (item.customerEmailErasedAt ? 'Erased under retention policy' : 'Not available'))}</span>
+            <span class="muted">Support never receives the full customer address.</span>
+          </div>
+          <button class="small-btn" type="button" data-business-id="${escapeHtml(item.businessId)}">Open account</button>
+        </div>
+      `).join('') : '<div class="activation-empty">No recent reply requests are available in the support snapshot.</div>';
+      replyRequestRecentEl.querySelectorAll('[data-business-id]').forEach((button) => {
+        button.addEventListener('click', () => openDetail(button.dataset.businessId));
+      });
+    }
+
     function renderMetrics() {
       const metrics = overview?.metricsSnapshot?.metrics || {};
       const heroMetric = metrics.weeklyActiveFeedbackLocations;
@@ -2866,6 +2983,8 @@
           status: dashboardEngagement.qrCtaEvents ? 'Ready' : 'Not enough data yet'
         })
       ].join('');
+
+      renderReplyRequestMetrics(metrics.replyRequests || {});
 
       postFeedbackMetricCardsEl.innerHTML = [
         'googleReviewCtaClicks',
