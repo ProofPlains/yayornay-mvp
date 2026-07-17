@@ -4554,8 +4554,8 @@
 		    font-size: 12px;
 		    border-radius: 8px;
 		  }
-		  .feedback-more-panel { position:fixed; left:0; right:0; top:auto; bottom:0; width:100%; max-height:75vh; overflow:auto; border-radius:18px 18px 0 0; padding:20px; z-index:1002; }
-		  .feedback-filter-backdrop.is-open { display:block; position:fixed; inset:0; z-index:1001; background:rgba(3,7,18,.68); }
+		  .feedback-more-panel { position:fixed; left:0; right:0; top:auto; bottom:0; width:100%; max-height:calc(100dvh - 24px); overflow:auto; border-radius:18px 18px 0 0; padding:20px 20px calc(20px + env(safe-area-inset-bottom, 0px)); z-index:2102; }
+		  .feedback-filter-backdrop.is-open { display:block; position:fixed; inset:0; z-index:2101; background:rgba(3,7,18,.68); }
 
 		  .feedback-summary-grid {
 		    display: grid;
@@ -13854,8 +13854,8 @@
 		    const pending = { feedbackId, createdAt: Date.now() };
 		    localStorage.setItem(REPLY_STATUS_PENDING_KEY, JSON.stringify(pending));
 		    replyStatusPromptShownFor = null;
-		    const locationName = currentUser?.locations?.[item.location]?.name || currentUser?.businessName || 'your recent visit';
-		    const subject = `Following up on your feedback for ${locationName}`;
+		    const businessName = currentUser?.businessName || 'our team';
+		    const subject = `Following up on your feedback for ${businessName}`;
 		    const body = `Hello,\n\nThank you for sharing your feedback with ${currentUser?.businessName || 'our team'}. I’m getting in touch because you asked us to reply.\n\nKind regards,`;
 		    window.location.href = `mailto:${encodeURIComponent(item.customer_email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 		  } catch (error) { showToast?.(error.message || 'Could not start this reply.', 'error'); }
