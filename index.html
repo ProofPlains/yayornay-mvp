@@ -9694,7 +9694,7 @@
 
 		const QR_PRINT_PRODUCTS = {
 		  qr_sticker: { productType: 'qr_sticker', productName: 'Glossy QR Stickers', quantityIncrement: 1, helper: 'Place them where customers can scan in person.' },
-		  qr_insert: { productType: 'qr_insert', productName: 'Glossy QR Inserts', quantityIncrement: 1, helper: 'Recommended for roughly one month of outgoing parcels.' }
+		  qr_insert: { productType: 'qr_insert', productName: 'Glossy QR Inserts', quantityIncrement: 10, helper: 'Recommended for roughly one month of outgoing parcels.' }
 		};
 		let qrPrintQuoteState = {
 		  orderId: null,
@@ -10282,7 +10282,7 @@
 		  const hasInserts = qrPrintQuoteState.items.some((item) => item.product_type === 'qr_insert');
 		  const helperParts = [];
 		  if (hasStickers) helperParts.push('For stickers, we start with one per in-person spot, then add 20% so you have a few spares. You can change the quantity to anything that feels right.');
-		  if (hasInserts) helperParts.push('For inserts, this is a one-time order sized around one month of deliveries. For this test, insert quantities can be exact.');
+		  if (hasInserts) helperParts.push('For inserts, this is a one-time order sized around one month of deliveries, rounded up to practical batches of 10.');
 		  container.innerHTML = qrPrintQuoteState.items.map((item) => {
 		    const product = QR_PRINT_PRODUCTS[item.product_type];
 		    const increment = Math.max(1, Number(product?.quantityIncrement || 1));
