@@ -6607,7 +6607,7 @@
 			    teamLimit: 6,
 			    checkout: true,
 			    summary: 'Up to 3 locations.',
-			    features: ['Up to 3 locations', 'Invite up to 6 team members', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
+			    features: ['Up to 3 locations', 'Invite up to 6 team members', 'Unlimited feedback history', 'Let customers ask for a reply — securely collect their email and track follow-up', 'Private feedback dashboard', 'QR code generation'],
 			    sandboxPriceId: 'price_1TaajGFIxmPNhgh2Purgftxq',
 			    productionPriceId: 'price_1TabHTFNq4Xp479bhvLoemuU'
 			  },
@@ -6619,7 +6619,7 @@
 			    teamLimit: 20,
 			    checkout: true,
 			    summary: 'Up to 10 locations.',
-			    features: ['Up to 10 locations', 'Invite up to 20 team members', 'Unlimited feedback history', 'Private feedback dashboard', 'QR code generation'],
+			    features: ['Up to 10 locations', 'Invite up to 20 team members', 'Unlimited feedback history', 'Let customers ask for a reply — securely collect their email and track follow-up', 'Private feedback dashboard', 'QR code generation'],
 			    sandboxPriceId: 'price_1TaaliFIxmPNhgh2psSx6s23',
 			    productionPriceId: 'price_1TabHQFNq4Xp479bH5NeGLYu'
 			  }
@@ -6981,7 +6981,7 @@
 			    pricingModalSelectedTier = currentTier === 'free' ? 'growth' : currentTier === 'growth' ? 'pro' : 'pro';
 			  } else if (context === 'team-limit') {
 			    pricingModalSelectedTier = currentTier === 'free' ? 'growth' : currentTier === 'growth' ? 'pro' : 'pro';
-			  } else if (context === 'history-upgrade') {
+			  } else if (context === 'history-upgrade' || context === 'feedback-value-upgrade') {
 			    pricingModalSelectedTier = currentTier === 'free' ? 'growth' : currentTier;
 			  }
 			  pricingModalSelectedLocations = new Set(
@@ -6998,6 +6998,8 @@
 			      ? 'Upgrade to add team members'
 			    : context === 'history-upgrade'
 			      ? 'Unlock full feedback history'
+			      : context === 'feedback-value-upgrade'
+			        ? 'Get more value from every response'
 			      : context === 'pending-location-action'
 			      ? 'Keep your scheduled plan change valid'
 			      : context === 'public-plans'
@@ -7022,6 +7024,8 @@
 			          : 'Growth lets you invite your team so more people can help manage feedback and QR codes.'
 			      : context === 'history-upgrade'
 			        ? 'Growth and Pro include unlimited feedback history, so you can see every response your customers have sent.'
+			        : context === 'feedback-value-upgrade'
+			          ? 'Growth and Pro help you keep every customer insight and respond when customers ask to hear from you.'
 			      : context === 'pending-location-action'
 			        ? 'Choose one more location to deactivate at renewal before continuing.'
 			      : 'Pick the plan that matches how many locations you want to manage.';
@@ -11906,11 +11910,13 @@
 		}
 
 		function openFeedbackHistoryUpgrade() {
+		  const hiddenCount = Math.max(0, Number(currentUser?.feedbackHistoryEntitlement?.hiddenCount) || 0);
 		  logDashboardEvent('feedback_history_upgrade_clicked', {
 		    tier: currentUser?.pricingTier || 'free',
-		    hidden_count: currentUser?.feedbackHistoryEntitlement?.hiddenCount || 0
+		    hidden_count: hiddenCount,
+		    prompt_context: hiddenCount > 0 ? 'hidden_history' : 'paid_value'
 		  });
-		  openPricingModal('history-upgrade');
+		  openPricingModal(hiddenCount > 0 ? 'history-upgrade' : 'feedback-value-upgrade');
 		}
 
 		function handleDashboardQrCta() {
@@ -12053,15 +12059,16 @@
 		    ? `You're viewing the last ${limitDays} days.`
 		    : `Your Free plan includes ${limitDays} days of feedback history.`;
 		  const detail = hiddenCount > 0
-		    ? `${hiddenCount} older response${hiddenCount === 1 ? '' : 's'} ${hiddenCount === 1 ? 'is' : 'are'} safely stored.`
-		    : 'Upgrade to Growth or Pro whenever you need unlimited history.';
+		    ? `${hiddenCount} older response${hiddenCount === 1 ? '' : 's'} ${hiddenCount === 1 ? 'is' : 'are'} safely stored. Upgrade to recover every insight and respond when customers want to hear from you.`
+		    : 'Upgrade to keep every customer insight and respond when customers want to hear from you.';
+		  const ctaLabel = hiddenCount > 0 ? 'Unlock full history' : 'Explore paid features';
 
 		  card.innerHTML = `
 		    <div class="history-limit-copy">
 		      <strong>${headline}</strong>
 		      <span>${detail}</span>
 		    </div>
-		    <button class="btn" type="button" onclick="openFeedbackHistoryUpgrade()">Unlock full history</button>
+		    <button class="btn" type="button" onclick="openFeedbackHistoryUpgrade()">${ctaLabel}</button>
 		  `;
 		  card.style.display = 'flex';
 		  const promptKey = `ff_history_prompt_v2_logged_${currentUser?.businessId || 'business'}`;
