@@ -6041,7 +6041,7 @@
 						<div id="feedbackMoreFiltersPanel" class="feedback-more-panel" role="dialog" aria-modal="false" aria-labelledby="feedbackMoreFiltersTitle">
 						  <div class="feedback-more-heading"><strong id="feedbackMoreFiltersTitle">More filters</strong><button class="feedback-filter-close" type="button" aria-label="Close filters" onclick="closeFeedbackMoreFilters()">×</button></div>
 						  <label class="feedback-toggle" for="commentsOnlyToggle"><input id="commentsOnlyToggle" type="checkbox" /><span>Comments only</span></label>
-						  <label class="feedback-filter" for="feedbackReplyStatusFilter">Reply status
+						  <label id="feedbackReplyStatusFilterField" class="feedback-filter" for="feedbackReplyStatusFilter">Reply status
 						    <select id="feedbackReplyStatusFilter" onchange="handleFeedbackReplyStatusChanged()">
 						      <option value="all">All reply statuses</option><option value="requested">Reply requested</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option><option value="expired">Contact details expired</option>
 						    </select>
@@ -6607,7 +6607,7 @@
 			    teamLimit: 6,
 			    checkout: true,
 			    summary: 'Up to 3 locations.',
-			    features: ['Up to 3 locations', 'Invite up to 6 team members', 'Unlimited feedback history', 'Let customers ask for a reply — securely collect their email and track follow-up', 'Private feedback dashboard', 'QR code generation'],
+			    features: ['Up to 3 locations', 'Invite up to 6 team members', 'Unlimited feedback history', 'Respond to your customers', 'Private feedback dashboard', 'QR code generation'],
 			    sandboxPriceId: 'price_1TaajGFIxmPNhgh2Purgftxq',
 			    productionPriceId: 'price_1TabHTFNq4Xp479bhvLoemuU'
 			  },
@@ -6619,7 +6619,7 @@
 			    teamLimit: 20,
 			    checkout: true,
 			    summary: 'Up to 10 locations.',
-			    features: ['Up to 10 locations', 'Invite up to 20 team members', 'Unlimited feedback history', 'Let customers ask for a reply — securely collect their email and track follow-up', 'Private feedback dashboard', 'QR code generation'],
+			    features: ['Up to 10 locations', 'Invite up to 20 team members', 'Unlimited feedback history', 'Respond to your customers', 'Private feedback dashboard', 'QR code generation'],
 			    sandboxPriceId: 'price_1TaaliFIxmPNhgh2psSx6s23',
 			    productionPriceId: 'price_1TabHQFNq4Xp479bH5NeGLYu'
 			  }
@@ -7028,7 +7028,7 @@
 			          ? 'Growth and Pro help you keep every customer insight and respond when customers ask to hear from you.'
 			      : context === 'pending-location-action'
 			        ? 'Choose one more location to deactivate at renewal before continuing.'
-			      : 'Pick the plan that matches how many locations you want to manage.';
+			      : "Pick the plan that matches your business's needs.";
 			  }
 			  if (continueBtn) {
 			    const enterpriseOnly = !isPricingModalSignupContext(context) && context !== 'public-plans' && currentTier === 'pro' && (context === 'limit' || context === 'team-limit');
@@ -11037,6 +11037,14 @@
 		  const isFree = isFeedbackDashboardFreePlan();
 		  const dashboard = document.getElementById('feedbackDashboard');
 		  dashboard?.classList.toggle('is-free-plan', isFree);
+		  const replyStatusField = document.getElementById('feedbackReplyStatusFilterField');
+		  const replyStatusSelect = document.getElementById('feedbackReplyStatusFilter');
+		  if (replyStatusField) replyStatusField.hidden = isFree;
+		  if (replyStatusSelect) {
+		    replyStatusSelect.disabled = isFree;
+		    if (isFree) replyStatusSelect.value = 'all';
+		  }
+		  syncFeedbackSecondaryFilters();
 		  if (!isFree) return;
 
 		  const dateRange = document.getElementById('feedbackDateRange');
@@ -12017,12 +12025,6 @@
 		  const card = document.getElementById('feedbackHistoryNotice');
 		  if (!card) return;
 
-		  if (currentFeedbackCount === 0) {
-		    card.style.display = 'none';
-		    card.innerHTML = '';
-		    return;
-		  }
-
 		  if (isDashboardDemoContext()) {
 		    card.style.display = 'none';
 		    card.innerHTML = '';
@@ -12054,6 +12056,12 @@
 		  }
 
 		  const hiddenCount = Math.max(0, Number(entitlement.hiddenCount) || 0);
+		  const visibleFeedbackCount = Math.max(0, Number(unfilteredFeedbackCount ?? currentFeedbackCount) || 0);
+		  if (visibleFeedbackCount === 0 && hiddenCount === 0) {
+		    card.style.display = 'none';
+		    card.innerHTML = '';
+		    return;
+		  }
 		  const limitDays = Math.max(1, Number(entitlement.limitDays) || 30);
 		  const headline = hiddenCount > 0
 		    ? `You're viewing the last ${limitDays} days.`
