@@ -6063,7 +6063,7 @@
                             <button class="feedback-summary-card is-clickable" id="dashboardAttentionCard" type="button" onclick="toggleDashboardQuickFilter('attention')" aria-pressed="false">
                                 <div class="feedback-summary-label">Needs attention</div>
                                 <div class="feedback-summary-value" id="dashboardAttentionCount">0</div>
-                                <div class="feedback-summary-note" id="dashboardAttentionNote">Neutral or negative responses.</div>
+                                <div class="feedback-summary-note" id="dashboardAttentionNote">Neutral, negative, or awaiting reply.</div>
                             </button>
                             <div class="feedback-summary-card">
                                 <div class="feedback-summary-label">Responses</div>
@@ -11051,6 +11051,10 @@
 		  return getSentimentMeta(sentiment).attention === true;
 		}
 
+		function isFeedbackNeedingAttention(item) {
+		  return isAttentionSentiment(item?.sentiment) || ['requested', 'in_progress'].includes(item?.reply_status);
+		}
+
 		function getFeedbackDateRangeLabel(value = document.getElementById('feedbackDateRange')?.value || '30') {
 		  if (value === 'today') return 'Today';
 		  if (value === '7') return 'Last 7 days';
@@ -11083,7 +11087,7 @@
 		  const replyStatus = document.getElementById('feedbackReplyStatusFilter')?.value || 'all';
 		  let filtered = feedback || [];
 		  if (sentimentFilter === 'needs-attention') {
-		    filtered = filtered.filter((item) => isAttentionSentiment(item?.sentiment));
+		    filtered = filtered.filter(isFeedbackNeedingAttention);
 		  } else if (sentimentFilter !== 'all') {
 		    filtered = filtered.filter((item) => item?.sentiment === sentimentFilter);
 		  }
@@ -11862,9 +11866,11 @@
 		  syncDashboardFilterActiveStates();
 		}
 
-		function renderDashboardSummary({ counts, total, commentsCount, periodLabel, selectedLocationName }) {
+		function renderDashboardSummary({ counts, total, commentsCount, attentionCount, periodLabel, selectedLocationName }) {
 		  const score = computeMoodScoreFromCounts(counts);
-		  const attentionCount = (counts.neutral || 0) + (counts.sad || 0) + (counts['very-sad'] || 0);
+		  attentionCount = Number.isFinite(attentionCount)
+		    ? attentionCount
+		    : (counts.neutral || 0) + (counts.sad || 0) + (counts['very-sad'] || 0);
 		  const commentRate = total > 0 ? Math.round((commentsCount / total) * 100) : 0;
 		  const scoreEl = document.getElementById('moodScore');
 		  const emojiEl = document.getElementById('moodEmoji');
@@ -12169,6 +12175,7 @@
 			      counts,
 			      total,
 			      commentsCount,
+			      attentionCount: dashboardFeedback.filter(isFeedbackNeedingAttention).length,
 			      periodLabel: getFeedbackDateRangeLabel(),
 			      selectedLocationName
 			    });
@@ -13735,7 +13742,7 @@
 		  const filtered = sentimentFilter === 'all'
 		    ? base
 		    : sentimentFilter === 'needs-attention'
-		      ? base.filter(it => isAttentionSentiment(it?.sentiment))
+		      ? base.filter(isFeedbackNeedingAttention)
 		      : base.filter(it => it?.sentiment === sentimentFilter);
 		  const withComments = commentsOnly
 		    ? filtered.filter(it => it?.comments && it.comments.trim())
@@ -13917,7 +13924,7 @@
 		  pageItems.forEach((item, index) => {
 		    const meta = getSentimentMeta(item.sentiment);
 		    const row = document.createElement('div');
-		    row.className = `feedback-row-card${meta.attention ? ' needs-attention' : ''}`;
+		    row.className = `feedback-row-card${isFeedbackNeedingAttention(item) ? ' needs-attention' : ''}`;
 		    if (item.id) row.setAttribute('data-feedback-id', item.id);
 		    if (firstSuccessFeedbackMatches(item)) row.classList.add('is-first-success-highlight');
 
