@@ -1173,6 +1173,21 @@
             color: #c53030;
         }
 
+        .field-error {
+            display: none;
+            margin-top: 6px;
+            color: var(--ff-error);
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .field-error.is-visible { display: block; }
+        .form-group input[aria-invalid="true"] {
+            border-color: var(--ff-error);
+            box-shadow: 0 0 0 3px color-mix(in oklab, var(--ff-error) 14%, transparent);
+        }
+
         .link-button {
             background: none;
             border: none;
@@ -5583,7 +5598,7 @@
             <p>Start collecting feedback in minutes</p>
         </div>
 
-        <div id="signupError" class="error-message" style="display: none;"></div>
+        <div id="signupError" class="error-message" role="alert" aria-live="assertive" tabindex="-1" style="display: none;"></div>
 
         <form id="signupForm" onsubmit="handleSignup(event)">
             <div class="form-group">
@@ -5634,15 +5649,18 @@
 			</div>
             <div class="form-group">
                 <label for="email">Email Address</label>
-                <input type="email" id="email" required>
+                <input type="email" id="email" required aria-describedby="emailError">
+                <div id="emailError" class="field-error" role="alert"></div>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" required minlength="6">
+                <input type="password" id="password" required minlength="6" aria-describedby="passwordError">
+                <div id="passwordError" class="field-error" role="alert"></div>
             </div>
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" required minlength="6">
+                <input type="password" id="confirmPassword" required minlength="6" aria-describedby="confirmPasswordError">
+                <div id="confirmPasswordError" class="field-error" role="alert"></div>
             </div>
 			<input type="hidden" id="signupPricingTier" name="signupPricingTier" value="free">
             <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Create Account</button>
@@ -5680,7 +5698,7 @@
 			<p style="opacity:.9;">Log in to see what your customers are saying.</p>
 		  </div>
 
-        <div id="loginError" class="error-message" style="display: none;"></div>
+        <div id="loginError" class="error-message" role="alert" aria-live="assertive" tabindex="-1" style="display: none;"></div>
 
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
@@ -8450,13 +8468,43 @@
                     element.textContent = '';
                 }
             });
+            document.querySelectorAll('#signupForm .field-error').forEach(function(element) {
+                element.textContent = '';
+                element.classList.remove('is-visible');
+            });
+            document.querySelectorAll('#signupForm [aria-invalid="true"]').forEach(function(element) {
+                element.removeAttribute('aria-invalid');
+            });
         }
 
-        function showError(elementId, message) {
+        function bringValidationIntoView(element) {
+            if (!element) return;
+            var reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+            element.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+            window.setTimeout(function() { element.focus({ preventScroll: true }); }, reduceMotion ? 0 : 250);
+        }
+
+        function showFieldError(inputId, errorId, message) {
+            var input = document.getElementById(inputId);
+            var error = document.getElementById(errorId);
+            if (!input || !error) return;
+            input.setAttribute('aria-invalid', 'true');
+            error.textContent = message;
+            error.classList.add('is-visible');
+            input.addEventListener('input', function clearThisFieldError() {
+                input.removeAttribute('aria-invalid');
+                error.textContent = '';
+                error.classList.remove('is-visible');
+            }, { once: true });
+            bringValidationIntoView(input);
+        }
+
+        function showError(elementId, message, options) {
             var element = document.getElementById(elementId);
             if (element) {
                 element.textContent = message;
                 element.style.display = 'block';
+                if (!options || options.bringIntoView !== false) bringValidationIntoView(element);
             }
         }
 
@@ -8544,13 +8592,13 @@
 			showError('signupError', 'Please fill in all fields'); return;
 		  }
 		  if (password !== confirmPwd) {
-			showError('signupError', 'Passwords do not match'); return;
+			showFieldError('confirmPassword', 'confirmPasswordError', 'Passwords do not match.'); return;
 		  }
 		  if (password.length < 6) {
-			showError('signupError', 'Password must be at least 6 characters long'); return;
+			showFieldError('password', 'passwordError', 'Password must be at least 6 characters long.'); return;
 		  }
 		  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-			showError('signupError', 'Please enter a valid email address'); return;
+			showFieldError('email', 'emailError', 'Please enter a valid email address.'); return;
 		  }
 
 		  if (!signupPlanConfirmed) {
