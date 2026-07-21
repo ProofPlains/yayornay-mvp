@@ -11339,6 +11339,7 @@
 		  } finally {
 		    firstSuccessSignals.loading = false;
 		    updateFirstSuccessPanel();
+		    renderRecentPage();
 		  }
 		}
 
@@ -11830,12 +11831,26 @@
 		  if (el) el.textContent = value;
 		}
 
+		function getDashboardEmptyQrOrderState() {
+		  if (isDashboardDemoContext() || !currentUser?.businessId) return null;
+		  const state = buildFirstSuccessState();
+		  const orderStage = String(state.orderStage || '').toLowerCase();
+		  const hasDiyQrReady = ['diy_print', 'diy_download'].includes(String(state.local?.qrMaterialType || ''));
+		  const waitingForPhysicalKit = Boolean(orderStage && !['completed', 'delivered'].includes(orderStage) && !hasDiyQrReady);
+		  if (!waitingForPhysicalKit) return null;
+		  return {
+		    title: orderStage === 'shipped' ? 'No feedback yet - your QR kit is on the way.' : 'No feedback yet - your QR kit is being prepared.',
+		    copy: 'Once it arrives, place your QR codes where customers naturally pause. New feedback will appear here after customers scan.'
+		  };
+		}
+
 		function dashboardEmptyStateMarkup(hasFilters = false, topNotice = false) {
+		  const qrOrderState = hasFilters ? null : getDashboardEmptyQrOrderState();
 		  return `
 		    <div class="feedback-empty-state${topNotice ? ' is-top-notice' : ''}">
-		      <strong>${hasFilters ? 'No matching feedback yet.' : 'No feedback in this period yet.'}</strong>
-		      <span>${hasFilters ? 'Try clearing a filter or choosing a wider time period.' : 'Place your QR codes where customers can see them, then feedback will appear here.'}</span>
-		      ${hasFilters ? '' : '<button class="btn" type="button" onclick="handleDashboardEmptyStateCta()">Get QR Codes</button>'}
+		      <strong>${hasFilters ? 'No matching feedback yet.' : qrOrderState ? qrOrderState.title : 'No feedback in this period yet.'}</strong>
+		      <span>${hasFilters ? 'Try clearing a filter or choosing a wider time period.' : qrOrderState ? qrOrderState.copy : 'Place your QR codes where customers can see them, then feedback will appear here.'}</span>
+		      ${hasFilters || qrOrderState ? '' : '<button class="btn" type="button" onclick="handleDashboardEmptyStateCta()">Get QR Codes</button>'}
 		    </div>
 		  `;
 		}
