@@ -8523,8 +8523,7 @@
 			
 			// If location is inactive, show “closed” message and stop
 			if (locRow && locRow.is_active === false) {
-			  const displayName = [locRow.business_name?.trim(), (locRow.name || 'Unknown Location').trim()]
-			    .filter(Boolean).join(' ').trim();
+			  const displayName = getCustomerFacingLocationLabel(locRow);
 			  setLocationName(displayName);
 			
 			  const form = document.getElementById('customerForm');
@@ -8537,18 +8536,16 @@
 			  return;
 			}
 			
-			// Compose: "BusinessName LocationName"
-			const displayName = [
-			  (locRow?.business_name || '').trim(),
-			  (locRow?.name || 'Unknown Location').trim()
-			].filter(Boolean).join(' ').trim();
+			const displayName = getCustomerFacingLocationLabel(locRow);
 			
 			setLocationName(displayName);
 			
 			// Keep existing display function happy (expects a map keyed by currentLocation)
 			const locations = {};
 			locations[locationId] = {
-			  name: displayName,
+			  name: locRow?.name || 'Unknown Location',
+			  business_name: locRow?.business_name || '',
+			  business_location_count: locRow?.business_location_count,
 			  google_review_url: locRow?.google_review_url || '',
 			  google_review_routing_enabled: locRow?.google_review_routing_enabled === true,
 			  feedback: []
@@ -9252,17 +9249,26 @@
 		  const display = document.getElementById('customerLocationDisplay');
 		  const ty = document.getElementById('thankYouLocationDisplay');
 
-		  // Base location name (from the passed map)
-		  const locationName = locations[currentLocation]?.name || 'Unknown Location';
-
-		  // Prefix with business name when logged-in; empty when public/QR
-		  const businessName = currentUser?.businessName ? String(currentUser.businessName).trim() : '';
-
-		  // Compose "Business Location" (no extra spaces if biz missing)
-		  const composed = [businessName, locationName].filter(Boolean).join(' ').trim();
+		  const location = locations[currentLocation] || {};
+		  const composed = getCustomerFacingLocationLabel(location, locations);
 
 		  if (display) display.textContent = composed;
 		  if (ty) ty.textContent = composed;
+		}
+
+		function getCustomerFacingLocationLabel(locationContext = null, locations = null) {
+		  const businessName = String(locationContext?.business_name || currentUser?.businessName || '').trim();
+		  const locationName = String(locationContext?.name || 'Unknown Location').trim();
+		  const knownLocationCount = Number(locationContext?.business_location_count);
+		  const localLocationCount = locations
+		    ? Object.keys(locations).length
+		    : Object.keys(currentUser?.locations || {}).length;
+		  const locationCount = Number.isFinite(knownLocationCount) && knownLocationCount > 0
+		    ? knownLocationCount
+		    : localLocationCount;
+
+		  if (locationCount === 1 && businessName) return businessName;
+		  return [businessName, locationName].filter(Boolean).join(' ').trim() || locationName;
 		}
 
 
@@ -9319,9 +9325,15 @@
 		}
 
 		function getPostFeedbackLocationLabel(locationContext = null) {
-		  const localName = currentUser?.locations?.[currentLocation]?.name || '';
+		  const localLocations = currentUser?.locations || {};
+		  const localName = localLocations[currentLocation]?.name || '';
 		  const businessName = String(locationContext?.business_name || currentUser?.businessName || '').trim();
 		  const locationName = String(locationContext?.name || localName || 'this location').trim();
+		  const knownLocationCount = Number(locationContext?.business_location_count);
+		  const locationCount = Number.isFinite(knownLocationCount) && knownLocationCount > 0
+		    ? knownLocationCount
+		    : Object.keys(localLocations).length;
+		  if (locationCount === 1 && businessName) return businessName;
 		  return [businessName, locationName].filter(Boolean).join(' - ') || locationName;
 		}
 
@@ -9513,10 +9525,7 @@
 		        return;
 		      }
 		
-		      const displayName = [
-		        (locRow?.business_name || '').trim(),
-		        (locRow?.name || 'Unknown Location').trim()
-		      ].filter(Boolean).join(' ').trim();
+		      const displayName = getCustomerFacingLocationLabel(locRow);
 		      setLocationName(displayName);
 		    }
 		
@@ -13656,7 +13665,7 @@
 		  if (!id) return null;
 		  const { data, error } = await supabase
 		    .from('location_public')
-		    .select('location_id, location_name, business_id, business_name, is_active, google_review_url, google_review_routing_enabled, reply_requests_enabled')
+		    .select('location_id, location_name, business_id, business_name, business_location_count, is_active, google_review_url, google_review_routing_enabled, reply_requests_enabled')
 		    .eq('location_id', id)
 		    .maybeSingle();
 		
@@ -13673,6 +13682,7 @@
 		    business_id: data.business_id,
 		    is_active: data.is_active,
 		    business_name: data.business_name,
+		    business_location_count: Number(data.business_location_count || 0),
 		    google_review_url: data.google_review_url || '',
 		    google_review_routing_enabled: data.google_review_routing_enabled === true,
 		    reply_requests_enabled: data.reply_requests_enabled === true
