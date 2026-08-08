@@ -5394,19 +5394,19 @@
 
 			<section class="ff-home-section ff-section">
 				<h2>One simple feedback system. Multiple ways to use it.</h2>
-				<p class="ff-section-copy">Use FlashFeedback anywhere the customer experience happens: in person, at pickup, after treatment, or inside a delivered order.</p>
+				<p class="ff-section-copy">Use FlashFeedback anywhere the customer experience happens in person: tables, counters, bill folders, waiting areas, collection points and service desks.</p>
 				<div class="ff-grid-3">
 					<div class="ff-tile">
-						<h3>Printed QR kits</h3>
-						<p>Order ready-to-use QR codes for in-person touchpoints and customer parcels.</p>
+						<h3>Printed QR stickers</h3>
+						<p>Order ready-to-use QR stickers for the places customers naturally pause.</p>
 					</div>
 					<div class="ff-tile">
 						<h3>QR stickers</h3>
 						<p>Use them on tables, bill folders, counters, waiting areas, takeaway bags and service desks.</p>
 					</div>
 					<div class="ff-tile">
-						<h3>Delivery inserts</h3>
-						<p>Add one to outgoing orders so customers can privately flag product, packaging or delivery issues.</p>
+						<h3>DIY options</h3>
+						<p>Print signs yourself or download the QR image for screens, menus, messages and social posts.</p>
 					</div>
 				</div>
 			</section>
@@ -5426,7 +5426,7 @@
 				<div class="ff-steps">
 					<div class="ff-step"><h3>Create your free account</h3><p>Set up your business and first feedback flow in minutes.</p></div>
 					<div class="ff-step"><h3>Generate your QR code</h3><p>Create the code for the location or touchpoint you want to track.</p></div>
-					<div class="ff-step"><h3>Choose how to use it</h3><p>Order a printed kit, use stickers and inserts, or print and download from your dashboard.</p></div>
+					<div class="ff-step"><h3>Choose how to use it</h3><p>Order QR stickers, or print and download from your dashboard for free.</p></div>
 					<div class="ff-step"><h3>See feedback privately</h3><p>Customers tap an emoji, add an optional comment, and the response lands in your dashboard.</p></div>
 				</div>
 			</section>
@@ -5469,13 +5469,13 @@
 					<div class="ff-persona-card"><h3>Restaurants &amp; cafes</h3><p>Catch service, wait time and food issues before guests leave.</p></div>
 					<div class="ff-persona-card"><h3>Salons &amp; clinics</h3><p>Give clients a quiet way to flag experience or appointment problems.</p></div>
 					<div class="ff-persona-card"><h3>Shops &amp; local services</h3><p>Learn what happened at the counter, checkout or collection point.</p></div>
-					<div class="ff-persona-card"><h3>Online sellers</h3><p>Hear about product, packaging and delivery issues from inside the order.</p></div>
+					<div class="ff-persona-card"><h3>Gyms &amp; studios</h3><p>Capture quick feedback at reception, changing areas, class exits or consultation spaces.</p></div>
 				</div>
 			</section>
 
 			<section class="ff-home-section ff-final-cta">
 				<h2>Start collecting private feedback today.</h2>
-				<p class="ff-section-copy">Create your first QR code in minutes. Use it with a printed kit, stickers, inserts, print, or download.</p>
+				<p class="ff-section-copy">Create your first QR code in minutes. Order stickers, print signs yourself, or download the QR image for digital use.</p>
 				<div class="ff-final-cta-actions">
 					<button class="btn-primary" onclick="showSignup()">Get Started Free</button>
 					<button class="btn-secondary" onclick="showDemo()">Try Demo First</button>
@@ -6210,10 +6210,10 @@
 					    </div>
 					    <div class="qr-action-instruction">Choose how you want to use your QR code.</div>
 					    <div class="qr-sign-actions">
-					      <div class="qr-action-choice" data-qr-action-card="order" role="button" tabindex="0" aria-label="Order printed kit">
-					        <div class="qr-action-choice-title">Order printed kit</div>
-					        <p class="qr-action-choice-copy">Printed stickers or inserts, delivered ready to use.</p>
-					        <button id="ffOrderQrBtn" class="btn">Order kit</button>
+					      <div class="qr-action-choice" data-qr-action-card="order" role="button" tabindex="0" aria-label="Order printed stickers">
+					        <div class="qr-action-choice-title">Order printed stickers</div>
+					        <p class="qr-action-choice-copy">QR stickers, delivered ready to use.</p>
+					        <button id="ffOrderQrBtn" class="btn">Order stickers</button>
 					      </div>
 					      <div class="qr-action-choice" data-qr-action-card="diy" role="button" tabindex="0" aria-label="Use DIY options for free">
 					        <div class="qr-action-choice-title">DIY for free</div>
@@ -6282,23 +6282,15 @@
 					    <div class="qr-order-hero">
 					      <div>
 					        <div class="qr-order-kicker">Fresh from the printer</div>
-					        <h4>Build your QR kit</h4>
-					        <p>We'll recommend the right QR stickers and delivery inserts, then print your exact FlashFeedback QR sign.</p>
+					        <h4>Order QR stickers</h4>
+					        <p>We'll recommend the right number of stickers, then print your exact FlashFeedback QR sign.</p>
 					      </div>
 					      <div id="qrOrderStartingPrice" class="qr-order-starting-price">Loading price...</div>
 					    </div>
 					    <div class="qr-kit-guide">
-					      <div class="qr-order-kicker">Quick questions</div>
-					      <h4><span class="qr-kit-question-label"><span class="qr-kit-question-number">1.</span><span>Where should customers find your QR code?</span></span></h4>
-					      <select id="qrKitEncounter" class="qr-kit-field">
-					        <option value="">Please select</option>
-					        <option value="in_person">In person - tables, bill folders, till points or service areas</option>
-					        <option value="delivery">In deliveries - inside outgoing parcels</option>
-					        <option value="both">Both in person and in deliveries</option>
-					        <option value="unsure">I'm not sure yet</option>
-					      </select>
+					      <div class="qr-order-kicker">Quick question</div>
 					      <div id="qrKitVolumeFields" class="qr-kit-volume-fields"></div>
-					      <button id="qrKitRecommend" class="btn" type="button">Show my recommended QR kit</button>
+					      <button id="qrKitRecommend" class="btn" type="button">Recommend my sticker quantity</button>
 					      <div id="qrKitRecommendation" class="qr-kit-recommendation" aria-live="polite"></div>
 					    </div>
 					    <button id="qrOrderCancelLite" class="btn" type="button">Back to choices</button>
@@ -6344,7 +6336,7 @@
 					        </select>
 					      </div>
 					      <div class="qr-order-final-actions">
-					        <button id="qrOrderSubmit" class="btn" type="submit" disabled aria-disabled="true">Pay and order QR kit</button>
+					        <button id="qrOrderSubmit" class="btn" type="submit" disabled aria-disabled="true">Pay and order stickers</button>
 					        <button id="qrOrderCancel" class="btn" type="button">Back to choices</button>
 					        <span id="qrOrderStatus" style="color:#4b5563;"></span>
 					      </div>
@@ -9750,8 +9742,7 @@
 		}
 
 		const QR_PRINT_PRODUCTS = {
-		  qr_sticker: { productType: 'qr_sticker', productName: 'Glossy QR Stickers', quantityIncrement: 1, helper: 'Place them where customers can scan in person.' },
-		  qr_insert: { productType: 'qr_insert', productName: 'Glossy QR Inserts', quantityIncrement: 10, helper: 'Recommended for roughly one month of outgoing parcels.' }
+		  qr_sticker: { productType: 'qr_sticker', productName: 'QR Stickers', quantityIncrement: 1, helper: 'Place them where customers can scan in person.' }
 		};
 		let qrPrintQuoteState = {
 		  orderId: null,
@@ -9776,20 +9767,7 @@
 		}
 
 		function getInsertCostPerParcelMarkup(option) {
-		  const insertItem = qrPrintQuoteState.items.find((item) => item.product_type === 'qr_insert');
-		  const hasStickerItem = qrPrintQuoteState.items.some((item) => item.product_type === 'qr_sticker');
-		  const insertQuantity = Number(insertItem?.quantity || 0);
-		  if (!option || !insertItem || insertQuantity <= 0) return '';
-		  const insertAmount = Number(option.insert_customer_total_amount ?? option.insertCustomerTotalAmount ?? (!hasStickerItem ? option.customer_total_amount : 0));
-		  if (!insertAmount) return '';
-		  const costPerParcel = Math.ceil(insertAmount / insertQuantity);
-		  if (costPerParcel > 79) return '';
-		  const helper = hasStickerItem
-		    ? 'Approximate QR insert cost per outgoing parcel. Stickers are not included in this figure.'
-		    : 'Approximate cost when you include one QR insert in each outgoing parcel.';
-		  return `
-		    <div class="qr-price-context-note"><strong>${formatQrOrderMoney(costPerParcel, option.currency)} per parcel</strong><span>${helper}</span></div>
-		  `;
+		  return '';
 		}
 
 		function qrPriceLoadingMarkup(label = 'Loading price') {
@@ -9836,6 +9814,7 @@
 
 		function getOrderableQrKitItems() {
 		  return (qrPrintQuoteState.items || [])
+		    .filter((item) => QR_PRINT_PRODUCTS[item.product_type])
 		    .filter((item) => Number(item.quantity || 0) > 0)
 		    .map((item) => ({ ...item, quantity: normalizeQrKitQuantity(item.product_type, item.quantity) }));
 		}
@@ -9907,11 +9886,11 @@
 		  const context = qrStep2CompletionContext || {};
 		  if (context.type === 'printed_order') {
 		    const summary = formatQrCompletedItemSummary(context.items || qrPrintQuoteState.items);
-		    return summary ? `Payment received - QR kit ordered: ${summary}` : 'Payment received - QR kit ordered';
+		    return summary ? `Payment received - stickers ordered: ${summary}` : 'Payment received - stickers ordered';
 		  }
 		  if (context.type === 'printed_order') {
 		    const summary = formatQrCompletedItemSummary(context.items || qrPrintQuoteState.items);
-		    return summary ? `QR kit ordered — ${summary}` : 'QR kit ordered';
+		    return summary ? `Stickers ordered - ${summary}` : 'Stickers ordered';
 		  }
 		  if (context.type === 'diy_print') {
 		    return context.layout === 'nine' ? 'Printable sheet created — 9 small signs' : 'Printable QR sign created';
@@ -10225,12 +10204,10 @@
 		  qrPrintQuoteState.hasRecommendation = false;
 		  qrAddressCandidates = [];
 
-		  const encounter = document.getElementById('qrKitEncounter');
 		  const recommendation = document.getElementById('qrKitRecommendation');
 		  const status = document.getElementById('qrOrderStatus');
 		  const addressSelect = document.getElementById('qrOrderAddressSelect');
 		  const addressStatus = document.getElementById('qrOrderAddressLookupStatus');
-		  if (encounter) encounter.value = '';
 		  if (recommendation) recommendation.innerHTML = '';
 		  if (status) status.textContent = '';
 		  if (addressSelect) {
@@ -10272,53 +10249,34 @@
 		}
 
 		function isQrKitRecommendationInputReady() {
-		  const route = document.getElementById('qrKitEncounter')?.value || '';
-		  if (!route) return false;
-		  if (route === 'delivery' || route === 'both') {
-		    const dispatchValue = (document.getElementById('qrKitDispatches')?.value || '').trim();
-		    return Number(dispatchValue) > 0;
-		  }
-		  return true;
+		  const touchpoints = Number(document.getElementById('qrKitTouchpoints')?.value || 0);
+		  return Number.isFinite(touchpoints) && touchpoints > 0;
 		}
 
 		function renderQrKitRecommendButtonState() {
 		  const button = document.getElementById('qrKitRecommend');
 		  if (!button) return;
-		  const route = document.getElementById('qrKitEncounter')?.value || '';
-		  button.style.display = route ? 'block' : 'none';
+		  button.style.display = 'block';
 		  const ready = isQrKitRecommendationInputReady();
 		  button.disabled = !ready;
 		  button.setAttribute('aria-disabled', String(!ready));
-		  button.title = ready ? '' : 'Add an approximate monthly parcel count to get your recommendation.';
+		  button.title = ready ? '' : 'Enter at least one customer-facing spot to get your recommendation.';
 		}
 
 		function renderQrKitVolumeFields() {
-		  const route = document.getElementById('qrKitEncounter')?.value || '';
 		  const container = document.getElementById('qrKitVolumeFields');
 		  const recommendButton = document.getElementById('qrKitRecommend');
 		  if (!container) return;
-		  if (!route) {
-		    container.innerHTML = '';
-		    if (recommendButton) recommendButton.style.display = 'none';
-		    return;
-		  }
 		  if (recommendButton) recommendButton.style.display = 'block';
-		  const fields = [];
-		  let questionNumber = 2;
-		  if (route === 'in_person' || route === 'both') {
-		    const touchpointLabel = route === 'both'
-		      ? 'How many in-person QR sticker locations do you have? For example, tables, bill folders, till points or service areas.'
-		      : 'How many of these customer touchpoints do you have?';
-		    fields.push(`<label><span class="qr-kit-question-label"><span class="qr-kit-question-number">${questionNumber++}.</span><span>${touchpointLabel}</span></span><input id="qrKitTouchpoints" class="qr-kit-field" type="number" min="1" value="10" inputmode="numeric"></label>`);
+		  if (!document.getElementById('qrKitTouchpoints')) {
+		    container.innerHTML = `<label><span class="qr-kit-question-label"><span>How many customer-facing spots would you like to cover?</span></span><input id="qrKitTouchpoints" class="qr-kit-field" type="number" min="1" value="10" inputmode="numeric"><span class="settings-helper">Count the places where customers naturally pause and could scan a sticker: tables, bill folders, counters, reception desks, till points, waiting areas or collection spots.</span></label>`;
 		  }
-		  if (route === 'delivery' || route === 'both') fields.push(`<label><span class="qr-kit-question-label"><span class="qr-kit-question-number">${questionNumber++}.</span><span>About how many parcels do you send each month?</span></span><input id="qrKitDispatches" class="qr-kit-field" type="number" min="1" placeholder="e.g. 100 parcels" inputmode="numeric"></label>`);
-		  container.innerHTML = fields.join('') || '<div class="settings-helper">We\'ll start with a small flexible QR kit. You can edit the recommendation before checkout.</div>';
 		  renderQrKitRecommendButtonState();
 		}
 
 		function handleQrKitVolumeKeydown(event) {
 		  if (event.key !== 'Enter') return;
-		  const input = event.target.closest('#qrKitTouchpoints, #qrKitDispatches');
+		  const input = event.target.closest('#qrKitTouchpoints');
 		  if (!input) return;
 		  event.preventDefault();
 		  if (isQrKitRecommendationInputReady()) {
@@ -10336,17 +10294,13 @@
 		    return;
 		  }
 		  const hasStickers = qrPrintQuoteState.items.some((item) => item.product_type === 'qr_sticker');
-		  const hasInserts = qrPrintQuoteState.items.some((item) => item.product_type === 'qr_insert');
 		  const helperParts = [];
 		  if (hasStickers) helperParts.push('For stickers, we start with one per in-person spot, then add 20% so you have a few spares. You can change the quantity to anything that feels right.');
-		  if (hasInserts) helperParts.push('For inserts, this is a one-time order sized around one month of deliveries, rounded up to practical batches of 10.');
 		  container.innerHTML = qrPrintQuoteState.items.map((item) => {
 		    const product = QR_PRINT_PRODUCTS[item.product_type];
 		    const increment = Math.max(1, Number(product?.quantityIncrement || 1));
-		    const imageSrc = item.product_type === 'qr_insert' ? 'assets/qr-insert-box-card.jpg' : 'assets/qr-sticker-stack-card.jpg';
-		    const imageAlt = item.product_type === 'qr_insert'
-		      ? 'QR insert being added to a parcel'
-		      : 'Stack of glossy QR stickers';
+		    const imageSrc = 'assets/qr-sticker-stack-card.jpg';
+		    const imageAlt = 'Stack of QR stickers';
 		    const quantity = normalizeQrKitQuantity(item.product_type, item.quantity);
 		    const decrementIcon = quantity <= increment
 		      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M6 6l1 15h10l1-15"></path></svg>'
@@ -10359,23 +10313,14 @@
 		}
 
 		function recommendQrKit() {
-		  const route = document.getElementById('qrKitEncounter')?.value || '';
-		  if (!route) {
-		    resetQrKitRecommendation();
-		    document.getElementById('qrKitEncounter')?.focus();
-		    return;
-		  }
 		  const touchpoints = Number(document.getElementById('qrKitTouchpoints')?.value || 0);
-		  const dispatchValue = (document.getElementById('qrKitDispatches')?.value || '').trim();
-		  if ((route === 'delivery' || route === 'both') && !(Number(dispatchValue) > 0)) {
+		  if (!(touchpoints > 0)) {
 		    renderQrKitRecommendButtonState();
-		    document.getElementById('qrKitDispatches')?.focus();
+		    document.getElementById('qrKitTouchpoints')?.focus();
 		    return;
 		  }
-		  const dispatches = Number(dispatchValue || 0);
 		  const items = [];
-		  if (route === 'in_person' || route === 'both') items.push({ product_type: 'qr_sticker', quantity: normalizeQrKitQuantity('qr_sticker', Math.max(1, touchpoints) * 1.2) });
-		  if (route === 'delivery' || route === 'both') items.push({ product_type: 'qr_insert', quantity: normalizeQrKitQuantity('qr_insert', Math.max(1, dispatches) * 1.1) });
+		  items.push({ product_type: 'qr_sticker', quantity: normalizeQrKitQuantity('qr_sticker', Math.max(1, touchpoints) * 1.2) });
 		  qrPrintQuoteState.items = items.length ? items : [{ product_type: 'qr_sticker', quantity: 10 }];
 		  qrPrintQuoteState.orderId = null;
 		  qrPrintQuoteState.options = [];
@@ -10385,9 +10330,9 @@
 		  renderQrKitRecommendation();
 		  try {
 		    logEvent('qr_kit_recommendation_shown', getQrJourneyContext({
-		      route,
-		      touchpoints: route === 'in_person' || route === 'both' ? Math.max(1, touchpoints) : null,
-		      monthly_dispatches: route === 'delivery' || route === 'both' ? Math.max(1, dispatches) : null,
+		      route: 'stickers',
+		      touchpoints: Math.max(1, touchpoints),
+		      monthly_dispatches: null,
 		      product_mix: getQrOrderProductMix(qrPrintQuoteState.items),
 		      items: qrPrintQuoteState.items
 		    }));
@@ -10481,7 +10426,7 @@
 		    if (hasFreshQrKitRecommendation() && !orderableItems.length) {
 		      summary.innerHTML = `
 		        ${qrPrintQuoteState.items.map((item) => `<div class="qr-price-row"><span class="qr-price-label">${Number(item.quantity)} ${escapePricingHtml(QR_PRINT_PRODUCTS[item.product_type]?.productName || 'QR items')}</span></div>`).join('')}
-		        <div class="qr-price-row"><span class="qr-price-label">QR kit and print</span><span class="qr-price-value">£0.00</span></div>
+		        <div class="qr-price-row"><span class="qr-price-label">QR stickers and print</span><span class="qr-price-value">£0.00</span></div>
 		        <div class="qr-price-row"><span class="qr-price-label">Delivery</span><span class="qr-price-value">£0.00</span></div>
 		        <div class="qr-price-row qr-price-total"><span class="qr-price-label">Total today</span><span class="qr-price-value">£0.00</span></div>
 		      `;
@@ -10492,7 +10437,7 @@
 		    } else if (option) {
 		      summary.innerHTML = `
 		        ${qrPrintQuoteState.items.map((item) => `<div class="qr-price-row"><span class="qr-price-label">${Number(item.quantity)} ${escapePricingHtml(QR_PRINT_PRODUCTS[item.product_type]?.productName || 'QR items')}</span></div>`).join('')}
-		        <div class="qr-price-row"><span class="qr-price-label">QR kit and print</span><span class="qr-price-value">${formatQrOrderMoney(option.customer_total_amount - option.shipping_amount, option.currency)}</span></div>
+		        <div class="qr-price-row"><span class="qr-price-label">QR stickers and print</span><span class="qr-price-value">${formatQrOrderMoney(option.customer_total_amount - option.shipping_amount, option.currency)}</span></div>
 		        <div class="qr-price-row">
 		          <span class="qr-price-label">${option.delivery_method} delivery</span>
 		          <span class="qr-price-value">${formatQrOrderMoney(option.shipping_amount, option.currency)}</span>
@@ -10754,7 +10699,7 @@
 		  const isSuccess = orderStatus === 'success';
 		  const completionContext = isSuccess ? getRememberedQrOrderCompletionContext() : null;
 		  const message = isSuccess
-		    ? 'Payment received. Your QR kit has been ordered successfully and will be delivered to you.'
+		    ? 'Payment received. Your QR stickers have been ordered successfully and will be delivered to you.'
 		    : 'Payment was cancelled. No order was placed.';
 		  if (isSuccess) {
 		    const signContainer = document.getElementById('generatedSign');
@@ -11451,15 +11396,15 @@
 		  const steps = [
 		    {
 		      pendingLabel: 'Get QR codes',
-		      completeLabel: waitingForDeliveredKit ? 'QR kit ordered' : 'QR codes ready',
+		      completeLabel: waitingForDeliveredKit ? 'QR stickers ordered' : 'QR codes ready',
 		      pendingCopy: 'Create, print, download, or order QR codes.',
-		      completeCopy: waitingForDeliveredKit ? 'Your paid QR kit is being prepared.' : 'Your QR code is ready to print, download, or use.',
+		      completeCopy: waitingForDeliveredKit ? 'Your paid QR stickers are being prepared.' : 'Your QR code is ready to print, download, or use.',
 		      complete: state.qrReady && state.materialAction
 		    },
 		    {
 		      pendingLabel: 'Place your QR',
 		      completeLabel: 'QR Placed',
-		      pendingCopy: waitingForDeliveredKit ? 'Place your delivered kit when it arrives, or print one now to start sooner.' : 'Place your QR code where customers can see it.',
+		      pendingCopy: waitingForDeliveredKit ? 'Place your delivered stickers when they arrive, or print one now to start sooner.' : 'Place your QR code where customers can see it.',
 		      completeCopy: 'Confirmed in the real world.',
 		      complete: state.qrPlaced
 		    },
@@ -11576,8 +11521,8 @@
 		  };
 		  if (state.stage === 'order-waiting') return {
 		    ...base,
-		    title: state.orderStage === 'shipped' ? 'Your QR kit is on the way' : 'Your QR kit is being prepared',
-		    copy: "When your QR codes arrive, come back here and confirm that you've placed them. Want to start sooner? Print a QR code now and place it where customers will see it.",
+		    title: state.orderStage === 'shipped' ? 'Your QR stickers are on the way' : 'Your QR stickers are being prepared',
+		    copy: "When your stickers arrive, come back here and confirm that you've placed them. Want to start sooner? Print a QR code now and place it where customers will see it.",
 		    primaryLabel: 'Print one now instead',
 		    primaryAction: 'print-now',
 		    secondary: [
@@ -11595,7 +11540,7 @@
 		      ...base,
 		      title: 'A customer response is in',
 		      copy: waitingForOrder
-		        ? "Your QR kit is still in progress. If it has arrived, confirm placement here. If not, you can print a QR code now to keep collecting feedback while you wait."
+		        ? "Your QR stickers are still in progress. If they have arrived, confirm placement here. If not, you can print a QR code now to keep collecting feedback while you wait."
 		        : 'Confirm your QR code is placed where customers will see it, so future responses keep coming in.',
 		      primaryLabel: waitingForOrder ? 'Print one now instead' : "I've placed my QR code",
 		      primaryAction: waitingForOrder ? 'print-now' : 'confirm-placed',
@@ -11848,7 +11793,7 @@
 		  const waitingForPhysicalKit = Boolean(orderStage && !['completed', 'delivered'].includes(orderStage) && !hasDiyQrReady);
 		  if (!waitingForPhysicalKit) return null;
 		  return {
-		    title: orderStage === 'shipped' ? 'No feedback yet - your QR kit is on the way.' : 'No feedback yet - your QR kit is being prepared.',
+		    title: orderStage === 'shipped' ? 'No feedback yet - your QR stickers are on the way.' : 'No feedback yet - your QR stickers are being prepared.',
 		    copy: 'Once it arrives, place your QR codes where customers naturally pause. New feedback will appear here after customers scan.'
 		  };
 		}
@@ -14602,10 +14547,6 @@
 		  document.getElementById('qrPlacementFirstFeedbackLink')?.addEventListener('click', () => {
 		    showSection('Feedback', { scrollToTop: false });
 		    setTimeout(() => document.getElementById('firstSuccessPanel')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }), 80);
-		  });
-		  document.getElementById('qrKitEncounter')?.addEventListener('change', () => {
-		    resetQrKitRecommendation();
-		    renderQrKitVolumeFields();
 		  });
 		  document.getElementById('qrKitVolumeFields')?.addEventListener('input', resetQrKitRecommendation);
 		  document.getElementById('qrKitVolumeFields')?.addEventListener('keydown', handleQrKitVolumeKeydown);
