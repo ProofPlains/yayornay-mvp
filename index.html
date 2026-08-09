@@ -2040,6 +2040,19 @@
 		  text-decoration: none !important;
 		}
 
+		.qr-placement-actions .qr-placement-secondary {
+		  background: transparent !important;
+		  color: var(--ff-text-muted) !important;
+		  box-shadow: none;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 32%, var(--ff-border));
+		}
+
+		.qr-placement-actions .qr-placement-secondary:visited,
+		.qr-placement-actions .qr-placement-secondary:hover,
+		.qr-placement-actions .qr-placement-secondary:focus {
+		  color: var(--ff-text) !important;
+		}
+
 		.qr-google-routing-prompt {
 		  display: grid;
 		  grid-template-columns: minmax(0, 1fr) auto;
@@ -6353,6 +6366,7 @@
 					      <ul id="qrPlacementChecklist" class="qr-placement-checklist"></ul>
 					      <div class="qr-placement-actions">
 					        <button id="qrPlacementFirstFeedbackLink" class="btn" type="button">Continue</button>
+					        <button id="qrGetMoreCodesBtn" class="btn qr-placement-secondary" type="button">Get more QR codes</button>
 					      </div>
 					      <div id="qrGoogleRoutingPrompt" class="qr-google-routing-prompt" hidden>
 					        <div>
@@ -9855,6 +9869,7 @@
 		  const step2Summary = document.getElementById('qrStep2CompleteSummary');
 		  const step1Text = document.getElementById('qrStep1CompleteText');
 		  const step2Text = document.getElementById('qrStep2CompleteText');
+		  const step1Change = document.getElementById('qrStep1Change');
 		  const step2Change = document.getElementById('qrStep2Change');
 		  const hasGeneratedSign = generatedSign?.style.display !== 'none' && Boolean(getSelectedQrTrackingLocationId());
 		  step1Label?.classList.toggle('is-complete', Boolean(hasGeneratedSign || qrStep2Completed));
@@ -9864,12 +9879,11 @@
 		  if (step2Summary) step2Summary.hidden = !qrStep2Completed;
 		  if (step1Text) step1Text.textContent = getQrStep1CompletionText();
 		  if (step2Text) step2Text.textContent = getQrStep2CompletionText();
+		  if (step1Change) step1Change.hidden = Boolean(qrStep2Completed);
 		  if (step2Change) {
-		    const isPrintedOrder = qrStep2Completed && qrStep2CompletionContext?.type === 'printed_order';
-		    step2Change.textContent = isPrintedOrder ? 'Order more stickers' : 'Change';
-		    step2Change.title = isPrintedOrder
-		      ? 'Place a separate additional QR sticker order.'
-		      : 'Choose a different QR code option.';
+		    step2Change.hidden = Boolean(qrStep2Completed);
+		    step2Change.textContent = 'Change';
+		    step2Change.title = 'Choose a different QR code option.';
 		  }
 		}
 
@@ -9930,6 +9944,15 @@
 		    return;
 		  }
 		  reopenQrStep2();
+		}
+
+		function startFreshQrCodeJourney() {
+		  try { localStorage.removeItem('ff_last_qr_order_context'); } catch {}
+		  resetQrOrderBuilderState({ clearDeliveryDetails: true });
+		  resetQrSignUI({ scrollToQrStart: true });
+		  setTimeout(() => {
+		    document.getElementById('qrLocationSelect')?.focus({ preventScroll: true });
+		  }, 120);
 		}
 
 		function setQrStep2Completed(isCompleted, context = null) {
@@ -14555,6 +14578,7 @@
 		  document.getElementById('qrGenerateSignBtn')?.addEventListener('click', generateSign);
 		  document.getElementById('qrStep1Change')?.addEventListener('click', reopenQrStep1);
 		  document.getElementById('qrStep2Change')?.addEventListener('click', handleQrStep2Change);
+		  document.getElementById('qrGetMoreCodesBtn')?.addEventListener('click', startFreshQrCodeJourney);
 		  document.getElementById('ffDownloadQrBtn')?.addEventListener('click', downloadQrSignAndLog);
 		  document.getElementById('ffPrintQrBtn')?.addEventListener('click', printQrSignAsPDFAndLog);
 		  document.getElementById('qrPrintLayout')?.addEventListener('change', renderQrPrintLayoutPreview);
