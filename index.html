@@ -6287,6 +6287,7 @@
 					      </div>
 					      <div id="qrOrderStartingPrice" class="qr-order-starting-price">Loading price...</div>
 					    </div>
+					    
 					    <div class="qr-kit-guide">
 					      <div class="qr-order-kicker">Quick question</div>
 					      <div id="qrKitVolumeFields" class="qr-kit-volume-fields"></div>
@@ -9854,6 +9855,7 @@
 		  const step2Summary = document.getElementById('qrStep2CompleteSummary');
 		  const step1Text = document.getElementById('qrStep1CompleteText');
 		  const step2Text = document.getElementById('qrStep2CompleteText');
+		  const step2Change = document.getElementById('qrStep2Change');
 		  const hasGeneratedSign = generatedSign?.style.display !== 'none' && Boolean(getSelectedQrTrackingLocationId());
 		  step1Label?.classList.toggle('is-complete', Boolean(hasGeneratedSign || qrStep2Completed));
 		  step2Label?.classList.toggle('is-complete', Boolean(qrStep2Completed));
@@ -9862,6 +9864,13 @@
 		  if (step2Summary) step2Summary.hidden = !qrStep2Completed;
 		  if (step1Text) step1Text.textContent = getQrStep1CompletionText();
 		  if (step2Text) step2Text.textContent = getQrStep2CompletionText();
+		  if (step2Change) {
+		    const isPrintedOrder = qrStep2Completed && qrStep2CompletionContext?.type === 'printed_order';
+		    step2Change.textContent = isPrintedOrder ? 'Order more stickers' : 'Change';
+		    step2Change.title = isPrintedOrder
+		      ? 'Place a separate additional QR sticker order.'
+		      : 'Choose a different QR code option.';
+		  }
 		}
 
 		function getQrStep1CompletionText() {
@@ -9912,6 +9921,15 @@
 		  setQrOrderBuilderOpen(false);
 		  setQrDiyBuilderOpen(false);
 		  document.querySelector('.qr-sign-action-step')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+
+		function handleQrStep2Change() {
+		  const completionContext = qrStep2CompletionContext;
+		  if (completionContext?.type === 'printed_order') {
+		    showQrOrderForm();
+		    return;
+		  }
+		  reopenQrStep2();
 		}
 
 		function setQrStep2Completed(isCompleted, context = null) {
@@ -10341,7 +10359,7 @@
 		  refreshQrPrintQuote();
 		}
 
-		function isQrOrderReady() {
+		function getQrOrderReadiness() {
 		  const contactName = (document.getElementById('qrOrderName')?.value || '').trim();
 		  const addressLine1 = (document.getElementById('qrOrderAddress1')?.value || '').trim();
 		  const city = (document.getElementById('qrOrderCity')?.value || '').trim();
@@ -10352,29 +10370,51 @@
 		  const hasValidKit = hasFreshQrKitRecommendation()
 		    && orderableItems.length > 0
 		    && qrPrintQuoteState.items.every(isQrKitItemQuantityValid);
-		  return Boolean(
-		    currentUser?.businessId
-		    && hasValidKit
-		    && contactName
-		    && addressLine1
-		    && city
-		    && postcode
-		    && country === 'United Kingdom'
-		    && signImage?.src
-		    && qrPrintQuoteState.orderId
-		    && getSelectedQrPrintOption()
-		    && !qrPrintQuoteState.loading
-		    && !qrPrintQuoteState.error
-		  );
+		  const selectedQuote = getSelectedQrPrintOption();
+		  const reasons = [];
+		  if (!currentUser?.businessId) reasons.push('Please log in again before ordering.');
+		  if (!hasValidKit) reasons.push('Choose a valid sticker quantity.');
+		  if (!contactName) reasons.push('Add the delivery contact.');
+		  if (!addressLine1) reasons.push('Add address line 1.');
+		  if (!city) reasons.push('Add the town or city.');
+		  if (!postcode) reasons.push('Add the postcode.');
+		  if (country !== 'United Kingdom') reasons.push('Delivery is currently UK-only.');
+		  if (!signImage?.src) reasons.push('Generate the QR sign first.');
+		  if (qrPrintQuoteState.loading) reasons.push('Wait for the live price to finish updating.');
+		  if (qrPrintQuoteState.error) reasons.push(qrPrintQuoteState.error);
+		  if (!selectedQuote) reasons.push('Choose a delivery option.');
+		  if (selectedQuote && !qrPrintQuoteState.orderId) reasons.push('Refresh the live price before checkout.');
+		  return { ready: reasons.length === 0, reasons };
+		}
+
+		function isQrOrderReady() {
+		  return getQrOrderReadiness().ready;
 		}
 
 		function renderQrOrderSubmitState() {
 		  const submitBtn = document.getElementById('qrOrderSubmit');
-		  const ready = isQrOrderReady();
+		  const status = document.getElementById('qrOrderStatus');
+		  const readiness = getQrOrderReadiness();
+		  const ready = readiness.ready;
+		  const readinessStatusPattern = /^(Refresh the live price|Wait for the live price|Choose a delivery option|Choose a valid sticker quantity|Add |Delivery is currently UK-only|Generate the QR sign|Please log in again)/i;
 		  if (submitBtn) {
 		    submitBtn.disabled = !ready;
 		    submitBtn.setAttribute('aria-disabled', String(!ready));
-		    submitBtn.title = ready ? '' : 'Choose a delivery option and complete the delivery details to continue.';
+		    submitBtn.title = ready ? '' : (readiness.reasons[0] || 'Complete the order details to continue.');
+		  }
+		  if (!ready && status && readiness.reasons.length) {
+		    const hasTouchedCheckoutDetails = Boolean(
+		      (document.getElementById('qrOrderName')?.value || '').trim()
+		      || (document.getElementById('qrOrderAddress1')?.value || '').trim()
+		      || (document.getElementById('qrOrderCity')?.value || '').trim()
+		      || (document.getElementById('qrOrderPostcode')?.value || '').trim()
+		    );
+		    if (hasTouchedCheckoutDetails && hasFreshQrKitRecommendation() && getSelectedQrPrintOption() && (!status.textContent || readinessStatusPattern.test(status.textContent))) {
+		      status.textContent = readiness.reasons[0] || '';
+		    }
+		  }
+		  if (ready && status && readinessStatusPattern.test(status.textContent || '')) {
+		    status.textContent = '';
 		  }
 		  renderQrStickyOrderSummary();
 		}
@@ -10874,7 +10914,7 @@
 		          : 'Could not open checkout. Please try again or email contact@flashfeedback.co.uk.';
 		    if (status) status.textContent = friendlyMessage;
 		  } finally {
-		    if (submitBtn) submitBtn.disabled = false;
+		    renderQrOrderSubmitState();
 		  }
 		}
 
@@ -11279,7 +11319,7 @@
 		        .limit(80),
 		      supabase
 		        .from('qr_print_orders')
-		        .select('location_id,stripe_payment_status,fulfilment_status,created_at,metadata')
+		        .select('location_id,stripe_payment_status,fulfilment_status,created_at,updated_at,metadata')
 		        .eq('business_id', currentUser.businessId)
 		        .order('created_at', { ascending: false })
 		        .limit(20)
@@ -14514,7 +14554,7 @@
 		  document.getElementById('qrLocationSelect')?.addEventListener('change', handleQrLocationChange);
 		  document.getElementById('qrGenerateSignBtn')?.addEventListener('click', generateSign);
 		  document.getElementById('qrStep1Change')?.addEventListener('click', reopenQrStep1);
-		  document.getElementById('qrStep2Change')?.addEventListener('click', reopenQrStep2);
+		  document.getElementById('qrStep2Change')?.addEventListener('click', handleQrStep2Change);
 		  document.getElementById('ffDownloadQrBtn')?.addEventListener('click', downloadQrSignAndLog);
 		  document.getElementById('ffPrintQrBtn')?.addEventListener('click', printQrSignAsPDFAndLog);
 		  document.getElementById('qrPrintLayout')?.addEventListener('change', renderQrPrintLayoutPreview);
