@@ -15,6 +15,61 @@
 	<meta name="apple-mobile-web-app-title" content="FlashFeedback">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 	<link rel="apple-touch-icon" href="/assets/pwa-icon-192.png">
+	<script>
+	  (function setupFlashFeedbackInstallPrompt() {
+	    const DISMISS_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+	    const DISMISSED_AT_KEY = 'ff_pwa_install_prompt_dismissed_at';
+	    const INSTALLED_KEY = 'ff_pwa_installed';
+	    let deferredInstallPrompt = null;
+	    let promptedThisSession = false;
+
+	    function isStandalone() {
+	      return window.matchMedia?.('(display-mode: standalone)')?.matches || window.navigator.standalone === true;
+	    }
+
+	    function recentlyDismissed() {
+	      const dismissedAt = Number(localStorage.getItem(DISMISSED_AT_KEY) || 0);
+	      return dismissedAt && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
+	    }
+
+	    async function maybePromptAfterDashboard() {
+	      if (!deferredInstallPrompt || promptedThisSession) return false;
+	      if (!window.__flashFeedbackDashboardReadyForInstall) return false;
+	      if (!window.currentUser?.businessId || window.currentView !== 'admin') return false;
+	      if (isStandalone() || localStorage.getItem(INSTALLED_KEY) === '1' || recentlyDismissed()) return false;
+
+	      promptedThisSession = true;
+	      const promptEvent = deferredInstallPrompt;
+	      deferredInstallPrompt = null;
+	      try {
+	        promptEvent.prompt();
+	        const choice = await promptEvent.userChoice;
+	        if (choice?.outcome === 'accepted') {
+	          localStorage.setItem(INSTALLED_KEY, '1');
+	        } else {
+	          localStorage.setItem(DISMISSED_AT_KEY, String(Date.now()));
+	        }
+	      } catch (error) {
+	        console.warn('FlashFeedback install prompt failed:', error);
+	      }
+	      return true;
+	    }
+
+	    window.addEventListener('beforeinstallprompt', event => {
+	      event.preventDefault();
+	      deferredInstallPrompt = event;
+	      setTimeout(maybePromptAfterDashboard, 600);
+	    });
+
+	    window.addEventListener('appinstalled', () => {
+	      localStorage.setItem(INSTALLED_KEY, '1');
+	      localStorage.removeItem(DISMISSED_AT_KEY);
+	      deferredInstallPrompt = null;
+	    });
+
+	    window.maybePromptFlashFeedbackInstallAfterDashboard = maybePromptAfterDashboard;
+	  })();
+	</script>
 	<script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -9207,6 +9262,8 @@
 			// 👇 ensure we land at the very top on mobile/desktop
 			scrollToTop();
 			hideLoader?.();
+			window.__flashFeedbackDashboardReadyForInstall = true;
+			setTimeout(() => window.maybePromptFlashFeedbackInstallAfterDashboard?.(), 700);
 			}
 
         async function logout() {
