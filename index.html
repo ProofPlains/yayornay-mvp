@@ -23,6 +23,10 @@
 	    let deferredInstallPrompt = null;
 	    let promptedThisSession = false;
 
+	    function isAndroidBrowser() {
+	      return /Android/i.test(navigator.userAgent || '');
+	    }
+
 	    function isStandalone() {
 	      return window.matchMedia?.('(display-mode: standalone)')?.matches || window.navigator.standalone === true;
 	    }
@@ -32,32 +36,58 @@
 	      return dismissedAt && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
 	    }
 
-	    async function maybePromptAfterDashboard() {
-	      if (!deferredInstallPrompt || promptedThisSession) return false;
-	      if (!window.__flashFeedbackDashboardReadyForInstall) return false;
-	      if (!window.currentUser?.businessId || window.currentView !== 'admin') return false;
-	      if (isStandalone() || localStorage.getItem(INSTALLED_KEY) === '1' || recentlyDismissed()) return false;
+	    function syncInstallUi() {
+	      const panel = document.getElementById('settingsInstallAppPanel');
+	      const button = document.getElementById('settingsInstallAppButton');
+	      const status = document.getElementById('settingsInstallAppStatus');
+	      const canInstall = Boolean(deferredInstallPrompt) && isAndroidBrowser() && !isStandalone() && localStorage.getItem(INSTALLED_KEY) !== '1';
+	      if (panel) panel.hidden = !canInstall;
+	      if (button) button.disabled = !canInstall;
+	      if (status && !canInstall) status.textContent = '';
+	    }
 
-	      promptedThisSession = true;
+	    async function promptInstall(source = 'dashboard') {
+	      if (!deferredInstallPrompt) return false;
+	      if (!isAndroidBrowser() || isStandalone() || localStorage.getItem(INSTALLED_KEY) === '1') return false;
+
+	      const status = document.getElementById('settingsInstallAppStatus');
 	      const promptEvent = deferredInstallPrompt;
 	      deferredInstallPrompt = null;
+	      syncInstallUi();
 	      try {
 	        promptEvent.prompt();
 	        const choice = await promptEvent.userChoice;
 	        if (choice?.outcome === 'accepted') {
 	          localStorage.setItem(INSTALLED_KEY, '1');
+	          localStorage.removeItem(DISMISSED_AT_KEY);
+	          if (status) status.textContent = 'FlashFeedback is installing.';
 	        } else {
 	          localStorage.setItem(DISMISSED_AT_KEY, String(Date.now()));
+	          if (status && source === 'settings') status.textContent = 'No problem. You can install later from Chrome if the option appears again.';
 	        }
 	      } catch (error) {
 	        console.warn('FlashFeedback install prompt failed:', error);
+	        if (status && source === 'settings') status.textContent = 'Install could not be started right now.';
 	      }
+	      syncInstallUi();
 	      return true;
+	    }
+
+	    async function maybePromptAfterDashboard() {
+	      if (!deferredInstallPrompt || promptedThisSession) return false;
+	      if (!window.__flashFeedbackDashboardReadyForInstall) return false;
+	      if (!window.currentUser?.businessId || window.currentView !== 'admin') return false;
+	      if (isStandalone() || localStorage.getItem(INSTALLED_KEY) === '1' || recentlyDismissed()) return false;
+	      if (!isAndroidBrowser()) return false;
+
+	      promptedThisSession = true;
+	      return promptInstall('dashboard');
 	    }
 
 	    window.addEventListener('beforeinstallprompt', event => {
 	      event.preventDefault();
 	      deferredInstallPrompt = event;
+	      syncInstallUi();
 	      setTimeout(maybePromptAfterDashboard, 600);
 	    });
 
@@ -65,9 +95,13 @@
 	      localStorage.setItem(INSTALLED_KEY, '1');
 	      localStorage.removeItem(DISMISSED_AT_KEY);
 	      deferredInstallPrompt = null;
+	      syncInstallUi();
 	    });
 
 	    window.maybePromptFlashFeedbackInstallAfterDashboard = maybePromptAfterDashboard;
+	    window.promptFlashFeedbackInstallFromSettings = () => promptInstall('settings');
+	    window.syncFlashFeedbackInstallUi = syncInstallUi;
+	    document.addEventListener('DOMContentLoaded', syncInstallUi);
 	  })();
 	</script>
 	<script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script>
@@ -6473,6 +6507,14 @@
 				    </div>
 				    <button class="btn" onclick="handleChangePassword()">Update password</button>
 				    <span id="settingsPwdStatus" style="margin-left:10px;color:#4b5563;"></span>
+				  </div>
+
+				  <!-- App shortcut -->
+				  <div id="settingsInstallAppPanel" hidden style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:16px;margin-bottom:20px;">
+				    <h3 style="margin-bottom:8px;">App shortcut</h3>
+				    <div class="settings-helper" style="margin-bottom:12px;">Install FlashFeedback on this Android device for quicker access from your app drawer.</div>
+				    <button id="settingsInstallAppButton" class="btn" type="button" onclick="promptFlashFeedbackInstallFromSettings()">Install FlashFeedback</button>
+				    <span id="settingsInstallAppStatus" style="margin-left:10px;color:#4b5563;"></span>
 				  </div>
 
 				  <!-- Plan -->
@@ -13472,6 +13514,7 @@
 		    try { sel.value = currentUser.defaultLocationId; } catch {}
 		  }
 		  renderPlanPanel();
+		  window.syncFlashFeedbackInstallUi?.();
 		  await loadTeamMembers();
 		}
 
