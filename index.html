@@ -6397,7 +6397,7 @@
 					      <div id="qrOrderStartingPrice" class="qr-order-starting-price">Loading price...</div>
 					    </div>
 					    
-					    <div class="qr-kit-guide">
+					    <div id="qrKitGuide" class="qr-kit-guide">
 					      <div class="qr-order-kicker">Quick question</div>
 					      <div id="qrKitVolumeFields" class="qr-kit-volume-fields"></div>
 					      <button id="qrKitRecommend" class="btn" type="button">Recommend my sticker quantity</button>
@@ -6736,7 +6736,7 @@
 			    teamLimit: 6,
 			    checkout: true,
 			    summary: 'Up to 3 locations.',
-			    features: ['Up to 3 locations', 'Invite up to 6 team members', 'Unlimited feedback history', 'Respond to your customers', 'Private feedback dashboard', 'QR code generation'],
+			    features: ['Up to 3 locations', 'Invite up to 6 team members', 'Unlimited feedback history', 'Respond to your customers', 'Private feedback dashboard', 'QR code generation', { id: 'starter_pack', label: '5 QR stickers included' }],
 			    sandboxPriceId: 'price_1TaajGFIxmPNhgh2Purgftxq',
 			    productionPriceId: 'price_1TabHTFNq4Xp479bhvLoemuU'
 			  },
@@ -6748,7 +6748,7 @@
 			    teamLimit: 20,
 			    checkout: true,
 			    summary: 'Up to 10 locations.',
-			    features: ['Up to 10 locations', 'Invite up to 20 team members', 'Unlimited feedback history', 'Respond to your customers', 'Private feedback dashboard', 'QR code generation'],
+			    features: ['Up to 10 locations', 'Invite up to 20 team members', 'Unlimited feedback history', 'Respond to your customers', 'Private feedback dashboard', 'QR code generation', { id: 'starter_pack', label: '10 QR stickers included' }],
 			    sandboxPriceId: 'price_1TaaliFIxmPNhgh2psSx6s23',
 			    productionPriceId: 'price_1TabHQFNq4Xp479bH5NeGLYu'
 			  }
@@ -6984,6 +6984,12 @@
 			  const currentTierKey = isPricingModalSignupContext() || isPublicReadOnly ? null : (currentUser?.pricingTier || 'free');
 			  const pendingTierKey = isPricingModalSignupContext() || isPublicReadOnly ? null : currentUser?.pendingPricingTier;
 			  const isComped = !isPricingModalSignupContext() && !isPublicReadOnly && currentUser?.subscriptionComped === true;
+			  const starterPackState = currentStarterPack?.state || 'not_eligible';
+			  const suppressStarterPack = !isPricingModalSignupContext() && !isPublicReadOnly && (
+			    isComped
+			    || ['reserved', 'claimed'].includes(starterPackState)
+			    || (currentUser?.subscriptionTestMode === true && currentStarterPack?.basis !== 'admin_test')
+			  );
 			  const planCards = Object.values(PRICING_TIERS).map((tier) => {
 			    const checked = !isPublicReadOnly && tier.key === pricingModalSelectedTier ? 'checked' : '';
 			    const selectedClass = !isPublicReadOnly && tier.key === pricingModalSelectedTier ? ' is-selected' : '';
@@ -6991,7 +6997,10 @@
 			    const disabledClass = isComped ? ' is-disabled' : '';
 			    const readOnlyClass = isPublicReadOnly ? ' is-readonly' : '';
 			    const tagName = isPublicReadOnly ? 'div' : 'label';
-			    const features = (tier.features || []).map((feature) => `<li>${feature}</li>`).join('');
+			    const features = (tier.features || [])
+			      .map((feature) => typeof feature === 'string' ? { id: null, label: feature } : feature)
+			      .filter((feature) => !(feature.id === 'starter_pack' && suppressStarterPack))
+			      .map((feature) => `<li>${escapePricingHtml(feature.label)}</li>`).join('');
 			    const status = tier.key === currentTierKey
 			      ? '<span class="plan-option-status">Current plan</span>'
 			      : tier.key === pendingTierKey
@@ -7008,7 +7017,16 @@
 			      </${tagName}>
 			    `;
 			  }).join('');
-			  container.innerHTML = planCards;
+			  const starterPackContextNote = !suppressStarterPack
+			    ? ''
+			    : isComped
+			      ? '<div class="settings-helper">Complimentary plans include the software features shown, but not a physical QR Sticker Starter Pack.</div>'
+			      : starterPackState === 'reserved'
+			        ? '<div class="settings-helper">Your one-time QR Sticker Starter Pack order is already in progress. Changing plan will not add another pack.</div>'
+			        : starterPackState === 'claimed'
+			          ? '<div class="settings-helper">Your one-time QR Sticker Starter Pack has already been claimed. Changing plan will not add another pack.</div>'
+			          : '<div class="settings-helper">Sandbox subscriptions do not automatically include a physical QR Sticker Starter Pack.</div>';
+			  container.innerHTML = planCards + starterPackContextNote;
 			  renderPricingLocationPicker();
 			}
 
@@ -7023,6 +7041,9 @@
 			      : []
 			  );
 			  renderPricingModalOptions();
+			  if (currentUser?.businessId && !isPricingModalSignupContext(context) && context !== 'public-plans') {
+			    refreshStarterPackStatus().then(renderPricingModalOptions);
+			  }
 			}
 
 			function togglePricingLocationSelection(locationId) {
@@ -8987,6 +9008,7 @@
 			  teamInvites: [],
 			  locations: buildLocationsShape(locRows, fbRows)
 			};
+			await refreshStarterPackStatus();
 			firstSuccessSignals = { loading: false, loaded: false, events: [], orders: [] };
 			firstSuccessLastStateKey = '';
 			renderBranding();		  
@@ -9874,11 +9896,62 @@
 		  error: '',
 		  hasRecommendation: false
 		};
+		let currentStarterPack = {
+		  state: 'not_eligible',
+		  claimable: false,
+		  tier: null,
+		  allowance: null,
+		  basis: null,
+		  orderId: null
+		};
 		let qrPrintQuoteTimer = null;
 		let qrPrintQuoteRequestId = 0;
 		let qrAddressCandidates = [];
 		let qrStep2Completed = false;
 		let qrStep2CompletionContext = null;
+		let orderingAdditionalQrStickers = false;
+
+		function isStarterPackClaimable() {
+		  return currentStarterPack?.state === 'eligible' && currentStarterPack?.claimable === true;
+		}
+
+		async function refreshStarterPackStatus() {
+		  if (!currentUser?.businessId) return currentStarterPack;
+		  try {
+		    const { data: sessionData } = await supabase.auth.getSession();
+		    const accessToken = sessionData?.session?.access_token;
+		    if (!accessToken) return currentStarterPack;
+		    const url = new URL(`${SUPABASE_URL}/functions/v1/get-starter-pack-status`);
+		    url.searchParams.set('business_id', currentUser.businessId);
+		    const response = await fetch(url.toString(), {
+		      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${accessToken}` }
+		    });
+		    const body = await response.json().catch(() => ({}));
+		    if (!response.ok) throw new Error(body.error || 'Could not load Starter Pack status.');
+		    currentStarterPack = body.starterPack || currentStarterPack;
+		    if (currentUser) currentUser.starterPack = currentStarterPack;
+		  } catch (error) {
+		    console.warn('Starter Pack status refresh failed:', error?.message || error);
+		  }
+		  return currentStarterPack;
+		}
+
+		function renderStarterPackOrderMode() {
+		  const claimable = isStarterPackClaimable();
+		  const allowance = Number(currentStarterPack?.allowance || 0);
+		  const tierLabel = currentStarterPack?.tier === 'pro' ? 'Pro' : 'Growth';
+		  const guide = document.getElementById('qrKitGuide');
+		  const hero = document.querySelector('#qrOrderForm .qr-order-hero');
+		  const kicker = hero?.querySelector('.qr-order-kicker');
+		  const heading = hero?.querySelector('h4');
+		  const copy = hero?.querySelector('p');
+		  if (guide) guide.style.display = claimable ? 'none' : '';
+		  if (kicker) kicker.textContent = claimable ? `${tierLabel} benefit` : 'Fresh from the printer';
+		  if (heading) heading.textContent = claimable ? `Your ${tierLabel} Starter Pack is included` : 'Order QR stickers';
+		  if (copy) copy.textContent = claimable
+		    ? `Up to ${allowance} QR stickers for this location, with Standard delivery included.`
+		    : `We'll recommend the right number of stickers, then print your exact FlashFeedback QR sign.`;
+		}
 
 		function formatQrOrderMoney(amount, currency = 'gbp') {
 		  return new Intl.NumberFormat('en-GB', {
@@ -10046,6 +10119,7 @@
 		function handleQrStep2Change() {
 		  const completionContext = qrStep2CompletionContext;
 		  if (completionContext?.type === 'printed_order') {
+		    orderingAdditionalQrStickers = true;
 		    showQrOrderForm();
 		    return;
 		  }
@@ -10054,6 +10128,7 @@
 
 		function startFreshQrCodeJourney() {
 		  try { localStorage.removeItem('ff_last_qr_order_context'); } catch {}
+		  orderingAdditionalQrStickers = true;
 		  resetQrOrderBuilderState({ clearDeliveryDetails: true });
 		  resetQrSignUI({ scrollToQrStart: true });
 		  setTimeout(() => {
@@ -10284,12 +10359,14 @@
 		  }
 		  const totalMarkup = qrPrintQuoteState.loading
 		    ? qrPriceLoadingMarkup('Updating')
-		    : `${escapePricingHtml(formatQrOrderMoney(option.customer_total_amount, option.currency))} total`;
+		    : isStarterPackClaimable()
+		      ? 'Included - GBP 0.00 total'
+		      : `${escapePricingHtml(formatQrOrderMoney(option.customer_total_amount, option.currency))} total`;
 		  copy.innerHTML = `${escapePricingHtml(getQrOrderStickySummaryText(option))}<span>${totalMarkup}</span>`;
 		  const ready = isQrOrderReady();
 		  button.disabled = !ready;
 		  button.setAttribute('aria-disabled', String(!ready));
-		  button.textContent = ready ? 'Pay' : 'Complete details';
+		  button.textContent = ready ? (isStarterPackClaimable() ? 'Order' : 'Pay') : 'Complete details';
 		}
 
 		function setQrOrderBuilderOpen(isOpen) {
@@ -10329,7 +10406,7 @@
 		  hideQrOrderForm();
 		  setQrDiyBuilderOpen(true);
 		  syncQrPreviewImages();
-		  try { logEvent('qr_step2_path_opened', getQrJourneyContext({ path: 'diy' })); } catch {}
+		  try { logEvent('qr_step2_path_opened', getQrJourneyContext({ path: 'diy', starter_pack_state: currentStarterPack?.state || 'not_eligible' })); } catch {}
 		  document.getElementById('qrDiyPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}
 
@@ -10442,7 +10519,9 @@
 		  }
 		  const hasStickers = qrPrintQuoteState.items.some((item) => item.product_type === 'qr_sticker');
 		  const helperParts = [];
-		  if (hasStickers) helperParts.push('For stickers, we start with one per in-person spot, then add 20% so you have a few spares. You can change the quantity to anything that feels right.');
+		  if (hasStickers) helperParts.push(isStarterPackClaimable()
+		    ? `Your ${currentStarterPack.tier === 'pro' ? 'Pro' : 'Growth'} Starter Pack includes up to ${currentStarterPack.allowance} stickers for this location. Standard delivery is included.`
+		    : 'For stickers, we start with one per in-person spot, then add 20% so you have a few spares. You can change the quantity to anything that feels right.');
 		  container.innerHTML = qrPrintQuoteState.items.map((item) => {
 		    const product = QR_PRINT_PRODUCTS[item.product_type];
 		    const increment = Math.max(1, Number(product?.quantityIncrement || 1));
@@ -10530,6 +10609,7 @@
 		    submitBtn.disabled = !ready;
 		    submitBtn.setAttribute('aria-disabled', String(!ready));
 		    submitBtn.title = ready ? '' : (readiness.reasons[0] || 'Complete the order details to continue.');
+		    submitBtn.textContent = isStarterPackClaimable() ? 'Order my stickers' : 'Pay and order stickers';
 		  }
 		  if (!ready && status && readiness.reasons.length) {
 		    const hasTouchedCheckoutDetails = Boolean(
@@ -10588,7 +10668,9 @@
 		      : qrPrintQuoteState.loading
 		      ? qrPriceLoadingMarkup('Loading price')
 		      : option
-		        ? `${escapePricingHtml(formatQrOrderMoney(option.customer_total_amount, option.currency))} total`
+		        ? isStarterPackClaimable()
+		          ? 'Included'
+		          : `${escapePricingHtml(formatQrOrderMoney(option.customer_total_amount, option.currency))} total`
 		        : 'Price pending';
 		  }
 		  if (summary) {
@@ -10603,6 +10685,12 @@
 		      summary.innerHTML = qrPriceLoadingMarkup('Loading price');
 		    } else if (qrPrintQuoteState.error) {
 		      summary.textContent = qrPrintQuoteState.error;
+		    } else if (option && isStarterPackClaimable()) {
+		      summary.innerHTML = `
+		        ${qrPrintQuoteState.items.map((item) => `<div class="qr-price-row"><span class="qr-price-label">${Number(item.quantity)} ${escapePricingHtml(QR_PRINT_PRODUCTS[item.product_type]?.productName || 'QR items')}</span><span class="qr-price-value">Included</span></div>`).join('')}
+		        <div class="qr-price-row"><span class="qr-price-label">Standard delivery</span><span class="qr-price-value">Included</span></div>
+		        <div class="qr-price-row qr-price-total"><span class="qr-price-label">Total today</span><span class="qr-price-value">Â£0.00</span></div>
+		      `;
 		    } else if (option) {
 		      summary.innerHTML = `
 		        ${qrPrintQuoteState.items.map((item) => `<div class="qr-price-row"><span class="qr-price-label">${Number(item.quantity)} ${escapePricingHtml(QR_PRINT_PRODUCTS[item.product_type]?.productName || 'QR items')}</span></div>`).join('')}
@@ -10688,6 +10776,10 @@
 		    });
 		    const body = await res.json().catch(() => ({}));
 		    if (quoteRequestId !== qrPrintQuoteRequestId) return;
+		    if (body.starter_pack) {
+		      currentStarterPack = body.starter_pack;
+		      if (currentUser) currentUser.starterPack = currentStarterPack;
+		    }
 		    if (!res.ok) throw new Error(body.error || 'Could not get live delivery prices.');
 		    qrPrintQuoteState.orderId = body.order_id || qrPrintQuoteState.orderId;
 		    qrPrintQuoteState.options = Array.isArray(body.quote_options) ? body.quote_options : [];
@@ -10800,7 +10892,8 @@
 		function adjustQrOrderQuantity(change) {
 		  const sticker = qrPrintQuoteState.items.find((item) => item.product_type === 'qr_sticker');
 		  if (!sticker) return;
-		  sticker.quantity = Math.max(1, sticker.quantity + change);
+		  const maximum = isStarterPackClaimable() ? Number(currentStarterPack.allowance || 5) : Number.POSITIVE_INFINITY;
+		  sticker.quantity = Math.min(maximum, Math.max(1, sticker.quantity + change));
 		  renderQrKitRecommendation();
 		  scheduleQrPrintQuoteRefresh();
 		}
@@ -10811,14 +10904,17 @@
 		  const product = QR_PRINT_PRODUCTS[productType] || QR_PRINT_PRODUCTS.qr_sticker;
 		  const increment = Math.max(1, Number(product.quantityIncrement || 1));
 		  const current = normalizeQrKitQuantity(productType, item.quantity);
+		  const maximum = isStarterPackClaimable() && productType === 'qr_sticker'
+		    ? Number(currentStarterPack.allowance || 5)
+		    : Number.POSITIVE_INFINITY;
 		  item.quantity = direction === 'up'
-		    ? current + increment
+		    ? Math.min(maximum, current + increment)
 		    : Math.max(0, current - increment);
 		  renderQrKitRecommendation();
 		  scheduleQrPrintQuoteRefresh();
 		}
 
-		function showQrOrderForm() {
+		async function showQrOrderForm() {
 		  if (!currentUser) {
 		    alert('Please log in to order delivered QR signs.');
 		    return;
@@ -10841,6 +10937,46 @@
 		  setQrStep2Completed(false);
 		  try { logEvent('qr_step2_path_opened', getQrJourneyContext({ path: 'order' })); } catch {}
 		  resetQrOrderBuilderState({ clearDeliveryDetails: true });
+		  await refreshStarterPackStatus();
+		  renderStarterPackOrderMode();
+		  if (currentStarterPack?.state === 'activating') {
+		    if (status) status.textContent = `Activating your ${currentStarterPack.tier === 'pro' ? 'Pro' : 'Growth'} plan... Your included stickers will appear here shortly.`;
+		    setTimeout(showQrOrderForm, 2500);
+		    return;
+		  }
+		  if (!orderingAdditionalQrStickers && currentStarterPack?.state === 'claimed' && currentStarterPack?.linkedOrder) {
+		    const linkedOrder = currentStarterPack.linkedOrder;
+		    completeQrPrintedOrderJourney({
+		      locationId: linkedOrder.location_id,
+		      type: 'printed_order',
+		      items: [{ product_type: 'qr_sticker', quantity: Number(linkedOrder.quantity || currentStarterPack.allowance || 0) }]
+		    }, 'Your included QR stickers have already been ordered. Standard delivery is included.');
+		    return;
+		  }
+		  if (currentStarterPack?.state === 'reserved') {
+		    if (status) status.textContent = 'Your Starter Pack order is already being processed. We will unlock Step 3 as soon as placement is confirmed.';
+		    renderQrKitRecommendation();
+		    return;
+		  }
+		  const activationPending = !isStarterPackClaimable()
+		    && ['growth', 'pro'].includes(pendingUpgradePayment?.tier)
+		    && currentUser?.subscriptionStatus !== 'active';
+		  if (activationPending) {
+		    if (status) status.textContent = `Activating your ${pendingUpgradePayment.tier === 'pro' ? 'Pro' : 'Growth'} plan... Your included stickers will appear here shortly.`;
+		    setTimeout(async () => {
+		      await loadSettings();
+		      await refreshStarterPackStatus();
+		      if (isStarterPackClaimable()) showQrOrderForm();
+		    }, 2500);
+		    return;
+		  }
+		  if (isStarterPackClaimable()) {
+		    qrPrintQuoteState.items = [{ product_type: 'qr_sticker', quantity: Number(currentStarterPack.allowance || 5) }];
+		    qrPrintQuoteState.hasRecommendation = true;
+		    qrPrintQuoteState.deliveryMethod = 'Standard';
+		    renderQrKitRecommendation();
+		    refreshQrPrintQuote();
+		  }
 		  if (nameInput && !nameInput.value) {
 		    nameInput.value = currentUser.userName || currentUser.ownerName || currentUser.businessName || '';
 		  }
@@ -10854,6 +10990,54 @@
 		  setQrOrderBuilderOpen(false);
 		  setQrStep2Completed(false);
 		  renderQrStickyOrderSummary();
+		}
+
+		function completeQrPrintedOrderJourney(completionContext, message) {
+		  orderingAdditionalQrStickers = false;
+		  const form = document.getElementById('qrOrderForm');
+		  const status = document.getElementById('qrOrderStatus');
+		  const signContainer = document.getElementById('generatedSign');
+		  const qrSelect = document.getElementById('qrLocationSelect');
+		  if (completionContext?.locationId && qrSelect) {
+		    try { qrSelect.value = completionContext.locationId; } catch {}
+		  }
+		  if (signContainer) signContainer.style.display = 'block';
+		  if (form) form.style.display = 'none';
+		  setQrOrderBuilderOpen(false);
+		  setQrDiyBuilderOpen(false);
+		  setQrStep2Completed(true, completionContext);
+		  markFirstSuccessLocalSignal('qr_material_action', {
+		    locationId: completionContext?.locationId || getSelectedQrTrackingLocationId(),
+		    materialType: completionContext?.type || 'printed_order',
+		    productMix: completionContext?.productMix || getQrOrderProductMix(completionContext?.items || [])
+		  });
+		  renderQrPrintQuote();
+		  renderQrStickyOrderSummary();
+		  if (status) status.textContent = message || 'Your QR stickers have been ordered successfully and will be delivered to you.';
+		  document.getElementById('qrPlacementStep')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+
+		async function pollStarterPackOrderPlacement(attempt = 0) {
+		  const status = document.getElementById('qrOrderStatus');
+		  await refreshStarterPackStatus();
+		  if (currentStarterPack?.state === 'claimed') {
+		    const remembered = getRememberedQrOrderCompletionContext();
+		    const linkedOrder = currentStarterPack.linkedOrder || {};
+		    completeQrPrintedOrderJourney(remembered || {
+		      locationId: linkedOrder.location_id,
+		      type: 'printed_order',
+		      items: [{ product_type: 'qr_sticker', quantity: Number(linkedOrder.quantity || currentStarterPack.allowance || 0) }]
+		    }, 'Your included QR stickers have been ordered successfully. Standard delivery is included.');
+		    renderPricingModalOptions();
+		    return;
+		  }
+		  if (currentStarterPack?.state === 'reserved' && attempt < 20) {
+		    setTimeout(() => pollStarterPackOrderPlacement(attempt + 1), 3000);
+		    return;
+		  }
+		  if (status && currentStarterPack?.state === 'reserved') {
+		    status.textContent = 'Your Starter Pack remains safely reserved. Support can retry the same printer order without creating a duplicate.';
+		  }
 		}
 
 		function showQrOrderReturnMessage() {
@@ -10871,24 +11055,15 @@
 		    ? 'Payment received. Your QR stickers have been ordered successfully and will be delivered to you.'
 		    : 'Payment was cancelled. No order was placed.';
 		  if (isSuccess) {
-		    const signContainer = document.getElementById('generatedSign');
-		    const qrSelect = document.getElementById('qrLocationSelect');
-		    if (completionContext?.locationId && qrSelect) {
-		      try { qrSelect.value = completionContext.locationId; } catch {}
-		    }
-		    if (signContainer) signContainer.style.display = 'block';
+		    completeQrPrintedOrderJourney(completionContext, message);
+		  } else {
+		    if (form) form.style.display = 'block';
+		    setQrOrderBuilderOpen(true);
+		    setQrDiyBuilderOpen(false);
+		    setQrStep2Completed(false, null);
+		    renderQrPrintQuote();
+		    renderQrStickyOrderSummary();
 		  }
-		  if (form) form.style.display = isSuccess ? 'none' : 'block';
-		  setQrOrderBuilderOpen(!isSuccess);
-		  setQrDiyBuilderOpen(false);
-		  setQrStep2Completed(isSuccess, completionContext);
-		  if (isSuccess) markFirstSuccessLocalSignal('qr_material_action', {
-		    locationId: completionContext?.locationId || getSelectedQrTrackingLocationId(),
-		    materialType: completionContext?.type || 'printed_order',
-		    productMix: completionContext?.productMix || getQrOrderProductMix(completionContext?.items || [])
-		  });
-		  renderQrPrintQuote();
-		  renderQrStickyOrderSummary();
 
 		  if (status) {
 		    status.textContent = message;
@@ -10966,7 +11141,7 @@
 		  }
 
 		  if (submitBtn) submitBtn.disabled = true;
-		  if (status) status.textContent = 'Opening secure checkout...';
+		  if (status) status.textContent = isStarterPackClaimable() ? 'Placing your included order...' : 'Opening secure checkout...';
 
 		  try {
 		    const { data: sessionData } = await supabase.auth.getSession();
@@ -11012,8 +11187,26 @@
 		    }
 
 		    const data = await res.json();
-		    if (!data?.url) throw new Error('Checkout did not return a payment link.');
 		    rememberQrOrderCompletionContext();
+		    if (data?.flow === 'processing') {
+		      currentStarterPack = { ...currentStarterPack, state: 'reserved', claimable: false, orderId: data.order_id || qrPrintQuoteState.orderId };
+		      if (currentUser) currentUser.starterPack = currentStarterPack;
+		      if (status) status.textContent = 'Your Starter Pack is safely reserved while we confirm the printer order. Please check again shortly; a duplicate order will not be created.';
+		      renderStarterPackOrderMode();
+		      pollStarterPackOrderPlacement();
+		      return;
+		    }
+		    if (data?.flow === 'included') {
+		      currentStarterPack = { ...currentStarterPack, state: 'claimed', claimable: false, orderId: data.order_id || qrPrintQuoteState.orderId };
+		      if (currentUser) currentUser.starterPack = currentStarterPack;
+		      completeQrPrintedOrderJourney(
+		        getRememberedQrOrderCompletionContext(),
+		        'Your included QR stickers have been ordered successfully. Standard delivery is included.'
+		      );
+		      renderPricingModalOptions();
+		      return;
+		    }
+		    if (!data?.url) throw new Error('Checkout did not return a payment link.');
 		    try {
 		      logEvent('qr_checkout_started', getQrJourneyContext({
 		        product_mix: getQrOrderProductMix(orderableItems),
@@ -13470,6 +13663,7 @@
 		  currentUser.pendingPricingTier = biz.pending_pricing_tier || null;
 		  currentUser.planChangeEffectiveAt = biz.plan_change_effective_at || null;
 		  currentUser.stripeSubscriptionScheduleId = biz.stripe_subscription_schedule_id || null;
+		  await refreshStarterPackStatus();
 		  if (pendingUpgradePayment?.tier && currentUser.pricingTier === pendingUpgradePayment.tier) {
 		    pendingUpgradePayment = null;
 		    try { sessionStorage.removeItem('ffPendingUpgradePayment'); } catch (_) {}
