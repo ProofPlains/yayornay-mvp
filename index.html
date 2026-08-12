@@ -10360,7 +10360,7 @@
 		  const totalMarkup = qrPrintQuoteState.loading
 		    ? qrPriceLoadingMarkup('Updating')
 		    : isStarterPackClaimable()
-		      ? 'Included - GBP 0.00 total'
+		      ? 'Included &middot; &pound;0.00 total'
 		      : `${escapePricingHtml(formatQrOrderMoney(option.customer_total_amount, option.currency))} total`;
 		  copy.innerHTML = `${escapePricingHtml(getQrOrderStickySummaryText(option))}<span>${totalMarkup}</span>`;
 		  const ready = isQrOrderReady();
@@ -10664,7 +10664,7 @@
 		    startingPrice.innerHTML = !hasFreshQrKitRecommendation()
 		      ? 'Tell us where they go'
 		      : !orderableItems.length
-		      ? '£0.00 total'
+		      ? '&pound;0.00 total'
 		      : qrPrintQuoteState.loading
 		      ? qrPriceLoadingMarkup('Loading price')
 		      : option
@@ -10677,9 +10677,9 @@
 		    if (hasFreshQrKitRecommendation() && !orderableItems.length) {
 		      summary.innerHTML = `
 		        ${qrPrintQuoteState.items.map((item) => `<div class="qr-price-row"><span class="qr-price-label">${Number(item.quantity)} ${escapePricingHtml(QR_PRINT_PRODUCTS[item.product_type]?.productName || 'QR items')}</span></div>`).join('')}
-		        <div class="qr-price-row"><span class="qr-price-label">QR stickers and print</span><span class="qr-price-value">£0.00</span></div>
-		        <div class="qr-price-row"><span class="qr-price-label">Delivery</span><span class="qr-price-value">£0.00</span></div>
-		        <div class="qr-price-row qr-price-total"><span class="qr-price-label">Total today</span><span class="qr-price-value">£0.00</span></div>
+		        <div class="qr-price-row"><span class="qr-price-label">QR stickers and print</span><span class="qr-price-value">&pound;0.00</span></div>
+		        <div class="qr-price-row"><span class="qr-price-label">Delivery</span><span class="qr-price-value">&pound;0.00</span></div>
+		        <div class="qr-price-row qr-price-total"><span class="qr-price-label">Total today</span><span class="qr-price-value">&pound;0.00</span></div>
 		      `;
 		    } else if (qrPrintQuoteState.loading) {
 		      summary.innerHTML = qrPriceLoadingMarkup('Loading price');
@@ -10689,7 +10689,7 @@
 		      summary.innerHTML = `
 		        ${qrPrintQuoteState.items.map((item) => `<div class="qr-price-row"><span class="qr-price-label">${Number(item.quantity)} ${escapePricingHtml(QR_PRINT_PRODUCTS[item.product_type]?.productName || 'QR items')}</span><span class="qr-price-value">Included</span></div>`).join('')}
 		        <div class="qr-price-row"><span class="qr-price-label">Standard delivery</span><span class="qr-price-value">Included</span></div>
-		        <div class="qr-price-row qr-price-total"><span class="qr-price-label">Total today</span><span class="qr-price-value">Â£0.00</span></div>
+		        <div class="qr-price-row qr-price-total"><span class="qr-price-label">Total today</span><span class="qr-price-value">&pound;0.00</span></div>
 		      `;
 		    } else if (option) {
 		      summary.innerHTML = `
