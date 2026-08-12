@@ -1142,6 +1142,7 @@
             <select id="orderProductFilter">
               <option value="all">All products</option>
               <option value="stickers">Stickers</option>
+              <option value="starter_pack">Starter Packs</option>
               <option value="inserts">Inserts</option>
               <option value="both">Both</option>
             </select>
@@ -1513,7 +1514,9 @@
       const prodigiStatus = String(order.prodigiStatus || '').toLowerCase();
       const emailStatus = String(order.internalEmailStatus || '').toLowerCase();
       const missingDelivery = hasMissingDelivery(order);
+      const included = order.orderKind === 'starter_pack' && payment === 'not_required';
       const paid = payment === 'paid';
+      const funded = paid || included;
       const cancelled = ['cancelled', 'canceled', 'expired'].includes(payment) || ['cancelled', 'canceled', 'refunded'].includes(fulfilment);
 
       if (fulfilment === 'refunded' || payment === 'refunded') {
@@ -1522,22 +1525,22 @@
       if (cancelled) {
         return { label: 'Cancelled', bucket: 'cancelled', priority: 88, nextAction: 'No fulfilment action needed.', needsAttention: false };
       }
-      if (missingDelivery && paid) {
+      if (missingDelivery && funded) {
         return { label: 'Missing delivery details', bucket: 'needs_attention', priority: 1, nextAction: 'Investigate missing address before fulfilment.', needsAttention: true };
       }
       if (['failed', 'needs_attention'].includes(fulfilment) || prodigiStatus === 'failed') {
         return { label: fulfilment === 'needs_attention' ? 'Needs attention' : 'Prodigi failed', bucket: 'needs_attention', priority: 2, nextAction: 'Check Prodigi dashboard and create or retry manually only if safe.', needsAttention: true };
       }
-      if (paid && !order.prodigiOrderId) {
-        return { label: 'Paid / not sent to Prodigi', bucket: 'needs_attention', priority: 3, nextAction: 'Create or retry Prodigi order manually after checking for duplicates.', needsAttention: true };
+      if (funded && !order.prodigiOrderId) {
+        return { label: included ? 'Starter Pack / not sent' : 'Paid / not sent to Prodigi', bucket: 'needs_attention', priority: 3, nextAction: included ? 'Retry the reserved Starter Pack order. Do not create a new order.' : 'Create or retry Prodigi order manually after checking for duplicates.', needsAttention: true };
       }
       if (paid && emailStatus === 'failed') {
         return { label: 'Needs attention', bucket: 'needs_attention', priority: 4, nextAction: 'Internal email failed - check notification and send a customer update if needed.', needsAttention: true };
       }
-      if (!paid && order.stripeSessionId) {
+      if (!funded && order.stripeSessionId) {
         return { label: 'Checkout started / not paid', bucket: 'unpaid', priority: 55, nextAction: 'Check Stripe payment before fulfilling.', needsAttention: false };
       }
-      if (!paid) {
+      if (!funded) {
         return { label: 'Unknown', bucket: 'unpaid', priority: 70, nextAction: 'Wait for payment or check Stripe if the customer reports an issue.', needsAttention: false };
       }
       if (['completed', 'delivered'].includes(fulfilment)) {
@@ -1552,7 +1555,7 @@
       if (order.prodigiOrderId) {
         return { label: 'Sent to Prodigi', bucket: 'paid', priority: 40, nextAction: 'Check Prodigi dashboard if no update arrives.', needsAttention: false };
       }
-      return { label: 'Paid / fulfilment pending', bucket: 'paid', priority: 35, nextAction: 'Wait briefly, then check Prodigi if it stays pending.', needsAttention: false };
+      return { label: included ? 'Starter Pack / fulfilment pending' : 'Paid / fulfilment pending', bucket: 'paid', priority: 35, nextAction: 'Wait briefly, then check Prodigi if it stays pending.', needsAttention: false };
     }
 
     function flattenQrOrders() {
@@ -2043,6 +2046,38 @@
       }
     }
 
+    async function grantStarterPack(businessId, allowance, button) {
+      if (!window.confirm(`Grant a one-time ${allowance}-sticker test Starter Pack to this business?`)) return;
+      if (button) button.disabled = true;
+      try {
+        await runSupportMutation('grant_starter_pack', {
+          business_id: businessId,
+          allowance,
+          note: 'Explicit support-console test grant'
+        });
+        await loadOverview();
+        openDetail(businessId);
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Could not grant Starter Pack.');
+        if (button) button.disabled = false;
+      }
+    }
+
+    async function retryStarterPackOrder(orderId, button) {
+      if (!window.confirm('Retry this exact reserved Starter Pack order using its existing Prodigi idempotency key?')) return;
+      if (button) button.disabled = true;
+      try {
+        await runSupportMutation('retry_starter_pack_order', { order_id: orderId });
+        await loadOverview();
+        openOrderDetail(orderId);
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Could not retry Starter Pack order.');
+        if (button) button.disabled = false;
+      }
+    }
+
     function searchText(business) {
       const qrPrintOrderText = (business.qrPrintOrders || []).map((order) => [
         order.productName,
@@ -2437,7 +2472,7 @@
       qrDeployed: {
         name: 'QR deployed',
         category: 'Activation',
-        definition: 'Unique locations where a QR sign was downloaded, printed, or a paid sticker order was completed.',
+        definition: 'Unique locations where a QR sign was downloaded, printed, or a paid or included sticker order was completed.',
         tells: 'Signals that a business intends to place FlashFeedback in the real world.'
       },
       qrJourney: {
@@ -2449,8 +2484,8 @@
       qrPrintOrders: {
         name: 'QR print orders',
         category: 'Fulfilment',
-        definition: 'Paid QR print orders and their Prodigi fulfilment progress.',
-        tells: 'Shows whether paid sticker demand is turning into successful print fulfilment.'
+        definition: 'Paid and included QR print orders and their Prodigi fulfilment progress.',
+        tells: 'Shows whether physical sticker demand is turning into successful print fulfilment, while revenue remains paid-only.'
       },
       firstFeedbackReceived: {
         name: 'First feedback received',
@@ -2732,7 +2767,7 @@
           `Path choice: Order ${Number(metric.orderPathBusinesses || 0).toLocaleString()} | DIY ${Number(metric.diyPathBusinesses || 0).toLocaleString()}.`,
           `DIY deployed: Print ${Number(metric.diyPrintDeployments || 0).toLocaleString()} | Download ${Number(metric.diyDownloadDeployments || 0).toLocaleString()} | Estimated printed signs ${Number(metric.estimatedDiyPrintedSigns || 0).toLocaleString()}.`,
           `Recommendations: Stickers ${Number(metric.recommendationProductMix?.stickers || 0).toLocaleString()} | Inserts ${Number(metric.recommendationProductMix?.inserts || 0).toLocaleString()} | Both ${Number(metric.recommendationProductMix?.both || 0).toLocaleString()}.`,
-          `Paid orders: ${Number(metric.paidOrders || 0).toLocaleString()} | Revenue: ${revenue}.`,
+          `Physical orders: ${Number(metric.physicalOrders || metric.paidOrders || 0).toLocaleString()} | Included Starter Packs: ${Number(metric.includedOrders || 0).toLocaleString()} | Paid orders: ${Number(metric.paidOrders || 0).toLocaleString()} | Revenue: ${revenue}.`,
           rates.join(' | ')
         ].join(' ');
       }
@@ -2903,7 +2938,7 @@
         ['Recommended kit', qrJourney.recommendationLocations],
         ['Checkout started', qrJourney.checkoutStartedLocations],
         ['DIY deployed', qrJourney.diyDeployedLocations],
-        ['Paid print order', qrJourney.paidPrintOrderLocations],
+        ['Physical print order', qrJourney.physicalPrintOrderLocations ?? qrJourney.paidPrintOrderLocations],
         ['First feedback', qrJourney.firstFeedbackLocations]
       ];
       qrJourneyFunnelFlowEl.innerHTML = qrJourneyStages.map(([label, value], index) => `
@@ -3047,7 +3082,7 @@
       const filtered = sortQrOrders(orders.filter((order) =>
         (!query || orderSearchText(order).includes(query)) &&
         (statusFilter === 'all' || order.rescue.bucket === statusFilter || (statusFilter === 'paid' && order.stripePaymentStatus === 'paid')) &&
-        (productFilter === 'all' || order.productMix === productFilter) &&
+        (productFilter === 'all' || order.productMix === productFilter || (productFilter === 'starter_pack' && order.orderKind === 'starter_pack')) &&
         (fulfilmentFilter === 'all' || order.fulfilmentBucket === fulfilmentFilter) &&
         (countryFilter === 'all' || order.country === countryFilter || order.countryCode === countryFilter)
       ), sortMode);
@@ -3065,6 +3100,7 @@
             </div>
             <div class="order-rescue-meta">
               <span class="badge enabled">${escapeHtml(productMixLabel(order.productMix))}</span>
+              ${order.orderKind === 'starter_pack' ? '<span class="badge enabled">Starter Pack</span>' : ''}
               <span class="badge enabled">${escapeHtml(itemText || 'No items recorded')}</span>
               <span class="badge ${order.stripePaymentStatus === 'paid' ? 'enabled' : 'disabled'}">Stripe: ${escapeHtml(order.stripePaymentStatus || 'Unknown')}</span>
               <span class="badge ${qrPrintFulfilmentTone(order.fulfilmentStatus)}">Prodigi: ${escapeHtml(order.prodigiOrderId || qrPrintFulfilmentLabel(order.fulfilmentStatus))}</span>
@@ -3076,6 +3112,7 @@
               <div class="muted">${escapeHtml(formatSupportMoney(order.customerTotalAmount, order.currency))} - Order ${escapeHtml(order.id || 'not recorded')}</div>
               <div class="order-detail-actions">
                 <button class="small-btn" type="button" data-order-id="${escapeHtml(order.id)}">Open details</button>
+                ${order.orderKind === 'starter_pack' && !order.prodigiOrderId ? `<button class="small-btn" type="button" data-retry-starter-pack-order="${escapeHtml(order.id)}">Retry reserved order</button>` : ''}
                 <button class="small-btn" type="button" data-open-business-id="${escapeHtml(order.businessId)}">Open business</button>
               </div>
             </div>
@@ -3303,6 +3340,7 @@
             ${detailCopyButton('Copy QR URL', feedbackUrl)}
             ${detailCopyButton('Copy Stripe session', order.stripeSessionId)}
             ${detailCopyButton('Copy Prodigi ID', order.prodigiOrderId)}
+            ${order.orderKind === 'starter_pack' && !order.prodigiOrderId ? `<button class="small-btn" type="button" data-retry-starter-pack-order="${escapeHtml(order.id)}">Retry reserved Starter Pack order</button>` : ''}
             ${stripeSessionUrl ? `<a class="small-btn" href="${escapeHtml(stripeSessionUrl)}" target="_blank" rel="noopener noreferrer">Open Stripe</a>` : ''}
             ${order.trackingUrl ? `<a class="small-btn" href="${escapeHtml(order.trackingUrl)}" target="_blank" rel="noopener noreferrer">Open tracking</a>` : ''}
           </div>
@@ -3337,6 +3375,9 @@
             <h3>Order</h3>
             <div class="grid">
               ${detailField('Internal order ID', order.id)}
+              ${detailField('Order kind', order.orderKind === 'starter_pack' ? 'Subscription-included Starter Pack' : 'Paid QR sticker order')}
+              ${detailField('Starter Pack tier', order.starterPackTier)}
+              ${detailField('Starter Pack allowance', order.starterPackAllowance)}
               ${detailField('Product mix', productMixLabel(order.productMix))}
               ${detailField('Delivery method', order.deliveryMethod)}
               ${detailField('Customer total', formatSupportMoney(order.customerTotalAmount, order.currency))}
@@ -3424,6 +3465,7 @@
       const recentFeedback = Array.isArray(business.recentFeedback) ? business.recentFeedback : [];
       const users = Array.isArray(business.users) ? business.users : [];
       const qrPrintOrders = Array.isArray(business.qrPrintOrders) ? business.qrPrintOrders : [];
+      const starterPack = business.starterPack || null;
       const hasSimulation = Boolean(business.stripeTestClockId);
       const canStartSimulation = !business.subscriptionComped &&
         !business.stripeSubscriptionId &&
@@ -3461,6 +3503,26 @@
             <div class="field"><span>Created</span>${escapeHtml(formatDate(business.createdAt))}</div>
             <div class="field"><span>Latest feedback</span>${escapeHtml(formatDate(business.latestFeedbackAt))}</div>
           </div>
+        </div>
+        <div class="section">
+          <h3>QR Sticker Starter Pack</h3>
+          <div class="grid">
+            <div class="field"><span>State</span>${escapeHtml(starterPack?.state || 'Not eligible')}</div>
+            <div class="field"><span>Basis</span>${escapeHtml(starterPack?.basis === 'admin_test' ? 'Admin test grant' : starterPack?.basis === 'paid_subscription' ? 'Paid subscription' : '-')}</div>
+            <div class="field"><span>Allowance</span>${starterPack?.allowance ? `${escapeHtml(starterPack.allowance)} stickers` : '-'}</div>
+            <div class="field"><span>Quantity claimed/reserved</span>${escapeHtml(starterPack?.quantity || '-')}</div>
+            <div class="field"><span>Eligible</span>${escapeHtml(formatDate(starterPack?.eligibleAt))}</div>
+            <div class="field"><span>Reserved</span>${escapeHtml(formatDate(starterPack?.reservedAt))}</div>
+            <div class="field"><span>Claimed</span>${escapeHtml(formatDate(starterPack?.claimedAt))}</div>
+            <div class="field"><span>Linked order</span>${escapeHtml(starterPack?.orderId || '-')}</div>
+          </div>
+          ${starterPack ? `<div class="muted">${escapeHtml(starterPack.adminGrantNote || 'One lifetime Starter Pack. Plan changes do not create another entitlement.')}</div>` : `
+            <div class="simulation-actions">
+              <button class="small-btn" type="button" data-grant-starter-pack="5" data-starter-pack-business-id="${escapeHtml(business.id)}">Grant test pack (5)</button>
+              <button class="small-btn" type="button" data-grant-starter-pack="10" data-starter-pack-business-id="${escapeHtml(business.id)}">Grant test pack (10)</button>
+            </div>
+            <div class="muted">Admin-only test grant. This does not change the subscription or create an order.</div>
+          `}
         </div>
         <div class="section">
           <h3>Integration Routing</h3>
@@ -3660,6 +3722,11 @@
       control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', renderOrderRescue);
     });
     orderRescueListEl.addEventListener('click', (event) => {
+      const retryButton = event.target.closest('[data-retry-starter-pack-order]');
+      if (retryButton) {
+        retryStarterPackOrder(retryButton.dataset.retryStarterPackOrder, retryButton);
+        return;
+      }
       const orderButton = event.target.closest('[data-order-id]');
       if (orderButton) {
         openOrderDetail(orderButton.dataset.orderId);
@@ -3681,6 +3748,20 @@
       if (button) openDetail(button.dataset.businessId);
     });
     drawerEl.addEventListener('click', (event) => {
+      const grantButton = event.target.closest('[data-grant-starter-pack]');
+      if (grantButton) {
+        grantStarterPack(
+          grantButton.dataset.starterPackBusinessId,
+          Number(grantButton.dataset.grantStarterPack),
+          grantButton
+        );
+        return;
+      }
+      const retryButton = event.target.closest('[data-retry-starter-pack-order]');
+      if (retryButton) {
+        retryStarterPackOrder(retryButton.dataset.retryStarterPackOrder, retryButton);
+        return;
+      }
       const deleteUserButton = event.target.closest('[data-delete-user-id]');
       if (deleteUserButton) {
         const email = deleteUserButton.dataset.deleteUserEmail || 'this user';
