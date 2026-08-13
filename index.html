@@ -7155,11 +7155,13 @@
 			  const currentTierKey = isPricingModalSignupContext() || isPublicReadOnly ? null : (currentUser?.pricingTier || 'free');
 			  const pendingTierKey = isPricingModalSignupContext() || isPublicReadOnly ? null : currentUser?.pendingPricingTier;
 			  const isComped = !isPricingModalSignupContext() && !isPublicReadOnly && currentUser?.subscriptionComped === true;
-			  const starterPackState = currentStarterPack?.state || 'not_eligible';
+			  const isSandboxBilling = currentUser?.integrationTestMode === true || currentUser?.subscriptionTestMode === true;
+			  const starterPack = ensureStarterPackBusinessContext();
+			  const starterPackState = starterPack.state;
 			  const suppressStarterPack = !isPricingModalSignupContext() && !isPublicReadOnly && (
 			    isComped
 			    || ['reserved', 'claimed'].includes(starterPackState)
-			    || (currentUser?.subscriptionTestMode === true && currentStarterPack?.basis !== 'admin_test')
+			    || (isSandboxBilling && starterPack.basis !== 'admin_test')
 			  );
 			  const planCards = Object.values(PRICING_TIERS).map((tier) => {
 			    const checked = !isPublicReadOnly && tier.key === pricingModalSelectedTier ? 'checked' : '';
@@ -10067,14 +10069,19 @@
 		  error: '',
 		  hasRecommendation: false
 		};
-		let currentStarterPack = {
-		  state: 'not_eligible',
-		  claimable: false,
-		  tier: null,
-		  allowance: null,
-		  basis: null,
-		  orderId: null
-		};
+		function createEmptyStarterPackStatus() {
+		  return {
+		    state: 'not_eligible',
+		    claimable: false,
+		    tier: null,
+		    allowance: null,
+		    basis: null,
+		    orderId: null
+		  };
+		}
+
+		let currentStarterPack = createEmptyStarterPackStatus();
+		let currentStarterPackBusinessId = null;
 		let qrPrintQuoteTimer = null;
 		let qrPrintQuoteRequestId = 0;
 		let qrAddressCandidates = [];
@@ -10082,24 +10089,39 @@
 		let qrStep2CompletionContext = null;
 		let orderingAdditionalQrStickers = false;
 
+		function ensureStarterPackBusinessContext() {
+		  const businessId = currentUser?.businessId || null;
+		  if (currentStarterPackBusinessId !== businessId) {
+		    currentStarterPack = createEmptyStarterPackStatus();
+		    currentStarterPackBusinessId = businessId;
+		    if (currentUser) currentUser.starterPack = currentStarterPack;
+		  }
+		  return currentStarterPack;
+		}
+
 		function isStarterPackClaimable() {
-		  return currentStarterPack?.state === 'eligible' && currentStarterPack?.claimable === true;
+		  const starterPack = ensureStarterPackBusinessContext();
+		  return starterPack.state === 'eligible' && starterPack.claimable === true;
 		}
 
 		async function refreshStarterPackStatus() {
-		  if (!currentUser?.businessId) return currentStarterPack;
+		  const businessId = currentUser?.businessId || null;
+		  ensureStarterPackBusinessContext();
+		  if (!businessId) return currentStarterPack;
 		  try {
 		    const { data: sessionData } = await supabase.auth.getSession();
 		    const accessToken = sessionData?.session?.access_token;
 		    if (!accessToken) return currentStarterPack;
 		    const url = new URL(`${SUPABASE_URL}/functions/v1/get-starter-pack-status`);
-		    url.searchParams.set('business_id', currentUser.businessId);
+		    url.searchParams.set('business_id', businessId);
 		    const response = await fetch(url.toString(), {
 		      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${accessToken}` }
 		    });
 		    const body = await response.json().catch(() => ({}));
 		    if (!response.ok) throw new Error(body.error || 'Could not load Starter Pack status.');
-		    currentStarterPack = body.starterPack || currentStarterPack;
+		    if (currentUser?.businessId !== businessId) return ensureStarterPackBusinessContext();
+		    currentStarterPack = body.starterPack || createEmptyStarterPackStatus();
+		    currentStarterPackBusinessId = businessId;
 		    if (currentUser) currentUser.starterPack = currentStarterPack;
 		    renderStarterPackStep2Choice();
 		  } catch (error) {
