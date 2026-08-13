@@ -10119,12 +10119,12 @@
 		  orderCard?.classList.toggle('is-starter-pack-eligible', claimable);
 
 		  if (orderKicker) orderKicker.textContent = claimable ? `${tierLabel} benefit` : '';
-		  if (orderTitle) orderTitle.textContent = claimable ? 'Your Starter Pack is ready' : 'Order printed stickers';
+		  if (orderTitle) orderTitle.textContent = claimable ? 'Your Starter Pack is available to claim' : 'Order printed stickers';
 		  if (orderCopy) orderCopy.textContent = claimable
 		    ? `Up to ${allowance} QR stickers for this location, with Standard delivery included.`
 		    : 'QR stickers, delivered ready to use.';
 		  if (orderMeta) orderMeta.textContent = claimable ? 'Standard delivery included \u00b7 \u00a30 today' : '';
-		  if (orderButton) orderButton.textContent = claimable ? 'Use my Starter Pack' : 'Order stickers';
+		  if (orderButton) orderButton.textContent = claimable ? 'Order my included stickers' : 'Order stickers';
 		  if (diyTitle) diyTitle.textContent = claimable ? 'Prefer to print it yourself?' : 'DIY for free';
 		  if (diyCopy) diyCopy.textContent = claimable
 		    ? 'You can still print or download the sign for free.'
@@ -10133,7 +10133,7 @@
 		  orderCard?.setAttribute(
 		    'aria-label',
 		    claimable
-		      ? `Use your ${tierLabel} Starter Pack for up to ${allowance} included QR stickers`
+		      ? `Claim your ${tierLabel} Starter Pack by ordering up to ${allowance} included QR stickers`
 		      : 'Order printed stickers'
 		  );
 
