@@ -1771,6 +1771,146 @@
 		  margin-top: auto;
 		}
 
+		.qr-action-choice-kicker,
+		.qr-action-choice-meta {
+		  display: none;
+		}
+
+		.qr-sign-actions.is-starter-pack-eligible {
+		  grid-template-columns: minmax(0, 1fr);
+		}
+
+		.qr-action-choice.is-starter-pack-eligible {
+		  position: relative;
+		  overflow: hidden;
+		  padding: 18px;
+		  border-color: color-mix(in oklab, var(--ff-brand-2) 68%, var(--ff-border));
+		  background:
+		    radial-gradient(circle at top right, color-mix(in oklab, var(--ff-brand-2) 22%, transparent), transparent 42%),
+		    linear-gradient(135deg, color-mix(in oklab, var(--ff-surface) 97%, black), color-mix(in oklab, var(--ff-brand-1) 15%, var(--ff-surface)));
+		  box-shadow: 0 16px 38px rgba(91, 33, 182, .18);
+		}
+
+		.qr-action-choice.is-starter-pack-eligible > * {
+		  position: relative;
+		  z-index: 1;
+		}
+
+		.qr-action-choice.is-starter-pack-eligible .qr-action-choice-kicker {
+		  display: block;
+		  color: color-mix(in oklab, var(--ff-brand-2) 76%, white);
+		  font-size: 11px;
+		  font-weight: 900;
+		  letter-spacing: .08em;
+		  line-height: 1.2;
+		  text-transform: uppercase;
+		}
+
+		.qr-action-choice.is-starter-pack-eligible .qr-action-choice-title {
+		  font-size: 20px;
+		}
+
+		.qr-action-choice.is-starter-pack-eligible .qr-action-choice-copy {
+		  flex: 0 1 auto;
+		  max-width: 620px;
+		  font-size: 14px;
+		}
+
+		.qr-action-choice.is-starter-pack-eligible .qr-action-choice-meta {
+		  display: inline-flex;
+		  width: fit-content;
+		  margin: 0;
+		  padding: 6px 9px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-2) 42%, var(--ff-border));
+		  border-radius: 999px;
+		  background: color-mix(in oklab, var(--ff-brand-2) 16%, transparent);
+		  color: var(--ff-text);
+		  font-size: 12px;
+		  font-weight: 800;
+		  line-height: 1.2;
+		}
+
+		.qr-action-choice.is-starter-pack-eligible .btn {
+		  width: min(100%, 320px);
+		  margin-top: 2px;
+		}
+
+		.qr-sign-actions.is-starter-pack-eligible .qr-action-choice[data-qr-action-card="diy"] {
+		  display: grid;
+		  grid-template-columns: minmax(0, 1fr) auto;
+		  grid-template-areas:
+		    "title button"
+		    "copy button";
+		  align-items: center;
+		  padding: 12px 14px;
+		  background: transparent;
+		}
+
+		.qr-sign-actions.is-starter-pack-eligible .qr-action-choice[data-qr-action-card="diy"] .qr-action-choice-title {
+		  grid-area: title;
+		}
+
+		.qr-sign-actions.is-starter-pack-eligible .qr-action-choice[data-qr-action-card="diy"] .qr-action-choice-copy {
+		  grid-area: copy;
+		}
+
+		.qr-sign-actions.is-starter-pack-eligible .qr-action-choice[data-qr-action-card="diy"] .btn {
+		  grid-area: button;
+		  width: auto;
+		  min-width: 140px;
+		  margin: 0;
+		}
+
+		.qr-action-choice.is-starter-pack-arriving {
+		  animation: qr-starter-pack-arrival 2400ms ease-in-out 2;
+		}
+
+		.qr-action-choice.is-starter-pack-arriving::after {
+		  content: "";
+		  position: absolute;
+		  inset: 0;
+		  z-index: 0;
+		  pointer-events: none;
+		  background: linear-gradient(110deg, transparent 0%, transparent 34%, color-mix(in oklab, var(--ff-brand-1) 24%, transparent) 46%, color-mix(in oklab, #22c55e 14%, transparent) 52%, transparent 66%, transparent 100%);
+		  transform: translateX(-120%);
+		  animation: qr-starter-pack-sweep 2400ms ease-in-out 2;
+		}
+
+		@keyframes qr-starter-pack-arrival {
+		  0% {
+		    box-shadow: 0 16px 38px rgba(91, 33, 182, .18);
+		  }
+		  18% {
+		    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ff-brand-1) 20%, transparent), 0 20px 44px rgba(139, 92, 246, .22);
+		  }
+		  42%,
+		  100% {
+		    box-shadow: 0 16px 38px rgba(91, 33, 182, .18);
+		  }
+		}
+
+		@keyframes qr-starter-pack-sweep {
+		  0% {
+		    transform: translateX(-120%);
+		    opacity: 0;
+		  }
+		  8% {
+		    opacity: 1;
+		  }
+		  42%,
+		  100% {
+		    transform: translateX(120%);
+		    opacity: 0;
+		  }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+		  .qr-action-choice.is-starter-pack-arriving,
+		  .qr-action-choice.is-starter-pack-arriving::after {
+		    animation: none;
+		  }
+		}
+
 		.qr-diy-panel {
 		  display: none;
 		  width: min(100%, 640px);
@@ -2793,6 +2933,27 @@
 
 		  .qr-action-choice-copy {
 		    font-size: 12px;
+		  }
+
+		  .qr-action-choice.is-starter-pack-eligible {
+		    padding: 16px;
+		    gap: 9px;
+		  }
+
+		  .qr-action-choice.is-starter-pack-eligible .qr-action-choice-title {
+		    font-size: 18px;
+		  }
+
+		  .qr-sign-actions.is-starter-pack-eligible .qr-action-choice[data-qr-action-card="diy"] {
+		    grid-template-columns: minmax(0, 1fr);
+		    grid-template-areas:
+		      "title"
+		      "copy"
+		      "button";
+		  }
+
+		  .qr-sign-actions.is-starter-pack-eligible .qr-action-choice[data-qr-action-card="diy"] .btn {
+		    width: 100%;
 		  }
 
 		  .qr-diy-actions {
@@ -6319,14 +6480,16 @@
 					    </div>
 					    <div class="qr-action-instruction">Choose how you want to use your QR code.</div>
 					    <div class="qr-sign-actions">
-					      <div class="qr-action-choice" data-qr-action-card="order" role="button" tabindex="0" aria-label="Order printed stickers">
-					        <div class="qr-action-choice-title">Order printed stickers</div>
-					        <p class="qr-action-choice-copy">QR stickers, delivered ready to use.</p>
+					      <div id="qrOrderChoice" class="qr-action-choice" data-qr-action-card="order" role="button" tabindex="0" aria-label="Order printed stickers">
+					        <div id="qrOrderChoiceKicker" class="qr-action-choice-kicker"></div>
+					        <div id="qrOrderChoiceTitle" class="qr-action-choice-title">Order printed stickers</div>
+					        <p id="qrOrderChoiceCopy" class="qr-action-choice-copy">QR stickers, delivered ready to use.</p>
+					        <p id="qrOrderChoiceMeta" class="qr-action-choice-meta"></p>
 					        <button id="ffOrderQrBtn" class="btn">Order stickers</button>
 					      </div>
-					      <div class="qr-action-choice" data-qr-action-card="diy" role="button" tabindex="0" aria-label="Use DIY options for free">
-					        <div class="qr-action-choice-title">DIY for free</div>
-					        <p class="qr-action-choice-copy">Print now or download the sign for digital use.</p>
+					      <div id="qrDiyChoice" class="qr-action-choice" data-qr-action-card="diy" role="button" tabindex="0" aria-label="Use DIY options for free">
+					        <div id="qrDiyChoiceTitle" class="qr-action-choice-title">DIY for free</div>
+					        <p id="qrDiyChoiceCopy" class="qr-action-choice-copy">Print now or download the sign for digital use.</p>
 					        <button id="ffDiyQrBtn" class="btn">DIY options</button>
 					      </div>
 					    </div>
@@ -9930,14 +10093,72 @@
 		    if (!response.ok) throw new Error(body.error || 'Could not load Starter Pack status.');
 		    currentStarterPack = body.starterPack || currentStarterPack;
 		    if (currentUser) currentUser.starterPack = currentStarterPack;
+		    renderStarterPackStep2Choice();
 		  } catch (error) {
 		    console.warn('Starter Pack status refresh failed:', error?.message || error);
 		  }
 		  return currentStarterPack;
 		}
 
+		function renderStarterPackStep2Choice(options = {}) {
+		  const claimable = isStarterPackClaimable();
+		  const allowance = Number(currentStarterPack?.allowance || 0);
+		  const tierLabel = currentStarterPack?.tier === 'pro' ? 'Pro' : 'Growth';
+		  const actions = document.querySelector('.qr-sign-actions');
+		  const orderCard = document.getElementById('qrOrderChoice');
+		  const orderKicker = document.getElementById('qrOrderChoiceKicker');
+		  const orderTitle = document.getElementById('qrOrderChoiceTitle');
+		  const orderCopy = document.getElementById('qrOrderChoiceCopy');
+		  const orderMeta = document.getElementById('qrOrderChoiceMeta');
+		  const orderButton = document.getElementById('ffOrderQrBtn');
+		  const diyTitle = document.getElementById('qrDiyChoiceTitle');
+		  const diyCopy = document.getElementById('qrDiyChoiceCopy');
+		  const diyButton = document.getElementById('ffDiyQrBtn');
+
+		  actions?.classList.toggle('is-starter-pack-eligible', claimable);
+		  orderCard?.classList.toggle('is-starter-pack-eligible', claimable);
+
+		  if (orderKicker) orderKicker.textContent = claimable ? `${tierLabel} benefit` : '';
+		  if (orderTitle) orderTitle.textContent = claimable ? 'Your Starter Pack is ready' : 'Order printed stickers';
+		  if (orderCopy) orderCopy.textContent = claimable
+		    ? `Up to ${allowance} QR stickers for this location, with Standard delivery included.`
+		    : 'QR stickers, delivered ready to use.';
+		  if (orderMeta) orderMeta.textContent = claimable ? 'Standard delivery included \u00b7 \u00a30 today' : '';
+		  if (orderButton) orderButton.textContent = claimable ? 'Use my Starter Pack' : 'Order stickers';
+		  if (diyTitle) diyTitle.textContent = claimable ? 'Prefer to print it yourself?' : 'DIY for free';
+		  if (diyCopy) diyCopy.textContent = claimable
+		    ? 'You can still print or download the sign for free.'
+		    : 'Print now or download the sign for digital use.';
+		  if (diyButton) diyButton.textContent = claimable ? 'View DIY options' : 'DIY options';
+		  orderCard?.setAttribute(
+		    'aria-label',
+		    claimable
+		      ? `Use your ${tierLabel} Starter Pack for up to ${allowance} included QR stickers`
+		      : 'Order printed stickers'
+		  );
+
+		  if (!orderCard) return;
+		  if (!claimable) {
+		    orderCard.classList.remove('is-starter-pack-arriving');
+		    delete orderCard.dataset.starterPackAnimationKey;
+		    return;
+		  }
+		  if (options.animate !== true) return;
+		  const animationKey = `${currentStarterPack.state}:${currentStarterPack.tier}:${allowance}`;
+		  if (orderCard.dataset.starterPackAnimationKey === animationKey) return;
+		  orderCard.dataset.starterPackAnimationKey = animationKey;
+		  orderCard.classList.remove('is-starter-pack-arriving');
+		  void orderCard.offsetWidth;
+		  orderCard.classList.add('is-starter-pack-arriving');
+		}
+
+		function stopStarterPackStep2Animation() {
+		  document.getElementById('qrOrderChoice')?.classList.remove('is-starter-pack-arriving');
+		}
+
 		function renderStarterPackOrderMode() {
 		  const claimable = isStarterPackClaimable();
+		  renderStarterPackStep2Choice();
 		  const allowance = Number(currentStarterPack?.allowance || 0);
 		  const tierLabel = currentStarterPack?.tier === 'pro' ? 'Pro' : 'Growth';
 		  const guide = document.getElementById('qrKitGuide');
@@ -13437,6 +13658,7 @@
 		  imageContainer.appendChild(img);
 		  syncQrPreviewImages();
 		  signContainer.style.display = 'block';
+		  renderStarterPackStep2Choice({ animate: true });
 		  renderQrStepCompletionState();
 		  signContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 		  logEvent('qr_generated', {
@@ -14886,6 +15108,8 @@
 		  document.getElementById('qrPrintCopies')?.addEventListener('input', renderQrPrintLayoutPreview);
 		  document.getElementById('ffOrderQrBtn')?.addEventListener('click', showQrOrderForm);
 		  document.getElementById('ffDiyQrBtn')?.addEventListener('click', showQrDiyPanel);
+		  document.getElementById('qrOrderChoice')?.addEventListener('pointerdown', stopStarterPackStep2Animation);
+		  document.getElementById('qrOrderChoice')?.addEventListener('focusin', stopStarterPackStep2Animation);
 		  document.querySelectorAll('[data-qr-action-card]').forEach((card) => {
 		    const activate = () => {
 		      if (card.dataset.qrActionCard === 'order') showQrOrderForm();
