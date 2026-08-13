@@ -1556,6 +1556,10 @@
 		  line-height: 1.3;
 		}
 
+		.qr-sign-action-step {
+		  scroll-margin-top: 18px;
+		}
+
 		.qr-step-label strong {
 		  color: var(--ff-text);
 		}
@@ -2917,6 +2921,10 @@
 		}
 
 		@media (max-width: 760px) {
+		  .qr-sign-action-step {
+		    scroll-margin-top: 76px;
+		  }
+
 		  .qr-sign-actions {
 		    grid-template-columns: repeat(2, minmax(0, 1fr));
 		    gap: 8px;
@@ -10252,6 +10260,17 @@
 		  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}
 
+		function scrollQrStep2IntoView() {
+		  const step = document.querySelector('.qr-sign-action-step');
+		  if (!step) return;
+		  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+		  window.requestAnimationFrame(() => {
+		    window.requestAnimationFrame(() => {
+		      step.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+		    });
+		  });
+		}
+
 		function renderQrPlacementStepVisibility() {
 		  const placement = document.getElementById('qrPlacementStep');
 		  if (placement) placement.style.display = qrStep2Completed ? 'block' : 'none';
@@ -13660,7 +13679,7 @@
 		  signContainer.style.display = 'block';
 		  renderStarterPackStep2Choice({ animate: true });
 		  renderQrStepCompletionState();
-		  signContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		  scrollQrStep2IntoView();
 		  logEvent('qr_generated', {
 		    locationId: selectedLocation,
 		    source: 'business_dashboard'
