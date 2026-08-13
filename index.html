@@ -10328,11 +10328,10 @@
 		  const context = qrStep2CompletionContext || {};
 		  if (context.type === 'printed_order') {
 		    const summary = formatQrCompletedItemSummary(context.items || qrPrintQuoteState.items);
+		    if (context.orderKind === 'starter_pack') {
+		      return summary ? `Starter Pack ordered: ${summary}` : 'Starter Pack ordered';
+		    }
 		    return summary ? `Payment received - stickers ordered: ${summary}` : 'Payment received - stickers ordered';
-		  }
-		  if (context.type === 'printed_order') {
-		    const summary = formatQrCompletedItemSummary(context.items || qrPrintQuoteState.items);
-		    return summary ? `Stickers ordered - ${summary}` : 'Stickers ordered';
 		  }
 		  if (context.type === 'diy_print') {
 		    return context.layout === 'nine' ? 'Printable sheet created — 9 small signs' : 'Printable QR sign created';
@@ -10418,12 +10417,13 @@
 		  });
 		}
 
-		function rememberQrOrderCompletionContext() {
+		function rememberQrOrderCompletionContext(orderKind = isStarterPackClaimable() ? 'starter_pack' : 'paid') {
 		  const { locationId, locationName } = getSelectedQrOrderLocation();
 		  const orderableItems = getOrderableQrKitItems();
 		  try {
 		    localStorage.setItem('ff_last_qr_order_context', JSON.stringify({
 		      type: 'printed_order',
+		      orderKind,
 		      locationId,
 		      locationName,
 		      items: orderableItems.map((item) => ({
@@ -10441,7 +10441,14 @@
 		    if (!parsed || parsed.type !== 'printed_order') return { type: 'printed_order', productMix: 'stickers' };
 		    const ageMs = Date.now() - Number(parsed.savedAt || 0);
 		    if (ageMs > 1000 * 60 * 60 * 24) return { type: 'printed_order', productMix: 'stickers' };
-		    return { type: 'printed_order', productMix: getQrOrderProductMix(parsed.items || []), items: parsed.items || [], locationId: parsed.locationId || null, locationName: parsed.locationName || null };
+		    return {
+		      type: 'printed_order',
+		      orderKind: parsed.orderKind === 'starter_pack' ? 'starter_pack' : 'paid',
+		      productMix: getQrOrderProductMix(parsed.items || []),
+		      items: parsed.items || [],
+		      locationId: parsed.locationId || null,
+		      locationName: parsed.locationName || null
+		    };
 		  } catch {
 		    return { type: 'printed_order', productMix: 'stickers' };
 		  }
@@ -11189,6 +11196,7 @@
 		    completeQrPrintedOrderJourney({
 		      locationId: linkedOrder.location_id,
 		      type: 'printed_order',
+		      orderKind: 'starter_pack',
 		      items: [{ product_type: 'qr_sticker', quantity: Number(linkedOrder.quantity || currentStarterPack.allowance || 0) }]
 		    }, 'Your included QR stickers have already been ordered. Standard delivery is included.');
 		    return;
@@ -11263,11 +11271,14 @@
 		  if (currentStarterPack?.state === 'claimed') {
 		    const remembered = getRememberedQrOrderCompletionContext();
 		    const linkedOrder = currentStarterPack.linkedOrder || {};
-		    completeQrPrintedOrderJourney(remembered || {
-		      locationId: linkedOrder.location_id,
-		      type: 'printed_order',
-		      items: [{ product_type: 'qr_sticker', quantity: Number(linkedOrder.quantity || currentStarterPack.allowance || 0) }]
-		    }, 'Your included QR stickers have been ordered successfully. Standard delivery is included.');
+		    completeQrPrintedOrderJourney(remembered
+		      ? { ...remembered, orderKind: 'starter_pack' }
+		      : {
+		          locationId: linkedOrder.location_id,
+		          type: 'printed_order',
+		          orderKind: 'starter_pack',
+		          items: [{ product_type: 'qr_sticker', quantity: Number(linkedOrder.quantity || currentStarterPack.allowance || 0) }]
+		        }, 'Your included QR stickers have been ordered successfully. Standard delivery is included.');
 		    renderPricingModalOptions();
 		    return;
 		  }
