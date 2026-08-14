@@ -20,11 +20,29 @@
 	    const DISMISS_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
 	    const DISMISSED_AT_KEY = 'ff_pwa_install_prompt_dismissed_at';
 	    const INSTALLED_KEY = 'ff_pwa_installed';
+	    const IOS_DISMISSED_AT_KEY = 'ff_ios_install_guidance_dismissed_at';
+	    const IOS_SHOWN_KEY_PREFIX = 'ff_ios_install_guidance_shown_';
 	    let deferredInstallPrompt = null;
 	    let promptedThisSession = false;
+	    let iosGuidanceShownThisSession = false;
+	    let iosGuidanceSource = 'dashboard';
 
 	    function isAndroidBrowser() {
 	      return /Android/i.test(navigator.userAgent || '');
+	    }
+
+	    function isIosDevice() {
+	      const ua = navigator.userAgent || '';
+	      return /iPhone|iPod/i.test(ua);
+	    }
+
+	    function isIosSafariBrowser() {
+	      const ua = navigator.userAgent || '';
+	      return isIosDevice() && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(ua);
+	    }
+
+	    function isIosInstallGuidanceEligible() {
+	      return isIosSafariBrowser() && !isAndroidBrowser() && !isStandalone();
 	    }
 
 	    function isStandalone() {
@@ -36,13 +54,49 @@
 	      return dismissedAt && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
 	    }
 
+	    function recentlyDismissedIosGuidance() {
+	      const dismissedAt = Number(localStorage.getItem(IOS_DISMISSED_AT_KEY) || 0);
+	      return dismissedAt && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
+	    }
+
+	    function logInstallEvent(eventType, metadata = {}) {
+	      if (!window.currentUser?.businessId || window.currentView !== 'admin') return;
+	      try {
+	        window.logEvent?.(eventType, {
+	          source: 'pwa_install',
+	          metadata: {
+	            platform: isIosInstallGuidanceEligible() ? 'ios' : isAndroidBrowser() ? 'android' : 'other',
+	            userAgent: navigator.userAgent || '',
+	            ...metadata
+	          }
+	        });
+	      } catch {}
+	    }
+
+	    function logIosGuidanceShown(source) {
+	      const businessId = window.currentUser?.businessId || 'unknown';
+	      const key = `${IOS_SHOWN_KEY_PREFIX}${businessId}_${source}`;
+	      if (sessionStorage.getItem(key)) return;
+	      sessionStorage.setItem(key, '1');
+	      logInstallEvent('ios_install_guidance_shown', { source });
+	    }
+
 	    function syncInstallUi() {
 	      const panel = document.getElementById('settingsInstallAppPanel');
 	      const button = document.getElementById('settingsInstallAppButton');
 	      const status = document.getElementById('settingsInstallAppStatus');
-	      const canInstall = Boolean(deferredInstallPrompt) && isAndroidBrowser() && !isStandalone() && localStorage.getItem(INSTALLED_KEY) !== '1';
+	      const helper = document.getElementById('settingsInstallAppHelper');
+	      const androidCanInstall = Boolean(deferredInstallPrompt) && isAndroidBrowser() && !isStandalone() && localStorage.getItem(INSTALLED_KEY) !== '1';
+	      const iosCanShow = isIosInstallGuidanceEligible();
+	      const canInstall = androidCanInstall || iosCanShow;
 	      if (panel) panel.hidden = !canInstall;
 	      if (button) button.disabled = !canInstall;
+	      if (button) button.textContent = iosCanShow ? 'Install FlashFeedback' : 'Install FlashFeedback';
+	      if (helper) {
+	        helper.textContent = iosCanShow
+	          ? 'Add FlashFeedback to your iPhone Home Screen for quick access to your dashboard.'
+	          : 'Install FlashFeedback on this Android device for quicker access from your app drawer.';
+	      }
 	      if (status && !canInstall) status.textContent = '';
 	    }
 
@@ -73,6 +127,45 @@
 	      return true;
 	    }
 
+	    function setIosGuidanceOpen(open, source = 'dashboard') {
+	      const panel = document.getElementById('iosInstallGuidance');
+	      if (!panel) return false;
+	      if (!isIosInstallGuidanceEligible() || !window.currentUser?.businessId || window.currentView !== 'admin') {
+	        panel.hidden = true;
+	        panel.setAttribute('aria-hidden', 'true');
+	        return false;
+	      }
+	      panel.hidden = !open;
+	      panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+	      if (open) {
+	        iosGuidanceSource = source;
+	        syncInstallUi();
+	        logIosGuidanceShown(source);
+	      }
+	      return true;
+	    }
+
+	    function maybeShowIosGuidanceAfterDashboard() {
+	      if (iosGuidanceShownThisSession) return false;
+	      if (!window.__flashFeedbackDashboardReadyForInstall) return false;
+	      if (!window.currentUser?.businessId || window.currentView !== 'admin') return false;
+	      if (!isIosInstallGuidanceEligible() || recentlyDismissedIosGuidance()) return false;
+	      iosGuidanceShownThisSession = true;
+	      return setIosGuidanceOpen(true, 'dashboard');
+	    }
+
+	    function dismissIosGuidance() {
+	      localStorage.setItem(IOS_DISMISSED_AT_KEY, String(Date.now()));
+	      setIosGuidanceOpen(false);
+	      logInstallEvent('ios_install_guidance_dismissed', { source: iosGuidanceSource });
+	    }
+
+	    function openIosGuidanceFromSettings() {
+	      if (!isIosInstallGuidanceEligible()) return false;
+	      logInstallEvent('ios_settings_install_guidance_opened', { source: 'settings' });
+	      return setIosGuidanceOpen(true, 'settings');
+	    }
+
 	    async function maybePromptAfterDashboard() {
 	      if (!deferredInstallPrompt || promptedThisSession) return false;
 	      if (!window.__flashFeedbackDashboardReadyForInstall) return false;
@@ -99,7 +192,10 @@
 	    });
 
 	    window.maybePromptFlashFeedbackInstallAfterDashboard = maybePromptAfterDashboard;
-	    window.promptFlashFeedbackInstallFromSettings = () => promptInstall('settings');
+	    window.maybeShowFlashFeedbackIosInstallGuidanceAfterDashboard = maybeShowIosGuidanceAfterDashboard;
+	    window.promptFlashFeedbackInstallFromSettings = () => isIosInstallGuidanceEligible() ? openIosGuidanceFromSettings() : promptInstall('settings');
+	    window.dismissFlashFeedbackIosInstallGuidance = dismissIosGuidance;
+	    window.closeFlashFeedbackIosInstallGuidance = () => setIosGuidanceOpen(false);
 	    window.syncFlashFeedbackInstallUi = syncInstallUi;
 	    document.addEventListener('DOMContentLoaded', syncInstallUi);
 	  })();
@@ -3111,6 +3207,80 @@
 		  margin-top: 6px;
 		  font-size: 13px;
 		  color: var(--ff-text-muted);
+		}
+
+		.ios-install-guidance {
+		  position: fixed;
+		  left: 50%;
+		  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+		  z-index: 2100;
+		  width: min(420px, calc(100vw - 24px));
+		  transform: translateX(-50%);
+		  padding: 16px;
+		  border: 1px solid color-mix(in oklab, var(--ff-brand-1) 42%, var(--ff-border));
+		  border-radius: 12px;
+		  background: #0d1117;
+		  color: var(--ff-text);
+		  box-shadow: 0 18px 46px rgba(0,0,0,.36);
+		}
+
+		.ios-install-guidance[hidden] { display: none; }
+		.ios-install-guidance h3 {
+		  margin: 0 0 6px;
+		  color: var(--ff-text);
+		  font-size: 18px;
+		  line-height: 1.2;
+		}
+
+		.ios-install-guidance p {
+		  margin: 0;
+		  color: var(--ff-text-muted);
+		  font-size: 14px;
+		  line-height: 1.45;
+		}
+
+		.ios-install-steps {
+		  display: grid;
+		  gap: 8px;
+		  margin: 14px 0;
+		  padding: 0;
+		  list-style: none;
+		}
+
+		.ios-install-steps li {
+		  display: grid;
+		  grid-template-columns: 28px minmax(0, 1fr);
+		  gap: 10px;
+		  align-items: center;
+		  min-height: 36px;
+		  color: var(--ff-text);
+		  font-size: 14px;
+		  font-weight: 700;
+		}
+
+		.ios-install-step-icon {
+		  display: inline-grid;
+		  place-items: center;
+		  width: 28px;
+		  height: 28px;
+		  border-radius: 999px;
+		  background: rgba(167,139,250,.16);
+		  color: var(--ff-brand-1);
+		  font-weight: 900;
+		}
+
+		.ios-install-actions {
+		  display: flex;
+		  flex-wrap: wrap;
+		  gap: 10px;
+		  align-items: center;
+		  justify-content: flex-end;
+		  margin-top: 12px;
+		}
+
+		.ios-install-actions .btn {
+		  min-height: 40px;
+		  padding: 9px 14px;
 		}
 
 		.history-limit-card {
@@ -6683,7 +6853,7 @@
 				  <!-- App shortcut -->
 				  <div id="settingsInstallAppPanel" hidden style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:16px;margin-bottom:20px;">
 				    <h3 style="margin-bottom:8px;">App shortcut</h3>
-				    <div class="settings-helper" style="margin-bottom:12px;">Install FlashFeedback on this Android device for quicker access from your app drawer.</div>
+				    <div id="settingsInstallAppHelper" class="settings-helper" style="margin-bottom:12px;">Install FlashFeedback on this device for quicker dashboard access.</div>
 				    <button id="settingsInstallAppButton" class="btn" type="button" onclick="promptFlashFeedbackInstallFromSettings()">Install FlashFeedback</button>
 				    <span id="settingsInstallAppStatus" style="margin-left:10px;color:#4b5563;"></span>
 				  </div>
@@ -6795,6 +6965,20 @@
 				    <span style="margin-left:10px;color:#4b5563;">Use if a device is lost.</span>
 				  </div> -->
 				</section>
+
+				<div id="iosInstallGuidance" class="ios-install-guidance" role="dialog" aria-modal="false" aria-labelledby="iosInstallTitle" aria-describedby="iosInstallCopy" hidden aria-hidden="true">
+				  <h3 id="iosInstallTitle">Add FlashFeedback to your iPhone</h3>
+				  <p id="iosInstallCopy">Get quick access to your dashboard from your Home Screen, like an app.</p>
+				  <ol class="ios-install-steps">
+				    <li><span class="ios-install-step-icon" aria-hidden="true">1</span><span>Tap the Share button in your browser.</span></li>
+				    <li><span class="ios-install-step-icon" aria-hidden="true">2</span><span>Choose <strong>Add to Home Screen</strong>.</span></li>
+				    <li><span class="ios-install-step-icon" aria-hidden="true">3</span><span>Confirm <strong>Add</strong>.</span></li>
+				  </ol>
+				  <div class="ios-install-actions">
+				    <button id="iosInstallDismiss" class="btn" type="button" onclick="dismissFlashFeedbackIosInstallGuidance()">Not now</button>
+				    <button class="btn" type="button" onclick="closeFlashFeedbackIosInstallGuidance()">Got it</button>
+				  </div>
+				</div>
 
         </main>
 
@@ -9501,6 +9685,7 @@
 			hideLoader?.();
 			window.__flashFeedbackDashboardReadyForInstall = true;
 			setTimeout(() => window.maybePromptFlashFeedbackInstallAfterDashboard?.(), 700);
+			setTimeout(() => window.maybeShowFlashFeedbackIosInstallGuidanceAfterDashboard?.(), 900);
 			}
 
         async function logout() {
@@ -13836,6 +14021,7 @@
 		  submitFeedback,
 		  handleCustomerReplyRequestToggle,
 		  trackPostFeedbackEvent,
+		  logEvent,
 		  toggleView,
 		  openNavDrawer,
 		  closeNavDrawer,
