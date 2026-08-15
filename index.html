@@ -187,9 +187,19 @@
 	    }
 
 	    function openIosGuidanceFromSettings() {
-	      if (!isIosInstallGuidanceEligible()) return false;
+	      const status = document.getElementById('settingsInstallAppStatus');
+	      if (!isIosInstallGuidanceEligible()) {
+	        if (status) status.textContent = 'Open FlashFeedback in Safari on your iPhone to add it to your Home Screen.';
+	        return false;
+	      }
+	      if (!window.currentUser?.businessId || window.currentView !== 'admin') {
+	        if (status) status.textContent = 'Open your dashboard, then try again.';
+	        return false;
+	      }
 	      logInstallEvent('ios_settings_install_guidance_opened', { source: 'settings' });
-	      return setIosGuidanceOpen(true, 'settings');
+	      const opened = setIosGuidanceOpen(true, 'settings');
+	      if (!opened && status) status.textContent = 'Install guidance could not be opened right now.';
+	      return opened;
 	    }
 
 	    async function maybePromptAfterDashboard() {
@@ -9401,6 +9411,8 @@
 		  currentLocation = (business.default_location_id && locRows.some(l => l.id === business.default_location_id))
 			  ? business.default_location_id
 			  : (locRows?.[0]?.id || null);
+		  window.currentUser = currentUser;
+		  window.currentLocation = currentLocation;
 
 		
 		// 6) Render dashboard + UI
