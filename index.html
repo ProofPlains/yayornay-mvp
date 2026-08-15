@@ -24,7 +24,7 @@
 	    const IOS_SHOWN_KEY_PREFIX = 'ff_ios_install_guidance_shown_';
 	    let deferredInstallPrompt = null;
 	    let promptedThisSession = false;
-	    let iosGuidanceShownThisSession = false;
+	    let iosGuidanceShownBusinessId = null;
 	    let iosGuidanceSource = 'dashboard';
 
 	    function isAndroidBrowser() {
@@ -172,11 +172,12 @@
 	    }
 
 	    function maybeShowIosGuidanceAfterDashboard() {
-	      if (iosGuidanceShownThisSession) return false;
 	      if (!window.__flashFeedbackDashboardReadyForInstall) return false;
-	      if (!window.currentUser?.businessId || window.currentView !== 'admin') return false;
+	      const businessId = window.currentUser?.businessId || null;
+	      if (!businessId || window.currentView !== 'admin') return false;
+	      if (iosGuidanceShownBusinessId === businessId) return false;
 	      if (!isIosInstallGuidanceEligible() || recentlyDismissedIosGuidance()) return false;
-	      iosGuidanceShownThisSession = true;
+	      iosGuidanceShownBusinessId = businessId;
 	      return setIosGuidanceOpen(true, 'dashboard');
 	    }
 
