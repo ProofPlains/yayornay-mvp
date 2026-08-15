@@ -8345,6 +8345,7 @@
 
 		
 		var currentView = 'welcome';
+		window.currentView = currentView;
         var selectedSentiment = null;
         var currentLocation = 'main';
         var currentUser = null;
@@ -9671,6 +9672,7 @@
 
         function scheduleDashboardInstallPrompts() {
           if (!currentUser?.businessId || currentView !== 'admin') return;
+          window.currentView = currentView;
           window.__flashFeedbackDashboardReadyForInstall = true;
           [350, 900, 1800].forEach((delay) => {
             setTimeout(() => {
@@ -9691,6 +9693,7 @@
             document.body.classList.add('is-admin-shell');
             
             currentView = 'admin';
+            window.currentView = currentView;
             if (currentUser) window.demoAccount = null;
             
             var demoNotice = document.getElementById('demoNotice');
