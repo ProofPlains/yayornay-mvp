@@ -36,27 +36,53 @@
 	      return /iPhone|iPod/i.test(ua);
 	    }
 
-	    function isIosSafariBrowser() {
+	    function isSupportedIosBrowser() {
 	      const ua = navigator.userAgent || '';
-	      return isIosDevice() && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(ua);
+	      return isIosDevice() && /Safari|CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo|Orion/i.test(ua);
 	    }
 
 	    function isIosInstallGuidanceEligible() {
-	      return isIosSafariBrowser() && !isAndroidBrowser() && !isStandalone();
+	      return isSupportedIosBrowser() && !isAndroidBrowser() && !isStandalone();
 	    }
 
 	    function isStandalone() {
 	      return window.matchMedia?.('(display-mode: standalone)')?.matches || window.navigator.standalone === true;
 	    }
 
+	    function readLocalStorage(key) {
+	      try { return localStorage.getItem(key); } catch { return null; }
+	    }
+
+	    function writeLocalStorage(key, value) {
+	      try { localStorage.setItem(key, value); } catch {}
+	    }
+
+	    function removeLocalStorage(key) {
+	      try { localStorage.removeItem(key); } catch {}
+	    }
+
+	    function readSessionStorage(key) {
+	      try { return sessionStorage.getItem(key); } catch { return null; }
+	    }
+
+	    function writeSessionStorage(key, value) {
+	      try { sessionStorage.setItem(key, value); } catch {}
+	    }
+
 	    function recentlyDismissed() {
-	      const dismissedAt = Number(localStorage.getItem(DISMISSED_AT_KEY) || 0);
+	      const dismissedAt = Number(readLocalStorage(DISMISSED_AT_KEY) || 0);
 	      return dismissedAt && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
 	    }
 
 	    function recentlyDismissedIosGuidance() {
-	      const dismissedAt = Number(localStorage.getItem(IOS_DISMISSED_AT_KEY) || 0);
+	      const dismissedAt = Number(readLocalStorage(getIosDismissedKey()) || 0);
 	      return dismissedAt && Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
+	    }
+
+	    function getIosDismissedKey() {
+	      return window.currentUser?.businessId
+	        ? `${IOS_DISMISSED_AT_KEY}_${window.currentUser.businessId}`
+	        : IOS_DISMISSED_AT_KEY;
 	    }
 
 	    function logInstallEvent(eventType, metadata = {}) {
@@ -76,8 +102,8 @@
 	    function logIosGuidanceShown(source) {
 	      const businessId = window.currentUser?.businessId || 'unknown';
 	      const key = `${IOS_SHOWN_KEY_PREFIX}${businessId}_${source}`;
-	      if (sessionStorage.getItem(key)) return;
-	      sessionStorage.setItem(key, '1');
+	      if (readSessionStorage(key)) return;
+	      writeSessionStorage(key, '1');
 	      logInstallEvent('ios_install_guidance_shown', { source });
 	    }
 
@@ -86,7 +112,7 @@
 	      const button = document.getElementById('settingsInstallAppButton');
 	      const status = document.getElementById('settingsInstallAppStatus');
 	      const helper = document.getElementById('settingsInstallAppHelper');
-	      const androidCanInstall = Boolean(deferredInstallPrompt) && isAndroidBrowser() && !isStandalone() && localStorage.getItem(INSTALLED_KEY) !== '1';
+	      const androidCanInstall = Boolean(deferredInstallPrompt) && isAndroidBrowser() && !isStandalone() && readLocalStorage(INSTALLED_KEY) !== '1';
 	      const iosCanShow = isIosInstallGuidanceEligible();
 	      const canInstall = androidCanInstall || iosCanShow;
 	      if (panel) panel.hidden = !canInstall;
@@ -102,7 +128,7 @@
 
 	    async function promptInstall(source = 'dashboard') {
 	      if (!deferredInstallPrompt) return false;
-	      if (!isAndroidBrowser() || isStandalone() || localStorage.getItem(INSTALLED_KEY) === '1') return false;
+	      if (!isAndroidBrowser() || isStandalone() || readLocalStorage(INSTALLED_KEY) === '1') return false;
 
 	      const status = document.getElementById('settingsInstallAppStatus');
 	      const promptEvent = deferredInstallPrompt;
@@ -112,11 +138,11 @@
 	        promptEvent.prompt();
 	        const choice = await promptEvent.userChoice;
 	        if (choice?.outcome === 'accepted') {
-	          localStorage.setItem(INSTALLED_KEY, '1');
-	          localStorage.removeItem(DISMISSED_AT_KEY);
+	          writeLocalStorage(INSTALLED_KEY, '1');
+	          removeLocalStorage(DISMISSED_AT_KEY);
 	          if (status) status.textContent = 'FlashFeedback is installing.';
 	        } else {
-	          localStorage.setItem(DISMISSED_AT_KEY, String(Date.now()));
+	          writeLocalStorage(DISMISSED_AT_KEY, String(Date.now()));
 	          if (status && source === 'settings') status.textContent = 'No problem. You can install later from Chrome if the option appears again.';
 	        }
 	      } catch (error) {
@@ -155,7 +181,7 @@
 	    }
 
 	    function dismissIosGuidance() {
-	      localStorage.setItem(IOS_DISMISSED_AT_KEY, String(Date.now()));
+	      writeLocalStorage(getIosDismissedKey(), String(Date.now()));
 	      setIosGuidanceOpen(false);
 	      logInstallEvent('ios_install_guidance_dismissed', { source: iosGuidanceSource });
 	    }
@@ -170,7 +196,7 @@
 	      if (!deferredInstallPrompt || promptedThisSession) return false;
 	      if (!window.__flashFeedbackDashboardReadyForInstall) return false;
 	      if (!window.currentUser?.businessId || window.currentView !== 'admin') return false;
-	      if (isStandalone() || localStorage.getItem(INSTALLED_KEY) === '1' || recentlyDismissed()) return false;
+	      if (isStandalone() || readLocalStorage(INSTALLED_KEY) === '1' || recentlyDismissed()) return false;
 	      if (!isAndroidBrowser()) return false;
 
 	      promptedThisSession = true;
@@ -185,8 +211,8 @@
 	    });
 
 	    window.addEventListener('appinstalled', () => {
-	      localStorage.setItem(INSTALLED_KEY, '1');
-	      localStorage.removeItem(DISMISSED_AT_KEY);
+	      writeLocalStorage(INSTALLED_KEY, '1');
+	      removeLocalStorage(DISMISSED_AT_KEY);
 	      deferredInstallPrompt = null;
 	      syncInstallUi();
 	    });
@@ -9239,6 +9265,7 @@
 			renderBranding();
 			updateAvatarImage();
 			updateAccountMenuHeader();  
+			scheduleDashboardInstallPrompts();
 
 		  } catch (e) {
 			console.error(e);
@@ -9389,6 +9416,7 @@
 		  updateFeedback();
 		  setTimeout(maybeShowPendingReplyStatus, 300);
 		  setTimeout(openLinkedReplyRequest, 350);
+		  scheduleDashboardInstallPrompts();
         }
 
 		}
@@ -9640,6 +9668,17 @@
         function handleQrLocationChange() {
           resetQrSignUI({ scrollToQrStart: true });
         }
+
+        function scheduleDashboardInstallPrompts() {
+          if (!currentUser?.businessId || currentView !== 'admin') return;
+          window.__flashFeedbackDashboardReadyForInstall = true;
+          [350, 900, 1800].forEach((delay) => {
+            setTimeout(() => {
+              window.maybePromptFlashFeedbackInstallAfterDashboard?.();
+              window.maybeShowFlashFeedbackIosInstallGuidanceAfterDashboard?.();
+            }, delay);
+          });
+        }
 		
         function showAdminDashboard() {
             hideAllScreens();
@@ -9671,21 +9710,23 @@
 			const dashboardViewBusinessId = currentUser?.businessId || null;
 			const dashboardViewKey = dashboardViewBusinessId ? `ff_dashboard_view_logged_${dashboardViewBusinessId}` : '';
 			const dashboardViewPendingKey = dashboardViewBusinessId ? `ff_dashboard_view_pending_${dashboardViewBusinessId}` : '';
-			if (!isDashboardDemoContext() && dashboardViewKey && !sessionStorage.getItem(dashboardViewKey) && !sessionStorage.getItem(dashboardViewPendingKey)) {
-			  sessionStorage.setItem(dashboardViewPendingKey, '1');
-			  logEvent('dashboard_view').then((logged) => {
-			    sessionStorage.removeItem(dashboardViewPendingKey);
-			    if (logged) sessionStorage.setItem(dashboardViewKey, '1');
-			  });
-			}
+			try {
+			  if (!isDashboardDemoContext() && dashboardViewKey && !sessionStorage.getItem(dashboardViewKey) && !sessionStorage.getItem(dashboardViewPendingKey)) {
+			    sessionStorage.setItem(dashboardViewPendingKey, '1');
+			    logEvent('dashboard_view').then((logged) => {
+			      try {
+			        sessionStorage.removeItem(dashboardViewPendingKey);
+			        if (logged) sessionStorage.setItem(dashboardViewKey, '1');
+			      } catch {}
+			    });
+			  }
+			} catch {}
 
 			
 			// 👇 ensure we land at the very top on mobile/desktop
 			scrollToTop();
 			hideLoader?.();
-			window.__flashFeedbackDashboardReadyForInstall = true;
-			setTimeout(() => window.maybePromptFlashFeedbackInstallAfterDashboard?.(), 700);
-			setTimeout(() => window.maybeShowFlashFeedbackIosInstallGuidanceAfterDashboard?.(), 900);
+			scheduleDashboardInstallPrompts();
 			}
 
         async function logout() {
