@@ -5752,6 +5752,7 @@
 	  .sheet-backdrop[aria-hidden="false"]{display:block}
 	  .sheet{position:fixed;left:0;right:0;bottom:0;background:#1a1325;color:#e5e7eb;border-radius:18px 18px 0 0;box-shadow:0 20px 60px rgba(0,0,0,.5);transform:translateY(100%);transition:transform .22s ease-out;max-height:85vh;overflow:auto;z-index:51}
 	  .sheet.open{transform:translateY(0)}
+      .sheet[aria-hidden="true"]{visibility:hidden;pointer-events:none}
 	  .sheet .handle{width:44px;height:5px;border-radius:3px;background:#3b3350;margin:10px auto 6px}
 	  .sheet .inner{padding:16px 16px 20px}
 	  .sheet h2{margin:6px 0 10px;font-size:20px;color:#b88aff}
@@ -5828,6 +5829,114 @@
 	</style>
 
 	
+
+    <style id="ffPublicPresentation">
+      /* Public surfaces only: do not alter dashboard/customer/checkout styling. */
+      #welcomeScreen { max-width:1280px; padding:0 48px; border:0 !important; border-radius:0 !important; box-shadow:none !important; overflow:visible; }
+      #welcomeScreen .ff-landing { gap:0; min-width:0; }
+      #welcomeScreen .ff-nav { padding:24px 0; border-bottom:0; }
+      #welcomeScreen .ff-nav .brand-logo { height:64px; max-width:80px; }
+      #welcomeScreen .ff-nav .brand-title { font-size:32px; }
+      #welcomeScreen .ff-nav-actions .link-button { min-height:44px; font-size:15px; }
+      #welcomeScreen .ff-home-section { padding:76px 0; }
+      #welcomeScreen .ff-hero { grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:64px; padding:52px 0 88px; }
+      #welcomeScreen .ff-home-copy { gap:22px; min-width:0; }
+      #welcomeScreen h1 { font-size:clamp(40px,4.5vw,60px); line-height:1.08; letter-spacing:-.035em; text-transform:none; max-width:620px; }
+      #welcomeScreen h1 span { color:#c4a7ff; }
+      #welcomeScreen .ff-home-copy > p { font-size:18px; line-height:1.65; color:#c4c3cc; }
+      #welcomeScreen .ff-eyebrow { margin:0; font-size:12px !important; line-height:1.5; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#c4a7ff !important; }
+      #welcomeScreen .ff-microcopy { font-size:14px !important; color:#eee8fb !important; line-height:1.5; }
+      #welcomeScreen .ff-home-copy .ff-setup-note { font-size:13px; margin-top:-12px; }
+      #welcomeScreen .ff-section { gap:24px; border-color:rgba(167,139,250,.16); }
+      #welcomeScreen h2 { font-size:clamp(28px,3vw,38px); line-height:1.18; letter-spacing:-.025em; text-transform:none; max-width:720px; }
+      #welcomeScreen h3 { font-size:19px; line-height:1.4; margin:0 0 12px; }
+      #welcomeScreen p { margin:0; }
+      #welcomeScreen .ff-section-copy { font-size:17px; color:#bdbcc7; }
+      #welcomeScreen button:focus-visible, #pricingModal button:focus-visible, #pricingModal input:focus-visible { outline:3px solid #e0d2ff; outline-offset:4px; }
+      #welcomeScreen .btn-primary, #welcomeScreen .btn-secondary { min-height:48px; font-size:15px; }
+      #welcomeScreen .ff-plan-link { min-height:44px; }
+      #welcomeScreen figure { margin:0; min-width:0; }
+      #welcomeScreen .ff-customer-example { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+      #welcomeScreen figcaption, #welcomeScreen .ff-example-caption { font-size:13px; line-height:1.5; color:#bdbcc7; }
+      #welcomeScreen .ff-customer-example > figcaption, #welcomeScreen .ff-example-caption { text-align:center; }
+      #welcomeScreen .ff-customer-surface { padding:30px 24px; border:1px solid #514460; border-radius:20px; background:#18151e; box-shadow:0 20px 50px #0003; }
+      #welcomeScreen .ff-customer-surface h2 { font-size:25px; letter-spacing:-.02em; text-align:center; margin:10px 0; }
+      #welcomeScreen .ff-customer-surface > p { font-size:13px; line-height:1.6; color:#bdbcc7; text-align:center; }
+      #welcomeScreen .ff-customer-surface .ff-example-business { color:#c4a7ff; }
+      #welcomeScreen .ff-example-moods { display:flex; justify-content:space-between; gap:6px; margin:26px 0; }
+      #welcomeScreen .ff-example-moods span { display:grid; place-items:center; font-size:30px; border:1px solid #49414f; border-radius:12px; width:54px; height:58px; background:#25212b; }
+      #welcomeScreen .ff-customer-surface .ff-example-label { text-align:left; color:#eee8fb; }
+      #welcomeScreen .ff-example-label span { color:#bdbcc7; }
+      #welcomeScreen .ff-example-comment { border:1px solid #49414f; border-radius:8px; margin:8px 0 20px; padding:14px; color:#dfdce6; font-size:14px; line-height:1.6; }
+      #welcomeScreen .ff-customer-surface .ff-example-note { font-size:12px; }
+      #welcomeScreen .ff-simple-steps { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:40px; padding:0; margin:12px 0 0; list-style:none; counter-reset:public-step; }
+      #welcomeScreen .ff-simple-steps li::before { counter-increment:public-step; content:'0' counter(public-step); display:block; color:#c4a7ff; font-size:15px; font-weight:800; margin-bottom:16px; }
+      #welcomeScreen .ff-simple-steps p, #welcomeScreen .ff-benefits p { font-size:15px; line-height:1.7; color:#bdbcc7; }
+      #welcomeScreen .ff-benefits { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:40px; margin-top:12px; }
+      #welcomeScreen .ff-benefits article { border-left:2px solid #8063ad; padding-left:20px; }
+      #welcomeScreen .ff-product-section { grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:64px; align-items:center; }
+      #welcomeScreen .ff-product-copy, #welcomeScreen .ff-free-copy { display:grid; gap:20px; }
+      #welcomeScreen .ff-dashboard-example { border:1px solid #514460; border-radius:16px; background:#18151e; padding:24px; }
+      #welcomeScreen .ff-dashboard-example figcaption { color:#eee8fb; font-size:18px; font-weight:700; padding-bottom:8px; }
+      #welcomeScreen .ff-dashboard-example figcaption span { display:block; font-size:12px; font-weight:400; color:#bdbcc7; margin-top:4px; }
+      #welcomeScreen .ff-example-response { display:grid; grid-template-columns:32px minmax(0,1fr); gap:12px; padding:20px 0; border-bottom:1px solid #39313f; }
+      #welcomeScreen .ff-example-response:last-child { border:0; padding-bottom:0; }
+      #welcomeScreen .ff-example-response > span { font-size:25px; }
+      #welcomeScreen .ff-example-response strong { font-size:14px; }
+      #welcomeScreen .ff-example-response p { font-size:14px; line-height:1.6; margin:6px 0; color:#dfdce6; }
+      #welcomeScreen .ff-example-response small { font-size:12px; color:#bdbcc7; }
+      #welcomeScreen .ff-audience h2 { font-size:28px; }
+      #welcomeScreen .ff-audience ul { display:flex; flex-wrap:wrap; gap:16px 32px; padding:0; margin:0; list-style:none; color:#dfdce6; font-size:14px; }
+      #welcomeScreen .ff-audience li:first-child { color:#c4a7ff; font-weight:700; }
+      #welcomeScreen .ff-free-section { grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
+      #welcomeScreen .ff-free-section h2 { margin-top:16px; }
+      #welcomeScreen .ff-free-promise { font-weight:700; font-size:18px; }
+      #welcomeScreen .ff-free-copy button { width:fit-content; }
+      #welcomeScreen .ff-final-cta { background:linear-gradient(120deg,#30223f,#211b2a); border:0; border-radius:20px; box-shadow:none; padding:64px 24px; margin:0 0 40px; text-align:center; justify-items:center; gap:26px; }
+      #welcomeScreen .ff-final-cta-actions { justify-content:center; }
+      #pricingModal.is-public .pricing-modal-card { width:min(1040px,100%); padding:32px; }
+      #pricingModal.is-public .pricing-modal-close { flex:0 0 44px; width:44px; height:44px; }
+      #pricingModal.is-public .plan-options { gap:20px; margin-top:28px; }
+      #pricingModal.is-public .plan-option { align-content:start; gap:16px; padding:24px; }
+      #pricingModal.is-public .plan-option-title { font-size:22px; }
+      #pricingModal.is-public .plan-option-price { font-size:25px; line-height:1.3; color:#f2edf9; }
+      #pricingModal.is-public .plan-option-note { min-height:100px; color:#c4c0ce; font-size:14px; }
+      #pricingModal.is-public .plan-feature-list { font-size:14px; gap:12px; color:#d4cfde; padding-top:16px; border-top:1px solid #49414f; }
+      #pricingModal.is-public .plan-option:first-child { border-color:#a78bfa; }
+      #pricingModal .plan-free-reassurance { color:#dfcfff; font-size:13px; line-height:1.5; margin-top:6px; }
+      #pricingModal.is-public .pricing-modal-actions > button:first-child { background:transparent !important; color:#c4a7ff !important; border:1px solid #77638f; }
+      @media(max-width:900px) {
+        #welcomeScreen { padding:0 28px; }
+        #welcomeScreen .ff-hero, #welcomeScreen .ff-product-section { gap:32px; }
+        #welcomeScreen .ff-simple-steps, #welcomeScreen .ff-benefits { gap:24px; }
+      }
+      @media(max-width:700px) {
+        #welcomeScreen { padding:0 20px; }
+        #welcomeScreen .ff-nav { gap:8px; padding:18px 0; }
+        #welcomeScreen .ff-nav .brand-logo { height:48px; max-width:56px; }
+        #welcomeScreen .ff-nav .brand-title { font-size:25px; }
+        #welcomeScreen .ff-nav-actions .link-button { font-size:14px; }
+        #welcomeScreen .ff-home-section { padding:48px 0; }
+        #welcomeScreen .ff-hero { grid-template-columns:minmax(0,1fr); padding:28px 0 48px; gap:36px; }
+        #welcomeScreen h1 { font-size:40px; }
+        #welcomeScreen .ff-home-copy > p { font-size:16px; }
+        #welcomeScreen .ff-simple-steps, #welcomeScreen .ff-benefits, #welcomeScreen .ff-product-section, #welcomeScreen .ff-free-section { grid-template-columns:minmax(0,1fr); gap:28px; }
+        #welcomeScreen .ff-simple-steps li { position:relative; padding-left:40px; }
+        #welcomeScreen .ff-simple-steps li::before { position:absolute; left:0; top:3px; }
+        #welcomeScreen .ff-customer-surface { padding:24px 18px; }
+        #welcomeScreen .ff-example-moods span { font-size:27px; height:50px; }
+        #welcomeScreen .ff-dashboard-example { padding:20px; }
+        #welcomeScreen .ff-audience ul { gap:14px; display:grid; grid-template-columns:1fr 1fr; }
+        #welcomeScreen .ff-final-cta { padding:40px 20px; }
+        #welcomeScreen .ff-final-cta h2 br { display:none; }
+        #pricingModal.is-public .pricing-modal-card { padding:20px; margin:0 auto; }
+        #pricingModal.is-public .plan-options { grid-template-columns:1fr; }
+        #pricingModal.is-public .plan-option-note { min-height:0; }
+        #pricingModal.is-public .pricing-modal-actions { justify-content:stretch; }
+        #pricingModal.is-public .pricing-modal-actions button { flex:1; }
+      }
+    </style>
+
 </head>
 <body>
     <!-- Welcome Screen -->
@@ -5845,129 +5954,87 @@
 				</div>
 			</nav>
 
-			<section class="ff-home-section ff-hero">
-				<div class="ff-home-copy">
-					<h1>Catch customer problems before they become bad reviews.</h1>
-					<p>Private QR feedback for restaurants, local businesses and online sellers. Customers scan, tap an emoji, and tell you what went wrong before they disappear, return the product, or complain publicly.</p>
-					<div class="ff-hero-cta">
-						<button class="btn-primary" onclick="showSignup()">Get Started Free</button>
-						<button class="btn-secondary" onclick="showDemo()">Try Demo First</button>
-					</div>
-					<p class="ff-microcopy">Free plan available. No card needed. Setup in minutes.</p>
-					<button class="ff-plan-link" type="button" onclick="openPricingModal('public-plans')">Compare plans</button>
-					<div class="ff-chips">
-						<div class="ff-chip">Works on any phone</div>
-						<div class="ff-chip">No customer account needed</div>
-						<div class="ff-chip">Private to your business</div>
-					</div>
-				</div>
-				<div class="ff-home-panel" aria-label="FlashFeedback customer journey">
-					<div class="ff-home-kicker">From customer moment to private insight</div>
-					<div class="ff-home-flow">
-						<div class="ff-flow-row"><img class="ff-qr-mark" src="assets/landing-qr-sample.png" alt="" aria-hidden="true"><p><span class="ff-step-label">1. Customer scans</span><br>At the table, counter, waiting area, takeaway bag, or inside an online order.</p></div>
-						<div class="ff-emoji-step">
-							<div class="ff-step-label">2. Customer taps a mood</div>
-							<div class="emoji-row" aria-label="Emoji feedback choices">&#128525; &#128522; &#128528; &#128544; &#128545;</div>
-						</div>
-						<div class="ff-step-label">3. You see private feedback</div>
-						<div class="ff-feedback-row"><span>&#128544;</span><p class="ff-feedback-main"><strong class="ff-feedback-label">Packaging damaged</strong>"The corner was crushed when it arrived."</p><small>Just now</small></div>
-						<div class="ff-feedback-row"><span>&#128528;</span><p class="ff-feedback-main"><strong class="ff-feedback-label">Wait time</strong>"I waited longer than expected."</p><small>8 min ago</small></div>
-						<div class="ff-feedback-row"><span>&#128525;</span><p class="ff-feedback-main"><strong class="ff-feedback-label">Great service</strong>"The team was lovely today."</p><small>14 min ago</small></div>
-					</div>
-				</div>
-			</section>
 
-			<section class="ff-home-section ff-section">
-				<h2>One simple feedback system. Multiple ways to use it.</h2>
-				<p class="ff-section-copy">Use FlashFeedback anywhere the customer experience happens in person: tables, counters, bill folders, waiting areas, collection points and service desks.</p>
-				<div class="ff-grid-3">
-					<div class="ff-tile">
-						<h3>Printed QR stickers</h3>
-						<p>Order ready-to-use QR stickers for the places customers naturally pause.</p>
-					</div>
-					<div class="ff-tile">
-						<h3>QR stickers</h3>
-						<p>Use them on tables, bill folders, counters, waiting areas, takeaway bags and service desks.</p>
-					</div>
-					<div class="ff-tile">
-						<h3>DIY options</h3>
-						<p>Print signs yourself or download the QR image for screens, menus, messages and social posts.</p>
-					</div>
-				</div>
-			</section>
+            <section class="ff-home-section ff-hero" aria-labelledby="landingTitle">
+                <div class="ff-home-copy">
+                    <p class="ff-eyebrow">Quick, private customer feedback</p>
+                    <h1 id="landingTitle">Catch problems before they become <span>bad reviews.</span></h1>
+                    <p>Unhappy customers don't always complain directly. FlashFeedback gives them a quick, private way to tell you first.</p>
+                    <div class="ff-hero-cta">
+                        <button class="btn-primary" type="button" onclick="showSignup()">Get Started Free</button>
+                        <button class="btn-secondary" type="button" onclick="showDemo()">Try Demo</button>
+                    </div>
+                    <p class="ff-microcopy">Free forever. No credit card required.</p>
+                    <p class="ff-setup-note">Set up in minutes. Print your QR and you're ready to listen.</p>
+                </div>
+                <figure class="ff-customer-example" aria-label="Example customer feedback screen">
+                    <figcaption>Your customer's side of the conversation</figcaption>
+                    <div class="ff-customer-surface">
+                        <p class="ff-example-business">Example café</p>
+                        <h2>How was your experience?</h2>
+                        <p>Please rate your experience with us today</p>
+                        <div class="ff-example-moods" role="img" aria-label="Five ratings, from very happy to very unhappy">
+                            <span>😍</span><span>😊</span><span>😐</span><span>😠</span><span>😡</span>
+                        </div>
+                        <p class="ff-example-label">Any additional feedback? <span>(optional)</span></p>
+                        <div class="ff-example-comment">The coffee was lovely, but we waited a while to order.</div>
+                        <p class="ff-example-note">No customer account required. Feedback stays private.</p>
+                    </div>
+                    <p class="ff-example-caption">Scan → tap a rating → optionally say more.</p>
+                </figure>
+            </section>
 
-			<section class="ff-home-section ff-section">
-				<h2>Most unhappy customers never tell you. They just leave.</h2>
-				<div class="ff-grid-3">
-					<div class="ff-quote-card">"Service was slow, but I didn't want to complain."</div>
-					<div class="ff-quote-card">"The packaging arrived damaged, but I didn't bother messaging."</div>
-					<div class="ff-quote-card">"I'll just leave a bad review later."</div>
-				</div>
-				<p class="ff-section-copy">FlashFeedback gives customers a private, low-friction way to speak up while you still have a chance to fix the problem.</p>
-			</section>
+            <section class="ff-home-section ff-section" aria-labelledby="landingHow">
+                <p class="ff-eyebrow">How it works</p>
+                <h2 id="landingHow">A few seconds for them.<br>A clearer picture for you.</h2>
+                <ol class="ff-simple-steps">
+                    <li><h3>Put your QR where customers see it</h3><p>Print a sign, download your QR, or order stickers for your counter, tables or reception.</p></li>
+                    <li><h3>They rate their experience</h3><p>One scan, one rating and an optional comment. No account and no long survey.</p></li>
+                    <li><h3>You see the feedback privately</h3><p>Read responses in your dashboard and notice the experiences that need attention.</p></li>
+                </ol>
+            </section>
 
-			<section class="ff-home-section ff-section">
-				<h2>From scan to insight in seconds.</h2>
-				<div class="ff-steps">
-					<div class="ff-step"><h3>Create your free account</h3><p>Set up your business and first feedback flow in minutes.</p></div>
-					<div class="ff-step"><h3>Generate your QR code</h3><p>Create the code for the location or touchpoint you want to track.</p></div>
-					<div class="ff-step"><h3>Choose how to use it</h3><p>Order QR stickers, or print and download from your dashboard for free.</p></div>
-					<div class="ff-step"><h3>See feedback privately</h3><p>Customers tap an emoji, add an optional comment, and the response lands in your dashboard.</p></div>
-				</div>
-			</section>
+            <section class="ff-home-section ff-section" aria-labelledby="landingBenefits">
+                <p class="ff-eyebrow">Make it easier to speak up</p>
+                <h2 id="landingBenefits">Hear it while you can still help.</h2>
+                <div class="ff-benefits">
+                    <article><h3>Hear what goes unsaid</h3><p>Give customers a private way to share what they might not say face-to-face.</p></article>
+                    <article><h3>Catch problems early</h3><p>Read comments and receive feedback alerts, so poor experiences are easier to spot.</p></article>
+                    <article><h3>Give customers a reason to return</h3><p>Use what you hear to put small problems right and keep doing what customers love.</p></article>
+                </div>
+            </section>
 
-			<section class="ff-home-section ff-section">
-				<h2>See what customers are trying to tell you.</h2>
-				<div class="ff-dashboard-mock" aria-label="Example private feedback dashboard">
-					<div class="ff-dashboard-top">
-						<div>
-							<div class="ff-dashboard-label">Recent private feedback</div>
-							<div class="ff-home-flow">
-								<div class="ff-dashboard-row"><span>&#128544;</span><p><strong>Packaging issue</strong><br>Box arrived crushed on one side.</p><small>2 min ago</small></div>
-								<div class="ff-dashboard-row"><span>&#128528;</span><p><strong>Wait time</strong><br>Collected order took longer than expected.</p><small>18 min ago</small></div>
-								<div class="ff-dashboard-row"><span>&#128522;</span><p><strong>Helpful team</strong><br>Staff sorted my question quickly.</p><small>41 min ago</small></div>
-								<div class="ff-dashboard-row"><span>&#128525;</span><p><strong>Great service</strong><br>Friendly, quick and easy.</p><small>1 hr ago</small></div>
-							</div>
-						</div>
-						<div class="ff-score-card">
-							<strong>71/100</strong>
-							<span>Overall mood score</span>
-						</div>
-					</div>
-				</div>
-			</section>
+            <section class="ff-home-section ff-section ff-product-section" aria-labelledby="landingProduct">
+                <div class="ff-product-copy">
+                    <p class="ff-eyebrow">Your private dashboard</p>
+                    <h2 id="landingProduct">See the experience behind the rating.</h2>
+                    <p class="ff-section-copy">See customer ratings, read their comments and know which location they came from. Spot what needs attention and what your team is getting right.</p>
+                    <button class="ff-plan-link" type="button" onclick="showDemo()">Explore the demo</button>
+                </div>
+                <figure class="ff-dashboard-example">
+                    <figcaption>Recent feedback <span>Illustrative café responses</span></figcaption>
+                    <div class="ff-example-response"><span aria-label="Unhappy">😠</span><div><strong>Unhappy</strong><p>We waited a while before anyone took our order.</p><small>Main café · Today, 10:42</small></div></div>
+                    <div class="ff-example-response"><span aria-label="Loved it">😍</span><div><strong>Loved it</strong><p>Lovely coffee and a really welcoming team.</p><small>Main café · Today, 10:18</small></div></div>
+                    <div class="ff-example-response"><span aria-label="Neutral">😐</span><div><strong>Neutral</strong><p>A little noisy, but the food was good.</p><small>Main café · Today, 09:56</small></div></div>
+                </figure>
+            </section>
 
-			<section class="ff-home-section ff-section">
-				<h2>Private feedback first. Google reviews when the moment is right.</h2>
-				<p class="ff-section-copy">Add a Google review link for each location and FlashFeedback can offer a gentle review invitation after feedback is submitted. You still capture the private response first, keep control by location, and customers never need an account to share what happened.</p>
-				<div class="ff-chips">
-					<div class="ff-chip">Per-location Google links</div>
-					<div class="ff-chip">Private response captured first</div>
-					<div class="ff-chip">Gentle optional invitation</div>
-					<div class="ff-chip">Customer-safe tracking</div>
-				</div>
-			</section>
+            <section class="ff-home-section ff-section ff-audience" aria-labelledby="landingAudience">
+                <h2 id="landingAudience">For the places people experience in person.</h2>
+                <p class="ff-section-copy">From the morning coffee to the next appointment, make it easy to tell you how it went.</p>
+                <ul><li>Restaurants &amp; cafés</li><li>Salons &amp; clinics</li><li>Shops &amp; local services</li><li>Gyms &amp; studios</li></ul>
+            </section>
 
-			<section class="ff-home-section ff-section">
-				<h2>Built for businesses that need fast, honest feedback.</h2>
-				<div class="ff-grid-4">
-					<div class="ff-persona-card"><h3>Restaurants &amp; cafes</h3><p>Catch service, wait time and food issues before guests leave.</p></div>
-					<div class="ff-persona-card"><h3>Salons &amp; clinics</h3><p>Give clients a quiet way to flag experience or appointment problems.</p></div>
-					<div class="ff-persona-card"><h3>Shops &amp; local services</h3><p>Learn what happened at the counter, checkout or collection point.</p></div>
-					<div class="ff-persona-card"><h3>Gyms &amp; studios</h3><p>Capture quick feedback at reception, changing areas, class exits or consultation spaces.</p></div>
-				</div>
-			</section>
+            <section class="ff-home-section ff-section ff-free-section" aria-labelledby="landingPlans">
+                <div><p class="ff-eyebrow">A useful Free plan</p><h2 id="landingPlans">Start free.<br>Upgrade when you need more.</h2></div>
+                <div class="ff-free-copy"><p class="ff-free-promise">Free forever. No credit card required.</p><p class="ff-section-copy" id="landingFreeFeatures"></p><button class="btn-secondary" type="button" onclick="openPricingModal('public-plans')">Compare Free, Growth &amp; Pro</button></div>
+            </section>
 
-			<section class="ff-home-section ff-final-cta">
-				<h2>Start collecting private feedback today.</h2>
-				<p class="ff-section-copy">Create your first QR code in minutes. Order stickers, print signs yourself, or download the QR image for digital use.</p>
-				<div class="ff-final-cta-actions">
-					<button class="btn-primary" onclick="showSignup()">Get Started Free</button>
-					<button class="btn-secondary" onclick="showDemo()">Try Demo First</button>
-				</div>
-				<button class="ff-plan-link" type="button" onclick="openPricingModal('public-plans')">Compare plans</button>
-				<p class="ff-microcopy">Free plan available. No card needed.</p>
-			</section>
+            <section class="ff-home-section ff-final-cta" aria-labelledby="landingFinal">
+                <h2 id="landingFinal">Catch the feedback customers <br>don't say out loud.</h2>
+                <div class="ff-final-cta-actions"><button class="btn-primary" type="button" onclick="showSignup()">Get Started Free</button></div>
+                <p class="ff-microcopy">Free forever. No credit card required.</p>
+            </section>
 
 			<section class="ff-hero">
 				<div>
@@ -7145,7 +7212,10 @@
 			    productionPriceId: 'price_1TabHQFNq4Xp479bH5NeGLYu'
 			  }
 			};
-			let pricingModalContext = 'signup';
+			const landingFreeFeatures = document.getElementById('landingFreeFeatures');
+            if (landingFreeFeatures) landingFreeFeatures.textContent = PRICING_TIERS.free.features.join(' · ') + '.';
+            let pricingModalContext = 'signup';
+            let pricingModalReturnFocus = null;
 			let pricingModalSelectedTier = 'free';
 			let pricingModalSelectedLocations = new Set();
 			let pricingModalPendingAction = null;
@@ -7371,6 +7441,7 @@
 			  const container = document.getElementById('pricingModalOptions');
 			  if (!container) return;
 			  const isPublicReadOnly = pricingModalContext === 'public-plans';
+              const publicSummaries = { free: 'For getting started at one location.', growth: 'For growing businesses that need more locations, team access and customer replies.', pro: 'For larger businesses with more locations and a bigger team.' };
 			  container.setAttribute('role', isPublicReadOnly ? 'list' : 'radiogroup');
 			  container.setAttribute('aria-label', isPublicReadOnly ? 'Plan comparison' : 'Pricing plans');
 			  const currentTierKey = isPricingModalSignupContext() || isPublicReadOnly ? null : (currentUser?.pricingTier || 'free');
@@ -7394,6 +7465,7 @@
 			    const features = (tier.features || [])
 			      .map((feature) => typeof feature === 'string' ? { id: null, label: feature } : feature)
 			      .filter((feature) => !(feature.id === 'starter_pack' && suppressStarterPack))
+                  .filter((feature) => !isPublicReadOnly || !Object.values(PRICING_TIERS).every((plan) => plan.features.includes(feature.label)))
 			      .map((feature) => `<li>${escapePricingHtml(feature.label)}</li>`).join('');
 			    const status = tier.key === currentTierKey
 			      ? '<span class="plan-option-status">Current plan</span>'
@@ -7406,7 +7478,8 @@
 			        <strong class="plan-option-title">${tier.label}</strong>
 			        ${status}
 			        <span class="plan-option-price">${tier.priceLabel}</span>
-			        <span class="plan-option-note">${tier.summary}</span>
+			        <span class="plan-option-note">${isPublicReadOnly ? publicSummaries[tier.key] : tier.summary}
+                    ${isPublicReadOnly && tier.key === 'free' ? '<span class="plan-free-reassurance">Free forever. No credit card required.</span>' : ''}</span>
 			        <ul class="plan-feature-list">${features}</ul>
 			      </${tagName}>
 			    `;
@@ -7511,8 +7584,10 @@
 
 			function openPricingModal(context = 'signup') {
 			  pricingModalContext = context;
+              pricingModalReturnFocus = document.activeElement;
 			  const modal = document.getElementById('pricingModal');
-			  const title = document.getElementById('pricingModalTitle');
+			  modal?.classList.toggle('is-public', context === 'public-plans');
+              const title = document.getElementById('pricingModalTitle');
 			  const intro = document.getElementById('pricingModalIntro');
 			  const continueBtn = document.getElementById('pricingModalContinue');
 			  const currentTier = isPricingModalSignupContext(context) || context === 'public-plans'
@@ -7553,7 +7628,7 @@
 			        : 'Upgrade / Change Plan';
 			  if (intro) {
 			    intro.textContent = context === 'public-plans'
-			      ? 'See what each plan includes. You can choose a plan when you create your account.'
+			      ? 'Start free. Upgrade when you need more. All plans include a private feedback dashboard and QR code generation.'
 			      : currentUser?.subscriptionComped && !isPricingModalSignupContext(context)
 			      ? 'This complimentary plan is managed by FlashFeedback support.'
 			      : context === 'limit'
@@ -7577,13 +7652,14 @@
 			  if (continueBtn) {
 			    const enterpriseOnly = !isPricingModalSignupContext(context) && context !== 'public-plans' && currentTier === 'pro' && (context === 'limit' || context === 'team-limit');
 			    continueBtn.style.display = (currentUser?.subscriptionComped && !isPricingModalSignupContext(context) && context !== 'public-plans') || enterpriseOnly ? 'none' : '';
-			    continueBtn.textContent = context === 'signup-submit' ? 'Create account' : context === 'public-plans' ? 'Sign Up' : 'Continue';
+			    continueBtn.textContent = context === 'signup-submit' ? 'Create account' : context === 'public-plans' ? 'Get Started Free' : 'Continue';
 			  }
 			  renderPricingModalOptions();
 			  loadSubscriptionPrices();
 			  modal?.classList.add('open');
 			  modal?.setAttribute('aria-hidden', 'false');
 			  resetOpenedDialogScroll(modal);
+              modal?.querySelector('.pricing-modal-close')?.focus();
 			}
 
 			function closePricingModal() {
@@ -7591,6 +7667,7 @@
 			  modal?.classList.remove('open');
 			  modal?.setAttribute('aria-hidden', 'true');
 			  pricingModalPendingAction = null;
+              if (pricingModalReturnFocus?.isConnected) pricingModalReturnFocus.focus();
 			}
 
 			async function confirmPricingModal() {
@@ -14586,7 +14663,15 @@
 		  modal?.addEventListener('click', (e) => {
 		    if (e.target === modal) closeCommentModal(); // click outside card
 		  });
-		  pricingModal?.addEventListener('click', (e) => {
+		  pricingModal?.addEventListener('keydown', (e) => {
+                if (e.key !== 'Tab' || !pricingModal.classList.contains('open')) return;
+                const focusable = [...pricingModal.querySelectorAll('button, input, a[href], select, textarea, [tabindex="0"]')]
+                  .filter((el) => !el.disabled && el.getClientRects().length);
+                const first = focusable[0], last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+              });
+              pricingModal?.addEventListener('click', (e) => {
 		    if (e.target === pricingModal) closePricingModal();
 		  });
 		  document.addEventListener('keydown', (e) => {
