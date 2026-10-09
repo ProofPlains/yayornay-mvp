@@ -6,7 +6,96 @@
 	<meta http-equiv="Expires" content="0"> <!-- Prevent caching of the HTML document so users always fetch the latest -->
 	<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlashFeedback - Instant Customer Feedback with QR Codes</title>
+    <title>FlashFeedback | Private Customer Feedback with QR Codes</title>
+    <meta name="description" content="Collect quick, private customer feedback with QR codes. Catch problems early and view responses in one dashboard. Start free with no credit card required.">
+    <link id="ffCanonical" rel="canonical" href="https://flashfeedback.co.uk/">
+    <meta property="og:title" content="FlashFeedback | Private Customer Feedback with QR Codes">
+    <meta property="og:description" content="Catch problems before they become bad reviews. Collect quick, private feedback with QR codes. Start free with no credit card required.">
+    <meta property="og:url" content="https://flashfeedback.co.uk/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FlashFeedback">
+    <meta property="og:locale" content="en_GB">
+    <meta property="og:image" content="https://flashfeedback.co.uk/assets/pwa-icon-512.png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:image:alt" content="FlashFeedback lightning bolt logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="FlashFeedback | Private Customer Feedback with QR Codes">
+    <meta name="twitter:description" content="Catch problems before they become bad reviews. Collect quick, private feedback with QR codes. Start free with no credit card required.">
+    <meta name="twitter:image" content="https://flashfeedback.co.uk/assets/pwa-icon-512.png">
+    <meta name="twitter:image:alt" content="FlashFeedback lightning bolt logo">
+    <script id="ffPublicSchema" type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://flashfeedback.co.uk/#organization",
+          "name": "FlashFeedback",
+          "url": "https://flashfeedback.co.uk/",
+          "logo": "https://flashfeedback.co.uk/assets/pwa-icon-512.png"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://flashfeedback.co.uk/#website",
+          "name": "FlashFeedback",
+          "url": "https://flashfeedback.co.uk/",
+          "publisher": { "@id": "https://flashfeedback.co.uk/#organization" },
+          "inLanguage": "en-GB"
+        }
+      ]
+    }
+    </script>
+    <script>
+      // GitHub Pages serves identical HTML for query variants. Run before app/CDN
+      // dependencies so application links receive noindex even if app boot fails.
+      // This is crawler guidance, never an access-control or privacy boundary.
+      (function setupSearchMetadata() {
+        const canonical = document.getElementById('ffCanonical');
+        const schema = document.getElementById('ffPublicSchema');
+        const homeTitle = document.title;
+        const robots = document.createElement('meta');
+        robots.name = 'robots';
+        robots.content = 'noindex, nofollow';
+        let marketingView = true;
+
+        function isMarketingUrl() {
+          if (!['/', '/index.html'].includes(window.location.pathname)) return false;
+          // Tracking-only URLs are homepage duplicates. Unknown parameters default
+          // to noindex; deliberately review new marketing parameters before adding.
+          const trackingKeys = new Set(['utm_source', 'utm_medium', 'utm_campaign',
+            'utm_term', 'utm_content', 'utm_id', 'gclid', 'dclid', 'fbclid', 'msclkid']);
+          const params = new URLSearchParams(window.location.search);
+          if ([...params.keys()].some(key => !trackingKeys.has(key))) return false;
+          return !window.location.hash || ['#', '#landingTitle', '#landingHow',
+            '#landingBenefits', '#landingProduct', '#landingAudience', '#landingPlans',
+            '#landingFinal'].includes(window.location.hash);
+        }
+
+        // Keep application arrivals excluded if auth/payment code later cleans URL.
+        const applicationArrival = !isMarketingUrl();
+        window.setFlashFeedbackSearchView = function(isMarketing) {
+          marketingView = isMarketing;
+          const indexable = marketingView && !applicationArrival && isMarketingUrl();
+          if (indexable) {
+            robots.remove();
+            if (!canonical.isConnected) document.head.appendChild(canonical);
+            if (!schema.isConnected) document.head.appendChild(schema);
+            document.title = homeTitle;
+          } else {
+            if (!robots.isConnected) document.head.appendChild(robots);
+            canonical.remove();
+            schema.remove();
+            document.title = 'FlashFeedback';
+          }
+        };
+        window.addEventListener('popstate', () => window.setFlashFeedbackSearchView(marketingView));
+        window.addEventListener('hashchange', () => window.setFlashFeedbackSearchView(marketingView));
+        window.setFlashFeedbackSearchView(true);
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/png" href="https://flashfeedback.co.uk/Favicon.png">
 	<link rel="manifest" href="/manifest.webmanifest">
 	<meta name="theme-color" content="#212121">
@@ -675,7 +764,7 @@
 		  padding: 4px 0 8px;
 		}
 
-		.ff-hero h1 {
+		.ff-hero h1, .ff-hero > div > h2 {
 		  max-width: 760px;
 		  font-size: clamp(36px, 9vw, 68px);
 		  line-height: 0.96;
@@ -6038,7 +6127,7 @@
 
 			<section class="ff-hero">
 				<div>
-					<h1>CATCH PROBLEMS BEFORE THEY BECOME BAD REVIEWS.</h1>
+					<h2>CATCH PROBLEMS BEFORE THEY BECOME BAD REVIEWS.</h2>
 					<p>Most unhappy customers don’t complain — they just don’t come back. <br>
 						FlashFeedback makes it easy to collect private, instant feedback with a QR code.</p>
 					<div class="ff-hero-cta">
@@ -6051,7 +6140,7 @@
 				<div class="ff-preview">
 					<div class="preview-card">
 						<h3>1. Customer scans your QR code</h3>
-						<img class="qr-placeholder" SRC="QR%20to%20Home.png">
+						<img class="qr-placeholder" src="QR%20to%20Home.png" alt="QR code linking to the FlashFeedback homepage" width="500" height="500" loading="lazy">
 					</div>
 					<div class="preview-card">
 						<h3>2. They tap an emoji in seconds</h3>
@@ -6804,7 +6893,7 @@
 					        </div>
 					        <div id="qrPrintLayoutPreview" class="qr-print-preview" data-layout="single" aria-live="polite">
 					          <div class="qr-print-preview-sheet" aria-hidden="true">
-					            <span class="qr-print-preview-card"><img id="qrPrintPreviewImage" alt=""></span>
+					            <span class="qr-print-preview-card"><img id="qrPrintPreviewImage" alt="Preview of your printable QR sign"></span>
 					          </div>
 					          <div class="qr-print-preview-copy">
 					            <strong id="qrPrintLayoutPreviewTitle">One larger sign</strong>
@@ -6819,7 +6908,7 @@
 					        <p class="qr-diy-option-copy">Save the sign as an image to use digitally, email to your team, or print later.</p>
 					        <div class="qr-download-preview" aria-hidden="true">
 					          <div id="qrDownloadPreviewFile" class="qr-download-preview-file">
-					            <img id="qrDownloadPreviewImage" alt="">
+					            <img id="qrDownloadPreviewImage" alt="Preview of your downloadable QR code">
 					          </div>
 					          <div class="qr-download-preview-copy">
 					            <strong>PNG image file</strong>
@@ -8861,7 +8950,9 @@
 		  document.getElementById('welcomeScreen').style.display = 'block';
 		  hideLoader?.();
 		  currentView = 'welcome';
-		  populateLandingEmojiHero();
+          window.setFlashFeedbackSearchView(true);
+          // The legacy landing chart is hidden by ffPublicPresentation.
+          // Keep its helper available without building an invisible Chart instance.
 		  scrollToTop();
 		}
 
@@ -9008,6 +9099,7 @@
         }
 
         function hideAllScreens() {
+          window.setFlashFeedbackSearchView(false);
 		  document.body.classList.remove('is-admin-shell');
 		  var screens = [
 		    'welcomeScreen',
@@ -15231,7 +15323,7 @@
 		  preview.dataset.layout = layout;
 		  sheet.innerHTML = layout === 'nine'
 		    ? Array.from({ length: 9 }, () => '<span class="qr-print-preview-card"></span>').join('')
-		    : '<span class="qr-print-preview-card"><img id="qrPrintPreviewImage" alt=""></span>';
+		    : '<span class="qr-print-preview-card"><img id="qrPrintPreviewImage" alt="Preview of your printable QR sign"></span>';
 		  syncQrPreviewImages();
 		  if (title) title.textContent = layout === 'nine' ? 'Nine smaller signs' : 'One larger sign';
 		  if (text) {
