@@ -10,7 +10,9 @@ Live gateway smoke checks passed: allowed-origin invalid tracking payload → 40
 
 A live database transaction verified confirmed-account setup, repeat-call idempotency, initial owner membership, and staff page-open exclusion. Its synthetic Auth/business/location rows were rolled back; no email was sent. This does not verify the real confirmation-email journey. Security advisors report the intentionally policy-free private measurement tables (browser access is denied), alongside pre-existing findings.
 
-Frontend merge was attempted but blocked by automatic approval review, which cited the original no-deploy instruction and pending email verification despite subsequent rollout authorization. No merge occurred. Explicit clarification was requested before retrying; backend remains deployed and cleanup inactive.
+Frontend merge was initially blocked by automatic approval review. The owner chose to wait for the email/signup test and supplied a fresh test inbox. The real signup endpoint immediately confirmed the account and issued a session: this project's current configuration does not require an email-confirmation link. Password login then passed. Two concurrent real PostgREST setup calls returned one business/location (created flags true/false); attribution retained the test source/campaign. This verifies current immediate-confirmation behavior, not an email-delivery flow with confirmation enabled.
+
+The designated test business `184e6484-5c0e-4f87-80f4-db19ea4157b5` was marked integration-test mode and alerts disabled before feedback testing. One explicit test feedback submission returned 201; the same submission key returned 200 with the identical feedback ID and replay=true. Anonymous cohort-report access returned 401. This resolves the requested signup test gate; frontend release is next and cleanup remains inactive.
 
 ## Recovery material
 
