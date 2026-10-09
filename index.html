@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
-<head>    
+<head>
+    <script src="/assets/js/measurement.js"></script>
 	<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0"> <!-- Prevent caching of the HTML document so users always fetch the latest -->
 	<meta http-equiv="Pragma" content="no-cache"> <!-- Prevent caching of the HTML document so users always fetch the latest -->
 	<meta http-equiv="Expires" content="0"> <!-- Prevent caching of the HTML document so users always fetch the latest -->
@@ -64,7 +65,7 @@
           // Tracking-only URLs are homepage duplicates. Unknown parameters default
           // to noindex; deliberately review new marketing parameters before adding.
           const trackingKeys = new Set(['utm_source', 'utm_medium', 'utm_campaign',
-            'utm_term', 'utm_content', 'utm_id', 'gclid', 'dclid', 'fbclid', 'msclkid']);
+            'utm_term', 'utm_content', 'utm_id', 'gclid', 'dclid', 'gbraid', 'wbraid', 'fbclid', 'msclkid']);
           const params = new URLSearchParams(window.location.search);
           if ([...params.keys()].some(key => !trackingKeys.has(key))) return false;
           return !window.location.hash || ['#', '#landingTitle', '#landingHow',
@@ -6543,6 +6544,9 @@
                 </div>
             </div>
             
+            <details style="margin:12px 0;font-size:0.85rem"><summary>Testing this QR code?</summary>
+              <label style="display:block;padding:10px 0"><input type="checkbox" id="feedbackTestSubmission" onchange="if(this.checked)window.FFMeasurement?.pageOpen(new URLSearchParams(location.search).get('location'),new URLSearchParams(location.search).get('ff_test')==='1',true)"> This is an owner or staff test. Save it as feedback, but exclude it from activation reporting.</label>
+            </details>
             <button id="submitFeedbackBtn" class="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
         </div>
         
@@ -7272,6 +7276,7 @@
 
 			// This object lets your frontend talk to Supabase Auth + DB
 			const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+			window.FFMeasurement?.configure(supabase, SUPABASE_URL, SUPABASE_ANON_KEY);
 			window.supabase = supabase; // expose the client for console/debug use
 
 			const PRICING_TIERS = {
@@ -8404,7 +8409,7 @@
 			async function logEvent(eventType, details = {}) {
 			  try {
 			    if (isDashboardDemoContext?.()) return false;
-			    const bizId = await getCurrentBusinessId();
+			    const bizId = currentUser?.businessId || await getCurrentBusinessId();
 			    if (!bizId) return false; // silently skip if not authenticated/owner context
 			    const payload = {
 			      business_id: bizId,
@@ -8414,12 +8419,9 @@
 			    if (details.source) payload.source = details.source;
 			    if (details.metadata) payload.metadata = details.metadata;
 			    if (details.idempotencyKey) payload.idempotency_key = details.idempotencyKey;
-			    const { error } = await supabase.from('analytics_events').insert(
-			      payload,
-			      { returning: 'minimal' }
-			    );
-			    if (error) throw error;
-			    return true;
+			    if (window.FFMeasurement) return await window.FFMeasurement.ownerEvent(payload, currentUser?.userId);
+			    const { error } = await supabase.from('analytics_events').insert(payload);
+			    return !error;
 			  } catch (e) {
 			    // non-blocking
 			    console.warn('analytics log failed:', e?.message || e);
@@ -9040,6 +9042,7 @@
                 return;
             }
             const invitedEmail = getTeamInviteEmailHint();
+            window.FFMeasurement?.signupStarted();
             hideAllScreens();
             hideAdminControls();
 
@@ -9247,6 +9250,9 @@
 			  feedback: []
 			};
 			updateCustomerLocationDisplay(locations);
+			if (locRow?.is_active !== false && locRow && locationId !== 'demo') {
+			  window.FFMeasurement?.pageOpen(locationId, new URLSearchParams(window.location.search).get('ff_test') === '1');
+			}
 
 
 		
@@ -9281,6 +9287,9 @@
 
 
 		  // Basic client-side checks
+		  if ([businessName, ownerName, locationName, businessType].some(value => value.length > 160)) {
+		    showError('signupError', 'Please keep business, owner, location, and business-type names to 160 characters or fewer.'); return;
+		  }
 		  if (!businessName || !ownerName || !email || !password || !confirmPwd) {
 			showError('signupError', 'Please fill in all fields'); return;
 		  }
@@ -9304,7 +9313,11 @@
 		  try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
 
 		  // 1) Create auth user in Supabase
-		  const { data: signup, error: authErr } = await supabase.auth.signUp({ email, password });
+		  const journeyToken = await window.FFMeasurement?.signupToken();
+		  const { data: signup, error: authErr } = await supabase.auth.signUp({ email, password, options: { data: {
+		    ff_setup: { business_name: businessName, owner_name: ownerName, location_name: locationName,
+		      industry, business_type: businessType, plan: selectedPricingTier, journey_token: journeyToken }
+		  } } });
 		  if (authErr) { showError('signupError', authErr.message); return; }
 		  const user = signup.user;
 		  if (!user) { showError('signupError', 'Please check your email to confirm your account.'); return; }
@@ -9338,44 +9351,11 @@
 		  }
 
 		  try {
-			// 2) Create business owned by this user
-			const { data: biz, error: bizErr } = await supabase
-			  .from('businesses')
-			  .insert({
-				  name: businessName,
-				  owner_id: user.id,
-				  owner_name: ownerName,
-				  timezone: 'Europe/London',
-				  industry: industry || null,
-				  business_type: businessType || null,
-				  email_alerts_enabled: true,
-				  pricing_tier: 'free',
-				  subscription_status: 'none',
-				  subscription_comped: false
-				})
-			  .select()
-			  .single();
-			if (bizErr) throw bizErr;
-
-			// 3) Add membership (owner)
-			const { error: buErr } = await supabase
-			  .from('business_users')
-			  .insert({ business_id: biz.id, user_id: user.id, role: 'owner' });
-			if (buErr) throw buErr;
-
-			// 4) Create first location (uses optional name or falls back to "Location 01")
-			const { data: loc, error: locErr } = await supabase
-			  .from('locations')
-			  .insert({ business_id: biz.id, name: locationName, is_active: true })
-			  .select()
-			  .single();
-			if (locErr) throw locErr;
-			
-			// Set as default location on the business
-			await supabase
-			  .from('businesses')
-			  .update({ default_location_id: loc.id })
-			  .eq('id', biz.id);
+			// Atomic and retry-safe: setup and attribution commit in one transaction.
+			const { data: setup, error: setupError } = await supabase.rpc('complete_acquisition_signup');
+			if (setupError || !setup?.business || !setup?.location) throw setupError || new Error('Could not finish account setup. Please log in to retry.');
+			const biz = setup.business;
+			const loc = setup.location;
 
 			// 5) Build the in-memory shape your UI expects
 			currentUser = {
@@ -9494,6 +9474,9 @@
 
 		// Re-usable path after we know "user" is authenticated (fresh login or restored session)
 		async function hydrateAndShowDashboard(user) {
+		  // Resumes confirmed/interrupted signup from the immutable server-side intent.
+		  const { data: recoveredSetup, error: setupError } = await supabase.rpc('complete_acquisition_signup');
+		  if (setupError) throw new Error('Could not finish account setup. Please try signing in again.');
 		  // 2) Load or create business
 		  const loaded = await loadBusinessForUser(user);
 		  let business = loaded.business;
@@ -9601,6 +9584,10 @@
 		  setTimeout(openLinkedReplyRequest, 350);
 		  scheduleDashboardInstallPrompts();
         }
+		if (recoveredSetup?.created && getPricingTier(recoveredSetup.plan).checkout) {
+		  const started = await startSubscriptionCheckout(recoveredSetup.plan, user.id);
+		  if (!started) { showSection('settings'); alert('Your Free account is ready. You can retry your selected upgrade in Settings.'); }
+		}
 
 		}
 
@@ -10256,6 +10243,8 @@
 		      const safeComments = comments ? comments.slice(0, 500) : null;
 
 		      const feedbackPayload = {
+		        submission_key: window.FFMeasurement?.submissionKey(currentLocation),
+		        is_test: document.getElementById('feedbackTestSubmission')?.checked === true,
 		        location_id: currentLocation,
 		        sentiment: selectedSentiment,
 		        comments: safeComments,
@@ -10267,11 +10256,12 @@
 		      };
 		      const response = await fetch(`${SUPABASE_URL}/functions/v1/submit-feedback`, {
 		        method: 'POST',
-		        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+		        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || SUPABASE_ANON_KEY}` },
 		        body: JSON.stringify(feedbackPayload)
 		      });
 		      const result = await response.json().catch(() => ({}));
 		      if (!response.ok) throw new Error(result.error || 'Could not save feedback. Please try again.');
+		      window.FFMeasurement?.submissionSucceeded(currentLocation, feedbackPayload.submission_key);
 		      maskedReplyEmail = result.masked_email || maskedReplyEmail;
 		
 		      // Mirror in-memory state for instant UI if logged in
@@ -15874,6 +15864,7 @@
         <footer class="ff-footer">
           © <span id="footerYear"></span> FlashFeedback —
           <a href="#" data-sheet-open="privacy">Privacy Policy</a> ·
+          <button type="button" onclick="window.FFMeasurement?.consentSettings()" style="font:inherit;color:inherit;background:none;border:0;text-decoration:underline;cursor:pointer">Measurement choices</button> ·
           <a href="#" data-sheet-open="terms">Terms of Service</a> ·
           <a href="mailto:contact@flashfeedback.co.uk">Contact</a>
 		  <div>Designed for quick, private feedback — not surveys.</div>
