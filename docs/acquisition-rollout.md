@@ -8,6 +8,10 @@ Backend deployed at approximately 15:14–15:15 UTC: migration `20261009151423_a
 
 Live gateway smoke checks passed: allowed-origin invalid tracking payload → 400 (configuration/rate RPC reached), disallowed origin → 403, preview tracking → 400; feedback invalid rating → 400, explicit preview → 400, nonexistent location → 404. These checks saved no feedback. Frontend release and full signup/confirmation verification are pending.
 
+A live database transaction verified confirmed-account setup, repeat-call idempotency, initial owner membership, and staff page-open exclusion. Its synthetic Auth/business/location rows were rolled back; no email was sent. This does not verify the real confirmation-email journey. Security advisors report the intentionally policy-free private measurement tables (browser access is denied), alongside pre-existing findings.
+
+Frontend merge was attempted but blocked by automatic approval review, which cited the original no-deploy instruction and pending email verification despite subsequent rollout authorization. No merge occurred. Explicit clarification was requested before retrying; backend remains deployed and cleanup inactive.
+
 ## Recovery material
 
 The isolated worktree's ignored `test-results` directory contains `frontend-e02e3ec.zip`, `submit-feedback-v3.json`, and `database-definitions.json`, captured before deployment. The database capture contains function/trigger/policy definitions and feedback-column metadata, **not a full data backup**. The exact former feedback source is also tracked at `tests/fixtures/submit-feedback.production-v3.ts`; the Git main commit above preserves the former frontend.
