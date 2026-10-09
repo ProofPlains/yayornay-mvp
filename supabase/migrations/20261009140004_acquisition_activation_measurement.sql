@@ -319,6 +319,36 @@ declare result jsonb; begin
     group by 1,2,3,4,5) r),'policy_version',1);
 end $$;
 
+-- Approved retention: identifiers expire; business dimensions and milestones remain.
+create index on ff_measurement.journeys(created_at);
+create index on ff_measurement.page_opens(received_at);
+create index on ff_measurement.rate_limits(started_at);
+create function ff_measurement.cleanup() returns void
+language plpgsql security definer set search_path='' as $$
+declare cutoff timestamptz := now()-interval '90 days';
+  clicks text[] := array['gclid','dclid','gbraid','wbraid','fbclid','msclkid'];
+begin
+  delete from ff_measurement.journeys where created_at <= cutoff;
+  -- Arrivals cascade with their journey, including all copied click identifiers.
+  delete from ff_measurement.page_opens where received_at <= cutoff;
+  delete from ff_measurement.rate_limits where started_at <= now()-interval '2 days';
+  update ff_measurement.business_acquisition
+    set first_touch=first_touch-clicks, latest_non_direct=latest_non_direct-clicks,
+        visitor_id=null
+    where acquired_at <= cutoff
+      and (visitor_id is not null or first_touch ?| clicks or latest_non_direct ?| clicks);
+  update ff_measurement.signup_intents set token_hash=null
+    where created_at <= cutoff and token_hash is not null;
+  -- Remove the original browser capability too; preserve every other auth field.
+  update auth.users set raw_user_meta_data=raw_user_meta_data #- '{ff_setup,journey_token}'
+    where exists(select 1 from ff_measurement.signup_intents i
+      where i.user_id=auth.users.id and i.created_at <= cutoff)
+      and raw_user_meta_data->'ff_setup' ? 'journey_token';
+end $$;
+
+-- pg_cron is an existing deployment prerequisite. Fail rather than silently omit retention.
+select cron.schedule('ff-measurement-retention','17 3 * * *','select ff_measurement.cleanup()');
+
 -- Service-only ingress. Default PUBLIC execute is explicitly removed.
 revoke all on all functions in schema ff_measurement from public,anon,authenticated;
 revoke all on function public.measurement_rate_limit(text,integer), public.record_acquisition_arrival(text,uuid,uuid,uuid,text,jsonb,uuid),

@@ -9,6 +9,12 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         const schema = fs.readFileSync('tests/fixtures/production-schema.sql', 'utf8');
         const constraints = schema.match(/^alter table public\..* add constraint .*;$/gm) || [];
         await db.exec(schema.replace(/^alter table public\..* add constraint .*;$/gm, '') + '\n' + constraints.sort((a, b) => Number(a.includes('FOREIGN KEY')) - Number(b.includes('FOREIGN KEY'))).join('\n'));
+        // PGlite cannot run pg_cron: record the real migration's scheduling call.
+        await db.exec(`create schema cron;
+          create table cron.job(jobname text primary key,schedule text,command text);
+          create function cron.schedule(text,text,text) returns bigint language sql as $$
+            insert into cron.job values($1,$2,$3) on conflict(jobname) do update
+            set schedule=excluded.schedule,command=excluded.command returning 1::bigint $$;`);
         await db.exec(fs.readFileSync('supabase/migrations/20261009140004_acquisition_activation_measurement.sql', 'utf8'));
         const query = (s, args = []) => db.query(s, args);
         const one = async (s, args = []) => (await query(s, args)).rows[0];
@@ -114,6 +120,39 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         await query("insert into feedback(location_id,sentiment,measurement_status) values($1,'happy','eligible_unverified')", [lateSetup.location.id]);
         await db.exec('reset role');
         assert.equal((await one('select status from ff_measurement.feedback_eligibility where business_id=$1',[lateSetup.business.id])).status,'legacy_unclassified','direct writes cannot forge trusted eligibility');
+        await db.exec('set role authenticated');
+        await assert.rejects(query('select ff_measurement.cleanup()'), /permission denied/);
+        await db.exec('reset role; begin');
+        const milestonesBefore = (await query('select * from ff_measurement.milestones order by business_id,location_id,stage')).rows;
+        const feedbackBefore = (await one('select count(*)::int n from public.feedback')).n;
+        const freshJourney = await one('select * from ff_measurement.journeys where token_hash=$1', [lateHash]);
+        await query("update ff_measurement.journeys set created_at=now()-interval '90 days' where token_hash=$1", [hash]);
+        await query("update ff_measurement.business_acquisition set acquired_at=now()-interval '90 days',first_touch=first_touch || '{\"gclid\":\"expired\",\"dclid\":\"expired\",\"gbraid\":\"expired\"}',latest_non_direct=latest_non_direct || '{\"wbraid\":\"expired\",\"fbclid\":\"expired\",\"msclkid\":\"expired\"}' where business_id=$1", [b]);
+        await query("update ff_measurement.signup_intents set created_at=now()-interval '90 days' where user_id=$1", [user]);
+        await query("update ff_measurement.page_opens set received_at=now()-interval '90 days' where visit_id=$1", [visit]);
+        await db.exec("insert into ff_measurement.rate_limits(bucket,started_at) values('expired',now()-interval '2 days'),('recent',now()-interval '2 days'+interval '1 second'); select ff_measurement.cleanup(); select ff_measurement.cleanup();");
+        assert.equal((await one('select count(*)::int n from ff_measurement.journeys where token_hash=$1', [hash])).n, 0);
+        assert.equal((await one('select count(*)::int n from ff_measurement.arrivals where token_hash=$1', [hash])).n, 0);
+        assert.deepEqual(await one('select * from ff_measurement.journeys where token_hash=$1', [lateHash]), freshJourney);
+        const retained = await one('select * from ff_measurement.business_acquisition where business_id=$1', [b]);
+        assert.equal(retained.visitor_id,null);
+        assert.equal(retained.first_touch.utm_campaign,'first');
+        assert.equal(retained.latest_non_direct.utm_campaign,'later');
+        for (const key of ['gclid','dclid','gbraid','wbraid','fbclid','msclkid']) {
+            assert.equal(retained.first_touch[key],undefined);
+            assert.equal(retained.latest_non_direct[key],undefined);
+        }
+        assert.equal((await one('select token_hash from ff_measurement.signup_intents where user_id=$1',[user])).token_hash,null);
+        assert.equal((await one('select raw_user_meta_data from auth.users where id=$1',[user])).raw_user_meta_data.ff_setup.journey_token,undefined);
+        assert.equal((await one('select raw_user_meta_data from auth.users where id=$1',[user])).raw_user_meta_data.ff_setup.business_name,'Fixture');
+        assert.equal((await one('select count(*)::int n from ff_measurement.page_opens where visit_id=$1',[visit])).n,0);
+        assert.ok((await one('select count(*)::int n from ff_measurement.page_opens')).n>0);
+        assert.equal((await one("select count(*)::int n from ff_measurement.rate_limits where bucket='expired'")).n,0);
+        assert.equal((await one("select count(*)::int n from ff_measurement.rate_limits where bucket='recent'")).n,1);
+        assert.deepEqual((await query('select * from ff_measurement.milestones order by business_id,location_id,stage')).rows,milestonesBefore);
+        assert.equal((await one('select count(*)::int n from public.feedback')).n,feedbackBefore);
+        assert.deepEqual(await one('select * from cron.job'),{jobname:'ff-measurement-retention',schedule:'17 3 * * *',command:'select ff_measurement.cleanup()'});
+        await db.exec('commit');
         await query('delete from public.businesses where id=$1',[lateSetup.business.id]);
         assert.equal((await one('select complete_acquisition_signup() result')).result,null,'login never recreates a deliberately deleted business');
     }
