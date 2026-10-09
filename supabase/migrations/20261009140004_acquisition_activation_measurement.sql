@@ -348,6 +348,8 @@ end $$;
 
 -- pg_cron is an existing deployment prerequisite. Fail rather than silently omit retention.
 select cron.schedule('ff-measurement-retention','17 3 * * *','select ff_measurement.cleanup()');
+-- Phased rollout: registration is atomic with disabling. Enable only after live checks.
+select cron.alter_job(jobid, active := false) from cron.job where jobname='ff-measurement-retention';
 
 -- Service-only ingress. Default PUBLIC execute is explicitly removed.
 revoke all on all functions in schema ff_measurement from public,anon,authenticated;

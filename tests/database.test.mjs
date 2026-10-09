@@ -11,9 +11,11 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         await db.exec(schema.replace(/^alter table public\..* add constraint .*;$/gm, '') + '\n' + constraints.sort((a, b) => Number(a.includes('FOREIGN KEY')) - Number(b.includes('FOREIGN KEY'))).join('\n'));
         // PGlite cannot run pg_cron: record the real migration's scheduling call.
         await db.exec(`create schema cron;
-          create table cron.job(jobname text primary key,schedule text,command text);
+          create table cron.job(jobname text primary key,schedule text,command text,jobid bigint default 1,active boolean default true);
+          create function cron.alter_job(bigint,active boolean) returns void language sql as $$
+            update cron.job set active=$2 where jobid=$1 $$;
           create function cron.schedule(text,text,text) returns bigint language sql as $$
-            insert into cron.job values($1,$2,$3) on conflict(jobname) do update
+            insert into cron.job(jobname,schedule,command) values($1,$2,$3) on conflict(jobname) do update
             set schedule=excluded.schedule,command=excluded.command returning 1::bigint $$;`);
         await db.exec(fs.readFileSync('supabase/migrations/20261009140004_acquisition_activation_measurement.sql', 'utf8'));
         const query = (s, args = []) => db.query(s, args);
@@ -151,7 +153,7 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         assert.equal((await one("select count(*)::int n from ff_measurement.rate_limits where bucket='recent'")).n,1);
         assert.deepEqual((await query('select * from ff_measurement.milestones order by business_id,location_id,stage')).rows,milestonesBefore);
         assert.equal((await one('select count(*)::int n from public.feedback')).n,feedbackBefore);
-        assert.deepEqual(await one('select * from cron.job'),{jobname:'ff-measurement-retention',schedule:'17 3 * * *',command:'select ff_measurement.cleanup()'});
+        assert.deepEqual(await one('select * from cron.job'),{jobname:'ff-measurement-retention',schedule:'17 3 * * *',command:'select ff_measurement.cleanup()',jobid:1,active:false});
         await db.exec('commit');
         await query('delete from public.businesses where id=$1',[lateSetup.business.id]);
         assert.equal((await one('select complete_acquisition_signup() result')).result,null,'login never recreates a deliberately deleted business');
