@@ -4,7 +4,9 @@
 
 The owner authorized production deployment instead of staging, with cleanup disabled until verification. No customer rollout or real payment/fulfilment transaction is part of the tests. At preparation time, main is `e02e3ecddc78ce0020458eb17ecc6e5135b99a47`, Supabase is `evediwsocfbalzbzdden`, and submit-feedback is v3. GitHub Pages deploys main automatically. The original dirty checkout remains untouched.
 
-Preparation is complete; production changes have not yet been applied. Supabase secret configuration requires dashboard access because the connector lacks a secret-management operation and the local CLI is unauthenticated.
+Backend deployed at approximately 15:14–15:15 UTC: migration `20261009151423_acquisition_activation_measurement`, track-acquisition v1, submit-feedback v5. Supabase assigned the migration version; the checked-in filename was aligned to it to avoid a duplicate future application. The hashing secret was configured in the dashboard. Cleanup is registered and **inactive**. Existing scheduled jobs are unchanged. Browser roles cannot use the private schema, and all three restrictive policies are present.
+
+Live gateway smoke checks passed: allowed-origin invalid tracking payload → 400 (configuration/rate RPC reached), disallowed origin → 403, preview tracking → 400; feedback invalid rating → 400, explicit preview → 400, nonexistent location → 404. These checks saved no feedback. Frontend release and full signup/confirmation verification are pending.
 
 ## Recovery material
 

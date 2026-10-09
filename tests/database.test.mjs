@@ -17,7 +17,7 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
           create function cron.schedule(text,text,text) returns bigint language sql as $$
             insert into cron.job(jobname,schedule,command) values($1,$2,$3) on conflict(jobname) do update
             set schedule=excluded.schedule,command=excluded.command returning 1::bigint $$;`);
-        await db.exec(fs.readFileSync('supabase/migrations/20261009140004_acquisition_activation_measurement.sql', 'utf8'));
+        await db.exec(fs.readFileSync('supabase/migrations/20261009151423_acquisition_activation_measurement.sql', 'utf8'));
         const query = (s, args = []) => db.query(s, args);
         const one = async (s, args = []) => (await query(s, args)).rows[0];
         const token = 'a'.repeat(64), hash = createHash('sha256').update(token).digest('hex');
