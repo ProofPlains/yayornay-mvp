@@ -1,0 +1,6 @@
+# Additive configuration; do not deploy unrelated functions from this partial repo.
+[functions.track-acquisition]
+verify_jwt = false
+
+[functions.submit-feedback]
+verify_jwt = false
