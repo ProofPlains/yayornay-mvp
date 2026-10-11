@@ -2,7 +2,7 @@
 
 ## Status and verified baseline
 
-This follow-up is implemented on `codex/signup-campaign-consent`, based on verified live main `8dca62581fd2900dd9e452f060967d3c00973495`. Read-only reconciliation on 11 October 2026 confirmed the original measurement migration and deployed tracker. The original retention job is active. The original dirty checkout remains untouched. **This follow-up is not deployed.** Original implementation/rollout history remains in acquisition-measurement.md and acquisition-rollout.md; their prospective status is historical.
+This follow-up is implemented on `codex/signup-campaign-consent`, based on verified live main `8dca62581fd2900dd9e452f060967d3c00973495`. Read-only reconciliation on 11 October 2026 confirmed the original measurement migration and deployed tracker. The original retention job is active. The original dirty checkout remains untouched. **Production release approved on 11 October 2026.** Backend migration 20261011170128 and track-acquisition v2 are deployed; frontend release follows by merging PR #20. Supabase assigned the migration version, and this filename is aligned to prevent duplicate application. Original implementation/rollout history remains in acquisition-measurement.md and acquisition-rollout.md; their prospective status is historical.
 
 ## Signup-visit policy (version 2)
 
@@ -38,10 +38,10 @@ PGlite applies both actual migrations and verifies private grants, anonymous den
 
 Reproduce with node --test tests/*.test.mjs and node tests/check-syntax.mjs, then git diff --check. Browser tests use installed Edge/Chrome and do not contact production. No payments/orders are needed for this change.
 
-## Deployment — separate approval required
+## Approved deployment sequence
 
 1. Reconcile GitHub main, live function definitions/grants and migration history again. The original 20261009151423 migration is already deployed. Do not replay it or run blind db push against the incomplete repository baseline.
-2. Apply **only 20261011164338_signup_campaign_consent.sql** using a runner recording that exact version. It adds withdrawal audit state/RPC and replaces arrival/report functions while retaining existing grants. It performs no automatic historical deletion and changes no billing, feedback, retention or cron behavior.
+2. Apply **only 20261011170128_signup_campaign_consent.sql** using a runner recording that exact version. It adds withdrawal audit state/RPC and replaces arrival/report functions while retaining existing grants. It performs no automatic historical deletion and changes no billing, feedback, retention or cron behavior.
 3. Deploy **only track-acquisition** with the updated _shared/measurement.ts, keeping existing secrets/origins and verify_jwt=false configuration. This accepts the new consent/scope metadata. No submit-feedback or unrelated function redeployment is needed.
 4. Verify authenticated withdrawal/grants, denied anonymous access and internal-admin report authorization, then publish HTML and both external scripts together. The existing PWA worker network-fetches these scripts.
 5. Check a tagged landing causes no campaign request/storage/banner; declined signup remains unknown; checked signup records only that document and correct scope; return does not reuse it; withdrawal removes only that account's campaign link. Use controlled internal accounts and avoid accidental production analytics. Check offline/expired retries and independent-session contention.
@@ -50,3 +50,7 @@ Reproduce with node --test tests/*.test.mjs and node tests/check-syntax.mjs, the
 ## Rollback
 
 Revert only this frontend/script follow-up if required. That restores the old banner/browser policy and must be a deliberate privacy decision; retired local history cannot be recovered. Prefer retaining the compatible tracker sanitizer, because older code drops new scope metadata. Leave the withdrawal RPC, revoked intent state and arrival locking in place to honor withdrawal and prevent reassociation. Do not restore withdrawn data, drop measurement tables, replay analytics or disable retention during ordinary rollback. This change does not replace feedback, billing or fulfilment endpoints.
+
+## Live backend verification (11 October 2026)
+
+Migration history, arrival intent locking, report scope and tracker v2 source were verified. Anonymous withdrawal is denied; authenticated withdrawal is granted; arrival ingress remains service-only. A live transaction called withdrawal twice as the designated internal test user and proved revoked intent, cleared campaign snapshot, unchanged other owners’ snapshots and unchanged feedback/business/milestone counts, then rolled back all changes. Original retention remains active. The security advisor continues to report deliberately policy-free private measurement tables and existing baseline findings. Original source is saved locally in ignored test-results/track-acquisition-before-consent.json, with main 8dca625 preserving the prior frontend.
