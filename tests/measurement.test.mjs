@@ -18,6 +18,13 @@ test('server strips arbitrary URLs and sensitive fields, limits values and class
     assert.ok(uuid('11111111-1111-4111-8111-111111111111'));
     assert.ok(!uuid('fake'));
 });
+test('signup consent metadata is allowlisted and bounded to the retry window', () => {
+    const consented_at = new Date().toISOString();
+    assert.equal(sanitizeTouch({ attribution_policy: 'signup_visit_v2', consented_at }).consented_at, consented_at);
+    assert.equal(sanitizeTouch({ attribution_policy: 'unexpected', consented_at }).attribution_policy, undefined);
+    assert.equal(sanitizeTouch({ attribution_policy: 'signup_visit_v2', consented_at: 'invalid' }).attribution_policy, undefined);
+    assert.equal(sanitizeTouch({ attribution_policy: 'signup_visit_v2', consented_at: new Date(Date.now() - 2 * 86400000).toISOString() }).attribution_policy, undefined);
+});
 test('cohort denominator uses distinct businesses and handles skipped/reversed milestones', () => {
     const ctx = { window: {} };
     vm.runInNewContext(fs.readFileSync('assets/js/acquisition-report.js', 'utf8'), ctx);
@@ -26,6 +33,7 @@ test('cohort denominator uses distinct businesses and handles skipped/reversed m
     const a = { ...base, business_id: 'one', milestones: { eligible_feedback: '2026-10-09T02:00:00Z', placement_confirmed: '2026-10-09T03:00:00Z' }, locations: [{ id: 'l1', milestones: { eligible_feedback: '2026-10-09T02:00:00Z' } }, { id: 'l2' }] };
     const b = { ...base, business_id: 'two', milestones: { qr_ready: '2026-10-09T02:00:00Z' }, locations: [{ id: 'l3' }] };
     const excluded = { ...a, business_id: 'internal', excluded_internal: true };
+    assert.equal(report.summarize([a, { ...b, attribution_policy: 'signup_visit_v2' }]).length, 2, 'old and new attribution scopes stay separate');
     const g = report.summarize([a, b, excluded]);
     assert.equal(g[0].total, 2);
     assert.equal(g[0].stages.eligible_feedback, 1);

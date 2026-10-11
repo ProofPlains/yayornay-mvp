@@ -6,6 +6,13 @@ export function sanitizeTouch(input: any) {
     const captured = Date.parse(input?.captured_at);
     if (Number.isFinite(captured) && captured <= Date.now() + 300000 && captured > Date.now() - 90 * 86400000)
         touch.captured_at = new Date(captured).toISOString();
+    if (input?.attribution_policy === 'signup_visit_v2') {
+        const consented = Date.parse(input.consented_at);
+        if (Number.isFinite(consented) && consented <= Date.now() + 300000 && consented > Date.now() - 86400000) {
+            touch.attribution_policy = 'signup_visit_v2';
+            touch.consented_at = new Date(consented).toISOString();
+        }
+    }
     for (const key of trackingKeys) {
         const v = input?.[key];
         if (typeof v === 'string' && /^[a-zA-Z0-9 _.,:+~-]{1,200}$/.test(v))

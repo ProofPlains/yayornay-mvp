@@ -18,6 +18,7 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
             insert into cron.job(jobname,schedule,command) values($1,$2,$3) on conflict(jobname) do update
             set schedule=excluded.schedule,command=excluded.command returning 1::bigint $$;`);
         await db.exec(fs.readFileSync('supabase/migrations/20261009151423_acquisition_activation_measurement.sql', 'utf8'));
+        await db.exec(fs.readFileSync('supabase/migrations/20261011164338_signup_campaign_consent.sql', 'utf8'));
         const query = (s, args = []) => db.query(s, args);
         const one = async (s, args = []) => (await query(s, args)).rows[0];
         const token = 'a'.repeat(64), hash = createHash('sha256').update(token).digest('hex');
@@ -85,12 +86,14 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         await query("insert into internal_admins(user_id,email,role) values($1,'owner@example.test','superuser')", [user]);
         const report = (await one('select acquisition_cohort_report(current_date-1,current_date) result')).result;
         assert.equal(report.businesses.length, 1);
+        assert.equal(report.businesses[0].attribution_policy, 'browser_journey_v1');
         assert.equal(report.businesses[0].excluded_internal, true);
         assert.equal(report.businesses[0].milestones.eligible_feedback != null, true);
         await db.exec("set role anon");
         await assert.rejects(query('select * from ff_measurement.business_acquisition'), /permission denied/);
         await assert.rejects(query('select record_feedback_page_open($1,$2,null,false)', [l, randomUUID()]), /permission denied/);
         await assert.rejects(query('select complete_acquisition_signup()'), /permission denied/);
+        await assert.rejects(query('select withdraw_campaign_measurement()'), /permission denied/);
         await db.exec('reset role');
         const other = randomUUID();
         await query("insert into auth.users(id,email,email_confirmed_at) values($1,'other@example.test',now())", [other]);
@@ -114,6 +117,13 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         assert.equal((await one('select first_touch from ff_measurement.business_acquisition where business_id=$1', [lateSetup.business.id])).first_touch.utm_source, 'recovered');
         await query('select record_acquisition_arrival($1,$2,$3,$4,$5,$6,$7)', [lateHash, randomUUID(), randomUUID(), randomUUID(), 'landing', { channel: 'email', utm_source: 'overwrite' }, other]);
         assert.equal((await one('select first_touch from ff_measurement.business_acquisition where business_id=$1', [lateSetup.business.id])).first_touch.utm_source, 'recovered');
+        const scopeHash = 'c'.repeat(64);
+        await query('select record_acquisition_arrival($1,$2,$3,$4,$5,$6)', [scopeHash, randomUUID(), randomUUID(), randomUUID(), 'landing', { channel: 'email', utm_source: 'recovered', attribution_policy: 'signup_visit_v2' }]);
+        await query("select set_config('request.jwt.claim.sub',$1,false)", [user]);
+        const scopedReport = (await one('select acquisition_cohort_report(current_date-1,current_date) result')).result;
+        assert.equal(scopedReport.arrivals.filter(x => x.source === 'recovered').length, 2);
+        assert.deepEqual(scopedReport.arrivals.filter(x => x.source === 'recovered').map(x => x.attribution_policy).sort(), ['browser_journey_v1','signup_visit_v2']);
+        await query("select set_config('request.jwt.claim.sub',$1,false)", [lateUser]);
         const limits = await query("select measurement_rate_limit('fixture',2) ok from generate_series(1,3)");
         assert.deepEqual(limits.rows.map(x => x.ok), [true, true, false]);
         await db.exec("set role authenticated");
@@ -155,6 +165,32 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         assert.equal((await one('select count(*)::int n from public.feedback')).n,feedbackBefore);
         assert.deepEqual(await one('select * from cron.job'),{jobname:'ff-measurement-retention',schedule:'17 3 * * *',command:'select ff_measurement.cleanup()',jobid:1,active:false});
         await db.exec('commit');
+        // Withdrawal affects only the authenticated owner, is repeatable, and cannot
+        // be undone by queued authenticated delivery or edited Auth metadata.
+        const otherSnapshot = await one('select * from ff_measurement.business_acquisition where business_id=$1', [b]);
+        await db.exec('set role authenticated');
+        await query('select withdraw_campaign_measurement()');
+        await query('select withdraw_campaign_measurement()');
+        await db.exec('reset role');
+        const withdrawn = await one('select * from ff_measurement.business_acquisition where business_id=$1', [lateSetup.business.id]);
+        assert.equal(withdrawn.first_touch, null);
+        assert.equal(withdrawn.latest_non_direct, null);
+        assert.equal(withdrawn.visitor_id, null);
+        assert.equal(withdrawn.coverage, 'unknown');
+        const intent = await one('select * from ff_measurement.signup_intents where user_id=$1', [lateUser]);
+        assert.equal(intent.token_hash, null);
+        assert.ok(intent.campaign_consent_withdrawn_at);
+        assert.ok(intent.completed_at);
+        assert.equal((await one('select count(*)::int n from ff_measurement.journeys where token_hash=$1', [lateHash])).n, 0);
+        assert.equal((await one('select count(*)::int n from ff_measurement.arrivals where token_hash=$1', [lateHash])).n, 0);
+        assert.equal((await one('select raw_user_meta_data from auth.users where id=$1', [lateUser])).raw_user_meta_data.ff_setup.journey_token, undefined);
+        await query('update auth.users set raw_user_meta_data=$2 where id=$1', [lateUser, { ff_setup: { journey_token: lateToken } }]);
+        await query('select record_acquisition_arrival($1,$2,$3,$4,$5,$6,$7)', [lateHash, randomUUID(), randomUUID(), randomUUID(), 'landing', { channel: 'email', utm_source: 'late-replay' }, lateUser]);
+        assert.deepEqual(await one('select * from ff_measurement.business_acquisition where business_id=$1', [lateSetup.business.id]), withdrawn);
+        assert.deepEqual(await one('select * from ff_measurement.business_acquisition where business_id=$1', [b]), otherSnapshot);
+        assert.deepEqual((await query('select * from ff_measurement.milestones order by business_id,location_id,stage')).rows,milestonesBefore);
+        assert.equal((await one('select count(*)::int n from public.feedback')).n,feedbackBefore);
+        assert.equal((await one('select complete_acquisition_signup() result')).result.business.id, lateSetup.business.id);
         await query('delete from public.businesses where id=$1',[lateSetup.business.id]);
         assert.equal((await one('select complete_acquisition_signup() result')).result,null,'login never recreates a deliberately deleted business');
     }
