@@ -1,4 +1,4 @@
-/* Acquisition only stores allowlisted campaign values after consent. Loaded before URL cleanup. */
+/* Current-page signup attribution only, after explicit consent. Loaded before URL cleanup. */
 (function (w) {
     'use strict';
     const DAY = 86400000, keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id', 'gclid', 'dclid', 'gbraid', 'wbraid', 'fbclid', 'msclkid'];
@@ -37,21 +37,36 @@
         catch { }
         return out;
     }
-    const arrivalUrl = new URL(w.location.href), arrival = marketing(arrivalUrl) ? touch(arrivalUrl, w.document.referrer) : null;
+    // Preserve the current URL in page memory through SEO cleanup. Parse campaign data
+    // only after signup consent; never write this URL or a visitor history to storage.
+    const arrivalUrl = new URL(w.location.href), arrivalReferrer = w.document.referrer;
     let client, endpoint, anonKey, flushing = false, knownAuthenticated = false, activated = false;
+    let signupJourney = null, signupConsented = false;
+    // Retire the former 90-day browser journey and consent. It cannot opt in this form.
+    ['ff_acquisition', 'ff_measurement_consent'].forEach(key => remove(key));
+    ['ff_acquisition_session', 'ff_arrival_ids'].forEach(key => remove(key, true));
     let queue = read('ff_measurement_queue') || [];
     if (!Array.isArray(queue))
         queue = [];
-    queue = queue.filter(x => x && x.expires > Date.now() && x.attempts < 12).slice(-100);
-    const consent = () => !w.navigator.globalPrivacyControl && w.navigator.doNotTrack !== '1' && read('ff_measurement_consent') === 'accepted';
-    function enqueue(type, body, userId = null) {
+    queue = queue.filter(x => x && x.type !== 'arrival' && x.expires > Date.now() && x.attempts < 12).slice(-100);
+    write('ff_measurement_queue', queue);
+    // Restore only delivery retries already bound to their original signup account.
+    // This is not used to recognise visitors or attribute another page/visit.
+    const pending = read('ff_signup_measurement_queue', true);
+    if (Array.isArray(pending)) queue.push(...pending.filter(x => x?.type === 'arrival' && x.userId && x.expires > Date.now() && x.attempts < 12));
+    const privacyBlocked = () => !!w.navigator.globalPrivacyControl || w.navigator.doNotTrack === '1';
+    function saveQueue() {
+        write('ff_measurement_queue', queue.filter(x => x.type !== 'arrival'));
+        write('ff_signup_measurement_queue', queue.filter(x => x.type === 'arrival'), true);
+    }
+    function enqueue(type, body, userId = null, sendNow = true) {
         const key = body.idempotency_key || body.id || `${body.kind}:${body.visit_id}`;
         if (queue.some(x => x.key === key))
             return;
         queue.push({ key, type, body, userId, expires: Date.now() + DAY, attempts: 0, next: 0 });
         queue = queue.slice(-100);
-        write('ff_measurement_queue', queue);
-        void flush();
+        saveQueue();
+        if (sendNow) void flush();
     }
     async function flush() {
         if (flushing || !client)
@@ -61,7 +76,8 @@
             const { data: { session } } = await client.auth.getSession();
             const now = Date.now();
             for (const item of [...queue]) {
-                if (item.expires < now || item.attempts >= 12 || (item.type === 'arrival' && !consent())) {
+                if (!queue.includes(item)) continue; // Withdrawal may cancel items while a request is in flight.
+                if (item.expires < now || item.attempts >= 12 || (item.type === 'arrival' && privacyBlocked())) {
                     queue = queue.filter(x => x !== item);
                     continue;
                 }
@@ -71,7 +87,7 @@
                     continue;
                 item.attempts++;
                 item.next = now + Math.min(300000, 1000 * 2 ** item.attempts) + Math.random() * 500;
-                write('ff_measurement_queue', queue);
+                saveQueue();
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 8000);
                 try {
@@ -89,69 +105,30 @@
         }
         catch { /* Auth/storage failures leave the queue available for a later retry. */ }
         finally {
-            write('ff_measurement_queue', queue);
+            saveQueue();
             flushing = false;
         }
     }
-    function journey() {
-        let j = read('ff_acquisition');
-        if (!j || !j.expires || j.expires < Date.now()) {
-            if (!arrival)
-                return null;
-            j = { token: Array.from(w.crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join(''), visitor_id: id(), expires: Date.now() + 90 * DAY, first_touch: arrival };
-        }
-        let session = read('ff_acquisition_session', true);
-        const campaign = arrival ? JSON.stringify([...keys.map(k => arrival[k] || ''), arrival.referrer_host || '']) : '';
-        const tagged = arrival && (keys.some(k => arrival[k]) || arrival.referrer_host);
-        if (!session || session.expires < Date.now() || (tagged && session.campaign !== campaign))
-            session = { id: id(), expires: Date.now() + 30 * 60000, campaign };
-        session.expires = Date.now() + 30 * 60000;
-        write('ff_acquisition_session', session, true);
-        j.session_id = session.id;
-        write('ff_acquisition', j);
-        return j;
-    }
     function acquisition(kind) {
-        if (!consent() || knownAuthenticated)
-            return;
-        const j = journey();
-        if (!j)
-            return;
-        const current = arrival || j.first_touch;
-        if (arrival && keys.some(k => arrival[k]) || arrival?.referrer_host)
-            j.latest_non_direct = arrival;
-        write('ff_acquisition', j);
-        const eventKey = `${kind}:${j.session_id}`;
-        const sent = read('ff_arrival_ids', true) || {};
-        const eventId = sent[eventKey] || id();
-        sent[eventKey] = eventId;
-        write('ff_arrival_ids', sent, true);
-        enqueue('arrival', { id: eventId, kind, token: j.token, visitor_id: j.visitor_id, session_id: j.session_id, touch: current });
+        const j = signupJourney;
+        if (!signupConsented || !j || privacyBlocked() || j.sent.has(kind)) return;
+        j.sent.add(kind);
+        enqueue('arrival', { id: id(), kind, token: j.token, visitor_id: j.visitor_id, session_id: j.session_id, touch: j.touch }, null, false);
     }
-    function setConsent(accepted) {
-        write('ff_measurement_consent', accepted ? 'accepted' : 'declined');
-        if (!accepted) {
-            remove('ff_acquisition');
-            remove('ff_acquisition_session', true);
-            queue = queue.filter(x => x.type !== 'arrival');
-            write('ff_measurement_queue', queue);
+    function cancelUnsent() {
+        signupConsented = false;
+        signupJourney = null;
+        queue = queue.filter(x => x.type !== 'arrival');
+        saveQueue();
+        const checkbox = w.document.getElementById('signupCampaignConsent');
+        if (checkbox) checkbox.checked = false;
+    }
+    function signupStarted() {
+        const checkbox = w.document.getElementById('signupCampaignConsent');
+        if (checkbox) {
+            checkbox.checked = false;
+            checkbox.disabled = privacyBlocked() || knownAuthenticated || !marketing(arrivalUrl);
         }
-        w.document.getElementById('ffMeasurementConsent')?.remove();
-        if (accepted)
-            acquisition('landing');
-    }
-    function showConsent(force = false) {
-        if ((!arrival && !force) || (knownAuthenticated && !force) || w.navigator.globalPrivacyControl || w.navigator.doNotTrack === '1' || (!force && read('ff_measurement_consent')))
-            return;
-        if (w.document.getElementById('ffMeasurementConsent'))
-            return;
-        const panel = w.document.createElement('aside');
-        panel.id = 'ffMeasurementConsent';
-        panel.setAttribute('aria-label', 'Optional measurement');
-        panel.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;max-width:540px;padding:16px;background:#fff;color:#171717;border:1px solid #777;border-radius:12px;z-index:10000;box-shadow:0 4px 24px #0003;font:14px/1.5 system-ui';
-        panel.innerHTML = '<p style="margin:0 0 12px">May we remember which campaign brought you here for 90 days? This helps us understand signups. Optional measurement does not affect your service.</p><button type="button" data-choice="yes">Allow measurement</button> <button type="button" data-choice="no">No thanks</button>';
-        panel.querySelectorAll('button').forEach(button => { button.style.cssText = 'padding:10px;margin:2px;border:1px solid #555;border-radius:6px;background:#f5f5f5;color:#171717;cursor:pointer'; button.onclick = () => setConsent(button.dataset.choice === 'yes'); });
-        w.document.body.appendChild(panel);
     }
     async function boot() {
         if (activated || !client)
@@ -162,10 +139,6 @@
             knownAuthenticated = !!session?.user;
         }
         catch { }
-        if (arrival && !knownAuthenticated) {
-            acquisition('landing');
-            showConsent();
-        }
         void flush();
     }
     function visit(locationId) {
@@ -178,8 +151,37 @@
     }
     w.FFMeasurement = {
         configure(c, url, key) { client = c; endpoint = url; anonKey = key; void boot(); },
-        signupStarted() { acquisition('signup_started'); },
-        async signupToken() { await Promise.race([flush(), new Promise(r => setTimeout(r, 1500))]); return consent() ? journey()?.token : null; },
+        signupStarted,
+        async signupToken(accepted = false) {
+            if (!accepted || privacyBlocked() || knownAuthenticated || !marketing(arrivalUrl)) {
+                cancelUnsent();
+                return null;
+            }
+            signupConsented = true;
+            if (!signupJourney) signupJourney = {
+                token: Array.from(w.crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join(''),
+                visitor_id: id(), session_id: id(), sent: new Set(),
+                touch: { ...touch(arrivalUrl, arrivalReferrer), attribution_policy: 'signup_visit_v2', consented_at: new Date().toISOString() }
+            };
+            acquisition('landing');
+            acquisition('signup_started');
+            await Promise.race([flush(), new Promise(r => setTimeout(r, 1500))]);
+            return signupJourney?.token || null;
+        },
+        signupCreated(userId, token) {
+            if (!userId || token !== signupJourney?.token) return;
+            queue.filter(x => x.type === 'arrival' && x.body.token === token).forEach(x => { x.userId = userId; });
+            saveQueue();
+        },
+        async withdraw() {
+            cancelUnsent();
+            const { data: { session }, error: authError } = await client.auth.getSession();
+            if (authError) throw authError;
+            if (!session?.user) return { linked: false };
+            const { error } = await client.rpc('withdraw_campaign_measurement');
+            if (error) throw error;
+            return { linked: true };
+        },
         async ownerEvent(body, userId) {
             if (!userId) {
                 const { data: { session } } = await client.auth.getSession();
@@ -205,7 +207,6 @@
             write(`ff_visit_${locationId}`, v, true);
         } },
         async authToken() { const { data: { session } } = await client.auth.getSession(); return session?.access_token || anonKey; },
-        consentSettings() { showConsent(true); },
         flush, marketing, touch
     };
     w.addEventListener('online', flush);

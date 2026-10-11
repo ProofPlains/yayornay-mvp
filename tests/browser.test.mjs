@@ -33,7 +33,7 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             const row = { id: locationId, location_id: locationId, name: 'Fixture Cafe', location_name: 'Fixture Cafe', business_name: 'Fixture', business_id: '22222222-2222-4222-8222-222222222222', is_active: !location.search.includes('inactive'), reply_requests_enabled: false };
             window.__ffClient = {
                 auth: { getSession: async () => ({ data: { session: window.__ffSession } }), getUser: async () => ({ data: { user: window.__ffSession?.user } }), onAuthStateChange: () => { }, signOut: async () => ({}), signUp: async (value) => { window.__ffCalls.push({ signup: value }); return { data: { user: { id: '33333333-3333-4333-8333-333333333333' }, session: null }, error: null }; }, signInWithPassword: async () => ({ error: { message: 'Confirm email' } }) },
-                rpc: async () => ({ data: null, error: null }),
+                rpc: async (name) => { window.__ffCalls.push({ rpc: name }); return { data: null, error: name === 'withdraw_campaign_measurement' && window.__ffWithdrawError ? { message: 'fixture failure' } : null }; },
                 from(table) {
                     const owner = location.search.includes('fixture_owner');
                     const biz = { id: row.business_id, name: 'Fixture business', owner_id: '33333333-3333-4333-8333-333333333333', pricing_tier: 'free', default_location_id: row.id };
@@ -88,32 +88,43 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
         const page = await context.newPage();
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
-        await t.test('tagged marketing arrival requires consent and retains only allowlisted URL data', async () => {
+        await t.test('landing has no banner or campaign writes; signup consent is unchecked and keyboard accessible', async () => {
             await page.goto(base + '/?utm_source=google&utm_medium=cpc&utm_campaign=launch&gbraid=abc');
-            await page.waitForSelector('#ffMeasurementConsent');
-            assert.equal(calls.length, 0);
-            await page.getByRole('button', { name: 'Allow measurement', exact: true }).focus();
-            await page.keyboard.press('Enter');
-            await page.waitForFunction(() => !document.getElementById('ffMeasurementConsent'));
             await page.waitForTimeout(100);
+            assert.equal(calls.length, 0);
+            assert.equal(await page.locator('#ffMeasurementConsent').count(), 0);
+            await page.evaluate(() => window.showSignup());
+            assert.equal(await page.locator('#signupCampaignConsent').isChecked(), false);
+            await page.locator('#signupCampaignConsent').focus();
+            await page.keyboard.press('Space');
+            assert.equal(await page.locator('#signupCampaignConsent').isChecked(), true);
+            await page.evaluate(() => window.FFMeasurement.signupToken(document.getElementById('signupCampaignConsent').checked));
             assert.equal(calls[0].kind, 'landing');
             assert.equal(calls[0].touch.gbraid, 'abc');
-            assert.ok(await page.locator('link[rel=canonical]').count());
-            const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('ff_acquisition')));
-            assert.equal(stored.first_touch.utm_source, 'google');
+            assert.equal(calls[0].touch.attribution_policy, 'signup_visit_v2');
+            assert.ok(calls[0].touch.consented_at);
+            assert.equal(await page.evaluate(() => localStorage.getItem('ff_acquisition')), null);
+            assert.equal(await page.evaluate(() => localStorage.getItem('ff_measurement_consent')), null);
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+            fs.mkdirSync('test-results', { recursive: true });
+            await page.screenshot({ path: 'test-results/signup-consent-mobile.png', fullPage: true });
         });
-        await t.test('direct return preserves first touch and later campaign updates latest touch', async () => {
+        await t.test('return visits cannot reuse attribution or old consent', async () => {
+            const oldToken = calls[0].token;
+            await page.evaluate(() => { localStorage.setItem('ff_acquisition', '{"first_touch":{"utm_source":"old"}}'); localStorage.setItem('ff_measurement_consent','true'); });
+            calls.length = 0;
             await page.goto(base);
             await page.waitForTimeout(100);
-            assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('ff_acquisition')).first_touch.utm_source), 'google');
+            assert.equal(calls.length, 0);
+            assert.equal(await page.evaluate(() => localStorage.getItem('ff_acquisition')), null);
             await page.goto(base + '/?utm_source=newsletter&utm_medium=email');
-            await page.waitForTimeout(100);
-            const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('ff_acquisition')));
-            assert.equal(stored.first_touch.utm_source, 'google');
-            assert.equal(stored.latest_non_direct.utm_source, 'newsletter');
             await page.evaluate(() => window.showSignup());
-            assert.equal(await page.locator('#signupScreen').isVisible(), true);
+            assert.equal(await page.locator('#signupCampaignConsent').isChecked(), false);
+            assert.equal(await page.evaluate(() => window.FFMeasurement.signupToken(false)), null);
+            assert.equal(calls.length, 0);
+            await page.evaluate(() => window.FFMeasurement.signupToken(true));
+            assert.equal(calls[0].touch.utm_source, 'newsletter');
+            assert.notEqual(calls[0].token, oldToken);
         });
         await t.test('QR opens deduplicate across refresh and preview/inactive routes do not track', async () => {
             calls.length = 0;
@@ -160,9 +171,11 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             await page.waitForTimeout(100);
             assert.equal(calls.some(x => x.feedback), false);
         });
-        await t.test('signup sends durable setup metadata before email confirmation', async () => {
+        for (const consent of [false, true]) await t.test('signup setup metadata with consent=' + consent, async () => {
+            calls.length = 0;
             await page.goto(base + '/?utm_source=signup-fixture');
             await page.evaluate(() => window.showSignup());
+            if (consent) await page.locator('#signupCampaignConsent').check();
             await page.locator('#businessName').fill('Fixture Cafe');
             await page.locator('#ownerName').fill('Fixture Owner');
             await page.locator('#signupIndustry').selectOption('Hospitality');
@@ -174,22 +187,50 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             await page.waitForFunction(() => window.__ffCalls.some(x => x.signup));
             const signup = await page.evaluate(() => window.__ffCalls.find(x => x.signup).signup);
             assert.equal(signup.options.data.ff_setup.business_name, 'Fixture Cafe');
-            assert.ok(signup.options.data.ff_setup.journey_token);
+            assert.equal(!!signup.options.data.ff_setup.journey_token, consent);
+            assert.equal(calls.some(x => x.kind === 'landing'), consent);
             assert.match(await page.locator('#signupError').textContent(), /confirm your email/i);
         });
-        await t.test('failed delivery survives navigation and retries the same ID', async () => {
+        await t.test('failed signup delivery retries only under its original account, not a return visitor', async () => {
             failTracking = true;
             calls.length = 0;
             await page.goto(base + '/?utm_source=offline&utm_campaign=retry');
-            await page.waitForTimeout(100);
+            const token = await page.evaluate(() => window.FFMeasurement.signupToken(true));
+            await page.evaluate(token => window.FFMeasurement.signupCreated('33333333-3333-4333-8333-333333333333', token), token);
             const failed = calls.find(x => x.kind === 'landing');
             assert.ok(failed);
-            assert.ok((await page.evaluate(() => JSON.parse(localStorage.getItem('ff_measurement_queue')))).length);
+            assert.equal((await page.evaluate(() => JSON.parse(localStorage.getItem('ff_measurement_queue')))).some(x => x.type === 'arrival'), false);
+            assert.ok((await page.evaluate(() => JSON.parse(sessionStorage.getItem('ff_signup_measurement_queue')))).every(x => x.userId));
             failTracking = false;
+            calls.length = 0;
             await page.reload();
-            await page.waitForTimeout(2300);
-            await page.evaluate(() => window.FFMeasurement.flush());
-            assert.ok(calls.filter(x => x.id === failed.id).length >= 2);
+            await page.waitForTimeout(2400);
+            await page.evaluate(() => { window.__ffSession = { access_token: 'wrong-account', user: { id: 'another-user' } }; return window.FFMeasurement.flush(); });
+            assert.equal(calls.length, 0);
+            await page.evaluate(() => { window.__ffSession = { access_token: 'fixture-token', user: { id: '33333333-3333-4333-8333-333333333333' } }; return window.FFMeasurement.flush(); });
+            assert.ok(calls.some(x => x.id === failed.id));
+            assert.ok(calls.every(x => x.token === token));
+        });
+        await t.test('withdrawal is available to signed-in users and reports backend failures', async () => {
+            await page.goto(base);
+            await page.evaluate(() => { window.__ffSession = { user: { id: '33333333-3333-4333-8333-333333333333' } }; document.querySelector('[data-sheet-open="measurement"]').click(); });
+            await page.locator('#withdrawCampaignMeasurement').click();
+            await page.waitForFunction(() => document.getElementById('campaignWithdrawalStatus').textContent.includes('information has been removed'));
+            assert.ok(await page.evaluate(() => window.__ffCalls.some(x => x.rpc === 'withdraw_campaign_measurement')));
+            await page.evaluate(() => { window.__ffWithdrawError = true; });
+            await page.locator('#withdrawCampaignMeasurement').click();
+            await page.waitForFunction(() => document.getElementById('campaignWithdrawalStatus').textContent.includes('withdrawal failed'));
+            assert.equal(await page.locator('#withdrawCampaignMeasurement').isEnabled(), true);
+            await page.keyboard.press('Escape');
+            assert.equal(await page.locator('#sheet-measurement').getAttribute('aria-hidden'), 'true');
+        });
+        await t.test('privacy signals disable campaign consent', async () => {
+            await page.goto(base);
+            await page.evaluate(() => { Object.defineProperty(navigator, 'globalPrivacyControl', { value: true }); window.showSignup(); });
+            assert.equal(await page.locator('#signupCampaignConsent').isDisabled(), true);
+            calls.length = 0;
+            assert.equal(await page.evaluate(() => window.FFMeasurement.signupToken(true)), null);
+            assert.equal(calls.length, 0);
         });
         await t.test('blocked storage falls back to memory without breaking the page', async () => {
             const isolated = await browser.newContext({ serviceWorkers: 'block' });
@@ -220,6 +261,7 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             assert.ok(await page.locator('#acquisitionCohorts').evaluate(el => el.getBoundingClientRect().right <= innerWidth), 'cohort card fits a mobile viewport');
         });
         fs.mkdirSync('test-results', { recursive: true });
+        await page.goto(base);
         await page.screenshot({ path: 'test-results/marketing-mobile.png', fullPage: false });
         assert.deepEqual(errors, []);
         await context.close();

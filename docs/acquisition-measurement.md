@@ -1,4 +1,6 @@
-# Acquisition and activation measurement
+# Original acquisition and activation measurement (9 October 2026)
+
+This document records the original implementation and rollout plan. Its returning-visitor browser policy and prospective deployment status are historical. For the current proposed consent behavior, validation, deployment order and rollback, see [Signup campaign consent](signup-campaign-consent.md).
 
 Production rollout was authorized on 9 October 2026 after the owner confirmed there are no live customers. Use the phased process below: backend first, cleanup disabled, frontend next, controlled verification, cleanup last. Deployment status and recovery details are recorded in `docs/acquisition-rollout.md`.
 
