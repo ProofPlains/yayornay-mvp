@@ -2,9 +2,23 @@
 
 Implemented on `codex/restaurants-acquisition` in the managed restaurants-acquisition worktree, based on live GitHub main `ba42f8244b78248ba362d1f1063cee414fa35b2d` (12 October 2026). Original dirty checkout at `7596ea5` is untouched. GitHub fetch succeeded despite an existing repository maintenance/repack error about an unrelated missing tree; no repository repair was attempted. Current checkout and touched source were readable and verified.
 
+## Production release — 12 October 2026
+
+Release was authorized by the founder. PR #23 merged at a092efd5a37e1e6a6235b0b6f7a3dde3eb7af234. GitHub Pages run 38296630528 completed successfully. Live restaurant HTML/CSS/link helper, root HTML/bridge/measurement, support HTML/report script and sitemap all returned HTTP 200 and matched the approved source.
+
+Only track-acquisition was deployed, as v3 with verify_jwt=false and bundle hash 232a51357fbc2e89cb7dc84bfde39b6635b08e4034ed4036662f9391b3039068. Entrypoint/authentication/CORS/provider secrets remain unchanged; the sole backend source change is the restaurant path and bounded CTA-dimension sanitizer. No migrations, grants, policies, triggers, storage, retention, payments or fulfilment changes were deployed. Arrival kinds/grants and active daily retention were reconfirmed.
+
+Live preflight returned 204 and invalid arrival returned 400. One uniquely identified synthetic landing with campaign internal_release_probe_20261012 was accepted; read-only lookup confirmed /restaurants/, hero/signup dimensions and signup_visit_v2 scope. Its unclaimed journey was deleted using the exact generated hash, visitor ID and test campaign; remaining journey and arrival counts were both zero. No real user account, feedback or order was created.
+
+All 13 browser checks passed against the published HTML/scripts with external APIs/CDNs mocked. A separate real-CDN smoke check verified HTTP 200, loaded italic/800 Anton wordmark, enabled unchecked signup consent, reconstructed restaurant landing path and demo bootstrap. No browser errors or write requests occurred in that check. Support filters/summary were verified against published frontend with mock authenticated cohort data, not a live signed-in admin report. Real consenting signup-to-business association, installed-PWA interaction and independent-session concurrency were not rerun in production.
+
+Supabase's get_edge_function endpoint failed to return both pre-release and new bundles. Pre-release metadata matched the previously inspected v2 hash; deployment returned active v3 metadata, and live ingress/persisted sanitizer output was verified. Full deployed-source readback remains unavailable. The old v2 source remains in GitHub main ba42f8244b78248ba362d1f1063cee414fa35b2d for rollback; prefer retaining the compatible v3 sanitizer.
+
+Documentation-only commits after the application merge record this release; the checks above apply to the application merge/source. Implementation validation and release instructions below preserve the original checks and recovery sequence.
+
 ## Page and implementation
 
-- Route/file: `/restaurants/` → `restaurants/index.html`; actual static HTML, not an application view. Local HTTP 200 verified. Production route is not deployed yet.
+- Route/file: `/restaurants/` → `restaurants/index.html`; actual static HTML, not an application view. Local HTTP 200 verified. Production route was deployed and verified on 12 October 2026.
 - H1: **A simple customer feedback system for restaurants** (one visible H1).
 - Title: **Restaurant Customer Feedback System | FlashFeedback**.
 - Description: **Collect quick, private restaurant customer feedback with QR codes. Catch problems early, see responses in one dashboard and start free with FlashFeedback.**
@@ -46,9 +60,9 @@ For an early review, use the support acquisition report grouped by `/restaurants
 
 ## Production reconciliation and release
 
-Read-only live Supabase inspection confirmed track-acquisition v2 source matches checked-in baseline, allowlisted arrival kinds, private measurement tables with RLS and no browser grants/policies, service-only arrival ingress, internal-admin cohort authorization, current signup/report RPC definitions, measurement triggers/stages and active daily 03:17 retention. No customer data was read and no production analytics/accounts/feedback were created. No schema, policies, grants, triggers, storage, cron, billing/provider or retention changes are required.
+Read-only live Supabase inspection confirmed track-acquisition v2 source matches checked-in baseline, allowlisted arrival kinds, private measurement tables with RLS and no browser grants/policies, service-only arrival ingress, internal-admin cohort authorization, current signup/report RPC definitions, measurement triggers/stages and active daily 03:17 retention. During implementation, no customer data was read and no production analytics/accounts/feedback were created. Release verification used one labelled synthetic arrival, removed afterwards with its absence verified; no real accounts or feedback were created. No schema, policies, grants, triggers, storage, cron, billing/provider or retention changes are required.
 
-The deployed tracker currently reduces restaurant landing_path to `/`. The checked-in shared sanitizer now accepts only the exact `/restaurants/` path and bounded signup-entry dimensions. **This backend change is prepared, not deployed.** The unchanged track-acquisition entrypoint imports it. Deploy only track-acquisition with the updated shared source, keeping its secrets, allowed origins and verify_jwt=false setting, BEFORE publishing the frontend. Do not redeploy submit-feedback or run db push/migrations for this task.
+The deployed tracker currently reduces restaurant landing_path to `/`. The checked-in shared sanitizer now accepts only the exact `/restaurants/` path and bounded signup-entry dimensions. **This backend change was deployed as track-acquisition v3 on 12 October 2026.** The unchanged track-acquisition entrypoint imports it. Deploy only track-acquisition with the updated shared source, keeping its secrets, allowed origins and verify_jwt=false setting, BEFORE publishing the frontend. Do not redeploy submit-feedback or run db push/migrations for this task.
 
 Then merge/publish the static page, links and both bridge/measurement scripts together through the existing GitHub Pages process. Verify live 200/canonical/sitemap, real CDN dependencies, browser and installed-PWA navigation, and controlled internal consenting signup attribution without counting test data as experiment results. Existing worker network-fetches HTML/noncached scripts and requires no cache-version change. Installed mode is not independently verified in this task.
 
