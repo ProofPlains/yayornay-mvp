@@ -173,6 +173,12 @@
             queue.filter(x => x.type === 'arrival' && x.body.token === token).forEach(x => { x.userId = userId; });
             saveQueue();
         },
+        async consentStatus() {
+            const { data, error } = await client.rpc('campaign_measurement_status');
+            if (error) throw error;
+            if (!['enabled', 'withdrawn', 'not_enabled'].includes(data)) throw new Error('Invalid consent status');
+            return data;
+        },
         async withdraw() {
             cancelUnsent();
             const { data: { session }, error: authError } = await client.auth.getSession();

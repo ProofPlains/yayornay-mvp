@@ -7054,6 +7054,18 @@
 				    <span id="settingsPwdStatus" style="margin-left:10px;color:#4b5563;"></span>
 				  </div>
 
+              <style>#settingsCampaignMeasurement [hidden], #settingsCampaignMeasurement[hidden] { display:none !important; }</style>
+              <!-- Campaign consent belongs to this account, not other team members. -->
+              <div id="settingsCampaignMeasurement" style="background:var(--ff-surface);border:1px solid var(--ff-border);border-radius:var(--ff-radius-lg);padding:20px;margin-bottom:20px;">
+                <h3 style="margin-bottom:12px;">Campaign measurement</h3>
+                <p class="settings-helper">Helps us understand how you found us and how you use FlashFeedback. This is optional and does not affect your account or feedback.</p>
+                <p style="margin:12px 0;">Campaign measurement: <strong id="settingsCampaignState" tabindex="-1">Checking…</strong></p>
+                <p id="settingsCampaignExplanation" class="settings-helper"></p>
+                <button id="settingsCampaignWithdraw" type="button" class="btn" onclick="withdrawCampaignConsent()" hidden>Turn off campaign measurement</button>
+                <button id="settingsCampaignRetry" type="button" class="btn" onclick="loadCampaignMeasurement()" hidden>Try again</button>
+                <p id="settingsCampaignStatus" role="status" aria-live="polite" class="settings-helper" style="margin-top:10px;"></p>
+              </div>
+
 				  <!-- App shortcut -->
 				  <div id="settingsInstallAppPanel" hidden style="background: var(--ff-surface) !important;border: 1px solid var(--ff-border) !important;box-shadow: var(--ff-shadow) !important;border-radius: var(--ff-radius-lg) !important;padding:16px;margin-bottom:20px;">
 				    <h3 style="margin-bottom:8px;">App shortcut</h3>
@@ -8221,6 +8233,7 @@
 
 			async function loadTeamMembers() {
 			  if (!currentUser?.businessId) return;
+          void loadCampaignMeasurement();
 			  const status = document.getElementById('settingsTeamStatus');
 			  try {
 			    const team = await callTeamMembersApi({
@@ -14308,6 +14321,58 @@
 		  openPendingUpgradePayment
 		});
 
+        let campaignSettingsRequest = 0;
+        function renderCampaignMeasurement(state) {
+          document.getElementById('settingsCampaignState').textContent = state === 'enabled' ? 'On' : 'Off';
+          document.getElementById('settingsCampaignExplanation').textContent = state === 'enabled'
+            ? 'You allowed this during signup. Turning it off removes your campaign information. It cannot be restored.'
+            : state === 'withdrawn' ? 'You’ve withdrawn consent. Your campaign information has been removed.'
+            : 'You haven’t enabled campaign measurement.';
+          document.getElementById('settingsCampaignWithdraw').hidden = state !== 'enabled';
+          document.getElementById('settingsCampaignRetry').hidden = true;
+        }
+        async function loadCampaignMeasurement() {
+          const panel = document.getElementById('settingsCampaignMeasurement');
+          panel.hidden = !currentUser?.userId || currentUser.userId === 'demo';
+          if (panel.hidden) return;
+          const request = ++campaignSettingsRequest, userId = currentUser.userId;
+          document.getElementById('settingsCampaignState').textContent = 'Checking…';
+          document.getElementById('settingsCampaignExplanation').textContent = '';
+          document.getElementById('settingsCampaignWithdraw').hidden = true;
+          document.getElementById('settingsCampaignRetry').hidden = true;
+          document.getElementById('settingsCampaignStatus').textContent = '';
+          try {
+            const state = await window.FFMeasurement.consentStatus();
+            if (request !== campaignSettingsRequest || currentUser?.userId !== userId) return;
+            renderCampaignMeasurement(state);
+          } catch {
+            if (request !== campaignSettingsRequest || currentUser?.userId !== userId) return;
+            document.getElementById('settingsCampaignState').textContent = 'Unavailable';
+            document.getElementById('settingsCampaignStatus').textContent = 'We couldn’t load your choice. Please try again.';
+            document.getElementById('settingsCampaignRetry').hidden = false;
+          }
+        }
+        async function withdrawCampaignConsent() {
+          const button = document.getElementById('settingsCampaignWithdraw');
+          if (button.disabled || button.hidden || !currentUser?.userId) return;
+          const request = ++campaignSettingsRequest, userId = currentUser.userId;
+          button.disabled = true;
+          const status = document.getElementById('settingsCampaignStatus');
+          status.textContent = 'Turning off campaign measurement…';
+          try {
+            const result = await window.FFMeasurement.withdraw();
+            if (!result.linked) throw new Error('Sign-in required');
+            if (request !== campaignSettingsRequest || currentUser?.userId !== userId) return;
+            renderCampaignMeasurement('withdrawn');
+            document.getElementById('settingsCampaignState').focus();
+            status.textContent = 'Your choice has been saved.';
+          } catch {
+            if (request !== campaignSettingsRequest || currentUser?.userId !== userId) return;
+            status.textContent = 'We couldn’t save your choice. Please try again.';
+          } finally { button.disabled = false; }
+        }
+        Object.assign(window, { loadCampaignMeasurement, withdrawCampaignConsent });
+
 		async function loadSettings() {
 		  if (!currentUser?.businessId) return;
 		
@@ -15872,7 +15937,6 @@
         <footer class="ff-footer">
           © <span id="footerYear"></span> FlashFeedback —
           <a href="#" data-sheet-open="privacy">Privacy Policy</a> ·
-          <a href="#" data-sheet-open="measurement">Measurement choices</a> ·
           <a href="#" data-sheet-open="terms">Terms of Service</a> ·
           <a href="mailto:contact@flashfeedback.co.uk">Contact</a>
 		  <div>Designed for quick, private feedback — not surveys.</div>
@@ -15895,14 +15959,14 @@
 	  <div class="handle" aria-hidden="true"></div>
 	  <div class="inner" tabindex="-1">
 	    <h2 id="sheet-privacy-title">Privacy Policy</h2>
-	    <p class="meta"><strong>Last updated:</strong> 11 October 2026</p>
+	    <p class="meta"><strong>Last updated:</strong> 12 October 2026</p>
 	    <p class="meta"><strong>Operator:</strong> FlashFeedback (independent creator)</p>
 	    <p class="meta"><strong>Contact:</strong> contact@flashfeedback.co.uk</p>
 	
 	    <p>FlashFeedback helps businesses collect quick, private feedback from customers. This Privacy Policy explains what information we collect, how it’s used, and your rights under the UK GDPR and South Africa’s POPIA laws.</p>
 	    <p><strong>Information we collect:</strong> feedback ratings, optional comments or contact details, business account details, and limited technical data.</p>
 	    <p><strong>Use of information:</strong> to provide the service, improve performance, and contact users only if requested. We never sell or share your data with advertisers.</p>
-	    <p><strong>Optional campaign measurement:</strong> if you select the separate checkbox during signup, we record the source, campaign and advertising click identifiers available on that page, then link them to your business's signup and later account activity. We do not recognise you across return visits. An unchecked box does not affect account creation. Browser delivery retries expire after 24 hours. Server journey and click identifiers are removed after 90 days by daily cleanup; business campaign dimensions remain for cohort reporting. <a href="#" data-sheet-open="measurement">Measurement choices and withdrawal</a>.</p>
+	    <p><strong>Optional campaign measurement:</strong> if you select the separate checkbox during signup, we record the source, campaign and advertising click identifiers available on that page, then link them to your business's signup and later account activity. We do not recognise you across return visits. An unchecked box does not affect account creation. Browser delivery retries expire after 24 hours. Server journey and click identifiers are removed after 90 days by daily cleanup; business campaign dimensions remain for cohort reporting. Change your choice in Account Settings → Campaign measurement.</p>
 	    <p><strong>Reply requests:</strong> if you ask a business to reply, your email address is shared securely with that business’s authorised owners and Admins solely so they can respond to your feedback. Alert emails show only a masked address.</p>
 	    <p><strong>Legal basis:</strong> optional campaign measurement relies on your consent. Other service processing relies on the applicable contractual, legitimate-interest or consent basis under UK GDPR and POPIA.</p>
 	    <p><strong>Data storage:</strong> hosted securely on Supabase. Reply-request email addresses are erased 30 days after the request is resolved or 180 days after submission if it remains unresolved. Feedback may remain after the address is erased, and plan downgrades may hide older feedback without deleting it. Earlier deletion is available upon request.</p>
@@ -15914,17 +15978,6 @@
 	</div>
 	
 	<!-- Terms bottom-sheet -->
-	<div class="sheet" id="sheet-measurement" role="dialog" aria-modal="true" aria-labelledby="sheet-measurement-title" aria-hidden="true">
-	  <div class="handle" aria-hidden="true"></div>
-	  <div class="inner" tabindex="-1">
-	    <h2 id="sheet-measurement-title">Measurement choices</h2>
-	    <p>Campaign measurement is optional and starts only when you select its checkbox and create an account. We do not track return visits. Your browser's Do Not Track or Global Privacy Control preference also disables this option.</p>
-	    <p>Use the button below to cancel unsent campaign measurement. When you are logged in, it also removes campaign information linked to your account. Log in first to withdraw an existing account’s consent. Withdrawal does not affect your account or the lawfulness of earlier processing. Ordinary account and feedback activity still supports the service.</p>
-	    <button type="button" id="withdrawCampaignMeasurement" class="close-btn">Withdraw campaign consent</button>
-	    <p id="campaignWithdrawalStatus" role="status" aria-live="polite"></p>
-	    <button class="close-btn" data-sheet-close>Close</button>
-	  </div>
-	</div>
 	<div class="sheet" id="sheet-terms" role="dialog" aria-modal="true" aria-labelledby="sheet-terms-title" aria-hidden="true">
 	  <div class="handle" aria-hidden="true"></div>
 	  <div class="inner" tabindex="-1">
@@ -15950,22 +16003,10 @@
 	    const body = document.body;
 	    const backdrop = document.getElementById('sheetBackdrop');
 	    const sheets = {
-	      measurement: document.getElementById('sheet-measurement'),
 	      privacy: document.getElementById('sheet-privacy'),
 	      terms: document.getElementById('sheet-terms')
 	    };
 	
-	    document.getElementById('withdrawCampaignMeasurement').addEventListener('click', async function () {
-	      const status = document.getElementById('campaignWithdrawalStatus');
-	      this.disabled = true;
-	      status.textContent = 'Withdrawing consent…';
-	      try {
-	        const result = await window.FFMeasurement.withdraw();
-	        status.textContent = result.linked ? 'Campaign consent withdrawn. Your account’s campaign information has been removed.' : 'Unsent campaign measurement cancelled. Log in to remove campaign information already linked to your account.';
-	      } catch {
-	        status.textContent = 'Unsent measurement cancelled, but account withdrawal failed. Please try again.';
-	      } finally { this.disabled = false; }
-	    });
 	    function openSheet(key) {
 	      const el = sheets[key];
 	      if (!el) return;
