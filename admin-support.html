@@ -538,6 +538,9 @@
       padding: 0 12px;
     }
 
+    .acquisition-filters label { min-width: 0; max-width: 100%; }
+    .acquisition-filters select { min-width: 0; max-width: 100%; }
+
     .login-gate {
       min-height: calc(100vh - 84px);
       display: grid;
@@ -1040,9 +1043,11 @@
       <section id="metricsDashboard" class="metrics-dashboard" aria-label="Founder metrics dashboard">
         <details class="metrics-section" id="acquisitionCohorts" style="min-width:0;max-width:100%;grid-template-columns:minmax(0,1fr)" open>
           <summary class="metrics-section-heading"><h3>Acquisition cohorts and activation</h3></summary>
-          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
+          <div class="acquisition-filters" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
             <label>From (UTC)<input type="date" id="acquisitionFrom"></label>
             <label>To (UTC)<input type="date" id="acquisitionTo"></label>
+            <label>Campaign<select id="acquisitionCampaign" disabled><option value="">All campaigns</option></select></label>
+            <label>Landing page<select id="acquisitionLanding" disabled><option value="">All landing pages</option></select></label>
             <label>Unit<select id="acquisitionUnit"><option value="business">Distinct businesses</option><option value="location">Location detail</option></select></label>
             <button type="button" class="small-btn" id="acquisitionRefresh">Load cohorts</button>
           </div>
@@ -3148,6 +3153,26 @@
     const acquisitionTo = document.getElementById('acquisitionTo');
     acquisitionFrom.value = new Date(Date.now() - 29 * 86400000).toISOString().slice(0,10);
     acquisitionTo.value = new Date().toISOString().slice(0,10);
+    const acquisitionCampaign = document.getElementById('acquisitionCampaign');
+    const acquisitionLanding = document.getElementById('acquisitionLanding');
+    function populateAcquisitionFilter(select, field, allLabel) {
+      const selected = select.value;
+      const values = new Set([...(acquisitionData.businesses || []), ...(acquisitionData.arrivals || [])].map(row => JSON.stringify(row[field] || null)));
+      // Keep a selected filter on date reload, even if it now has no results.
+      if (selected) values.add(selected);
+      select.replaceChildren(new Option(allLabel, ''));
+      [...values].sort().forEach(value => select.add(new Option(JSON.parse(value) || '(unknown / not recorded)', value)));
+      select.value = selected;
+      select.disabled = false;
+    }
+    function renderAcquisitionReport() {
+      if (!acquisitionData) return;
+      const filters = {};
+      if (acquisitionCampaign.value) filters.campaign = JSON.parse(acquisitionCampaign.value);
+      if (acquisitionLanding.value) filters.landing_page = JSON.parse(acquisitionLanding.value);
+      const filtered = window.FFAcquisitionReport.filterData(acquisitionData, filters);
+      window.FFAcquisitionReport.render(document.getElementById('acquisitionReport'), filtered, document.getElementById('acquisitionUnit').value);
+    }
     async function loadAcquisitionReport() {
       const status = document.getElementById('acquisitionStatus');
       status.textContent = 'Loading acquisition cohorts…';
@@ -3159,13 +3184,15 @@
         });
         if (!response.ok) throw new Error('Acquisition report unavailable. Check deployment and the date range (up to 367 days).');
         acquisitionData = await response.json();
-        window.FFAcquisitionReport.render(document.getElementById('acquisitionReport'), acquisitionData, document.getElementById('acquisitionUnit').value);
+        populateAcquisitionFilter(acquisitionCampaign, 'campaign', 'All campaigns');
+        populateAcquisitionFilter(acquisitionLanding, 'landing_page', 'All landing pages');
+        renderAcquisitionReport();
         status.textContent = 'Loaded. Historical and test exclusions are shown below.';
-      } catch(error) { acquisitionData = null; document.getElementById('acquisitionReport').replaceChildren(); status.textContent = error.message; }
+      } catch(error) { acquisitionData = null; acquisitionCampaign.disabled = true; acquisitionLanding.disabled = true; document.getElementById('acquisitionReport').replaceChildren(); status.textContent = error.message; }
     }
     document.getElementById('acquisitionRefresh').addEventListener('click', loadAcquisitionReport);
-    document.getElementById('acquisitionUnit').addEventListener('change', event => {
-      if (acquisitionData) window.FFAcquisitionReport.render(document.getElementById('acquisitionReport'), acquisitionData, event.target.value);
+    ['acquisitionUnit', 'acquisitionCampaign', 'acquisitionLanding'].forEach(id => {
+      document.getElementById(id).addEventListener('change', renderAcquisitionReport);
     });
 
     async function loadOverview() {

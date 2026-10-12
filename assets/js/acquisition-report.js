@@ -34,10 +34,29 @@
             return { label, denominator, converted: pairs.length, earlier: pairs.length - n, median };
         });
     }
+    function filterData(data, filters = {}) {
+        const matches = row => ['campaign', 'landing_page'].every(key =>
+            filters[key] === undefined || (row[key] || null) === filters[key]);
+        return { ...data, businesses: (data.businesses || []).filter(matches), arrivals: (data.arrivals || []).filter(matches) };
+    }
+    function activationSummary(rows) {
+        // A business counts once, even when more than one location has feedback.
+        const businesses = [...new Map(rows.filter(row => !row.excluded_internal && row.business_id
+            && row.coverage === 'measured' && row.attribution_policy === 'signup_visit_v2'
+            && Number.isFinite(Date.parse(row.signup_completed_at))).map(row => [row.business_id, row])).values()];
+        return { completed: businesses.length, activated: businesses.filter(row =>
+            Number.isFinite(Date.parse(row.milestones?.eligible_feedback))).length };
+    }
     function render(root, data, unit) {
-        const rows = data.businesses || [], groups = summarize(rows, unit);
+        const rows = data.businesses || [], groups = summarize(rows, unit), activation = activationSummary(rows);
         const cell = (n, d) => `${n} / ${d} (${d ? (100 * n / d).toFixed(1) : '0.0'}%)`;
-        root.innerHTML = `<p>Primary funnel unit: <strong>${unit === 'business' ? 'distinct businesses' : 'locations (separate detail)'}</strong>. Cohort date is first recorded marketing arrival in UTC, or signup date when attribution is unknown. Source dimensions use first touch.</p>
+        root.innerHTML = `<section aria-labelledby="acquisitionActivationTitle" style="border:1px solid var(--border,#403c46);border-radius:12px;padding:18px;margin:16px 0">
+      <h4 id="acquisitionActivationTitle">First-feedback activation · consenting businesses</h4>
+      <p id="acquisitionActivationRate" style="font-size:24px;font-weight:700;margin:10px 0">${activation.completed ? cell(activation.activated, activation.completed) : '— · No completed consenting signups'}</p>
+      <p>Businesses with first eligible saved feedback ÷ completed consenting signups across the selected campaign, landing page and loaded cohort dates. Each business counts once. This summary always uses businesses, including when the detail unit is locations.</p>
+      <p>Only measured signup-visit consent cohorts qualify. Internal/test businesses, unknown attribution and legacy consent scopes are excluded from this summary. Outcomes include all recorded feedback to date, including after 14 days; recent signups have had less time to activate. This is not visitor conversion or verified genuine-customer feedback.</p>
+      </section>
+      <p>Primary funnel unit: <strong>${unit === 'business' ? 'distinct businesses' : 'locations (separate detail)'}</strong>. Cohort date is first recorded marketing arrival in UTC, or signup date when attribution is unknown. Source dimensions use first touch.</p>
       <p>Every stage percentage uses all eligible ${unit === 'business' ? 'businesses' : 'locations'} in that cohort as its denominator. Stages may be skipped or occur out of order. Materials signal combines download/print requests or fulfilled orders; it does not prove materials were obtained or placed. Page opens are a scan proxy, not verified physical scans. Eligible feedback is unverified customer activity after known test exclusions.</p>
       <p>${rows.filter(b => b.excluded_internal).length} internal/test businesses excluded; ${rows.filter(b => b.coverage !== 'measured').length} businesses with unknown attribution; ${rows.reduce((n, b) => n + Number(b.excluded_feedback || 0), 0)} known test responses excluded; ${rows.reduce((n, b) => n + Number(b.unclassified_feedback || 0), 0)} historical/legacy responses unclassified; ${rows.reduce((n, b) => n + Number(b.flagged_eligible_feedback || 0), 0)} flagged responses retained as eligible.</p>
       <div style="overflow:auto" tabindex="0" aria-label="Acquisition cohort table"><table><caption>Activation by acquisition cohort</caption><thead><tr><th>Cohort / source / medium / campaign / landing / scope</th><th>Total</th><th>Materials signal</th>${stages.map(([, label]) => `<th>${label}</th>`).join('')}</tr></thead><tbody>${groups.map(g => `<tr><th scope="row">${g.dimensions.map(escape).join('<br>')}</th><td>${g.total}</td><td>${cell(g.materials, g.total)}</td>${stages.map(([s]) => `<td>${cell(g.stages[s], g.total)}</td>`).join('')}</tr>`).join('') || '<tr><td colspan="11">No cohorts in this date range.</td></tr>'}</tbody></table></div>
@@ -47,5 +66,5 @@
       <details><summary>Business and location milestone detail</summary>${rows.filter(b => !b.excluded_internal).map(b => `<details><summary>${escape(b.business_id)} · ${escape(b.coverage)} · latest non-direct source ${escape(b.latest_source)}</summary>${(b.locations || []).map(l => `<p><strong>${escape(l.name)}</strong> (${escape(l.id)})<br>${stages.map(([s, label]) => `${label}: ${escape(l.milestones?.[s] || 'Not observed')}`).join('<br>')}</p>`).join('')}</details>`).join('')}</details>
       <p>Coverage begins when this measurement migration is deployed. Historical feedback and operational metrics are preserved, but unclassified history cannot establish eligible first feedback. Recent cohorts have had less time to activate.</p>`;
     }
-    w.FFAcquisitionReport = { summarize, intervals, render, stages };
+    w.FFAcquisitionReport = { summarize, intervals, render, stages, filterData, activationSummary };
 })(window);

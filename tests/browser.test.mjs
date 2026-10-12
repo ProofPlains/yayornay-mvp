@@ -74,7 +74,11 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             if (url.includes('/functions/v1/admin-support-overview'))
                 return route.fulfill({ contentType: 'application/json', body: '{"isAdmin":true,"role":"superuser","businesses":[],"metricsSnapshot":{"metrics":{}}}' });
             if (url.includes('/rpc/acquisition_cohort_report'))
-                return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ businesses: [{ business_id: 'fixture-business', acquired_at: new Date().toISOString(), signup_completed_at: new Date().toISOString(), source: 'google', medium: 'cpc', campaign: 'fixture', landing_page: '/', coverage: 'measured', milestones: { qr_ready: new Date().toISOString() }, locations: [] }], arrivals: [] }) });
+                return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ businesses: [
+                ...['one','two','three'].map((id,i) => ({business_id:id,acquired_at:new Date(Date.now()-i*86400000).toISOString(),signup_completed_at:new Date(Date.now()-i*86400000).toISOString(),source:'google',medium:'cpc',campaign:'restaurants_search_test_01',landing_page:'/restaurants/',coverage:'measured',attribution_policy:'signup_visit_v2',milestones:i===0?{eligible_feedback:new Date().toISOString()}:{},locations:[{id:id+'-l1'},{id:id+'-l2'}]})),
+                {business_id:'other',acquired_at:new Date().toISOString(),signup_completed_at:new Date().toISOString(),source:'google',campaign:'other',landing_page:'/',coverage:'measured',attribution_policy:'signup_visit_v2',milestones:{eligible_feedback:new Date().toISOString()},locations:[]},
+                {business_id:'legacy',acquired_at:new Date().toISOString(),signup_completed_at:new Date().toISOString(),source:'google',campaign:'restaurants_search_test_01',landing_page:'/restaurants/',coverage:'measured',attribution_policy:'browser_journey_v1',milestones:{eligible_feedback:new Date().toISOString()},locations:[]}
+              ], arrivals: [{campaign:'restaurants_search_test_01',landing_page:'/restaurants/',attribution_policy:'signup_visit_v2',visitors:3,signup_started:3,signup_completed:3},{campaign:'other',landing_page:'/',visitors:1,signup_started:1,signup_completed:1}] }) });
             if (url.includes('/functions/v1/track-acquisition')) {
                 calls.push(JSON.parse(route.request().postData()));
                 return route.fulfill({ status: failTracking ? 503 : 200, contentType: 'application/json', body: JSON.stringify({ ok: !failTracking }) });
@@ -365,13 +369,33 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             await page.locator('#acquisitionRefresh').click();
             await page.waitForFunction(() => document.getElementById('acquisitionStatus').textContent.startsWith('Loaded.'));
             assert.match(await page.locator('#acquisitionReport').textContent(), /google/);
+            await page.locator('#acquisitionCampaign').selectOption({label:'restaurants_search_test_01'});
+            await page.locator('#acquisitionLanding').selectOption({label:'/restaurants/'});
+            assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'1 / 3 (33.3%)');
+            assert.equal(await page.getByRole('table').filter({has:page.locator('caption', {hasText:'Activation by acquisition cohort'})}).getByRole('rowheader').filter({hasText:'other'}).count(),0);
+            await page.locator('#acquisitionCampaign').focus();
+            await page.keyboard.press('Home');
+            await page.keyboard.press('Enter');
+            assert.equal(await page.locator('#acquisitionCampaign').inputValue(),'');
+            await page.locator('#acquisitionCampaign').selectOption({label:'restaurants_search_test_01'});
+            await page.locator('#acquisitionRefresh').click();
+            await page.waitForFunction(() => document.getElementById('acquisitionStatus').textContent.startsWith('Loaded.'));
+            assert.equal(await page.locator('#acquisitionCampaign').inputValue(),JSON.stringify('restaurants_search_test_01'));
+            assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'1 / 3 (33.3%)');
             await page.locator('#acquisitionUnit').selectOption('location');
             assert.match(await page.locator('#acquisitionReport').textContent(), /locations \(separate detail\)/);
+            assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'1 / 3 (33.3%)');
             await page.setViewportSize({ width: 1440, height: 1000 });
             fs.mkdirSync('test-results', { recursive: true });
             await page.screenshot({ path: 'test-results/cohort-desktop.png', fullPage: false });
             await page.setViewportSize({ width: 390, height: 844 });
-            assert.ok(await page.locator('#acquisitionCohorts').evaluate(el => el.getBoundingClientRect().right <= innerWidth), 'cohort card fits a mobile viewport');
+            for (const width of [320,390]) {
+                await page.setViewportSize({width,height:844});
+                assert.ok(await page.locator('#acquisitionCohorts').evaluate(el => el.getBoundingClientRect().right <= innerWidth), 'cohort card fits at ' + width);
+                for (const id of ['acquisitionCampaign','acquisitionLanding','acquisitionActivationRate']) assert.ok(await page.locator('#'+id).evaluate(el => el.getBoundingClientRect().right <= innerWidth), id + ' fits at ' + width);
+            }
+            await page.locator('#acquisitionCohorts').evaluate(el => el.scrollIntoView({block:'start',behavior:'instant'}));
+            await page.screenshot({path:'test-results/acquisition-filter-mobile.png'});
         });
         fs.mkdirSync('test-results', { recursive: true });
         await page.goto(base);

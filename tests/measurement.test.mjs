@@ -104,3 +104,28 @@ test('marketing bridge rejects mixed auth/QR routes, duplicate controls and unkn
     assert.equal(resolve(valid + '&ff_unattributed=1').eligible,false);
     assert.equal(resolve('restaurants/' + valid),undefined);
 });
+
+test('filtered activation summary uses completed consenting businesses, not locations or other scopes', () => {
+    const ctx = {window:{}};
+    vm.runInNewContext(fs.readFileSync('assets/js/acquisition-report.js','utf8'),ctx);
+    const report = ctx.window.FFAcquisitionReport;
+    const base = {acquired_at:'2026-10-01T12:00:00Z',campaign:'restaurants_search_test_01',landing_page:'/restaurants/',coverage:'measured',attribution_policy:'signup_visit_v2',signup_completed_at:'2026-10-01T12:00:00Z'};
+    const a = {...base,business_id:'one',milestones:{eligible_feedback:'2026-10-02T12:00:00Z'},locations:[{id:'l1'},{id:'l2'}]};
+    const b = {...base,business_id:'two'};
+    const rows = [a,a,b,{...a,business_id:'internal',excluded_internal:true},{...a,business_id:'unknown',coverage:'unknown'},{...a,business_id:'legacy',attribution_policy:'browser_journey_v1'},{...a,business_id:'incomplete',signup_completed_at:null},{...a,business_id:'other-campaign',campaign:'other'},{...a,business_id:'homepage',landing_page:'/'}];
+    const data = {businesses:rows,arrivals:[{campaign:base.campaign,landing_page:base.landing_page},{campaign:'other',landing_page:'/restaurants/'}]};
+    const filtered = report.filterData(data,{campaign:base.campaign,landing_page:base.landing_page});
+    const summary = report.activationSummary(filtered.businesses);
+    assert.equal(summary.completed,2);
+    assert.equal(summary.activated,1);
+    assert.equal(filtered.arrivals.length,1);
+    assert.equal(report.filterData(data,{campaign:'missing'}).businesses.length,0);
+    assert.equal(report.activationSummary([]).completed,0);
+    assert.equal(report.filterData({businesses:[{campaign:null}],arrivals:[]},{campaign:null}).businesses.length,1);
+    const root = {};
+    report.render(root,filtered,'location');
+    assert.match(root.innerHTML,/1 \/ 2 \(50.0%\)/);
+    assert.match(root.innerHTML,/always uses businesses/);
+    report.render(root,report.filterData(data,{campaign:'missing'}),'business');
+    assert.match(root.innerHTML,/No completed consenting signups/);
+});
