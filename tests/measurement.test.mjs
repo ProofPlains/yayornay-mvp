@@ -80,3 +80,27 @@ test('feedback edge preserves storage and replies, marks staff, and replays with
     assert.equal(alerts, 1);
     assert.equal((await handler(req({ ...payload, submission_key: 'invalid' }))).status, 400);
 });
+
+test('restaurant touch accepts only exact path and bounded CTA dimensions', () => {
+    const x = sanitizeTouch({landing_path:'/restaurants/',entry_action:'signup',cta_location:'hero',utm_source:'google',utm_medium:'cpc'});
+    assert.equal(x.landing_path,'/restaurants/');
+    assert.equal(x.cta_location,'hero');
+    assert.equal(x.entry_action,'signup');
+    assert.equal(x.channel,'paid_search');
+    for (const landing_path of ['/restaurants','/restaurants/?email=secret','/restaurants/other']) {
+        const invalid = sanitizeTouch({landing_path,entry_action:'signup',cta_location:'hero'});
+        assert.equal(invalid.landing_path,'/');
+        assert.equal(invalid.cta_location,undefined);
+    }
+    assert.equal(sanitizeTouch({landing_path:'/restaurants/',cta_location:'private@example.test'}).cta_location,undefined);
+});
+
+test('marketing bridge rejects mixed auth/QR routes, duplicate controls and unknown parameters', () => {
+    const source = fs.readFileSync('assets/js/marketing-entry.js','utf8');
+    const resolve = suffix => { const window = {location:{href:'https://flashfeedback.co.uk/' + suffix}}; vm.runInNewContext(source,{window,URL}); return window.FFMarketingEntry; };
+    const valid = '?ff_entry=restaurants&ff_action=signup&ff_cta=hero&utm_source=google';
+    assert.equal(new URL(resolve(valid).url).pathname,'/restaurants/');
+    for (const tail of ['&location=abc','&team_invite=abc','&code=secret','&unknown=1','&ff_entry=restaurants','#access_token=secret','#type=recovery']) assert.equal(resolve(valid + tail),undefined);
+    assert.equal(resolve(valid + '&ff_unattributed=1').eligible,false);
+    assert.equal(resolve('restaurants/' + valid),undefined);
+});

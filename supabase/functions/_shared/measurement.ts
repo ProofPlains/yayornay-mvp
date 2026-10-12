@@ -2,7 +2,12 @@
 export const trackingKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id', 'gclid', 'dclid', 'gbraid', 'wbraid', 'fbclid', 'msclkid'];
 export const uuid = (v: unknown) => typeof v === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(v);
 export function sanitizeTouch(input: any) {
-    const touch: Record<string, string> = { landing_path: input?.landing_path === '/index.html' ? '/index.html' : '/' };
+    const touch: Record<string, string> = { landing_path: ['/index.html', '/restaurants/'].includes(input?.landing_path) ? input.landing_path : '/' };
+    // Dimensions of the existing consented signup visit; never separate click counts.
+    if (touch.landing_path === '/restaurants/') {
+        if (['signup', 'demo'].includes(input?.entry_action)) touch.entry_action = input.entry_action;
+        if (['hero', 'product', 'pricing', 'final'].includes(input?.cta_location)) touch.cta_location = input.cta_location;
+    }
     const captured = Date.parse(input?.captured_at);
     if (Number.isFinite(captured) && captured <= Date.now() + 300000 && captured > Date.now() - 90 * 86400000)
         touch.captured_at = new Date(captured).toISOString();
