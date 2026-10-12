@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
+    <script src="/assets/js/marketing-entry.js"></script>
     <script src="/assets/js/measurement.js"></script>
 	<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0"> <!-- Prevent caching of the HTML document so users always fetch the latest -->
 	<meta http-equiv="Pragma" content="no-cache"> <!-- Prevent caching of the HTML document so users always fetch the latest -->
@@ -6112,7 +6113,7 @@
             <section class="ff-home-section ff-section ff-audience" aria-labelledby="landingAudience">
                 <h2 id="landingAudience">For the places people experience in person.</h2>
                 <p class="ff-section-copy">From the morning coffee to the next appointment, make it easy to tell you how it went.</p>
-                <ul><li>Restaurants &amp; cafés</li><li>Salons &amp; clinics</li><li>Shops &amp; local services</li><li>Gyms &amp; studios</li></ul>
+                <ul><li><a href="/restaurants/" style="color:inherit;text-underline-offset:4px">Restaurants &amp; cafés</a></li><li>Salons &amp; clinics</li><li>Shops &amp; local services</li><li>Gyms &amp; studios</li></ul>
             </section>
 
             <section class="ff-home-section ff-section ff-free-section" aria-labelledby="landingPlans">
@@ -8910,7 +8911,12 @@
 		  }
 		
 		  if (!booted) {
-		    showWelcome();
+            // Authenticated, QR, recovery and invitation arrivals have already returned.
+            // Only the exact validated marketing bridge can choose an anonymous flow.
+            const entry = window.FFMarketingEntry;
+            if (entry?.action === 'signup') showSignup();
+            else if (entry?.action === 'demo') showDemo();
+            else showWelcome();
 		    scrollToTop?.();
 		  }
 		});

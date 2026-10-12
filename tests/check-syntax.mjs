@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
-for (const file of ['index.html', 'admin-support.html']) {
+for (const file of ['index.html', 'admin-support.html', 'restaurants/index.html']) {
     const html = fs.readFileSync(file, 'utf8');
     let i = 0;
     for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {

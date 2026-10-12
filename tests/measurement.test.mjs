@@ -80,3 +80,52 @@ test('feedback edge preserves storage and replies, marks staff, and replays with
     assert.equal(alerts, 1);
     assert.equal((await handler(req({ ...payload, submission_key: 'invalid' }))).status, 400);
 });
+
+test('restaurant touch accepts only exact path and bounded CTA dimensions', () => {
+    const x = sanitizeTouch({landing_path:'/restaurants/',entry_action:'signup',cta_location:'hero',utm_source:'google',utm_medium:'cpc'});
+    assert.equal(x.landing_path,'/restaurants/');
+    assert.equal(x.cta_location,'hero');
+    assert.equal(x.entry_action,'signup');
+    assert.equal(x.channel,'paid_search');
+    for (const landing_path of ['/restaurants','/restaurants/?email=secret','/restaurants/other']) {
+        const invalid = sanitizeTouch({landing_path,entry_action:'signup',cta_location:'hero'});
+        assert.equal(invalid.landing_path,'/');
+        assert.equal(invalid.cta_location,undefined);
+    }
+    assert.equal(sanitizeTouch({landing_path:'/restaurants/',cta_location:'private@example.test'}).cta_location,undefined);
+});
+
+test('marketing bridge rejects mixed auth/QR routes, duplicate controls and unknown parameters', () => {
+    const source = fs.readFileSync('assets/js/marketing-entry.js','utf8');
+    const resolve = suffix => { const window = {location:{href:'https://flashfeedback.co.uk/' + suffix}}; vm.runInNewContext(source,{window,URL}); return window.FFMarketingEntry; };
+    const valid = '?ff_entry=restaurants&ff_action=signup&ff_cta=hero&utm_source=google';
+    assert.equal(new URL(resolve(valid).url).pathname,'/restaurants/');
+    for (const tail of ['&location=abc','&team_invite=abc','&code=secret','&unknown=1','&ff_entry=restaurants','#access_token=secret','#type=recovery']) assert.equal(resolve(valid + tail),undefined);
+    assert.equal(resolve(valid + '&ff_unattributed=1').eligible,false);
+    assert.equal(resolve('restaurants/' + valid),undefined);
+});
+
+test('filtered activation summary uses completed consenting businesses, not locations or other scopes', () => {
+    const ctx = {window:{}};
+    vm.runInNewContext(fs.readFileSync('assets/js/acquisition-report.js','utf8'),ctx);
+    const report = ctx.window.FFAcquisitionReport;
+    const base = {acquired_at:'2026-10-01T12:00:00Z',campaign:'restaurants_search_test_01',landing_page:'/restaurants/',coverage:'measured',attribution_policy:'signup_visit_v2',signup_completed_at:'2026-10-01T12:00:00Z'};
+    const a = {...base,business_id:'one',milestones:{eligible_feedback:'2026-10-02T12:00:00Z'},locations:[{id:'l1'},{id:'l2'}]};
+    const b = {...base,business_id:'two'};
+    const rows = [a,a,b,{...a,business_id:'internal',excluded_internal:true},{...a,business_id:'unknown',coverage:'unknown'},{...a,business_id:'legacy',attribution_policy:'browser_journey_v1'},{...a,business_id:'incomplete',signup_completed_at:null},{...a,business_id:'other-campaign',campaign:'other'},{...a,business_id:'homepage',landing_page:'/'}];
+    const data = {businesses:rows,arrivals:[{campaign:base.campaign,landing_page:base.landing_page},{campaign:'other',landing_page:'/restaurants/'}]};
+    const filtered = report.filterData(data,{campaign:base.campaign,landing_page:base.landing_page});
+    const summary = report.activationSummary(filtered.businesses);
+    assert.equal(summary.completed,2);
+    assert.equal(summary.activated,1);
+    assert.equal(filtered.arrivals.length,1);
+    assert.equal(report.filterData(data,{campaign:'missing'}).businesses.length,0);
+    assert.equal(report.activationSummary([]).completed,0);
+    assert.equal(report.filterData({businesses:[{campaign:null}],arrivals:[]},{campaign:null}).businesses.length,1);
+    const root = {};
+    report.render(root,filtered,'location');
+    assert.match(root.innerHTML,/1 \/ 2 \(50.0%\)/);
+    assert.match(root.innerHTML,/always uses businesses/);
+    report.render(root,report.filterData(data,{campaign:'missing'}),'business');
+    assert.match(root.innerHTML,/No completed consenting signups/);
+});

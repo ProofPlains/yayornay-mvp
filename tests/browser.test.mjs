@@ -6,16 +6,17 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 const root = process.cwd();
 const locationId = '11111111-1111-4111-8111-111111111111';
-test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboard', { timeout: 90000 }, async (t) => {
+test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboard', { timeout: 150000 }, async (t) => {
     const server = http.createServer((req, res) => {
         const name = new URL(req.url, 'http://localhost').pathname;
-        const file = path.join(root, name === '/' ? 'index.html' : name);
+        let file = path.join(root, name === '/' ? 'index.html' : decodeURIComponent(name));
+        if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
         if (!file.startsWith(root) || !fs.existsSync(file)) {
             res.writeHead(404);
             res.end();
             return;
         }
-        res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html' : 'application/octet-stream');
+        res.setHeader('Content-Type', file.endsWith('.css') ? 'text/css' : file.endsWith('.js') ? 'text/javascript' : file.endsWith('.html') ? 'text/html' : 'application/octet-stream');
         res.end(fs.readFileSync(file));
     });
     await new Promise(r => server.listen(0, '127.0.0.1', r));
@@ -73,7 +74,11 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             if (url.includes('/functions/v1/admin-support-overview'))
                 return route.fulfill({ contentType: 'application/json', body: '{"isAdmin":true,"role":"superuser","businesses":[],"metricsSnapshot":{"metrics":{}}}' });
             if (url.includes('/rpc/acquisition_cohort_report'))
-                return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ businesses: [{ business_id: 'fixture-business', acquired_at: new Date().toISOString(), signup_completed_at: new Date().toISOString(), source: 'google', medium: 'cpc', campaign: 'fixture', landing_page: '/', coverage: 'measured', milestones: { qr_ready: new Date().toISOString() }, locations: [] }], arrivals: [] }) });
+                return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ businesses: [
+                ...['one','two','three'].map((id,i) => ({business_id:id,acquired_at:new Date(Date.now()-i*86400000).toISOString(),signup_completed_at:new Date(Date.now()-i*86400000).toISOString(),source:'google',medium:'cpc',campaign:'restaurants_search_test_01',landing_page:'/restaurants/',coverage:'measured',attribution_policy:'signup_visit_v2',milestones:i===0?{eligible_feedback:new Date().toISOString()}:{},locations:[{id:id+'-l1'},{id:id+'-l2'}]})),
+                {business_id:'other',acquired_at:new Date().toISOString(),signup_completed_at:new Date().toISOString(),source:'google',campaign:'other',landing_page:'/',coverage:'measured',attribution_policy:'signup_visit_v2',milestones:{eligible_feedback:new Date().toISOString()},locations:[]},
+                {business_id:'legacy',acquired_at:new Date().toISOString(),signup_completed_at:new Date().toISOString(),source:'google',campaign:'restaurants_search_test_01',landing_page:'/restaurants/',coverage:'measured',attribution_policy:'browser_journey_v1',milestones:{eligible_feedback:new Date().toISOString()},locations:[]}
+              ], arrivals: [{campaign:'restaurants_search_test_01',landing_page:'/restaurants/',attribution_policy:'signup_visit_v2',visitors:3,signup_started:3,signup_completed:3},{campaign:'other',landing_page:'/',visitors:1,signup_started:1,signup_completed:1}] }) });
             if (url.includes('/functions/v1/track-acquisition')) {
                 calls.push(JSON.parse(route.request().postData()));
                 return route.fulfill({ status: failTracking ? 503 : 200, contentType: 'application/json', body: JSON.stringify({ ok: !failTracking }) });
@@ -92,6 +97,91 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
         const page = await context.newPage();
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
+        await t.test('restaurant static route, SEO, CTA transport, consent, demo and keyboard', async () => {
+            const campaign = '?utm_source=google&utm_medium=cpc&utm_campaign=restaurants_search_test_01&utm_term=restaurant+feedback+software&utm_content=ag-1_cr-2_mt-e&utm_id=123&gclid=click&dclid=d&gbraid=gb&wbraid=wb&fbclid=fb&msclkid=ms';
+            calls.length = 0;
+            const response = await page.goto(base + '/restaurants/' + campaign);
+            assert.equal(response.status(), 200);
+            assert.equal(await page.locator('h1').count(), 1);
+            assert.equal(await page.locator('h1').innerText(), 'A simple customer feedback system for restaurants');
+            assert.equal(await page.title(), 'Restaurant Customer Feedback System | FlashFeedback');
+            assert.equal(await page.locator('link[rel=canonical]').getAttribute('href'), 'https://flashfeedback.co.uk/restaurants/');
+            assert.equal(await page.locator('meta[name=robots]').count(), 0);
+            assert.equal(calls.length, 0);
+            assert.equal(await page.evaluate(() => localStorage.length + sessionStorage.length), 0);
+            for (const width of [320,390,768,1440]) {
+                await page.setViewportSize({width,height:900});
+                assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'No overflow at ' + width);
+            }
+            fs.mkdirSync('test-results', {recursive:true});
+            await page.screenshot({path:'test-results/restaurants-desktop.png',fullPage:true});
+            await page.setViewportSize({width:390,height:844});
+            await page.screenshot({path:'test-results/restaurants-mobile.png',fullPage:true});
+            await page.keyboard.press('Tab');
+            assert.equal(await page.evaluate(() => document.activeElement.textContent), 'Skip to content');
+            await page.locator('summary').first().focus();
+            await page.keyboard.press('Enter');
+            assert.equal(await page.locator('details').first().getAttribute('open'), '');
+            // Signup navigation works with every CTA position; none records a click.
+            for (const cta of ['hero','pricing','final']) {
+                await page.goto(base + '/restaurants/' + campaign);
+                await page.locator('[data-restaurant-action="signup"][data-cta="' + cta + '"]').click();
+                await page.waitForSelector('#signupScreen', {state:'visible'});
+                assert.equal(await page.locator('#signupCampaignConsent').isChecked(), false);
+                assert.equal(await page.locator('#signupCampaignConsent').isEnabled(), true);
+                assert.equal(await page.locator('meta[name=robots]').getAttribute('content'), 'noindex, nofollow');
+                assert.equal(await page.evaluate(() => window.FFMeasurement.signupToken(false)), null);
+                assert.equal(calls.length, 0);
+            }
+            await page.goto(base + '/restaurants/' + campaign);
+            await page.locator('[data-restaurant-action="signup"][data-cta="hero"]').click();
+            await page.waitForSelector('#signupScreen', {state:'visible'});
+            await page.locator('#signupCampaignConsent').check();
+            await page.locator('#businessName').fill('Fixture Restaurant');
+            await page.locator('#ownerName').fill('Fixture Owner');
+            await page.locator('#signupIndustry').selectOption('Hospitality');
+            await page.locator('#email').fill('owner@example.test');
+            await page.locator('#password').fill('test-password');
+            await page.locator('#confirmPassword').fill('test-password');
+            await page.getByRole('button', {name:'Create Account',exact:true}).click();
+            await page.locator('#pricingModalContinue').click();
+            await page.waitForFunction(() => window.__ffCalls.some(x => x.signup));
+            const arrival = calls.find(x => x.kind === 'landing');
+            assert.equal(arrival.touch.landing_path, '/restaurants/');
+            assert.equal(arrival.touch.cta_location, 'hero');
+            assert.equal(arrival.touch.entry_action, 'signup');
+            for (const [key,value] of new URLSearchParams(campaign)) assert.equal(arrival.touch[key], value);
+            assert.equal(arrival.touch.attribution_policy, 'signup_visit_v2');
+            const setup = await page.evaluate(() => window.__ffCalls.find(x => x.signup).signup.options.data.ff_setup);
+            assert.equal(setup.journey_token, arrival.token);
+            calls.length = 0;
+            for (const cta of ['hero','product']) {
+                await page.goto(base + '/restaurants/' + campaign);
+                await page.locator('[data-restaurant-action="demo"][data-cta="' + cta + '"]').click();
+                await page.waitForSelector('#customerView', {state:'visible'});
+                await page.locator('[data-sentiment="happy"]').click();
+                await page.locator('#submitFeedbackBtn').click();
+                assert.equal(calls.some(x => x.feedback || x.kind === 'landing'), false);
+            }
+            await page.goto(base + '/restaurants/?location=secret&utm_source=google');
+            await page.locator('[data-restaurant-action="signup"][data-cta="hero"]').click();
+            await page.waitForSelector('#signupScreen', {state:'visible'});
+            assert.equal(await page.locator('#signupCampaignConsent').isDisabled(), true);
+            await page.goto(base + '/?ff_entry=restaurants&ff_action=signup&ff_cta=hero&location=' + locationId);
+            await page.waitForSelector('#customerView', {state:'visible'});
+            assert.equal(await page.evaluate(() => window.FFMarketingEntry), undefined);
+            await page.goto(base);
+            assert.equal(await page.locator('#welcomeScreen a[href="/restaurants/"]').getAttribute('href'), '/restaurants/');
+            assert.ok(fs.readFileSync('sitemap.xml','utf8').includes('https://flashfeedback.co.uk/restaurants/'));
+            const staticContext = await browser.newContext({javaScriptEnabled:false});
+            const staticPage = await staticContext.newPage();
+            await staticContext.route('**/*',route => route.request().url().startsWith(base) ? route.continue() : route.abort());
+            await staticPage.goto(base + '/restaurants/');
+            assert.equal(await staticPage.locator('h1').isVisible(), true);
+            assert.equal(await staticPage.locator('[data-restaurant-action="signup"]').count(), 3);
+            await staticContext.close();
+            calls.length = 0;
+        });
         await t.test('landing has no banner or campaign writes; signup consent is unchecked and keyboard accessible', async () => {
             await page.goto(base + '/?utm_source=google&utm_medium=cpc&utm_campaign=launch&gbraid=abc');
             await page.waitForTimeout(100);
@@ -279,13 +369,33 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             await page.locator('#acquisitionRefresh').click();
             await page.waitForFunction(() => document.getElementById('acquisitionStatus').textContent.startsWith('Loaded.'));
             assert.match(await page.locator('#acquisitionReport').textContent(), /google/);
+            await page.locator('#acquisitionCampaign').selectOption({label:'restaurants_search_test_01'});
+            await page.locator('#acquisitionLanding').selectOption({label:'/restaurants/'});
+            assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'1 / 3 (33.3%)');
+            assert.equal(await page.getByRole('table').filter({has:page.locator('caption', {hasText:'Activation by acquisition cohort'})}).getByRole('rowheader').filter({hasText:'other'}).count(),0);
+            await page.locator('#acquisitionCampaign').focus();
+            await page.keyboard.press('Home');
+            await page.keyboard.press('Enter');
+            assert.equal(await page.locator('#acquisitionCampaign').inputValue(),'');
+            await page.locator('#acquisitionCampaign').selectOption({label:'restaurants_search_test_01'});
+            await page.locator('#acquisitionRefresh').click();
+            await page.waitForFunction(() => document.getElementById('acquisitionStatus').textContent.startsWith('Loaded.'));
+            assert.equal(await page.locator('#acquisitionCampaign').inputValue(),JSON.stringify('restaurants_search_test_01'));
+            assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'1 / 3 (33.3%)');
             await page.locator('#acquisitionUnit').selectOption('location');
             assert.match(await page.locator('#acquisitionReport').textContent(), /locations \(separate detail\)/);
+            assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'1 / 3 (33.3%)');
             await page.setViewportSize({ width: 1440, height: 1000 });
             fs.mkdirSync('test-results', { recursive: true });
             await page.screenshot({ path: 'test-results/cohort-desktop.png', fullPage: false });
             await page.setViewportSize({ width: 390, height: 844 });
-            assert.ok(await page.locator('#acquisitionCohorts').evaluate(el => el.getBoundingClientRect().right <= innerWidth), 'cohort card fits a mobile viewport');
+            for (const width of [320,390]) {
+                await page.setViewportSize({width,height:844});
+                assert.ok(await page.locator('#acquisitionCohorts').evaluate(el => el.getBoundingClientRect().right <= innerWidth), 'cohort card fits at ' + width);
+                for (const id of ['acquisitionCampaign','acquisitionLanding','acquisitionActivationRate']) assert.ok(await page.locator('#'+id).evaluate(el => el.getBoundingClientRect().right <= innerWidth), id + ' fits at ' + width);
+            }
+            await page.locator('#acquisitionCohorts').evaluate(el => el.scrollIntoView({block:'start',behavior:'instant'}));
+            await page.screenshot({path:'test-results/acquisition-filter-mobile.png'});
         });
         fs.mkdirSync('test-results', { recursive: true });
         await page.goto(base);

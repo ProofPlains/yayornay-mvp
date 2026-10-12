@@ -19,7 +19,7 @@
     catch { } }
     const id = () => w.crypto.randomUUID();
     function marketing(url) {
-        return ['/', '/index.html'].includes(url.pathname) && [...url.searchParams.keys()].every(k => keys.includes(k))
+        return ['/', '/index.html', '/restaurants/'].includes(url.pathname) && [...url.searchParams.keys()].every(k => keys.includes(k))
             && (!url.hash || /^#(?:landing(?:Title|How|Benefits|Product|Audience|Plans|Final))?$/.test(url.hash));
     }
     function touch(url, referrer) {
@@ -39,7 +39,8 @@
     }
     // Preserve the current URL in page memory through SEO cleanup. Parse campaign data
     // only after signup consent; never write this URL or a visitor history to storage.
-    const arrivalUrl = new URL(w.location.href), arrivalReferrer = w.document.referrer;
+    const entry = w.FFMarketingEntry;
+    const arrivalUrl = new URL(entry?.eligible ? entry.url : w.location.href), arrivalReferrer = w.document.referrer;
     let client, endpoint, anonKey, flushing = false, knownAuthenticated = false, activated = false;
     let signupJourney = null, signupConsented = false;
     // Retire the former 90-day browser journey and consent. It cannot opt in this form.
@@ -161,7 +162,7 @@
             if (!signupJourney) signupJourney = {
                 token: Array.from(w.crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join(''),
                 visitor_id: id(), session_id: id(), sent: new Set(),
-                touch: { ...touch(arrivalUrl, arrivalReferrer), attribution_policy: 'signup_visit_v2', consented_at: new Date().toISOString() }
+                touch: { ...touch(arrivalUrl, arrivalReferrer), ...(entry?.eligible ? { entry_action: entry.action, cta_location: entry.cta } : {}), attribution_policy: 'signup_visit_v2', consented_at: new Date().toISOString() }
             };
             acquisition('landing');
             acquisition('signup_started');
