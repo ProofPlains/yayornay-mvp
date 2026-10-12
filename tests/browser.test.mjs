@@ -33,7 +33,11 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             const row = { id: locationId, location_id: locationId, name: 'Fixture Cafe', location_name: 'Fixture Cafe', business_name: 'Fixture', business_id: '22222222-2222-4222-8222-222222222222', is_active: !location.search.includes('inactive'), reply_requests_enabled: false };
             window.__ffClient = {
                 auth: { getSession: async () => ({ data: { session: window.__ffSession } }), getUser: async () => ({ data: { user: window.__ffSession?.user } }), onAuthStateChange: () => { }, signOut: async () => ({}), signUp: async (value) => { window.__ffCalls.push({ signup: value }); return { data: { user: { id: '33333333-3333-4333-8333-333333333333' }, session: null }, error: null }; }, signInWithPassword: async () => ({ error: { message: 'Confirm email' } }) },
-                rpc: async (name) => { window.__ffCalls.push({ rpc: name }); return { data: null, error: name === 'withdraw_campaign_measurement' && window.__ffWithdrawError ? { message: 'fixture failure' } : null }; },
+                rpc: async (name) => { window.__ffCalls.push({ rpc: name });
+                  if (name === 'campaign_measurement_status') return { data: window.__ffConsentState || 'enabled', error: window.__ffStatusError ? { message: 'fixture failure' } : null };
+                  if (name === 'withdraw_campaign_measurement') { if(window.__ffWithdrawError) return {error:{message:'fixture failure'}}; window.__ffConsentState='withdrawn'; }
+                  return { data: null, error: null };
+                },
                 from(table) {
                     const owner = location.search.includes('fixture_owner');
                     const biz = { id: row.business_id, name: 'Fixture business', owner_id: '33333333-3333-4333-8333-333333333333', pricing_tier: 'free', default_location_id: row.id };
@@ -211,18 +215,41 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             assert.ok(calls.some(x => x.id === failed.id));
             assert.ok(calls.every(x => x.token === token));
         });
-        await t.test('withdrawal is available to signed-in users and reports backend failures', async () => {
-            await page.goto(base);
-            await page.evaluate(() => { window.__ffSession = { user: { id: '33333333-3333-4333-8333-333333333333' } }; document.querySelector('[data-sheet-open="measurement"]').click(); });
-            await page.locator('#withdrawCampaignMeasurement').click();
-            await page.waitForFunction(() => document.getElementById('campaignWithdrawalStatus').textContent.includes('information has been removed'));
-            assert.ok(await page.evaluate(() => window.__ffCalls.some(x => x.rpc === 'withdraw_campaign_measurement')));
+        await t.test('account consent is clear, persists withdrawal, and handles failed reads/writes', async () => {
+            await page.goto(base + '/?fixture_owner=1');
+            await page.waitForFunction(() => window.currentUser?.businessName === 'Fixture business');
+            await page.evaluate(() => window.showSection('settings'));
+            await page.waitForFunction(() => document.getElementById('settingsCampaignState').textContent === 'On');
+            assert.equal(await page.locator('#sheet-measurement').count(), 0);
+            assert.equal(await page.locator('[data-sheet-open="measurement"]').count(), 0);
+            await page.locator('#settingsCampaignMeasurement').evaluate(el => el.scrollIntoView({block:'start',behavior:'instant'}));
+            await page.locator('#settingsCampaignMeasurement').screenshot({path:'test-results/account-consent-on-mobile.png'});
             await page.evaluate(() => { window.__ffWithdrawError = true; });
-            await page.locator('#withdrawCampaignMeasurement').click();
-            await page.waitForFunction(() => document.getElementById('campaignWithdrawalStatus').textContent.includes('withdrawal failed'));
-            assert.equal(await page.locator('#withdrawCampaignMeasurement').isEnabled(), true);
-            await page.keyboard.press('Escape');
-            assert.equal(await page.locator('#sheet-measurement').getAttribute('aria-hidden'), 'true');
+            await page.locator('#settingsCampaignWithdraw').click();
+            await page.waitForFunction(() => document.getElementById('settingsCampaignStatus').textContent.includes('couldn’t save'));
+            assert.equal(await page.locator('#settingsCampaignState').textContent(),'On');
+            assert.equal(await page.locator('#settingsCampaignWithdraw').isEnabled(), true);
+            await page.evaluate(() => { window.__ffWithdrawError = false; });
+            await page.locator('#settingsCampaignWithdraw').focus();
+            await page.keyboard.press('Enter');
+            await page.waitForFunction(() => document.getElementById('settingsCampaignState').textContent === 'Off');
+            assert.equal(await page.locator('#settingsCampaignWithdraw').isVisible(), false);
+            assert.equal(await page.locator('#settingsCampaignMeasurement').isVisible(), true);
+            assert.match(await page.locator('#settingsCampaignExplanation').textContent(), /withdrawn consent/);
+            await page.evaluate(() => window.loadCampaignMeasurement());
+            assert.equal(await page.locator('#settingsCampaignState').textContent(),'Off');
+            await page.evaluate(() => { window.__ffConsentState = 'not_enabled'; return window.loadCampaignMeasurement(); });
+            assert.match(await page.locator('#settingsCampaignExplanation').textContent(), /haven’t enabled/);
+            await page.evaluate(() => { window.__ffStatusError = true; return window.loadCampaignMeasurement(); });
+            assert.equal(await page.locator('#settingsCampaignState').textContent(),'Unavailable');
+            assert.equal(await page.locator('#settingsCampaignWithdraw').isVisible(), false);
+            await page.evaluate(() => { window.__ffStatusError = false; });
+            await page.locator('#settingsCampaignRetry').click();
+            await page.waitForFunction(() => document.getElementById('settingsCampaignState').textContent === 'Off');
+            await page.setViewportSize({width:1440,height:1000});
+            await page.locator('#settingsCampaignMeasurement').scrollIntoViewIfNeeded();
+            await page.locator('#settingsCampaignMeasurement').screenshot({path:'test-results/account-consent-off-desktop.png'});
+            await page.setViewportSize({width:390,height:844});
         });
         await t.test('privacy signals disable campaign consent', async () => {
             await page.goto(base);

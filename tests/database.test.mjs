@@ -42,6 +42,8 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         const acquired = await one('select * from ff_measurement.business_acquisition');
         assert.equal(acquired.first_touch.utm_campaign, 'first');
         assert.equal(acquired.latest_non_direct.utm_campaign, 'later');
+        await db.exec(fs.readFileSync('supabase/migrations/20261012102422_account_campaign_consent.sql', 'utf8'));
+        assert.equal((await one('select campaign_measurement_status() result')).result,'enabled','preexisting signup consent is backfilled');
         const b = setup.business.id, l = setup.location.id;
         await query("insert into analytics_events(business_id,location_id,event_type,source) values($1,$2,'qr_generated','qr')", [b, l]);
         await query("insert into analytics_events(business_id,location_id,event_type,source) values($1,$2,'qr_deployed','print')", [b, l]);
@@ -94,6 +96,7 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         await assert.rejects(query('select record_feedback_page_open($1,$2,null,false)', [l, randomUUID()]), /permission denied/);
         await assert.rejects(query('select complete_acquisition_signup()'), /permission denied/);
         await assert.rejects(query('select withdraw_campaign_measurement()'), /permission denied/);
+        await assert.rejects(query('select campaign_measurement_status()'), /permission denied/);
         await db.exec('reset role');
         const other = randomUUID();
         await query("insert into auth.users(id,email,email_confirmed_at) values($1,'other@example.test',now())", [other]);
@@ -102,6 +105,7 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         await assert.rejects(query("insert into business_users(business_id,user_id,role) values($1,$2,'owner')", [b, other]), /row-level security/);
         await assert.rejects(query("insert into analytics_events(business_id,location_id,event_type) values($1,$2,'qr_generated')", [b, l]), /row-level security/);
         assert.equal((await one('select complete_acquisition_signup() result')).result, null);
+        assert.equal((await one('select campaign_measurement_status() result')).result,'not_enabled');
         await db.exec('reset role');
         const invited = randomUUID();
         await query("insert into business_invites(business_id,email,token) values($1,'invited@example.test','test-token')", [b]);
@@ -155,6 +159,7 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
             assert.equal(retained.latest_non_direct[key],undefined);
         }
         assert.equal((await one('select token_hash from ff_measurement.signup_intents where user_id=$1',[user])).token_hash,null);
+        assert.equal((await one('select campaign_consent_granted from ff_measurement.signup_intents where user_id=$1',[user])).campaign_consent_granted,true,'identifier expiry preserves consent state');
         assert.equal((await one('select raw_user_meta_data from auth.users where id=$1',[user])).raw_user_meta_data.ff_setup.journey_token,undefined);
         assert.equal((await one('select raw_user_meta_data from auth.users where id=$1',[user])).raw_user_meta_data.ff_setup.business_name,'Fixture');
         assert.equal((await one('select count(*)::int n from ff_measurement.page_opens where visit_id=$1',[visit])).n,0);
@@ -170,6 +175,7 @@ test('schema migration, acquisition, eligibility, concurrency and isolation', as
         const otherSnapshot = await one('select * from ff_measurement.business_acquisition where business_id=$1', [b]);
         await db.exec('set role authenticated');
         await query('select withdraw_campaign_measurement()');
+        assert.equal((await one('select campaign_measurement_status() result')).result,'withdrawn');
         await query('select withdraw_campaign_measurement()');
         await db.exec('reset role');
         const withdrawn = await one('select * from ff_measurement.business_acquisition where business_id=$1', [lateSetup.business.id]);
