@@ -6552,9 +6552,6 @@
                 </div>
             </div>
             
-            <details style="margin:12px 0;font-size:0.85rem"><summary>Testing this QR code?</summary>
-              <label style="display:block;padding:10px 0"><input type="checkbox" id="feedbackTestSubmission" onchange="if(this.checked)window.FFMeasurement?.pageOpen(new URLSearchParams(location.search).get('location'),new URLSearchParams(location.search).get('ff_test')==='1',true)"> This is an owner or staff test. Save it as feedback, but exclude it from activation reporting.</label>
-            </details>
             <button id="submitFeedbackBtn" class="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
         </div>
         
@@ -10271,7 +10268,6 @@
 
 		      const feedbackPayload = {
 		        submission_key: window.FFMeasurement?.submissionKey(currentLocation),
-		        is_test: document.getElementById('feedbackTestSubmission')?.checked === true,
 		        location_id: currentLocation,
 		        sentiment: selectedSentiment,
 		        comments: safeComments,
