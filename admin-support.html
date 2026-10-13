@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <script src="/assets/js/acquisition-report.js"></script>
+  <script src="/assets/js/growth-experiments.js"></script>
+  <link rel="stylesheet" href="/assets/css/growth-experiments.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FlashFeedback Support Console</title>
@@ -1002,8 +1004,10 @@
       <button class="console-tab" type="button" role="tab" id="metricsTab" aria-selected="false" aria-controls="metricsPanel" data-console-tab="metrics" tabindex="-1">Metrics Dashboard</button>
       <button class="console-tab" type="button" role="tab" id="orderRescueTab" aria-selected="false" aria-controls="orderRescuePanel" data-console-tab="orders" tabindex="-1">Order Rescue</button>
       <button class="console-tab" type="button" role="tab" id="businessTab" aria-selected="false" aria-controls="businessPanel" data-console-tab="business" tabindex="-1">Business Support Overview</button>
+      <button class="console-tab" type="button" role="tab" id="growthTab" aria-selected="false" aria-controls="growthPanel" data-console-tab="growth" tabindex="-1">Growth Experiments</button>
     </div>
 
+    <section id="growthPanel" class="console-tab-panel" role="tabpanel" aria-labelledby="growthTab" hidden></section>
     <section id="activationPanel" class="console-tab-panel active" role="tabpanel" aria-labelledby="activationTab">
       <div class="intro">
         <div>
@@ -1302,6 +1306,8 @@
     const metricsPanelEl = document.getElementById('metricsPanel');
     const orderRescuePanelEl = document.getElementById('orderRescuePanel');
     const businessPanelEl = document.getElementById('businessPanel');
+    const growthPanelEl = document.getElementById('growthPanel');
+    let growthBoard = null;
     const weeklyActiveHeroEl = document.getElementById('weeklyActiveHero');
     const metricsFunnelFlowEl = document.getElementById('metricsFunnelFlow');
     const qrJourneyFunnelFlowEl = document.getElementById('qrJourneyFunnelFlow');
@@ -1338,7 +1344,8 @@
         activation: activationPanelEl,
         metrics: metricsPanelEl,
         orders: orderRescuePanelEl,
-        business: businessPanelEl
+        business: businessPanelEl,
+        growth: growthPanelEl
       };
       const selectedTab = panels[tabName] ? tabName : 'activation';
       Object.entries(panels).forEach(([name, panel]) => {
@@ -1354,6 +1361,7 @@
         tab.tabIndex = isActive ? 0 : -1;
         if (isActive && focusTab) tab.focus();
       });
+      if (selectedTab === 'growth' && growthBoard && !growthBoard.loaded) growthBoard.load();
     }
 
     function setStatus(message, tone = '') {
@@ -1376,6 +1384,7 @@
     }
 
     function showLoginGate(message = '') {
+      growthBoard?.clear();
       overview = null;
       rowsEl.innerHTML = '';
       emptyEl.style.display = 'none';
@@ -1397,6 +1406,7 @@
     }
 
     function showAccessDenied() {
+      growthBoard?.clear();
       overview = null;
       rowsEl.innerHTML = '';
       emptyEl.style.display = 'none';
@@ -3244,6 +3254,21 @@
       document.getElementById(id).addEventListener('change', renderAcquisitionReport);
     });
 
+    // Reuse acquisition reporting; only its existing filter controls are changed.
+    function viewGrowthAcquisitionResults() {
+      switchConsoleTab('metrics', true);
+      document.getElementById('acquisitionCohorts').open = true;
+      const filters = [[acquisitionCampaign, 'restaurants_search_test_01'], [acquisitionLanding, '/restaurants/']];
+      filters.forEach(([select, value]) => {
+        const encoded = JSON.stringify(value);
+        if (!Array.from(select.options).some(option => option.value === encoded)) select.add(new Option(value, encoded));
+        select.value = encoded;
+      });
+      document.getElementById('acquisitionCohorts').scrollIntoView({ block: 'start' });
+      if (acquisitionData) renderAcquisitionReport();
+      else loadAcquisitionReport();
+    }
+
     async function loadOverview() {
       rowsEl.innerHTML = '';
       emptyEl.style.display = 'none';
@@ -3806,7 +3831,7 @@
     logoutBtn.addEventListener('click', handleLogout);
     refreshBtn.addEventListener('click', async () => {
       // The header refresh includes cohort data only after its first successful load.
-      await Promise.allSettled([loadOverview(), ...(acquisitionLoadedRange ? [loadAcquisitionReport()] : [])]);
+      await Promise.allSettled([loadOverview(), ...(acquisitionLoadedRange ? [loadAcquisitionReport()] : []), ...(growthBoard?.loaded ? [growthBoard.load()] : [])]);
     });
     consoleTabEls.forEach((tab, index) => {
       tab.addEventListener('click', () => switchConsoleTab(tab.dataset.consoleTab));
@@ -3955,6 +3980,8 @@
       generateAdminQrSign(button.dataset.qrBusinessId, button.dataset.qrLocationId);
     });
     overlayEl.addEventListener('click', closeDetail);
+    growthBoard = window.FFGrowthExperiments.mount({ root: growthPanelEl, client, authorize: assertSuperuser, viewResults: viewGrowthAcquisitionResults });
+    client.auth.onAuthStateChange((event) => { if (event === 'SIGNED_OUT') growthBoard.clear(); });
     switchConsoleTab('metrics');
     loadOverview();
   </script>

@@ -1,0 +1,51 @@
+#growthPanel { min-width: 0; overflow-wrap: anywhere; }
+#growthPanel p { line-height: 1.5; }
+.growth-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.growth-actions .btn { height: auto; padding: 9px 14px; }
+.growth-actions button:disabled { opacity: .5; cursor: wait; }
+.growth-intro .growth-actions { margin-top: 0; }
+.growth-intro [data-growth-action="add"] { background: var(--brand); color: #15121c; font-weight: 800; }
+.growth-message { min-height: 24px; margin-bottom: 12px; color: var(--muted); }
+.growth-message.error, .growth-form-error { color: var(--bad); }
+.growth-banner, .growth-decision, .growth-card, .growth-recommendation { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.growth-banner { border-color: var(--brand); padding: 20px; margin-bottom: 18px; }
+.growth-banner article + article { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+.growth-banner h3 { font-size: 24px; margin: 8px 0; }
+.growth-banner p + p { margin-top: 10px; }
+.growth-meta { color: var(--brand); font-size: 12px; }
+.growth-decision { padding: 18px; margin-bottom: 18px; }
+.growth-decision > p { margin: 8px 0 14px; }
+#growthPanel label { display: grid; gap: 6px; font-size: 14px; min-width: 0; }
+.growth-outcome { width: 100%; max-width: 100%; }
+.growth-recommendations { display: grid; gap: 10px; margin-top: 12px; }
+.growth-recommendation { padding: 14px; }
+.growth-recommendation h4 { margin: 0 0 6px; }
+.growth-filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+.growth-filters label { flex: 1 1 220px; }
+.growth-state-section { margin-top: 26px; }
+.growth-state-section > h3 { margin-bottom: 8px; }
+.growth-cards { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin-top: 12px; align-items: start; }
+.growth-card { min-width: 0; }
+.growth-card > summary { padding: 16px; cursor: pointer; display: grid; gap: 8px; }
+.growth-card > summary strong { font-size: 18px; }
+.growth-short { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; font-size: 14px; }
+.growth-view { color: var(--brand); text-decoration: underline; font-size: 13px; }
+.growth-card[open] .growth-view { display: none; }
+.growth-card-body { padding: 0 16px 16px; display: grid; gap: 12px; }
+.growth-card h4 { font-size: 13px; color: var(--muted); margin: 0 0 4px; }
+.growth-card-body p { white-space: pre-wrap; }
+.growth-archives { margin-top: 26px; }
+.growth-archives > summary { cursor: pointer; padding: 12px 0; }
+.growth-archive-list { display: grid; gap: 12px; }
+.growth-dialog { background: var(--surface); color: var(--text); border: 1px solid var(--brand); border-radius: 12px; padding: 22px; width: min(620px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow-y: auto; }
+.growth-dialog::backdrop { background: rgba(0,0,0,.65); }
+.growth-fields { display: grid; gap: 14px; margin: 18px 0; }
+#growthPanel textarea { font: inherit; width: 100%; min-height: 90px; resize: vertical; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+#growthPanel textarea[name="brief"] { min-height: 320px; }
+#growthPanel :focus-visible { outline: 3px solid var(--brand); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .growth-intro { display: grid; }
+  .growth-cards { grid-template-columns: minmax(0,1fr); }
+  .growth-banner, .growth-decision { padding: 14px; }
+  .growth-dialog { padding: 16px; }
+}
