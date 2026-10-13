@@ -245,18 +245,17 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             assert.equal(calls.some(x => x.kind === 'feedback_page_open'), false);
             assert.equal(await page.locator('#locationClosedNotice').isVisible(), true);
         });
-        await t.test('customer saves and explicit previews/demo never submit; staff-test choice is sent', async () => {
+        await t.test('customer saves without a public test question; explicit previews/demo never submit', async () => {
             calls.length = 0;
             await page.goto(base + '/?location=' + locationId);
             await page.waitForSelector('[data-sentiment="happy"]');
             await page.locator('[data-sentiment="happy"]').click();
-            await page.locator('details').filter({ has: page.locator('#feedbackTestSubmission') }).locator('summary').click();
-            await page.locator('#feedbackTestSubmission').check();
+            assert.equal(await page.locator('#feedbackTestSubmission').count(),0);
             await page.locator('#submitFeedbackBtn').click();
             await page.waitForTimeout(100);
             const saved = calls.find(x => x.feedback);
             assert.ok(saved);
-            assert.equal(saved.feedback.is_test, true);
+            assert.equal(saved.feedback.is_test, undefined);
             assert.ok(saved.feedback.submission_key);
             calls.length = 0;
             await page.goto(base + '/?location=' + locationId + '&ff_test=1');
