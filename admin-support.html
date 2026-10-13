@@ -1043,13 +1043,16 @@
       <section id="metricsDashboard" class="metrics-dashboard" aria-label="Founder metrics dashboard">
         <details class="metrics-section" id="acquisitionCohorts" style="min-width:0;max-width:100%;grid-template-columns:minmax(0,1fr)" open>
           <summary class="metrics-section-heading"><h3>Acquisition cohorts and activation</h3></summary>
-          <div class="acquisition-filters" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
+          <div class="acquisition-filters" role="group" aria-label="Load acquisition cohorts" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
             <label>From (UTC)<input type="date" id="acquisitionFrom"></label>
             <label>To (UTC)<input type="date" id="acquisitionTo"></label>
+            <button type="button" class="small-btn" id="acquisitionRefresh">Load cohorts</button>
+          </div>
+          <p class="muted" id="acquisitionFilterHelp">Load your date range first, then filter the results below. Filter changes update the report automatically.</p>
+          <div class="acquisition-filters" role="group" aria-label="Filter loaded acquisition cohorts" aria-describedby="acquisitionFilterHelp" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
             <label>Campaign<select id="acquisitionCampaign" disabled><option value="">All campaigns</option></select></label>
             <label>Landing page<select id="acquisitionLanding" disabled><option value="">All landing pages</option></select></label>
             <label>Unit<select id="acquisitionUnit"><option value="business">Distinct businesses</option><option value="location">Location detail</option></select></label>
-            <button type="button" class="small-btn" id="acquisitionRefresh">Load cohorts</button>
           </div>
           <p id="acquisitionStatus" role="status"></p>
           <div id="acquisitionReport" style="min-width:0;max-width:100%;overflow-wrap:anywhere"></div>
