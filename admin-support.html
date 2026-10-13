@@ -1055,6 +1055,7 @@
             <label>Unit<select id="acquisitionUnit"><option value="business">Distinct businesses</option><option value="location">Location detail</option></select></label>
           </div>
           <p id="acquisitionStatus" role="status"></p>
+          <p id="acquisitionUpdated" class="muted" hidden></p>
           <div id="acquisitionReport" style="min-width:0;max-width:100%;overflow-wrap:anywhere"></div>
         </details>
         <p class="muted">Existing operational metrics below retain their original definitions and historical coverage.</p>
@@ -3152,6 +3153,9 @@
     }
 
     let acquisitionData = null;
+    let acquisitionLoadedRange = null;
+    let acquisitionLastUpdated = null;
+    let acquisitionLoading = false;
     const acquisitionFrom = document.getElementById('acquisitionFrom');
     const acquisitionTo = document.getElementById('acquisitionTo');
     acquisitionFrom.value = new Date(Date.now() - 29 * 86400000).toISOString().slice(0,10);
@@ -3176,24 +3180,66 @@
       const filtered = window.FFAcquisitionReport.filterData(acquisitionData, filters);
       window.FFAcquisitionReport.render(document.getElementById('acquisitionReport'), filtered, document.getElementById('acquisitionUnit').value);
     }
+    function acquisitionDatesChanged() {
+      return acquisitionLoadedRange && (acquisitionFrom.value !== acquisitionLoadedRange.from || acquisitionTo.value !== acquisitionLoadedRange.to);
+    }
+    function updateAcquisitionLoadState() {
+      const button = document.getElementById('acquisitionRefresh');
+      button.disabled = acquisitionLoading;
+      button.textContent = acquisitionLoading ? 'Loading cohorts…' : !acquisitionLoadedRange ? 'Load cohorts' : acquisitionDatesChanged() ? 'Load selected dates' : 'Refresh cohorts';
+      const updated = document.getElementById('acquisitionUpdated');
+      updated.hidden = !acquisitionLastUpdated;
+      updated.textContent = acquisitionLastUpdated ? 'Last updated ' + acquisitionLastUpdated.toISOString().slice(0,19).replace('T', ' ') + ' UTC · Cohorts: ' + acquisitionLoadedRange.from + ' to ' + acquisitionLoadedRange.to + '.' : '';
+    }
     async function loadAcquisitionReport() {
+      if (acquisitionLoading) return;
       const status = document.getElementById('acquisitionStatus');
+      const requestedRange = { from: acquisitionFrom.value, to: acquisitionTo.value };
+      acquisitionLoading = true;
+      updateAcquisitionLoadState();
       status.textContent = 'Loading acquisition cohorts…';
       try {
         const token = await assertSuperuser();
         const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/acquisition_cohort_report`, {
           method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ p_from: acquisitionFrom.value, p_to: acquisitionTo.value })
+          body: JSON.stringify({ p_from: requestedRange.from, p_to: requestedRange.to })
         });
-        if (!response.ok) throw new Error('Acquisition report unavailable. Check deployment and the date range (up to 367 days).');
-        acquisitionData = await response.json();
+        if (!response.ok) {
+          const error = new Error('Acquisition report unavailable. Check deployment and the date range (up to 367 days).');
+          error.status = response.status;
+          throw error;
+        }
+        const data = await response.json();
+        acquisitionData = data;
+        acquisitionLoadedRange = requestedRange;
+        acquisitionLastUpdated = new Date();
         populateAcquisitionFilter(acquisitionCampaign, 'campaign', 'All campaigns');
         populateAcquisitionFilter(acquisitionLanding, 'landing_page', 'All landing pages');
         renderAcquisitionReport();
-        status.textContent = 'Loaded. Historical and test exclusions are shown below.';
-      } catch(error) { acquisitionData = null; acquisitionCampaign.disabled = true; acquisitionLanding.disabled = true; document.getElementById('acquisitionReport').replaceChildren(); status.textContent = error.message; }
+        status.textContent = acquisitionDatesChanged() ? 'Loaded. Selected dates have changed; click Load selected dates to update the report.' : 'Loaded. Historical and test exclusions are shown below.';
+      } catch(error) {
+        // Retain the last successful snapshot on transient failure, but never on access denial.
+        if (['NO_SESSION', 'SUPERUSER_REQUIRED'].includes(error.code) || [401,403].includes(error.status)) {
+          acquisitionData = null;
+          acquisitionLoadedRange = null;
+          acquisitionLastUpdated = null;
+        }
+        if (!acquisitionData) {
+          acquisitionCampaign.disabled = true;
+          acquisitionLanding.disabled = true;
+          document.getElementById('acquisitionReport').replaceChildren();
+        }
+        status.textContent = (acquisitionData ? 'Refresh failed. Showing previously loaded cohorts. ' : '') + error.message;
+      } finally {
+        acquisitionLoading = false;
+        updateAcquisitionLoadState();
+      }
     }
     document.getElementById('acquisitionRefresh').addEventListener('click', loadAcquisitionReport);
+    [acquisitionFrom, acquisitionTo].forEach(input => input.addEventListener('input', () => {
+      updateAcquisitionLoadState();
+      if (acquisitionLoadedRange && !acquisitionLoading) document.getElementById('acquisitionStatus').textContent = acquisitionDatesChanged() ? 'Dates changed. Click Load selected dates to update the cohort report.' : 'Loaded. Historical and test exclusions are shown below.';
+    }));
     ['acquisitionUnit', 'acquisitionCampaign', 'acquisitionLanding'].forEach(id => {
       document.getElementById(id).addEventListener('change', renderAcquisitionReport);
     });
@@ -3758,7 +3804,10 @@
 
     loginFormEl.addEventListener('submit', handleLogin);
     logoutBtn.addEventListener('click', handleLogout);
-    refreshBtn.addEventListener('click', loadOverview);
+    refreshBtn.addEventListener('click', async () => {
+      // The header refresh includes cohort data only after its first successful load.
+      await Promise.allSettled([loadOverview(), ...(acquisitionLoadedRange ? [loadAcquisitionReport()] : [])]);
+    });
     consoleTabEls.forEach((tab, index) => {
       tab.addEventListener('click', () => switchConsoleTab(tab.dataset.consoleTab));
       tab.addEventListener('keydown', (event) => {

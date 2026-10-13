@@ -28,6 +28,9 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
         const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
         const calls = [];
         let failTracking = false;
+        const acquisitionRequests = [];
+        let acquisitionFailure = 0;
+        let acquisitionFixtureVersion = 0;
         await context.addInitScript(({ locationId }) => {
             window.__ffSession = /fixture_(admin|owner)/.test(location.search) ? { access_token: 'fixture-token', user: { id: '33333333-3333-4333-8333-333333333333', email: 'fixture@example.test' } } : null;
             window.__ffCalls = [];
@@ -73,9 +76,13 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
                 return route.fulfill({ contentType: 'application/json', body: '{"isAdmin":true,"role":"superuser"}' });
             if (url.includes('/functions/v1/admin-support-overview'))
                 return route.fulfill({ contentType: 'application/json', body: '{"isAdmin":true,"role":"superuser","businesses":[],"metricsSnapshot":{"metrics":{}}}' });
+            if (url.includes('/rpc/acquisition_cohort_report')) {
+                acquisitionRequests.push(JSON.parse(route.request().postData()));
+                if (acquisitionFailure) return route.fulfill({status:acquisitionFailure,contentType:'application/json',body:'{}'});
+            }
             if (url.includes('/rpc/acquisition_cohort_report'))
                 return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ businesses: [
-                ...['one','two','three'].map((id,i) => ({business_id:id,acquired_at:new Date(Date.now()-i*86400000).toISOString(),signup_completed_at:new Date(Date.now()-i*86400000).toISOString(),source:'google',medium:'cpc',campaign:'restaurants_search_test_01',landing_page:'/restaurants/',coverage:'measured',attribution_policy:'signup_visit_v2',milestones:i===0?{eligible_feedback:new Date().toISOString()}:{},locations:[{id:id+'-l1'},{id:id+'-l2'}]})),
+                ...['one','two','three'].map((id,i) => ({business_id:id,acquired_at:new Date(Date.now()-i*86400000).toISOString(),signup_completed_at:new Date(Date.now()-i*86400000).toISOString(),source:'google',medium:'cpc',campaign:'restaurants_search_test_01',landing_page:'/restaurants/',coverage:'measured',attribution_policy:'signup_visit_v2',milestones:(i===0 || (i===1 && acquisitionFixtureVersion))?{eligible_feedback:new Date().toISOString()}:{},locations:[{id:id+'-l1'},{id:id+'-l2'}]})),
                 {business_id:'other',acquired_at:new Date().toISOString(),signup_completed_at:new Date().toISOString(),source:'google',campaign:'other',landing_page:'/',coverage:'measured',attribution_policy:'signup_visit_v2',milestones:{eligible_feedback:new Date().toISOString()},locations:[]},
                 {business_id:'legacy',acquired_at:new Date().toISOString(),signup_completed_at:new Date().toISOString(),source:'google',campaign:'restaurants_search_test_01',landing_page:'/restaurants/',coverage:'measured',attribution_policy:'browser_journey_v1',milestones:{eligible_feedback:new Date().toISOString()},locations:[]}
               ], arrivals: [{campaign:'restaurants_search_test_01',landing_page:'/restaurants/',attribution_policy:'signup_visit_v2',visitors:3,signup_started:3,signup_completed:3},{campaign:'other',landing_page:'/',visitors:1,signup_started:1,signup_completed:1}] }) });
@@ -366,9 +373,15 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             assert.equal(await page.locator('#ffMeasurementConsent').count(), 0);
             await page.goto(base + '/admin-support.html?fixture_admin=1');
             await page.locator('#metricsTab').click();
+            assert.equal(await page.locator('#acquisitionRefresh').textContent(),'Load cohorts');
+            await page.locator('#refreshBtn').click();
+            await page.waitForTimeout(100);
+            assert.equal(acquisitionRequests.length,0,'header refresh does not load a cold cohort report');
             await page.locator('#acquisitionRefresh').click();
             await page.waitForFunction(() => document.getElementById('acquisitionStatus').textContent.startsWith('Loaded.'));
             assert.match(await page.locator('#acquisitionReport').textContent(), /google/);
+            assert.equal(await page.locator('#acquisitionRefresh').textContent(),'Refresh cohorts');
+            assert.match(await page.locator('#acquisitionUpdated').textContent(),/Last updated .* UTC/);
             await page.locator('#acquisitionCampaign').selectOption({label:'restaurants_search_test_01'});
             await page.locator('#acquisitionLanding').selectOption({label:'/restaurants/'});
             assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'1 / 3 (33.3%)');
@@ -382,6 +395,37 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             await page.waitForFunction(() => document.getElementById('acquisitionStatus').textContent.startsWith('Loaded.'));
             assert.equal(await page.locator('#acquisitionCampaign').inputValue(),JSON.stringify('restaurants_search_test_01'));
             assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'1 / 3 (33.3%)');
+            const oldFrom = await page.locator('#acquisitionFrom').inputValue();
+            const newFrom = new Date(Date.parse(oldFrom+'T00:00:00Z')+86400000).toISOString().slice(0,10);
+            await page.locator('#acquisitionFrom').fill(newFrom);
+            assert.equal(await page.locator('#acquisitionRefresh').textContent(),'Load selected dates');
+            assert.match(await page.locator('#acquisitionStatus').textContent(),/Dates changed/);
+            acquisitionFixtureVersion = 1;
+            const beforeHeader = acquisitionRequests.length;
+            await page.locator('#refreshBtn').click();
+            await page.waitForFunction(() => document.getElementById('acquisitionRefresh').textContent === 'Refresh cohorts');
+            assert.equal(acquisitionRequests.length,beforeHeader+1);
+            assert.equal(acquisitionRequests.at(-1).p_from,newFrom);
+            assert.equal(await page.locator('#acquisitionCampaign').inputValue(),JSON.stringify('restaurants_search_test_01'));
+            assert.equal(await page.locator('#acquisitionLanding').inputValue(),JSON.stringify('/restaurants/'));
+            assert.equal(await page.locator('#acquisitionUnit').inputValue(),'business');
+            assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'2 / 3 (66.7%)','header refresh renders new cohort data');
+            const lastUpdated = await page.locator('#acquisitionUpdated').textContent();
+            acquisitionFailure = 503;
+            await page.locator('#acquisitionRefresh').click();
+            await page.waitForFunction(() => document.getElementById('acquisitionStatus').textContent.startsWith('Refresh failed.'));
+            assert.equal(await page.locator('#acquisitionUpdated').textContent(),lastUpdated,'failed refresh does not claim newer data');
+            assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'2 / 3 (66.7%)');
+            acquisitionFailure = 401;
+            await page.locator('#acquisitionRefresh').click();
+            await page.waitForFunction(() => document.getElementById('acquisitionRefresh').textContent === 'Load cohorts');
+            assert.equal(await page.locator('#acquisitionReport').textContent(),'','denied access clears the old report');
+            assert.equal(await page.locator('#acquisitionUpdated').isVisible(),false);
+            acquisitionFailure = 0;
+            acquisitionFixtureVersion = 0;
+            await page.locator('#acquisitionFrom').fill(oldFrom);
+            await page.locator('#acquisitionRefresh').click();
+            await page.waitForFunction(() => document.getElementById('acquisitionRefresh').textContent === 'Refresh cohorts');
             await page.locator('#acquisitionUnit').selectOption('location');
             assert.match(await page.locator('#acquisitionReport').textContent(), /locations \(separate detail\)/);
             assert.equal(await page.locator('#acquisitionActivationRate').innerText(),'1 / 3 (33.3%)');
