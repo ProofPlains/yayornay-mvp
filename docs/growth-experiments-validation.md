@@ -6,7 +6,7 @@ Validated on 13 October 2026 against GitHub main `e10d9b920f17e5507630a1d9bc2df4
 
 The original `yayornay-mvp` checkout had staged, unstaged and untracked unrelated work, including Admin Support edits, and its HEAD was `7596ea595d4af7d754fe8de49039e11e7948f296`. Implementation used a separate clone of current main. The original checkout and synced ChatGPT sources were not modified. The local-only AGENTS/product-principles guidance was read; those files were absent from GitHub main and were not copied into this change.
 
-The additive Growth Experiments migration was applied live using Supabase MCP. The static UI is committed on the local review branch and requires GitHub publication and the normal frontend deployment after review. Automatic approval review blocked the attempted branch publication pending explicit user approval; no draft PR was created. No existing Edge Functions or customer-data policies were deployed or changed.
+The additive Growth Experiments migration was applied live using Supabase MCP. The static UI is published on the review branch and requires the normal frontend deployment after review. No existing Edge Functions or customer-data policies were deployed or changed.
 
 ## Database checks
 
