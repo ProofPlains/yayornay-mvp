@@ -150,10 +150,16 @@ uses signed tickets and is deployed. Live signed-ticket health request 2165
 returned HTTP 200 with configured=true; validation request 2166 returned HTTP 200
 with validation=validated and conversions_recorded=false. Browser RPC grants are
 denied. All 35 automated tests and JavaScript/TypeScript syntax checks passed.
-The integration settings remain disabled, the signup cron is paused and the
-conversion queue is empty. No real conversions have been uploaded. The reviewed
-frontend/disclosure changes still require publication and a fresh rollout boundary
-before activation. Do not reapply the deployed migrations or unpause unrelated jobs.
+After founder approval, PR #31 was merged as
+`72050ee0a4f025f0d33a7e77e803c61ae004ee21`. GitHub Pages run 38745470162
+succeeded; both the live homepage and `/privacy/` matched the reviewed files.
+Reporting was enabled with a fresh rollout boundary at
+`2026-10-15T13:47:12.103068Z` (14:47 UK time), and only the signup cron was
+unpaused. The queue and eligible historical-signup count were both zero. Signed
+worker request 2167 returned HTTP 200 with processed=0. No real conversions were
+uploaded during release verification. The existing retention cron remains active.
+Do not reapply the deployed migrations or reset the rollout boundary during normal
+operation; doing so would exclude otherwise eligible signups awaiting delivery.
 
 Automated tests apply the actual migrations in PGlite and exercise eligible
 signup/replay, missing click/consent, old consent, internal/test, incomplete signup,
@@ -171,10 +177,10 @@ checks. No controlled live conversion is authorised or required for this release
 - [ ] Secondary/observe only; no campaign custom-goal inclusion; Maximize Clicks.
 - [ ] Count One, no value, 30-day click window, selected attribution model checked.
 - [ ] Auto-tagging enabled; restaurant navigation preserves the ad click ID.
-- [ ] Operator Google app published, credentials valid, Data Manager API enabled.
-- [ ] Backend secrets and live validation succeed without a recorded conversion.
-- [ ] Migration, service-only worker, scheduler, disclosure version and privacy text deployed.
-- [ ] Fresh rollout boundary enabled, no historic signup queue, cron/retention active.
+- [x] Operator Google app published, credentials valid, Data Manager API enabled.
+- [x] Backend secrets and live validation succeed without a recorded conversion.
+- [x] Migration, service-only worker, scheduler, disclosure version and privacy text deployed.
+- [x] Fresh rollout boundary enabled, no historic signup queue, cron/retention active.
 - [ ] Founder knows how to disable reporting and inspect needs_attention/errors.
 
 Sources: https://developers.google.com/data-manager/api/devguides/events/google-ads/offline/send-events
