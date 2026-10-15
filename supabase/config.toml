@@ -4,3 +4,7 @@ verify_jwt = false
 
 [functions.submit-feedback]
 verify_jwt = false
+
+[functions.upload-google-ads-conversions]
+# Backend HMAC + expiring single-use ticket; never stage the service JWT in pg_net.
+verify_jwt = false

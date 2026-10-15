@@ -288,6 +288,7 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             const signup = await page.evaluate(() => window.__ffCalls.find(x => x.signup).signup);
             assert.equal(signup.options.data.ff_setup.business_name, 'Fixture Cafe');
             assert.equal(!!signup.options.data.ff_setup.journey_token, consent);
+            assert.equal(signup.options.data.ff_setup.campaign_disclosure_version, consent ? 'google_signup_v1' : null);
             assert.equal(calls.some(x => x.kind === 'landing'), consent);
             assert.match(await page.locator('#signupError').textContent(), /confirm your email/i);
         });

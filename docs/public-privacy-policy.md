@@ -13,13 +13,16 @@ helper text, Details link markup and click behaviour are unchanged.
 
 ## Google measurement release boundary
 
-The 15 October 2026 disclosure explains the proposed GCLID-only signup reports,
+The 15 October 2026 disclosure explains the GCLID-only signup reports,
 the Google recipient and data-use links, withdrawal limits, and the separate
-operator OAuth connection. Google reporting is explicitly labelled planned and
-inactive. This change does not implement or activate uploads, collect new
-identifiers, change retention, or treat an older consent choice as new consent.
+operator OAuth connection. The original public-policy release labelled reporting
+planned and inactive. The signup-reporting release updates both copies for the
+implemented behavior; publish that wording together with the disclosure version
+and activate only after the reporting checklist is complete. See
+[google-ads-signup-reporting.md](google-ads-signup-reporting.md) for the exact live
+deployment state. Publishing a policy alone never upgrades an older consent choice.
 
-Before enabling reporting, implement durable disclosure-version evidence and
+Before enabling reporting, verify durable disclosure-version evidence and
 eligibility checks, a rollout boundary excluding historic signups, internal/test
 exclusion, withdrawal cancellation of unsent reports, provider-safe idempotency,
 and bounded retries. Recheck whether the approved consent presentation satisfies
@@ -34,8 +37,9 @@ repository, public page, screenshot, or test fixture.
 
 ## Release and rollback
 
-Deploy through the normal GitHub main frontend release. No Supabase migration,
-Edge Function deployment, provider call or OAuth change is part of this patch.
+Deploy through the normal GitHub main frontend release. The original public-policy
+patch required no backend changes; the later signup-reporting implementation has
+separate Supabase migrations and an Edge Function documented in its release guide.
 Verify `/privacy/` returns 200 without authentication, and the homepage/footer
 and signup Details actions show the same policy. Then enter the URL in Google
 Auth Platform Branding; the Google console separately determines whether other
