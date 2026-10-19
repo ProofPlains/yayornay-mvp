@@ -111,6 +111,28 @@ Required Edge secrets:
 - `GOOGLE_ADS_SIGNUP_CONVERSION_ACTION_ID`
 - optional `GOOGLE_ADS_LOGIN_ACCOUNT_ID`, only for a manager-account access path
 
+Production destination corrected on 19 October 2026: **FlashFeedback completed
+signup**, conversion action **`7847468862`**, replacing `7845162456` in
+`GOOGLE_ADS_SIGNUP_CONVERSION_ACTION_ID` only. The old Google Ads action was not
+modified. The saved secret's SHA-256 was independently read back after reloading
+the Dashboard and matches `7847468862`:
+`24c33069761c59b1d49626e4e4f5ba07b4050c702472b5f14d8035e517ce7692`.
+Live worker v2 and its shared helper still match GitHub main; the setting supplies
+`destinations[0].productDestinationId` without a code change or redeployment.
+Post-update validation-only request **3416** returned HTTP 200,
+`validation=validated`, `conversions_recorded=false`. The existing response does
+not echo the destination ID; verification combines the saved fingerprint, reviewed
+direct environment-to-payload code path and successful live validation.
+
+At correction, the durable table contained zero queued, attempted, accepted or
+successfully processed conversions, including against the old action. All 72
+retained worker HTTP responses (19 October, 07:50–13:45 UTC) reported processed=0.
+No historical records were changed or replayed. This is no evidence of an old-action
+delivery in retained records, not proof that no delivery ever occurred outside
+retention or through another path; deleted business records cascade out of this
+table. Reporting and its five-minute schedule remain enabled, with the original
+rollout boundary unchanged.
+
 Use Data Manager API `POST /v1/events:ingest` and
 `GET /v1/requestStatus:retrieve`, OAuth scope `auth/datamanager`.
 The older Google Ads UploadClickConversions API is restricted for new adopters.
