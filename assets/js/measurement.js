@@ -52,9 +52,13 @@
     queue = queue.filter(x => x && x.type !== 'arrival' && x.expires > Date.now() && x.attempts < 12).slice(-100);
     write('ff_measurement_queue', queue);
     // Restore only delivery retries already bound to their original signup account.
-    // This is not used to recognise visitors or attribute another page/visit.
+    // During Google signup, hold unbound retries for the consented attempt in this tab.
     const pending = read('ff_signup_measurement_queue', true);
-    if (Array.isArray(pending)) queue.push(...pending.filter(x => x?.type === 'arrival' && x.userId && x.expires > Date.now() && x.attempts < 12));
+    const googleAttempt = read('ff_google_signup', true);
+    const googleToken = googleAttempt?.expiresAt > Date.now() && googleAttempt.token;
+    if (Array.isArray(pending)) queue.push(...pending.filter(x => x?.type === 'arrival'
+        && (x.userId || (googleToken && x.body.token === googleToken))
+        && x.expires > Date.now() && x.attempts < 12));
     const privacyBlocked = () => !!w.navigator.globalPrivacyControl || w.navigator.doNotTrack === '1';
     function saveQueue() {
         write('ff_measurement_queue', queue.filter(x => x.type !== 'arrival'));
@@ -85,6 +89,8 @@
                 if (item.next > now)
                     continue;
                 if (item.userId && item.userId !== session?.user?.id)
+                    continue;
+                if (item.type === 'arrival' && !item.userId && item.body.token === googleToken)
                     continue;
                 item.attempts++;
                 item.next = now + Math.min(300000, 1000 * 2 ** item.attempts) + Math.random() * 500;
@@ -170,9 +176,10 @@
             return signupJourney?.token || null;
         },
         signupCreated(userId, token) {
-            if (!userId || token !== signupJourney?.token) return;
+            if (!userId || !token || privacyBlocked() || (token !== signupJourney?.token && token !== googleToken)) return;
             queue.filter(x => x.type === 'arrival' && x.body.token === token).forEach(x => { x.userId = userId; });
             saveQueue();
+            if (token === googleToken) void flush();
         },
         async consentStatus() {
             const { data, error } = await client.rpc('campaign_measurement_status');

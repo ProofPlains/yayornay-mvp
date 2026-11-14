@@ -667,6 +667,36 @@
 
         .cta-buttons { display: flex; gap: 15px; justify-self: center; margin-top: 30px; }
 
+        .google-auth-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 48px;
+            padding: 10px 16px;
+            border: 1px solid #8e918f;
+            border-radius: 24px;
+            background: #131314;
+            color: #e3e3e3;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .google-auth-button[hidden] { display: none; }
+        .google-auth-button:hover:not(:disabled) { background: #252526; }
+        .google-auth-button:focus-visible { outline: 2px solid #8b5cf6; outline-offset: 3px; }
+        .google-auth-button:disabled { opacity: .7; cursor: wait; }
+        #signupGoogleOption { display: grid; gap: 10px; margin-bottom: 18px; }
+        #signupEmailNext { width: 100%; }
+        #signupScreen .signup-progress { font-size: 13px; margin-bottom: 8px; }
+        #signupOptionalDetails { margin: 18px 0; padding: 12px 14px; border: 1px solid #777; border-radius: 12px; }
+        #signupOptionalDetails summary { cursor: pointer; }
+        #signupOptionalDetails[open] summary { margin-bottom: 16px; }
+        #signupBack { display: block; margin: 14px auto 0; }
+        #signupScreen [hidden] { display: none; }
+        .auth-method-divider { margin: 12px 0; text-align: center; }
+
         .btn-primary, .btn-secondary {
             padding: 15px 30px;
             border-radius: 25px;
@@ -6237,16 +6267,51 @@
 		</div>
 
 		<div class="form-title">
-            <h2>Create Your Free Account</h2>
-            <p>Start collecting feedback in minutes</p>
+            <p id="signupProgress" class="signup-progress">Step 1 of 2 · Account</p>
+            <h2 id="signupTitle" tabindex="-1">Create your account</h2>
+            <p id="signupIntro">Choose how you’d like to sign in.</p>
         </div>
 
         <div id="signupError" class="error-message" role="alert" aria-live="assertive" tabindex="-1" style="display: none;"></div>
 
         <form id="signupForm" onsubmit="handleSignup(event)">
+            <div id="signupAccountStep">
+            <div id="signupGoogleOption">
+                <button type="button" class="google-auth-button" onclick="continueWithGoogle('signup', this)">
+                    <img src="/assets/google-g.svg" alt="" width="18" height="18">Continue with Google
+                </button>
+                <button id="signupEmailChoice" type="button" class="btn-secondary" aria-controls="signupPasswordFields" aria-expanded="false">Continue with email</button>
+            </div>
+            <div id="signupPasswordFields" hidden>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" autocomplete="email" required aria-describedby="emailError">
+                <div id="emailError" class="field-error" role="alert"></div>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" autocomplete="new-password" required minlength="6" aria-describedby="passwordError">
+                <div id="passwordError" class="field-error" role="alert"></div>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" autocomplete="new-password" required minlength="6" aria-describedby="confirmPasswordError">
+                <div id="confirmPasswordError" class="field-error" role="alert"></div>
+            </div>
+            </div>
+            <div id="signupCampaignOptions" class="form-group">
+                <label for="signupCampaignConsent" style="display:flex;align-items:flex-start;gap:10px;font-weight:normal;cursor:pointer">
+                    <input type="checkbox" id="signupCampaignConsent" aria-describedby="signupCampaignConsentHelp" style="width:20px;height:20px;flex:0 0 20px;margin:2px 0;accent-color:#8b5cf6">
+                    <span>Allow campaign measurement <span style="opacity:.7">(optional)</span></span>
+                </label>
+                <p id="signupCampaignConsentHelp" style="font-size:13px;line-height:1.5;color:#aab;margin:8px 0 0">Helps us understand how you found us and how you use FlashFeedback. <a href="#" data-sheet-open="privacy">Details</a>.</p>
+            </div>
+                <button id="signupEmailNext" type="submit" class="btn-primary" hidden>Continue</button>
+            </div>
+            <div id="signupBusinessStep" hidden>
             <div class="form-group">
                 <label for="businessName">Business Name</label>
-                <input type="text" id="businessName" required>
+                <input type="text" id="businessName" maxlength="160" required>
 				<div class="help-text" style="font-size:12px;color:#9aa;margin-top:6px;">
 					This appears on your customer feedback screen.
 				  </div>				  
@@ -6270,15 +6335,16 @@
 			  </select>
 			</div>
 			
-			<!-- NEW: Business type (free text for specificity) -->
+                <details id="signupOptionalDetails">
+                    <summary>Add optional details</summary>
 			<div class="form-group">
 			  <label for="signupBusinessType">Business type (optional)</label>
-			  <input id="signupBusinessType" type="text" placeholder="e.g., Restaurant, Doctor’s Practice, Salon">
+			  <input id="signupBusinessType" maxlength="160" type="text" placeholder="e.g., Restaurant, Doctor’s Practice, Salon">
 			</div>
 
             <div class="form-group">
-                <label for="ownerName">Your Name</label>
-                <input type="text" id="ownerName" required>
+                <label for="ownerName">Your name (optional)</label>
+                <input type="text" id="ownerName" autocomplete="name" maxlength="160">
 				<div class="help-text" style="font-size:12px;color:#9aa;margin-top:6px;">
 					We’ll use this to personalize your dashboard.
 				  </div>				  
@@ -6290,36 +6356,20 @@
 			    If you leave this blank we’ll use <em>Location 01</em>.
 			  </div>
 			</div>
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" required aria-describedby="emailError">
-                <div id="emailError" class="field-error" role="alert"></div>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" required minlength="6" aria-describedby="passwordError">
-                <div id="passwordError" class="field-error" role="alert"></div>
-            </div>
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" required minlength="6" aria-describedby="confirmPasswordError">
-                <div id="confirmPasswordError" class="field-error" role="alert"></div>
-            </div>
+                </details>
 			<input type="hidden" id="signupPricingTier" name="signupPricingTier" value="free">
-            <div class="form-group" style="margin-top:20px">
-                <label for="signupCampaignConsent" style="display:flex;align-items:flex-start;gap:10px;font-weight:normal;cursor:pointer">
-                    <input type="checkbox" id="signupCampaignConsent" aria-describedby="signupCampaignConsentHelp" style="width:20px;height:20px;flex:0 0 20px;margin:2px 0;accent-color:#8b5cf6">
-                    <span>Allow campaign measurement <span style="opacity:.7">(optional)</span></span>
-                </label>
-                <p id="signupCampaignConsentHelp" style="font-size:13px;line-height:1.5;color:#aab;margin:8px 0 0">Helps us understand how you found us and how you use FlashFeedback. <a href="#" data-sheet-open="privacy">Details</a>.</p>
+            <button id="signupSubmit" type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Create Account</button>
+                <button id="signupBack" type="button" class="link-button">← Back to account details</button>
             </div>
-            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Create Account</button>
         </form>
 
-        <div style="text-align: center; margin-top: 20px;">
+        <div id="signupLinks" style="text-align: center; margin-top: 20px;">
             <button class="link-button" onclick="showWelcome()">← Back to welcome</button>
             <span style="color: #ccc; margin: 0 10px;">|</span>
             <button class="link-button" onclick="showLogin()">Already have an account?</button>
+        </div>
+        <div id="googleSetupLinks" hidden style="text-align: center; margin-top: 20px;">
+            <button type="button" class="link-button" onclick="cancelGoogleSetup()">Use a different account</button>
         </div>
     </div>
 
@@ -6344,12 +6394,15 @@
 		</div>
 
 		<div class="form-title">
-			<h2>Welcome back 👋</h2>
 			<p style="opacity:.9;">Log in to see what your customers are saying.</p>
 		  </div>
 
         <div id="loginError" class="error-message" role="alert" aria-live="assertive" tabindex="-1" style="display: none;"></div>
 
+        <button type="button" class="google-auth-button" onclick="continueWithGoogle('login', this)">
+            <img src="/assets/google-g.svg" alt="" width="18" height="18">Continue with Google
+        </button>
+        <p class="auth-method-divider">or</p>
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
                 <label for="loginEmail">Email Address</label>
@@ -6383,7 +6436,14 @@
 	    <p id="teamInviteIntro" style="opacity:.9;">Create your user account to join this team.</p>
 	  </div>
 
-	  <div id="teamInviteError" class="error-message" style="display:none;"></div>
+	  <div id="teamInviteError" class="error-message" role="alert" tabindex="-1" style="display:none;"></div>
+
+	  <div id="teamInviteGoogleOption" hidden>
+	    <button type="button" class="google-auth-button" onclick="continueWithGoogle('teamInvite', this)">
+	      <img src="/assets/google-g.svg" alt="" width="18" height="18">Continue with Google
+	    </button>
+	    <p class="auth-method-divider">or join with email</p>
+	  </div>
 
 	  <form id="teamInviteAccountForm">
 	    <div class="form-group">
@@ -7292,6 +7352,8 @@
 			const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2ZWRpd3NvY2ZiYWx6YnpkZGVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzQ1NzcsImV4cCI6MjA3MzYxMDU3N30.Y6TGgEuk97iFuuZmfWvOkwXx88y7397rzUhwbDG0p9Q';
 
 			// This object lets your frontend talk to Supabase Auth + DB
+			const isGoogleReturn = new URLSearchParams(window.location.search).get('ff_google') === '1';
+			let googleCallbackHash = isGoogleReturn ? new URLSearchParams(window.location.hash.slice(1)) : null;
 			const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 			window.FFMeasurement?.configure(supabase, SUPABASE_URL, SUPABASE_ANON_KEY);
 			window.supabase = supabase; // expose the client for console/debug use
@@ -7339,6 +7401,9 @@
 			  pendingUpgradePayment = null;
 			}
 			let signupPlanConfirmed = false;
+			let googleSetupUser = null;
+			let googleSetupPending = false;
+			const googleSignupStorageKey = 'ff_google_signup';
 
 			function getPricingTier(key) {
 			  return PRICING_TIERS[key] || PRICING_TIERS.free;
@@ -8373,7 +8438,6 @@
 			    showSection('Feedback');
 			    return true;
 			  } catch (error) {
-			    console.error(error);
 			    if (error.code === 'email_mismatch') {
 			      try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
 			      currentUser = null;
@@ -8385,8 +8449,8 @@
 			      const signupEmail = document.getElementById('email');
 			      if (invitedEmail && signupEmail) signupEmail.value = invitedEmail;
 			      showError?.('teamInviteError', invitedEmail
-			        ? `This invite is for ${invitedEmail}. Create a new user account with that email, or ask the business to invite a different email.`
-			        : 'Create a new user account with the invited email address to accept this team invite.');
+			        ? `This invite is for ${invitedEmail}. Use that email to join the team.`
+			        : 'Use the email address that received the invitation to join the team.');
 			      return true;
 			    }
 			    if (error.code === 'existing_user') {
@@ -8397,6 +8461,7 @@
 			      showError?.('teamInviteError', 'This email already has a FlashFeedback account, so it cannot be invited to another business.');
 			      return true;
 			    }
+			    console.error(error);
 			    showLogin();
 			    showError?.('loginError', error.message || 'Could not accept this team invite.');
 			    return true;
@@ -8887,6 +8952,11 @@
 		
 		    // 3) Try to restore owner session (non-recovery)
 		    const { data: { session } } = await supabase.auth.getSession();
+		    if (urlParams.get('ff_google') === '1') {
+		      await finishGoogleRedirect(urlParams, session);
+		      booted = true;
+		      return;
+		    }
 		    if (session?.user) {
 		      if (teamInviteToken && await handleTeamInviteFromUrl(session.user)) {
 		        booted = true;
@@ -8997,6 +9067,9 @@
             const screen = document.getElementById('teamInviteAccountScreen');
             const intro = document.getElementById('teamInviteIntro');
             const emailInput = document.getElementById('teamInviteEmail');
+            const googleOption = document.getElementById('teamInviteGoogleOption');
+            googleOption.hidden = true;
+            emailInput.value = '';
             const errorEl = document.getElementById('teamInviteError');
             if (errorEl) {
                 errorEl.style.display = 'none';
@@ -9014,6 +9087,7 @@
             try {
                 const invite = await lookupTeamInvite(token);
                 if (emailInput) emailInput.value = invite.email || '';
+                googleOption.hidden = !invite.email;
                 if (intro) intro.textContent = `Create your user account to join ${invite.businessName || 'this business'} as an Admin.`;
             } catch (error) {
                 console.error(error);
@@ -9059,13 +9133,17 @@
             }
         }
 
-        function showSignup() {
+        function showSignup(googleUser = null) {
             if (new URLSearchParams(window.location.search).get('team_invite')) {
                 showTeamInviteAccountScreen();
                 return;
             }
-            const invitedEmail = getTeamInviteEmailHint();
-            window.FFMeasurement?.signupStarted();
+            googleSetupUser = googleUser;
+            signupEmailExpanded = false;
+            document.getElementById('signupOptionalDetails').open = false;
+            document.getElementById('ownerName').value = String(googleUser?.user_metadata?.full_name || '').slice(0, 160);
+            if (!googleUser) window.FFMeasurement?.signupStarted();
+            renderSignupStep(googleUser ? 'business' : 'account');
             hideAllScreens();
             hideAdminControls();
 
@@ -9073,15 +9151,55 @@
             resetQrSignUI();
 
             document.getElementById('signupScreen').style.display = 'block';
-            if (new URLSearchParams(window.location.search).get('team_invite') && invitedEmail) {
-                const emailInput = document.getElementById('email');
-                if (emailInput) emailInput.value = invitedEmail;
-            }
             currentView = 'signup';
             clearFormErrors();
             scrollToTop();
         }
 
+
+        let signupStep = 'account';
+        let signupEmailExpanded = false;
+
+        function renderSignupStep(step, focus = false) {
+            signupStep = step;
+            const business = step === 'business';
+            const showEmail = !business && signupEmailExpanded;
+            document.getElementById('signupAccountStep').hidden = business;
+            document.getElementById('signupPasswordFields').hidden = !showEmail;
+            document.getElementById('signupEmailNext').hidden = !showEmail;
+            document.getElementById('signupEmailChoice').setAttribute('aria-expanded', String(showEmail));
+            document.querySelectorAll('#signupPasswordFields input').forEach(input => {
+                input.disabled = business || !showEmail;
+            });
+            document.getElementById('signupBusinessStep').hidden = !business;
+            document.querySelectorAll('#signupBusinessStep input, #signupBusinessStep select').forEach(input => {
+                input.disabled = !business;
+            });
+            document.getElementById('signupLinks').hidden = business;
+            document.getElementById('signupBack').hidden = !!googleSetupUser;
+            document.getElementById('googleSetupLinks').hidden = !googleSetupUser;
+            const title = document.getElementById('signupTitle');
+            title.textContent = business ? 'Set up your business' : 'Create your account';
+            document.getElementById('signupProgress').textContent = business ? 'Step 2 of 2 · Business' : 'Step 1 of 2 · Account';
+            document.getElementById('signupIntro').textContent = business
+                ? 'Continuing as ' + (googleSetupUser?.email || document.getElementById('email').value.trim())
+                : 'Choose how you’d like to sign in.';
+            if (focus) {
+                scrollToTop();
+                title.focus({ preventScroll: true });
+            }
+        }
+
+        document.getElementById('signupEmailChoice').addEventListener('click', () => {
+            signupEmailExpanded = !signupEmailExpanded;
+            clearFormErrors();
+            renderSignupStep('account');
+            if (signupEmailExpanded) document.getElementById('email').focus();
+        });
+        document.getElementById('signupBack').addEventListener('click', () => {
+            clearFormErrors();
+            renderSignupStep('account', true);
+        });
 
         function showLogin() {
             const invitedEmail = getTeamInviteEmailHint();
@@ -9095,6 +9213,103 @@
             currentView = 'login';
             clearFormErrors();
             scrollToTop();
+        }
+
+        function readGoogleSignup() {
+            try {
+                const attempt = JSON.parse(sessionStorage.getItem(googleSignupStorageKey));
+                return attempt?.expiresAt > Date.now() ? attempt : null;
+            } catch {
+                return null;
+            }
+        }
+
+        function saveGoogleSignup(attempt) {
+            try {
+                if (attempt) sessionStorage.setItem(googleSignupStorageKey, JSON.stringify(attempt));
+                else sessionStorage.removeItem(googleSignupStorageKey);
+            } catch { /* OAuth still works when optional browser storage is blocked. */ }
+        }
+
+        function hasGoogleIdentity(user) {
+            return user.identities?.some(identity => identity.provider === 'google') ||
+                user.app_metadata?.providers?.includes('google');
+        }
+
+        async function continueWithGoogle(screen, button) {
+            clearFormErrors();
+            button.disabled = true;
+            try {
+                const token = screen === 'signup'
+                    ? await window.FFMeasurement?.signupToken(document.getElementById('signupCampaignConsent').checked)
+                    : null;
+                saveGoogleSignup({
+                    screen, token, plan: document.getElementById('signupPricingTier').value,
+                    expiresAt: Date.now() + 30 * 60 * 1000
+                });
+                const callback = new URL('/', window.location.origin);
+                callback.searchParams.set('ff_google', '1');
+                const invite = new URLSearchParams(window.location.search).get('team_invite');
+                if (invite) callback.searchParams.set('team_invite', invite);
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: callback.href, queryParams: { prompt: 'select_account' } }
+                });
+                if (error) throw error;
+            } catch {
+                saveGoogleSignup(null);
+                showError(screen + 'Error', 'Google sign-in could not start. Try again or use email and password.');
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function finishGoogleRedirect(params, session) {
+            const attempt = readGoogleSignup();
+            const failed = params.has('error') || googleCallbackHash?.has('error');
+            const signedIn = session?.access_token && session.access_token === googleCallbackHash?.get('access_token');
+            googleCallbackHash = null;
+            params.delete('ff_google');
+            params.delete('error');
+            params.delete('error_code');
+            params.delete('error_description');
+            history.replaceState({}, document.title, window.location.pathname + (params.size ? '?' + params : ''));
+
+            if (failed || !signedIn || !session?.user || !hasGoogleIdentity(session.user)) {
+                saveGoogleSignup(null);
+                const screen = params.has('team_invite') ? 'teamInvite' : attempt?.screen === 'signup' ? 'signup' : 'login';
+                if (screen === 'teamInvite') await showTeamInviteAccountScreen(params.get('team_invite'));
+                else if (screen === 'signup') showSignup();
+                else showLogin();
+                showError(screen + 'Error', 'Google sign-in was not completed. Try again or use email and password.');
+                return;
+            }
+            if (attempt) {
+                saveGoogleSignup({ ...attempt, userId: session.user.id });
+            }
+            try {
+                if (params.has('team_invite') && await handleTeamInviteFromUrl(session.user)) {
+                    saveGoogleSignup(null);
+                    return;
+                }
+                await hydrateAndShowDashboard(session.user);
+            } catch {
+                showLogin();
+                showError('loginError', 'Could not load your account. Try signing in again.');
+            }
+        }
+
+        async function cancelGoogleSetup() {
+            if (googleSetupPending) return;
+            try {
+                const { error } = await supabase.auth.signOut({ scope: 'local' });
+                if (error) throw error;
+                googleSetupUser = null;
+                saveGoogleSignup(null);
+                showLogin();
+            } catch {
+                showError('signupError', 'Could not sign out. Please try again.');
+            }
         }
 
         function showDemo() {
@@ -9183,7 +9398,7 @@
         }
 
         function clearFormErrors() {
-            ['signupError', 'loginError'].forEach(function(id) {
+            ['signupError', 'loginError', 'teamInviteError'].forEach(function(id) {
                 var element = document.getElementById(id);
                 if (element) {
                     element.style.display = 'none';
@@ -9296,6 +9511,7 @@
 
         async function handleSignup(event) {
 		  event.preventDefault();
+		  if (googleSetupPending) return;
 		  clearFormErrors?.(); // keep if you already have this helper
 
 		  const businessName = document.getElementById('businessName').value.trim();
@@ -9309,13 +9525,8 @@
 		  const selectedPricingTier = document.getElementById('signupPricingTier')?.value || 'free';
 
 
-		  // Basic client-side checks
-		  if ([businessName, ownerName, locationName, businessType].some(value => value.length > 160)) {
-		    showError('signupError', 'Please keep business, owner, location, and business-type names to 160 characters or fewer.'); return;
-		  }
-		  if (!businessName || !ownerName || !email || !password || !confirmPwd) {
-			showError('signupError', 'Please fill in all fields'); return;
-		  }
+		  if (signupStep === 'account') {
+		    if (!signupEmailExpanded) return;
 		  if (password !== confirmPwd) {
 			showFieldError('confirmPassword', 'confirmPasswordError', 'Passwords do not match.'); return;
 		  }
@@ -9326,6 +9537,26 @@
 			showFieldError('email', 'emailError', 'Please enter a valid email address.'); return;
 		  }
 
+		    renderSignupStep('business', true);
+		    return;
+		  }
+
+		  // Basic client-side checks
+		  if ([businessName, ownerName, locationName, businessType].some(value => value.length > 160)) {
+		    showError('signupError', 'Please keep business, owner, location, and business-type names to 160 characters or fewer.'); return;
+		  }
+		  if (!businessName || !industry || (!googleSetupUser && (!email || !password || !confirmPwd))) {
+			showError('signupError', 'Please fill in all fields'); return;
+		  }
+		  if (googleSetupUser) {
+		    if (!signupPlanConfirmed) {
+		      openPricingModal('signup-submit');
+		      return;
+		    }
+		    signupPlanConfirmed = false;
+		    await completeGoogleSetup({ businessName, ownerName, locationName, industry, businessType, selectedPricingTier });
+		    return;
+		  }
 		  if (!signupPlanConfirmed) {
 		    openPricingModal('signup-submit');
 		    return;
@@ -9459,6 +9690,38 @@
 		  }
 		}
 
+		async function completeGoogleSetup(details) {
+		  googleSetupPending = true;
+		  const submit = document.getElementById('signupSubmit');
+		  const user = googleSetupUser;
+		  const attempt = readGoogleSignup();
+		  const token = attempt?.userId === user.id ? attempt.token : null;
+		  submit.disabled = true;
+		  try {
+		    const { data: { user: verifiedUser }, error: authError } = await supabase.auth.getUser();
+		    if (authError || verifiedUser?.id !== user.id) throw new Error('Sign in with Google again to finish setup.');
+		    const { data: setup, error } = await supabase.rpc('complete_google_business_signup', {
+		      p_business_name: details.businessName,
+		      p_owner_name: details.ownerName,
+		      p_location_name: details.locationName,
+		      p_industry: details.industry,
+		      p_business_type: details.businessType,
+		      p_plan: details.selectedPricingTier,
+		      p_journey_token: token || null
+		    });
+		    if (error) throw new Error('Could not finish setting up your business. Please try again.');
+		    if (!setup?.business) throw new Error('Could not create a business for this account. If you were invited to a team, use the link in your invitation.');
+		    window.FFMeasurement?.signupCreated(user.id, token);
+		    saveGoogleSignup(null);
+		    await hydrateAndShowDashboard(user, setup);
+		  } catch (error) {
+		    showError('signupError', error.message);
+		  } finally {
+		    submit.disabled = false;
+		    googleSetupPending = false;
+		  }
+		}
+
 		async function loadBusinessForUser(user) {
 		  const { data: directMembership } = await supabase
 		    .from('business_users')
@@ -9498,9 +9761,11 @@
 		}
 
 		// Re-usable path after we know "user" is authenticated (fresh login or restored session)
-		async function hydrateAndShowDashboard(user) {
+		async function hydrateAndShowDashboard(user, completedSetup = null) {
 		  // Resumes confirmed/interrupted signup from the immutable server-side intent.
-		  const { data: recoveredSetup, error: setupError } = await supabase.rpc('complete_acquisition_signup');
+		  const { data: recoveredSetup, error: setupError } = completedSetup
+		    ? { data: completedSetup }
+		    : await supabase.rpc('complete_acquisition_signup');
 		  if (setupError) throw new Error('Could not finish account setup. Please try signing in again.');
 		  // 2) Load or create business
 		  const loaded = await loadBusinessForUser(user);
@@ -9508,6 +9773,12 @@
 		  let businessRole = loaded.role || 'owner';
 		  const notificationMembership = loaded.membership || null;
 		  if (!business) {
+		    if (hasGoogleIdentity(user) && !new URLSearchParams(window.location.search).has('team_invite')) {
+		      const attempt = readGoogleSignup();
+		      if (attempt?.userId === user.id && attempt.screen === 'signup') setSignupSelectedPlan(attempt.plan);
+		      showSignup(user);
+		      return false;
+		    }
 		    try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
 		    currentUser = null;
 		    window.currentUser = null;
@@ -9515,6 +9786,8 @@
 		    showError?.('loginError', 'Your account no longer has access to a business.');
 		    return false;
 		  }
+		  if (hasGoogleIdentity(user)) saveGoogleSignup(null);
+		  googleSetupUser = null;
 		
 		  // 3) Load locations (create one if none)
 		  let { data: locRows, error: locErr } = await supabase
@@ -9559,7 +9832,7 @@
 			  businessId: business.id,
 			  businessName: business.name,
 			  ownerName: business.owner_name || '',
-			  userName: user.user_metadata?.full_name || (businessRole === 'owner' ? business.owner_name || '' : ''),
+			  userName: businessRole === 'owner' ? business.owner_name || '' : user.user_metadata?.full_name || '',
 			  email: user.email || '',
 			  generalFeedbackAlertsEnabled: notificationMembership?.general_feedback_alerts_enabled ?? (business.email_alerts_enabled !== false),
 			  replyRequestAlertsEnabled: notificationMembership?.reply_request_alerts_enabled !== false,
@@ -14256,6 +14529,8 @@
 		  showCustomerViewForLocation,
 		  goToSignup,
 		  handleSignup,
+		  continueWithGoogle,
+		  cancelGoogleSetup,
 		  handleLogin,
 		  selectSentiment,
 		  submitFeedback,
@@ -15978,7 +16253,9 @@
         <p><strong>Google's use of information:</strong> Google receives the report and processes it under its applicable terms and privacy policies, including its own retention rules. See <a href="https://policies.google.com/technologies/partner-sites">how Google uses information from sites and apps that use its services</a> and <a href="https://policies.google.com/privacy">Google's Privacy Policy</a>. Our 90-day identifier cleanup does not control information already held by Google.</p>
         <p><strong>Your choice:</strong> signup remains available without campaign measurement. We respect Global Privacy Control and Do Not Track when collecting signup attribution. You can withdraw in Account Settings → Campaign measurement to remove your linked campaign information. Withdrawal also stops future and unsent signup reports. Withdrawal will not automatically remove a report already received by Google; contact <a href="mailto:contact@flashfeedback.co.uk">contact@flashfeedback.co.uk</a> for help with a data request.</p>
         <h3 id="google-account-access">Google account access for the reporting integration</h3>
-        <p>Only the operator or an authorised administrator connects a Google account to manage FlashFeedback's own advertising measurement. Customers do not need to sign in with Google. When connected, the integration uses Google authorisation tokens to submit eligible signup reports and check their delivery diagnostics. Tokens and required account identifiers are held in protected server-side configuration; they are not placed in public code or customer-accessible pages. We do not use this integration to access Gmail, Google Drive or customers' Google account profiles.</p>
+        <p>Only the operator or an authorised administrator connects a Google account to manage FlashFeedback's own advertising measurement. This integration uses Google authorisation tokens to submit eligible signup reports and check their delivery diagnostics. Tokens and required account identifiers are held in protected server-side configuration. The integration has no access to Gmail, Google Drive or customers' Google account profiles.</p>
+        <h2>Optional Google sign-in for business accounts</h2>
+        <p>If you choose Continue with Google, Google shares your account identifier, email address and basic profile with our authentication provider, Supabase. We use this information to sign you in and can use your name to prefill business setup. Email and password are also available. Google sign-in does not grant consent to Google Ads signup measurement.</p>
         <p>The integration's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including its Limited Use requirements. To disconnect Google account access, the operator can revoke the integration in their <a href="https://myaccount.google.com/connections">Google Account connections</a> and remove the stored server credentials. This administrator connection is separate from a business owner's campaign-measurement choice.</p>
         <p><strong>Reply requests:</strong> if you ask a business to reply, your email address is shared securely with that business’s authorised owners and Admins solely so they can respond to your feedback. Alert emails show only a masked address.</p>
 	    <p><strong>Legal basis:</strong> optional campaign measurement relies on your consent. Other service processing relies on the applicable contractual, legitimate-interest or consent basis under UK GDPR and POPIA.</p>

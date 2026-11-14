@@ -45,6 +45,9 @@ test('Durable signup reporting: eligibility, retries, recovery, exclusion and wi
    create function cron.alter_job(bigint,active boolean) returns void language sql as $$update cron.job set active=$2 where jobid=$1$$;
    create function cron.schedule(text,text,text) returns bigint language sql as $$insert into cron.job(jobname,schedule,command) values($1,$2,$3) on conflict(jobname) do update set command=excluded.command returning 1::bigint$$;`);
   for(const file of ['20261009151423_acquisition_activation_measurement.sql','20261011170128_signup_campaign_consent.sql','20261012102422_account_campaign_consent.sql','20261015112707_google_ads_signup_reporting.sql','20261015134030_google_ads_signed_worker_invocations.sql']) await db.exec(fs.readFileSync('supabase/migrations/'+file,'utf8'));
+  await db.exec('create table auth.identities(user_id uuid references auth.users(id), provider text)');
+  await db.exec(fs.readFileSync('supabase/migrations/20261114215049_optional_signup_owner_name.sql','utf8'));
+  await db.exec(fs.readFileSync('supabase/migrations/20261114220741_google_business_signup.sql','utf8'));
   const q=(sql,args=[])=>db.query(sql,args);
   const one=async(sql,args=[])=>(await q(sql,args)).rows[0];
   const claim=async()=>(await one('select google_ads_claim_signup($1,$2) x',[settings.accountId,settings.actionId])).x;
@@ -62,6 +65,40 @@ test('Durable signup reporting: eligibility, retries, recovery, exclusion and wi
    return {user,business,arrival};
   }
   assert.equal(await claim(),null,'disabled by default');
+  await t.test('Email signup can finish without an owner name', async () => {
+   const user=randomUUID();
+   await q('insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,$2,now(),$3)', [user,'optional-name@example.test',{ff_setup:{business_name:'Email fixture'}}]);
+   await q("select set_config('request.jwt.claim.sub',$1,false)",[user]);
+   const { setup }=await one('select complete_acquisition_signup() as setup');
+   assert.equal(setup.business.owner_name,null);
+  });
+  await t.test('Google signup reuses atomic setup and preserves explicit campaign consent', async () => {
+   const user=randomUUID(), token='a'.repeat(64), hash=createHash('sha256').update(token).digest('hex');
+   const complete=(name='Google fixture')=>one(
+    "select complete_google_business_signup($1,'','','Hospitality','','free',$2) as setup",
+    [name,token]);
+   await q("insert into auth.users(id,email,email_confirmed_at) values($1,'google@example.test',now())",[user]);
+   await q("select set_config('request.jwt.claim.sub',$1,false)",[user]);
+   await assert.rejects(complete(),/Confirmed Google/);
+   await q("insert into auth.identities values($1,'google')",[user]);
+   await q("insert into business_invites(business_id,email,token) values($1,'google@example.test','fixture-invite')",[(await signup({consent:false})).business]);
+   await q("select set_config('request.jwt.claim.sub',$1,false)",[user]);
+   assert.equal((await complete()).setup,null);
+   await q("update business_invites set status='revoked' where token='fixture-invite'");
+   await q("select record_acquisition_arrival($1,$2,$3,$4,'landing',$5)",[hash,randomUUID(),randomUUID(),randomUUID(),{channel:'paid_search',gclid:'google_fixture'}]);
+   const first=(await complete()).setup;
+   const retry=(await complete('Different name')).setup;
+   assert.equal(first.created,true);
+   assert.equal(first.business.owner_name,null);
+   assert.equal(retry.created,false);
+   assert.equal(retry.business.id,first.business.id);
+   assert.equal(retry.business.name,'Google fixture');
+   assert.equal(retry.location.name,'Location 01');
+   assert.deepEqual(await one("select campaign_consent_granted,google_ads_consent_version from ff_measurement.signup_intents where user_id=$1",[user]),
+    {campaign_consent_granted:true,google_ads_consent_version:'google_signup_v1'});
+   assert.equal((await one("select coverage from ff_measurement.business_acquisition where business_id=$1",[first.business.id])).coverage,'measured');
+   assert.equal((await one("select has_function_privilege('anon','public.complete_google_business_signup(text,text,text,text,text,text,text)','execute') as allowed")).allowed,false);
+  });
   await q('update ff_measurement.google_ads_settings set enabled=true');
   await t.test('consenting completed signup queues once and preserves analytics',async()=>{
    const x=await signup();
