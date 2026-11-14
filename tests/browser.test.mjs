@@ -32,18 +32,24 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
         let acquisitionFailure = 0;
         let acquisitionFixtureVersion = 0;
         await context.addInitScript(({ locationId }) => {
-            window.__ffSession = /fixture_(admin|owner)/.test(location.search) ? { access_token: 'fixture-token', user: { id: '33333333-3333-4333-8333-333333333333', email: 'fixture@example.test' } } : null;
+            const googleReturn = location.hash.includes('access_token=fixture-token');
+            const googleUser = { identities: [{ provider: 'google' }], user_metadata: { full_name: 'Google Owner' } };
+            window.__ffSession = googleReturn || /fixture_(admin|owner)/.test(location.search) ? { access_token: 'fixture-token', user: { id: '33333333-3333-4333-8333-333333333333', email: 'fixture@example.test', ...(googleReturn ? googleUser : {}) } } : null;
             window.__ffCalls = [];
             const row = { id: locationId, location_id: locationId, name: 'Fixture Cafe', location_name: 'Fixture Cafe', business_name: 'Fixture', business_id: '22222222-2222-4222-8222-222222222222', is_active: !location.search.includes('inactive'), reply_requests_enabled: false };
             window.__ffClient = {
                 auth: { getSession: async () => ({ data: { session: window.__ffSession } }), getUser: async () => ({ data: { user: window.__ffSession?.user } }), onAuthStateChange: () => { }, signOut: async () => ({}), signUp: async (value) => { window.__ffCalls.push({ signup: value }); return { data: { user: { id: '33333333-3333-4333-8333-333333333333' }, session: null }, error: null }; }, signInWithPassword: async () => ({ error: { message: 'Confirm email' } }) },
-                rpc: async (name) => { window.__ffCalls.push({ rpc: name });
+                rpc: async (name, args) => { window.__ffCalls.push({ rpc: name, args });
                   if (name === 'campaign_measurement_status') return { data: window.__ffConsentState || 'enabled', error: window.__ffStatusError ? { message: 'fixture failure' } : null };
                   if (name === 'withdraw_campaign_measurement') { if(window.__ffWithdrawError) return {error:{message:'fixture failure'}}; window.__ffConsentState='withdrawn'; }
+                  if (name === 'complete_google_business_signup') {
+                    window.__ffGoogleSetup = args;
+                    return { data: { business: { id: row.business_id }, location: row, plan: 'free', created: true } };
+                  }
                   return { data: null, error: null };
                 },
                 from(table) {
-                    const owner = location.search.includes('fixture_owner');
+                    const owner = location.search.includes('fixture_owner') || window.__ffGoogleSetup;
                     const biz = { id: row.business_id, name: 'Fixture business', owner_id: '33333333-3333-4333-8333-333333333333', pricing_tier: 'free', default_location_id: row.id };
                     const membership = { business_id: row.business_id, user_id: biz.owner_id, role: 'owner' };
                     const single = () => table === 'location_public' ? row : owner && table === 'businesses' ? biz : owner && table === 'business_users' ? membership : null;
@@ -52,6 +58,10 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
                             return async () => ({ data: single(), error: null }); return () => chain; } });
                     return chain;
                 }
+            };
+            window.__ffClient.auth.signInWithOAuth = async options => {
+                window.__ffCalls.push({ oauth: options });
+                return { error: { message: 'Provider unavailable in fixture' } };
             };
             window.Chart = class {
                 static register() { }
@@ -74,6 +84,14 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
                 return route.fulfill({ contentType: 'text/javascript', body: 'window.supabase={createClient:()=>window.__ffClient};' });
             if (url.includes('/functions/v1/admin-auth-status'))
                 return route.fulfill({ contentType: 'application/json', body: '{"isAdmin":true,"role":"superuser"}' });
+            if (url.includes('/functions/v1/team-members')) {
+                const request = route.request().postDataJSON();
+                if (request.action === 'lookup') return route.fulfill({ json: { invite: { email: 'invited@example.test', businessName: 'Fixture' } } });
+                if (request.action === 'accept' && request.token === 'fixture-mismatch') return route.fulfill({
+                    status: 403, json: { code: 'email_mismatch', inviteEmail: 'invited@example.test' }
+                });
+                if (request.action === 'accept') return route.fulfill({ json: { success: true } });
+            }
             if (url.includes('/functions/v1/admin-support-overview'))
                 return route.fulfill({ contentType: 'application/json', body: '{"isAdmin":true,"role":"superuser","businesses":[],"metricsSnapshot":{"metrics":{}}}' });
             if (url.includes('/rpc/acquisition_cohort_report')) {
@@ -144,12 +162,15 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             await page.locator('[data-restaurant-action="signup"][data-cta="hero"]').click();
             await page.waitForSelector('#signupScreen', {state:'visible'});
             await page.locator('#signupCampaignConsent').check();
-            await page.locator('#businessName').fill('Fixture Restaurant');
-            await page.locator('#ownerName').fill('Fixture Owner');
-            await page.locator('#signupIndustry').selectOption('Hospitality');
+            assert.equal(await page.locator('#businessName').isVisible(), false);
+            await page.getByRole('button', { name: 'Continue with email' }).click();
             await page.locator('#email').fill('owner@example.test');
             await page.locator('#password').fill('test-password');
             await page.locator('#confirmPassword').fill('test-password');
+            await page.getByRole('button', { name: 'Continue', exact: true }).click();
+            assert.equal(await page.locator('#pricingModal').isVisible(), false);
+            await page.locator('#businessName').fill('Fixture Restaurant');
+            await page.locator('#signupIndustry').selectOption('Hospitality');
             await page.getByRole('button', {name:'Create Account',exact:true}).click();
             await page.locator('#pricingModalContinue').click();
             await page.waitForFunction(() => window.__ffCalls.some(x => x.signup));
@@ -271,22 +292,81 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             await page.waitForTimeout(100);
             assert.equal(calls.some(x => x.feedback), false);
         });
+        await t.test('Google entry, redirect failures, existing owner, and new business setup', async () => {
+            await page.setViewportSize({ width: 320, height: 844 });
+            for (const screen of ['Signup', 'Login']) {
+                await page.goto(base);
+                await page.evaluate(name => window['show' + name](), screen);
+                const button = page.getByRole('button', { name: 'Continue with Google' });
+                await button.focus();
+                await page.keyboard.press('Enter');
+                await page.locator('#' + screen.toLowerCase() + 'Error').waitFor({ state: 'visible' });
+                const oauth = await page.evaluate(() => window.__ffCalls.find(call => call.oauth).oauth);
+                assert.equal(oauth.provider, 'google');
+                assert.equal(oauth.options.redirectTo, base + '/?ff_google=1');
+                assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+            }
+            await page.goto(base + '/?ff_google=1&error=access_denied');
+            await page.locator('#loginError').waitFor({ state: 'visible' });
+            assert.match(await page.locator('#loginError').innerText(), /was not completed/);
+            await page.goto(base + '/?ff_google=1&fixture_owner#access_token=fixture-token');
+            await page.locator('#adminView').waitFor({ state: 'visible' });
+            assert.equal(await page.evaluate(() => window.__ffGoogleSetup), undefined);
+
+            await page.goto(base + '/?ff_google=1#access_token=fixture-token');
+            await page.getByRole('heading', { name: 'Set up your business' }).waitFor();
+            assert.equal(await page.locator('#ownerName').inputValue(), 'Google Owner');
+            await page.getByText('Add optional details', { exact: true }).click();
+            await page.locator('#ownerName').fill('');
+            assert.equal(await page.locator('#password').isVisible(), false);
+            assert.equal(await page.locator('#password').isDisabled(), true);
+            await page.locator('#businessName').fill('Google fixture');
+            await page.locator('#signupIndustry').selectOption('Hospitality');
+            await page.getByRole('button', { name: 'Create Account' }).click();
+            await page.locator('#pricingModalContinue').click();
+            await page.locator('#adminView').waitFor({ state: 'visible' });
+            assert.equal(await page.evaluate(() => window.__ffGoogleSetup.p_business_name), 'Google fixture');
+            assert.equal(await page.evaluate(() => window.__ffGoogleSetup.p_owner_name), '');
+            assert.equal(await page.evaluate(() => window.__ffGoogleSetup.p_journey_token), null);
+            assert.equal(await page.evaluate(() => window.__ffCalls.some(call => call.signup)), false);
+            await page.setViewportSize({ width: 390, height: 844 });
+        });
+        await t.test('Google invite preserves the token and uses team acceptance', async () => {
+            await page.goto(base + '/?team_invite=fixture-invite');
+            await page.getByRole('button', { name: 'Continue with Google' }).click();
+            const oauth = await page.evaluate(() => window.__ffCalls.find(call => call.oauth).oauth);
+            assert.equal(oauth.options.redirectTo, base + '/?ff_google=1&team_invite=fixture-invite');
+            await page.goto(base + '/?ff_google=1&team_invite=fixture-invite&error=access_denied');
+            await page.locator('#teamInviteError').waitFor({ state: 'visible' });
+            assert.match(await page.locator('#teamInviteError').innerText(), /was not completed/);
+            await page.goto(base + '/?ff_google=1&team_invite=fixture-mismatch#access_token=fixture-token');
+            await page.locator('#teamInviteError').waitFor({ state: 'visible' });
+            assert.match(await page.locator('#teamInviteError').innerText(), /Use that email/);
+            await page.goto(base + '/?ff_google=1&fixture_owner&team_invite=fixture-invite#access_token=fixture-token');
+            await page.locator('#adminView').waitFor({ state: 'visible' });
+            assert.equal(new URL(page.url()).searchParams.has('team_invite'), false);
+            assert.equal(await page.evaluate(() => window.__ffCalls.some(call => call.rpc === 'complete_google_business_signup')), false);
+        });
         for (const consent of [false, true]) await t.test('signup setup metadata with consent=' + consent, async () => {
             calls.length = 0;
             await page.goto(base + '/?utm_source=signup-fixture');
             await page.evaluate(() => window.showSignup());
             if (consent) await page.locator('#signupCampaignConsent').check();
-            await page.locator('#businessName').fill('Fixture Cafe');
-            await page.locator('#ownerName').fill('Fixture Owner');
-            await page.locator('#signupIndustry').selectOption('Hospitality');
+            assert.equal(await page.locator('#businessName').isVisible(), false);
+            await page.getByRole('button', { name: 'Continue with email' }).click();
             await page.locator('#email').fill('owner@example.test');
             await page.locator('#password').fill('test-password');
             await page.locator('#confirmPassword').fill('test-password');
+            await page.getByRole('button', { name: 'Continue', exact: true }).click();
+            assert.equal(await page.locator('#pricingModal').isVisible(), false);
+            await page.locator('#businessName').fill('Fixture Cafe');
+            await page.locator('#signupIndustry').selectOption('Hospitality');
             await page.getByRole('button', { name: 'Create Account', exact: true }).click();
             await page.locator('#pricingModalContinue').click();
             await page.waitForFunction(() => window.__ffCalls.some(x => x.signup));
             const signup = await page.evaluate(() => window.__ffCalls.find(x => x.signup).signup);
             assert.equal(signup.options.data.ff_setup.business_name, 'Fixture Cafe');
+            assert.equal(signup.options.data.ff_setup.owner_name, '');
             assert.equal(!!signup.options.data.ff_setup.journey_token, consent);
             assert.equal(signup.options.data.ff_setup.campaign_disclosure_version, consent ? 'google_signup_v1' : null);
             assert.equal(calls.some(x => x.kind === 'landing'), consent);
