@@ -48,6 +48,8 @@ test('Durable signup reporting: eligibility, retries, recovery, exclusion and wi
   await db.exec('create table auth.identities(user_id uuid references auth.users(id), provider text)');
   await db.exec(fs.readFileSync('supabase/migrations/20261114215049_optional_signup_owner_name.sql','utf8'));
   await db.exec(fs.readFileSync('supabase/migrations/20261114220741_google_business_signup.sql','utf8'));
+  await db.exec("create function public.current_internal_admin_role() returns text language sql stable as $$select null::text$$");
+  await db.exec(fs.readFileSync('supabase/migrations/20261116142900_internal_campaign_funnel.sql','utf8'));
   const q=(sql,args=[])=>db.query(sql,args);
   const one=async(sql,args=[])=>(await q(sql,args)).rows[0];
   const claim=async()=>(await one('select google_ads_claim_signup($1,$2) x',[settings.accountId,settings.actionId])).x;
@@ -65,6 +67,42 @@ test('Durable signup reporting: eligibility, retries, recovery, exclusion and wi
    return {user,business,arrival};
   }
   assert.equal(await claim(),null,'disabled by default');
+  await t.test('Internal campaign capture is isolated, revocable, and expires into suppressed totals', async () => {
+   const month = (await one("select date_trunc('month',now() at time zone 'UTC')::date::text m")).m;
+   await q("insert into ff_measurement.internal_campaigns(code,ads_id,ever_verified,verified_at) values('restaurant_1','1234',true,now())");
+   async function campaignSignup() {
+    const user = randomUUID();
+    await q('insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,$2,now(),$3)',
+      [user,user+'@example.test',{ff_setup:{business_name:'Campaign fixture'},ff_internal_campaign:'restaurant_1'}]);
+    await q("select set_config('request.jwt.claim.sub',$1,false)",[user]);
+    const setup=(await one('select complete_acquisition_signup() x')).x;
+    return {user,business:setup.business.id,location:setup.location.id};
+   }
+   const disabled=await campaignSignup();
+   const hasLink = async user => (await one('select exists(select 1 from ff_measurement.internal_campaign_links where user_id=$1) x',[user])).x;
+   assert.equal(await hasLink(disabled.user),false);
+   await q("update ff_measurement.internal_campaign_settings set enabled_at=now(),capture_enabled=true,last_cleanup_at=now()");
+   const a=await campaignSignup();
+   assert.equal(await hasLink(a.user),true);
+   assert.equal((await one("select raw_user_meta_data ? 'ff_internal_campaign' x from auth.users where id=$1",[a.user])).x,false);
+   assert.equal((await one('select campaign_consent_granted x from ff_measurement.signup_intents where user_id=$1',[a.user])).x,false);
+   await q("insert into public.feedback(business_id,location_id,sentiment) values($1,$2,'happy'),($1,$2,'happy')",[a.business,a.location]);
+   assert.equal(Number((await one("select first_feedback x from ff_measurement.internal_campaign_counts($1) where code='restaurant_1'",[month])).x),1);
+   const excluded=await campaignSignup();
+   await q('update businesses set integration_test_mode=true where id=$1',[excluded.business]);
+   assert.equal(Number((await one("select signups x from ff_measurement.internal_campaign_counts($1) where code='restaurant_1'",[month])).x),1);
+   await q("select set_config('request.jwt.claim.sub',$1,false)",[a.user]);
+   await assert.rejects(()=>q("select public.internal_campaign_admin('read',p_month:=$1)",[month]),/Superuser required/);
+   await q('select public.object_to_internal_campaign_measurement()');
+   assert.equal(await hasLink(a.user),false);
+   const old=await campaignSignup();
+   await q("update ff_measurement.internal_campaign_settings set enabled_at=now()-interval '100 days'");
+   const past=(await one("update ff_measurement.signup_intents set completed_at=now()-interval '90 days' where user_id=$1 returning date_trunc('month',completed_at at time zone 'UTC')::date::text m",[old.user])).m;
+   await q('select ff_measurement.close_internal_campaign_months()');
+   await q('select ff_measurement.close_internal_campaign_months()');
+   assert.equal(await hasLink(old.user),false);
+   assert.equal(await one("select signups,first_feedback from ff_measurement.internal_campaign_totals where month=$1 and code='restaurant_1'",[past]),undefined);
+  });
   await t.test('Email signup can finish without an owner name', async () => {
    const user=randomUUID();
    await q('insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,$2,now(),$3)', [user,'optional-name@example.test',{ff_setup:{business_name:'Email fixture'}}]);

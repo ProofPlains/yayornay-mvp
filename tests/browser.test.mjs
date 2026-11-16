@@ -40,6 +40,12 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             window.__ffClient = {
                 auth: { getSession: async () => ({ data: { session: window.__ffSession } }), getUser: async () => ({ data: { user: window.__ffSession?.user } }), onAuthStateChange: () => { }, signOut: async () => ({}), signUp: async (value) => { window.__ffCalls.push({ signup: value }); return { data: { user: { id: '33333333-3333-4333-8333-333333333333' }, session: null }, error: null }; }, signInWithPassword: async () => ({ error: { message: 'Confirm email' } }) },
                 rpc: async (name, args) => { window.__ffCalls.push({ rpc: name, args });
+                  if (name === 'internal_campaign_admin') {
+                    if (args.p_operation === 'verify') window.__ffCampaignVerified = true;
+                    if (args.p_operation === 'reset') window.__ffCampaignVerified = false;
+                    return { data: { campaigns: [{ code:'restaurant_1', ads_id:'1234', verified_at:window.__ffCampaignVerified ? new Date().toISOString() : null }],
+                      counts:[], costs:[], enabledAt:null, captureHealthy:false } };
+                  }
                   if (name === 'campaign_measurement_status') return { data: window.__ffConsentState || 'enabled', error: window.__ffStatusError ? { message: 'fixture failure' } : null };
                   if (name === 'withdraw_campaign_measurement') { if(window.__ffWithdrawError) return {error:{message:'fixture failure'}}; window.__ffConsentState='withdrawn'; }
                   if (name === 'complete_google_business_signup') {
@@ -347,10 +353,17 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             assert.equal(new URL(page.url()).searchParams.has('team_invite'), false);
             assert.equal(await page.evaluate(() => window.__ffCalls.some(call => call.rpc === 'complete_google_business_signup')), false);
         });
-        for (const consent of [false, true]) await t.test('signup setup metadata with consent=' + consent, async () => {
+        for (const { consent, campaign, object } of [
+            { consent: false }, { consent: true }, { consent: false, campaign: true },
+            { consent: false, campaign: true, object: true }
+        ]) await t.test('signup setup metadata: ' + JSON.stringify({ consent, campaign, object }), async () => {
             calls.length = 0;
-            await page.goto(base + '/?utm_source=signup-fixture');
-            await page.evaluate(() => window.showSignup());
+            await page.goto(base + (campaign ? '/?ff_campaign=restaurant_1&gclid=fixture_click' : '/?utm_source=signup-fixture'));
+            if (!campaign) await page.evaluate(() => window.showSignup());
+            else {
+                await page.locator('#signupInternalCampaignNotice').waitFor({state:'visible'});
+                if (object) await page.locator('#signupInternalCampaignObject').check();
+            }
             if (consent) await page.locator('#signupCampaignConsent').check();
             assert.equal(await page.locator('#businessName').isVisible(), false);
             await page.getByRole('button', { name: 'Continue with email' }).click();
@@ -369,6 +382,9 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             assert.equal(signup.options.data.ff_setup.owner_name, '');
             assert.equal(!!signup.options.data.ff_setup.journey_token, consent);
             assert.equal(signup.options.data.ff_setup.campaign_disclosure_version, consent ? 'google_signup_v1' : null);
+            assert.equal(signup.options.data.ff_internal_campaign, campaign && !object ? 'restaurant_1' : undefined);
+            if (campaign) assert.equal(await page.evaluate(() => [localStorage,sessionStorage].some(s =>
+                Object.keys(s).some(k => s.getItem(k)?.includes('restaurant_1')))),false);
             assert.equal(calls.some(x => x.kind === 'landing'), consent);
             assert.match(await page.locator('#signupError').textContent(), /confirm your email/i);
         });
@@ -453,6 +469,21 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             assert.equal(await page.locator('#ffMeasurementConsent').count(), 0);
             await page.goto(base + '/admin-support.html?fixture_admin=1');
             await page.locator('#metricsTab').click();
+            await page.getByText('Ad campaigns and first feedback', {exact:true}).click();
+            const campaignReport = page.locator('#internalCampaignReport');
+            await campaignReport.getByText(/Tracking unverified/).waitFor();
+            const verify = campaignReport.locator('form[data-operation=verify]');
+            await verify.getByLabel('Campaign label').fill('restaurant_1');
+            await verify.getByLabel('Google Ads campaign ID').fill('1234');
+            await verify.getByLabel('Actual final URL from Google Ads').fill('https://flashfeedback.co.uk/?ff_campaign=wrong');
+            await verify.getByRole('button',{name:'Verify tracking'}).click();
+            await campaignReport.getByText('Use the exact registered URL.').waitFor();
+            await verify.getByLabel('Actual final URL from Google Ads').fill('https://flashfeedback.co.uk/?ff_campaign=restaurant_1');
+            await verify.getByRole('button',{name:'Verify tracking'}).click();
+            await campaignReport.getByText(/Tracking verified/).waitFor();
+            await campaignReport.getByRole('button',{name:'Mark unverified'}).click();
+            await campaignReport.getByText(/Tracking unverified/).waitFor();
+            await page.getByText('Ad campaigns and first feedback', {exact:true}).click();
             assert.equal(await page.locator('#acquisitionRefresh').textContent(),'Load cohorts');
             await page.locator('#refreshBtn').click();
             await page.waitForTimeout(100);

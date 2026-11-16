@@ -41,6 +41,7 @@
     // only after signup consent; never write this URL or a visitor history to storage.
     const entry = w.FFMarketingEntry;
     const arrivalUrl = new URL(entry?.eligible ? entry.url : w.location.href), arrivalReferrer = w.document.referrer;
+    if (w.FFInternalCampaign && !entry) arrivalUrl.searchParams.delete('ff_campaign');
     let client, endpoint, anonKey, flushing = false, knownAuthenticated = false, activated = false;
     let signupJourney = null, signupConsented = false;
     // Retire the former 90-day browser journey and consent. It cannot opt in this form.
