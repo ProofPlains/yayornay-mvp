@@ -7409,6 +7409,7 @@
 			}
 			let signupPlanConfirmed = false;
 			let googleSetupUser = null;
+			let googleCampaignReturn = null;
 			let googleSetupPending = false;
 			const googleSignupStorageKey = 'ff_google_signup';
 
@@ -9259,6 +9260,27 @@
                 callback.searchParams.set('ff_google', '1');
                 const invite = new URLSearchParams(window.location.search).get('team_invite');
                 if (invite) callback.searchParams.set('team_invite', invite);
+                const campaign = screen === 'signup' && !invite && !document.getElementById('signupInternalCampaignObject').checked
+                    && window.FFInternalCampaign;
+                if (campaign) {
+                    try {
+                        const r = await fetch(SUPABASE_URL + '/functions/v1/google-campaign-auth', {
+                            method: 'POST', credentials: 'omit', referrerPolicy: 'no-referrer',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ campaign }), signal: AbortSignal.timeout(6000)
+                        });
+                        if (r.ok) {
+                            const provider = new URL((await r.json()).url);
+                            if (provider.origin === 'https://accounts.google.com') {
+                                const link = document.createElement('a');
+                                link.href = provider.href;
+                                link.rel = 'noreferrer';
+                                link.click();
+                                return;
+                            }
+                        }
+                    } catch { /* Authentication can continue without campaign attribution. */ }
+                }
                 const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: { redirectTo: callback.href, queryParams: { prompt: 'select_account' } }
@@ -9274,10 +9296,12 @@
 
         async function finishGoogleRedirect(params, session) {
             const attempt = readGoogleSignup();
+            const campaign = params.getAll('ff_campaign').length === 1 ? params.get('ff_campaign') : null;
             const failed = params.has('error') || googleCallbackHash?.has('error');
             const signedIn = session?.access_token && session.access_token === googleCallbackHash?.get('access_token');
             googleCallbackHash = null;
             params.delete('ff_google');
+            params.delete('ff_campaign');
             params.delete('error');
             params.delete('error_code');
             params.delete('error_description');
@@ -9294,6 +9318,11 @@
             }
             if (attempt) {
                 saveGoogleSignup({ ...attempt, userId: session.user.id });
+            }
+            if (!params.has('team_invite') && attempt?.screen === 'signup' &&
+                /^[a-z][a-z0-9_-]{2,39}$/.test(campaign || '') && campaign !== 'unknown') {
+                googleCampaignReturn = { code: campaign, userId: session.user.id, expiresAt: attempt.expiresAt };
+                document.getElementById('signupInternalCampaignNotice').hidden = false;
             }
             try {
                 if (params.has('team_invite') && await handleTeamInviteFromUrl(session.user)) {
@@ -9313,6 +9342,7 @@
                 const { error } = await supabase.auth.signOut({ scope: 'local' });
                 if (error) throw error;
                 googleSetupUser = null;
+                googleCampaignReturn = null;
                 saveGoogleSignup(null);
                 showLogin();
             } catch {
@@ -9706,23 +9736,27 @@
 		  const user = googleSetupUser;
 		  const attempt = readGoogleSignup();
 		  const token = attempt?.userId === user.id ? attempt.token : null;
+		  const campaign = googleCampaignReturn?.userId === user.id && googleCampaignReturn.expiresAt > Date.now()
+		    && !document.getElementById('signupInternalCampaignObject').checked ? googleCampaignReturn.code : null;
 		  submit.disabled = true;
 		  try {
 		    const { data: { user: verifiedUser }, error: authError } = await supabase.auth.getUser();
 		    if (authError || verifiedUser?.id !== user.id) throw new Error('Sign in with Google again to finish setup.');
-		    const { data: setup, error } = await supabase.rpc('complete_google_business_signup', {
+		    const { data: setup, error } = await supabase.rpc(campaign ? 'complete_google_campaign_signup' : 'complete_google_business_signup', {
 		      p_business_name: details.businessName,
 		      p_owner_name: details.ownerName,
 		      p_location_name: details.locationName,
 		      p_industry: details.industry,
 		      p_business_type: details.businessType,
 		      p_plan: details.selectedPricingTier,
-		      p_journey_token: token || null
+		      p_journey_token: token || null,
+		      ...(campaign ? { p_campaign: campaign } : {})
 		    });
 		    if (error) throw new Error('Could not finish setting up your business. Please try again.');
 		    if (!setup?.business) throw new Error('Could not create a business for this account. If you were invited to a team, use the link in your invitation.');
 		    window.FFMeasurement?.signupCreated(user.id, token);
 		    saveGoogleSignup(null);
+		    googleCampaignReturn = null;
 		    await hydrateAndShowDashboard(user, setup);
 		  } catch (error) {
 		    showError('signupError', error.message);
@@ -16267,7 +16301,7 @@
 	    <p><strong>Use of information:</strong> to provide the service, improve performance, and contact users only if requested. We do not sell personal data. The optional sharing with Google for campaign measurement is described below.</p>
 	    <p><strong>Optional campaign measurement:</strong> if you select the separate checkbox during signup, we record the source, campaign and advertising click identifiers available on that page, then link them to your business's signup and later account activity. We do not recognise you across return visits. An unchecked box does not affect account creation. Browser delivery retries expire after 24 hours. Server journey and click identifiers are removed after 90 days by daily cleanup; business campaign dimensions remain for cohort reporting. Change your choice in Account Settings → Campaign measurement.</p>
 
-        <p ><strong>Internal campaign reporting:</strong> When active, a dedicated campaign signup link can attach a shared campaign label to a completed email signup so we can compare campaigns by first saved feedback within 14 days. We use our legitimate interest in measuring which campaigns bring businesses that use FlashFeedback. This internal report does not use advertising click IDs or share results with Google. You can object at signup or in Account Settings → Campaign measurement. We remove the account link after the reporting window and reconciliation period and keep only totals that can be retained anonymously. This is separate from the optional Google Ads measurement below.</p>
+        <p ><strong>Internal campaign reporting:</strong> When active, a dedicated campaign signup link can attach a shared campaign label to a completed email or Google signup so we can compare campaigns by first saved feedback within 14 days. We use our legitimate interest in measuring which campaigns bring businesses that use FlashFeedback. This internal report does not use advertising click IDs or share results with Google. You can object at signup or in Account Settings → Campaign measurement. We remove the account link after the reporting window and reconciliation period and keep only totals that can be retained anonymously. This is separate from the optional Google Ads measurement below.</p>
         <h3 id="google-ads-measurement">Google Ads signup measurement</h3>
         <p><strong>Optional signup reporting.</strong> We use server-side Google Ads signup reporting for eligible new businesses. Only new signups with consent recorded under this disclosure covering Google sharing qualify; we do not upload historic signups under an older consent choice.</p>
         <p><strong>What is shared:</strong> if you arrive through a Google ad, choose optional campaign measurement and successfully create a genuine business account, we may send Google the advertising click identifier (GCLID), the signup completion time and an opaque conversion identifier, together with the Google Ads account and conversion-action identifiers needed to route the report. This lets Google associate the signup with the ad click and helps us measure which campaigns lead to completed signups. Internal and test businesses are excluded.</p>

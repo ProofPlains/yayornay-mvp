@@ -3,10 +3,25 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { randomUUID, createHash, createHmac } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
+import { checkedGoogleRedirect } from '../supabase/functions/_shared/google-campaign-auth.ts';
 import { signupPayload, configured, uploadSignup, diagnoseSignup, processSignup, validWorkerSignature } from '../supabase/functions/_shared/google-ads.ts';
 
 const settings={clientId:'fixture',clientSecret:'secret',refreshToken:'refresh',accountId:'2401666409',actionId:'7845162456'};
 const job={business_id:randomUUID(),lease_id:randomUUID(),transaction_id:randomUUID(),conversion_time:'2026-10-15T10:01:02Z',mode:'upload'};
+test('Google campaign handoff permits only an opaque standard Google authorization redirect',()=>{
+ const callback='https://project.example/auth/v1/callback';
+ const u=new URL('https://accounts.google.com/o/oauth2/v2/auth');
+ u.search=new URLSearchParams({redirect_uri:callback,client_id:'fixture.apps.googleusercontent.com',
+   response_type:'code',prompt:'select_account',scope:'email profile',state:randomUUID()});
+ assert.ok(checkedGoogleRedirect(u.href,callback));
+ for(const [key,value] of [['redirect_to','https://flashfeedback.co.uk/?ff_campaign=fixture'],
+   ['redirect_uri','https://unexpected.example/callback'],['state','encoded-callback'],
+   ['scope','email profile adwords'],['prompt','consent']]){
+  const bad=new URL(u);bad.searchParams.set(key,value);
+  assert.equal(checkedGoogleRedirect(bad.href,callback),null);
+ }
+ assert.equal(checkedGoogleRedirect(u.href.replace('accounts.google.com','accounts.google.com.example'),callback),null);
+});
 test('worker HMAC rejects missing, malformed, wrong-key and altered invocations',async()=>{
  const nonce=randomUUID(),signature=createHmac('sha256','fixture-service-secret').update(nonce).digest('hex');
  assert.equal(await validWorkerSignature(nonce,signature,'fixture-service-secret'),true);
@@ -46,6 +61,7 @@ test('Durable signup reporting: eligibility, retries, recovery, exclusion and wi
    create function cron.schedule(text,text,text) returns bigint language sql as $$insert into cron.job(jobname,schedule,command) values($1,$2,$3) on conflict(jobname) do update set command=excluded.command returning 1::bigint$$;`);
   for(const file of ['20261009151423_acquisition_activation_measurement.sql','20261011170128_signup_campaign_consent.sql','20261012102422_account_campaign_consent.sql','20261015112707_google_ads_signup_reporting.sql','20261015134030_google_ads_signed_worker_invocations.sql']) await db.exec(fs.readFileSync('supabase/migrations/'+file,'utf8'));
   await db.exec('create table auth.identities(user_id uuid references auth.users(id), provider text)');
+  await db.exec("alter table auth.users add column created_at timestamptz default now(); create table auth.flow_state(id uuid, provider_type text, referrer text, created_at timestamptz default now())");
   await db.exec(fs.readFileSync('supabase/migrations/20261114215049_optional_signup_owner_name.sql','utf8'));
   await db.exec(fs.readFileSync('supabase/migrations/20261114220741_google_business_signup.sql','utf8'));
   await db.exec("create function public.current_internal_admin_role() returns text language sql stable as $$select null::text$$");
@@ -96,6 +112,29 @@ test('Durable signup reporting: eligibility, retries, recovery, exclusion and wi
    await q('select public.object_to_internal_campaign_measurement()');
    assert.equal(await hasLink(a.user),false);
    const old=await campaignSignup();
+   const start='https://flashfeedback.co.uk/?ff_google=1&ff_campaign=restaurant_1', stateId=randomUUID();
+   await q("insert into auth.flow_state(id,provider_type,referrer) values($1,'google',$2)",[stateId,start]);
+   assert.equal((await one("select public.internal_campaign_google_handoff('restaurant_1',$1,$2) x",[stateId,start])).x,true);
+   assert.equal((await one("select public.internal_campaign_google_handoff('restaurant_1',$1,$2) x",[stateId,start+'wrong'])).x,false);
+   async function googleCampaign(oldAuth=false, invite=false) {
+    const id=randomUUID(),email=id+'@example.test';
+    await q("insert into auth.users(id,email,email_confirmed_at,created_at) values($1,$2,now(),now()-case when $3 then interval '1 day' else interval '0' end)",[id,email,oldAuth]);
+    await q("insert into auth.identities values($1,'google')",[id]);
+    if(invite) await q("insert into public.business_invites(business_id,email,token,status,expires_at) values($1,$2,$3,'pending',now()+interval '1 day')",[a.business,email,randomUUID()]);
+    await q("select set_config('request.jwt.claim.sub',$1,false)",[id]);
+    const finish=()=>one("select complete_google_campaign_signup('Google campaign',null,null,'Hospitality',null,'free',null,'restaurant_1') x");
+    return {id,finish};
+   }
+   const google=await googleCampaign();
+   assert.equal((await google.finish()).x.created,true);
+   assert.equal(await hasLink(google.id),true);
+   assert.equal((await google.finish()).x.created,false);
+   const returning=await googleCampaign(true);
+   assert.equal((await returning.finish()).x.created,true);
+   assert.equal(await hasLink(returning.id),false);
+   const invited=await googleCampaign(false,true);
+   assert.equal((await invited.finish()).x,null);
+   assert.equal(await hasLink(invited.id),false);
    await q("update ff_measurement.internal_campaign_settings set enabled_at=now()-interval '100 days'");
    const past=(await one("update ff_measurement.signup_intents set completed_at=now()-interval '90 days' where user_id=$1 returning date_trunc('month',completed_at at time zone 'UTC')::date::text m",[old.user])).m;
    await q('select ff_measurement.close_internal_campaign_months()');

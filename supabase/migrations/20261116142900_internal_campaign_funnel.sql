@@ -39,17 +39,22 @@ do $$ declare t text; begin
   end loop;
 end $$;
 
+create function ff_measurement.internal_campaign_capture_allowed(p_code text) returns boolean
+language sql stable security definer set search_path='' as $$
+ select exists(select 1 from ff_measurement.internal_campaigns c
+ cross join ff_measurement.internal_campaign_settings s
+ where c.code=p_code and c.verified_at is not null and s.enabled_at<=now()
+ and s.capture_enabled and s.last_cleanup_at>=now()-interval '36 hours');
+$$;
+
 -- Run after ff_capture_signup_intent. Copy only an allowlisted label, and
 -- remove the transport field from Auth metadata in the same transaction.
 create function ff_measurement.capture_internal_campaign() returns trigger
 language plpgsql security definer set search_path='' as $$
 begin
   insert into ff_measurement.internal_campaign_links(user_id,code)
-  select new.id,c.code from ff_measurement.internal_campaigns c
-  cross join ff_measurement.internal_campaign_settings s
-  where c.code=new.raw_user_meta_data->>'ff_internal_campaign'
-    and c.verified_at is not null and s.enabled_at<=now()
-    and s.capture_enabled and s.last_cleanup_at>=now()-interval '36 hours'
+  select new.id,new.raw_user_meta_data->>'ff_internal_campaign'
+  where ff_measurement.internal_campaign_capture_allowed(new.raw_user_meta_data->>'ff_internal_campaign')
     and exists(select 1 from ff_measurement.signup_intents where user_id=new.id)
   on conflict(user_id) do nothing;
   update auth.users set raw_user_meta_data=raw_user_meta_data-'ff_internal_campaign' where id=new.id;
@@ -58,6 +63,40 @@ end $$;
 create trigger ff_zzz_internal_campaign after insert on auth.users
 for each row when (new.raw_user_meta_data ? 'ff_internal_campaign')
 execute function ff_measurement.capture_internal_campaign();
+
+-- The relay confirms the hosted OAuth service accepted the exact private
+-- callback before allowing the browser to visit the provider URL.
+create function public.internal_campaign_google_handoff(p_code text,p_state uuid default null,p_callback text default null)
+returns boolean language sql stable security definer set search_path='' as $$
+ select ff_measurement.internal_campaign_capture_allowed(p_code) and
+   ((p_state is null and p_callback is null) or exists(
+    select 1 from auth.flow_state where id=p_state and provider_type='google'
+      and referrer=p_callback and created_at>=now()-interval '1 minute'));
+$$;
+revoke all on function public.internal_campaign_google_handoff(text,uuid,text) from public,anon,authenticated;
+grant execute on function public.internal_campaign_google_handoff(text,uuid,text) to service_role;
+
+create function public.complete_google_campaign_signup(
+  p_business_name text,p_owner_name text,p_location_name text,p_industry text,
+  p_business_type text,p_plan text,p_journey_token text,p_campaign text
+) returns jsonb language plpgsql security definer set search_path='' as $$
+declare actor uuid:=auth.uid(); was_new boolean; setup jsonb;
+begin
+ if actor is null then raise exception 'Authentication required' using errcode='42501'; end if;
+ perform pg_advisory_xact_lock(hashtextextended(actor::text,0));
+ select exists(select 1 from auth.users where id=actor and created_at>=now()-interval '30 minutes')
+   and not exists(select 1 from ff_measurement.signup_intents where user_id=actor)
+ into was_new;
+ setup:=public.complete_google_business_signup(p_business_name,p_owner_name,p_location_name,
+   p_industry,p_business_type,p_plan,p_journey_token);
+ if was_new and setup->>'created'='true' and ff_measurement.internal_campaign_capture_allowed(p_campaign) then
+   insert into ff_measurement.internal_campaign_links(user_id,code) values(actor,p_campaign)
+   on conflict(user_id) do nothing;
+ end if;
+ return setup;
+end $$;
+revoke all on function public.complete_google_campaign_signup(text,text,text,text,text,text,text,text) from public,anon,authenticated;
+grant execute on function public.complete_google_campaign_signup(text,text,text,text,text,text,text,text) to authenticated;
 
 create function public.object_to_internal_campaign_measurement() returns void
 language plpgsql security definer set search_path='' as $$
@@ -150,7 +189,7 @@ declare expected text:='https://flashfeedback.co.uk/?ff_campaign='||p_code; clos
  else raise exception 'Unknown campaign operation'; end if;
  return '{}'::jsonb;
 end $$;
-revoke all on function ff_measurement.capture_internal_campaign(),ff_measurement.internal_campaign_counts(date),
+revoke all on function ff_measurement.internal_campaign_capture_allowed(text),ff_measurement.capture_internal_campaign(),ff_measurement.internal_campaign_counts(date),
  ff_measurement.close_internal_campaign_months() from public,anon,authenticated;
 revoke all on function public.object_to_internal_campaign_measurement(),
  public.internal_campaign_admin(text,text,text,text,date,numeric,bigint) from public,anon,authenticated;

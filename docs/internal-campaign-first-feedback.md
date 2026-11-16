@@ -7,10 +7,10 @@ and the notice is live. Nothing backfills source labels.
 
 ## How to read it
 
-- Source means a completed email signup through an enabled, verified dedicated
-  route, not proof of a paid click. Shared links can contribute. Other signups,
-  including Google sign-in, cross-visit arrivals and objections, are Unknown.
-  No campaign label is put into Google OAuth state or saved in browser storage.
+- Source means a completed email or new Google signup through an enabled,
+  verified dedicated route, not proof of a paid click. Shared links can contribute.
+  Unlabelled signups, cross-visit arrivals, objections and Google signups whose
+  campaign handoff could not be verified are Unknown.
 - Count one conversion per completed business when any saved feedback falls in
   its first 14 days. An owner's submission on the live QR counts. No-write
   previews do not. The existing internal-business classifier excludes staff-owned
@@ -53,7 +53,13 @@ and the notice is live. Nothing backfills source labels.
   individual targeting, provider upload or eligibility decisions. Never export
   account-level records. Confirm the exact browser storage/access and request
   trace for the release, including redirects, referrers and infrastructure logs.
-  The assessment does not cover a future Google sign-in attribution handoff.
+  For Google sign-in, the same shared label goes to Supabase Auth only, as part
+  of its first-party return address. The OAuth service stores the redirect
+  temporarily server-side; the provider receives ordinary OAuth parameters and
+  its existing opaque state, with no campaign label or click ID. No campaign
+  data is written to localStorage, sessionStorage or cookies, and no additional
+  OAuth identifier is created for measurement. The label is removed from the
+  return address immediately and retained only in memory through setup.
 - **Retention:** the email signup metadata is stripped by the signup transaction
   after the label is copied into the private link table. Uncompleted links expire
   after seven days on daily cleanup. Whole UTC cohort months close 21 days after
@@ -78,6 +84,24 @@ frontend/notice. Test in staging with the Google checkbox off, use the existing
 auth/signup contract, and verify owner live feedback, preview exclusion, and
 objections. Register verified URLs before use. Schedule the retention function
 only with approval; verify the named job and alert/escalate if it fails.
+
+Deploy the new `google-campaign-auth` Edge Function to staging with only the
+approved staging website origin in `GOOGLE_CAMPAIGN_AUTH_ORIGINS`. The
+configured Supabase Auth site or redirect allowlist must accept
+`/?ff_google=1&ff_campaign=<registered label>` on that origin. Verify that a
+completed OAuth flow selects that exact callback, without forwarding the label
+in the provider URL, and that Auth flow state and infrastructure logs follow
+their documented retention. In the read-only provider redirect inspection,
+the project did not retain this exact test callback under its current settings:
+the relay must fall back until the callback is accepted. Do not expand the
+production redirect allowlist or enable capture before review.
+
+The server checks the outbound URL before the browser follows it and verifies
+the expected private callback against the fresh Auth flow state. A lost,
+expired or unverified handoff falls back to standard Google sign-in. After a
+verified return only a freshly created Google account that successfully opens
+its first business can acquire a campaign label; returning users, team
+invitations and repeat completion do not acquire a new link.
 
 ```sql
 -- Only after controller and schedule approval (UTC daily).

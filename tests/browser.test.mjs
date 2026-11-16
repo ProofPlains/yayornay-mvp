@@ -28,6 +28,8 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
         const context = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
         const calls = [];
         let failTracking = false;
+        let campaignAuthUnavailable = false;
+        const campaignAuthRequests = [];
         const acquisitionRequests = [];
         let acquisitionFailure = 0;
         let acquisitionFixtureVersion = 0;
@@ -48,7 +50,7 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
                   }
                   if (name === 'campaign_measurement_status') return { data: window.__ffConsentState || 'enabled', error: window.__ffStatusError ? { message: 'fixture failure' } : null };
                   if (name === 'withdraw_campaign_measurement') { if(window.__ffWithdrawError) return {error:{message:'fixture failure'}}; window.__ffConsentState='withdrawn'; }
-                  if (name === 'complete_google_business_signup') {
+                  if (['complete_google_business_signup','complete_google_campaign_signup'].includes(name)) {
                     window.__ffGoogleSetup = args;
                     return { data: { business: { id: row.business_id }, location: row, plan: 'free', created: true } };
                   }
@@ -90,6 +92,15 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
                 return route.fulfill({ contentType: 'text/javascript', body: 'window.supabase={createClient:()=>window.__ffClient};' });
             if (url.includes('/functions/v1/admin-auth-status'))
                 return route.fulfill({ contentType: 'application/json', body: '{"isAdmin":true,"role":"superuser"}' });
+            if (url.includes('/functions/v1/google-campaign-auth')) {
+                campaignAuthRequests.push(route.request().postDataJSON());
+                if (campaignAuthUnavailable) return route.fulfill({status:409,json:{}});
+                return route.fulfill({json:{url:'https://accounts.google.com/o/oauth2/v2/auth?state=fixture'}});
+            }
+            if (url === 'https://accounts.google.com/o/oauth2/v2/auth?state=fixture') {
+                assert.equal(route.request().headers().referer,undefined);
+                return route.fulfill({status:302,headers:{location:base+'/?ff_google=1&ff_campaign=restaurant_1#access_token=fixture-token'}});
+            }
             if (url.includes('/functions/v1/team-members')) {
                 const request = route.request().postDataJSON();
                 if (request.action === 'lookup') return route.fulfill({ json: { invite: { email: 'invited@example.test', businessName: 'Fixture' } } });
@@ -336,6 +347,35 @@ test('HTTP browser journeys, consent, preview, offline queue, mobile and keyboar
             assert.equal(await page.evaluate(() => window.__ffGoogleSetup.p_journey_token), null);
             assert.equal(await page.evaluate(() => window.__ffCalls.some(call => call.signup)), false);
             await page.setViewportSize({ width: 390, height: 844 });
+        });
+        await t.test('Google campaign signup has no stored label, honours objections and falls back safely', async () => {
+            for (const objectAfterReturn of [false,true]) {
+                await page.goto(base+'/?ff_campaign=restaurant_1&gclid=private_click');
+                await page.locator('#signupInternalCampaignNotice').waitFor({state:'visible'});
+                assert.equal(await page.locator('#signupCampaignConsent').isChecked(),false);
+                await page.getByRole('button',{name:'Continue with Google'}).click();
+                await page.getByRole('heading',{name:'Set up your business'}).waitFor();
+                assert.deepEqual(campaignAuthRequests.at(-1),{campaign:'restaurant_1'});
+                assert.equal(new URL(page.url()).searchParams.has('ff_campaign'),false);
+                assert.equal(await page.evaluate(()=>[localStorage,sessionStorage].some(store=>
+                    Object.values(store).some(value=>value.includes('restaurant_1')))),false);
+                if (objectAfterReturn) await page.locator('#signupInternalCampaignObject').check();
+                await page.locator('#businessName').fill('Campaign cafe');
+                await page.locator('#signupIndustry').selectOption('Hospitality');
+                await page.getByRole('button',{name:'Create Account'}).click();
+                await page.locator('#pricingModalContinue').click();
+                await page.locator('#adminView').waitFor({state:'visible'});
+                const setup=await page.evaluate(()=>window.__ffGoogleSetup);
+                assert.equal(setup.p_journey_token,null);
+                assert.equal(setup.p_campaign,objectAfterReturn?undefined:'restaurant_1');
+            }
+            campaignAuthUnavailable=true;
+            await page.goto(base+'/?ff_campaign=restaurant_1&gclid=private_click');
+            await page.getByRole('button',{name:'Continue with Google'}).click();
+            await page.locator('#signupError').waitFor({state:'visible'});
+            const fallback=await page.evaluate(()=>window.__ffCalls.find(call=>call.oauth).oauth);
+            assert.equal(fallback.options.redirectTo,base+'/?ff_google=1');
+            campaignAuthUnavailable=false;
         });
         await t.test('Google invite preserves the token and uses team acceptance', async () => {
             await page.goto(base + '/?team_invite=fixture-invite');

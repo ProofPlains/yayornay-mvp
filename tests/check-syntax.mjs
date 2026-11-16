@@ -15,7 +15,7 @@ for (const file of ['index.html', 'admin-support.html', 'restaurants/index.html'
 }
 for (const file of fs.readdirSync('assets/js').filter(f => f.endsWith('.js')))
     new vm.Script(fs.readFileSync('assets/js/' + file, 'utf8'), { filename: file });
-for (const file of ['supabase/functions/submit-feedback/index.ts', 'supabase/functions/track-acquisition/index.ts', 'supabase/functions/_shared/measurement.ts', 'supabase/functions/upload-google-ads-conversions/index.ts', 'supabase/functions/_shared/google-ads.ts']) {
+for (const file of ['supabase/functions/submit-feedback/index.ts', 'supabase/functions/track-acquisition/index.ts', 'supabase/functions/_shared/measurement.ts', 'supabase/functions/upload-google-ads-conversions/index.ts', 'supabase/functions/_shared/google-ads.ts', 'supabase/functions/google-campaign-auth/index.ts', 'supabase/functions/_shared/google-campaign-auth.ts']) {
     const output = ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext }, reportDiagnostics: true, fileName: file });
     const errors = output.diagnostics.filter(x => x.category === ts.DiagnosticCategory.Error);
     if (errors.length)
