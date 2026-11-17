@@ -1,9 +1,32 @@
 # Internal campaign reporting: first saved feedback
 
+## Production activation — 17 November 2026
+
+The founder approved the privacy/retention assessment and activation, accepting
+the documented lack of an end-to-end fresh-Google-account test. Normal capture
+was enabled at `2026-11-17T21:55:06.643059Z`. Retention job
+`ff-internal-campaign-retention` runs daily at 03:29 UTC; the initial cleanup
+completed successfully. The temporary release-test allowlist was expired, its
+route marked unverified and its campaign links removed; test accounts/feedback
+were retained with their internal flags. No Google conversion records existed.
+
+The live Google sign-in return succeeded after restarting an expired OAuth
+attempt. The existing account acquired no campaign link or new signup intent.
+New-Google-account attribution remains fixture-tested rather than live-tested.
+
+At activation there were **zero verified real campaigns**. Before measurement
+can attribute a real campaign, register its Google Ads campaign ID, copy its
+specific signup URL into the ad and complete the checklist below. Google signup
+also requires that exact first-party campaign callback in the Auth redirect
+allowlist; without it, signup works but the campaign falls back to Unknown.
+Never reuse the release-test route in an ad. This activation does not change
+Google Ads upload consent, launch a campaign or backfill historic attribution.
+
 This scorecard is separate from the Google Ads conversion worker and the existing
 acquisition reports. No new feedback event or external conversion is sent.
-Collection ships off and must stay off until the controller approves the design
-and the notice is live. Nothing backfills source labels.
+Collection ships off by default; production was enabled only after controller
+approval and publication of the notice as recorded above. Nothing backfills
+source labels.
 
 Restricted production testing was approved on 17 November 2026. Migration
 `20261117210609_internal_campaign_funnel.sql` is deployed with normal capture off.
