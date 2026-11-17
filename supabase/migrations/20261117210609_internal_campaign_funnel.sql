@@ -18,6 +18,11 @@ create table ff_measurement.internal_campaign_links (
   code text not null references ff_measurement.internal_campaigns(code),
   captured_at timestamptz not null default now()
 );
+create table ff_measurement.internal_campaign_test_access (
+ email text primary key check(email=lower(email)),
+ expires_at timestamptz not null,
+ code text not null references ff_measurement.internal_campaigns(code)
+);
 create table ff_measurement.internal_campaign_totals (
   month date not null,
   code text not null,
@@ -33,7 +38,7 @@ create table ff_measurement.internal_campaign_costs (
   primary key(month,code)
 );
 do $$ declare t text; begin
-  foreach t in array array['internal_campaigns','internal_campaign_settings','internal_campaign_links','internal_campaign_totals','internal_campaign_costs'] loop
+  foreach t in array array['internal_campaigns','internal_campaign_settings','internal_campaign_links','internal_campaign_totals','internal_campaign_costs','internal_campaign_test_access'] loop
     execute format('alter table ff_measurement.%I enable row level security',t);
     execute format('revoke all on ff_measurement.%I from public,anon,authenticated',t);
   end loop;
@@ -44,7 +49,16 @@ language sql stable security definer set search_path='' as $$
  select exists(select 1 from ff_measurement.internal_campaigns c
  cross join ff_measurement.internal_campaign_settings s
  where c.code=p_code and c.verified_at is not null and s.enabled_at<=now()
- and s.capture_enabled and s.last_cleanup_at>=now()-interval '36 hours');
+ and ((s.capture_enabled and s.last_cleanup_at>=now()-interval '36 hours')
+   or exists(select 1 from ff_measurement.internal_campaign_test_access t where t.code=c.code and t.expires_at>now())));
+$$;
+
+create function ff_measurement.internal_campaign_actor_allowed(p_code text,p_actor uuid) returns boolean
+language sql stable security definer set search_path='' as $$
+ select ff_measurement.internal_campaign_capture_allowed(p_code) and
+ ((select capture_enabled from ff_measurement.internal_campaign_settings) or exists(
+   select 1 from auth.users u join ff_measurement.internal_campaign_test_access t
+   on t.email=lower(u.email) where u.id=p_actor and t.code=p_code and t.expires_at>now()));
 $$;
 
 -- Run after ff_capture_signup_intent. Copy only an allowlisted label, and
@@ -54,7 +68,7 @@ language plpgsql security definer set search_path='' as $$
 begin
   insert into ff_measurement.internal_campaign_links(user_id,code)
   select new.id,new.raw_user_meta_data->>'ff_internal_campaign'
-  where ff_measurement.internal_campaign_capture_allowed(new.raw_user_meta_data->>'ff_internal_campaign')
+  where ff_measurement.internal_campaign_actor_allowed(new.raw_user_meta_data->>'ff_internal_campaign',new.id)
     and exists(select 1 from ff_measurement.signup_intents where user_id=new.id)
   on conflict(user_id) do nothing;
   update auth.users set raw_user_meta_data=raw_user_meta_data-'ff_internal_campaign' where id=new.id;
@@ -89,7 +103,7 @@ begin
  into was_new;
  setup:=public.complete_google_business_signup(p_business_name,p_owner_name,p_location_name,
    p_industry,p_business_type,p_plan,p_journey_token);
- if was_new and setup->>'created'='true' and ff_measurement.internal_campaign_capture_allowed(p_campaign) then
+ if was_new and setup->>'created'='true' and ff_measurement.internal_campaign_actor_allowed(p_campaign,actor) then
    insert into ff_measurement.internal_campaign_links(user_id,code) values(actor,p_campaign)
    on conflict(user_id) do nothing;
  end if;
@@ -97,6 +111,22 @@ begin
 end $$;
 revoke all on function public.complete_google_campaign_signup(text,text,text,text,text,text,text,text) from public,anon,authenticated;
 grant execute on function public.complete_google_campaign_signup(text,text,text,text,text,text,text,text) to authenticated;
+
+-- Mark allowlisted businesses before the signup transaction commits, so no
+-- asynchronous Google upload or normal analytics can treat them as genuine.
+create function ff_measurement.mark_campaign_test_business() returns trigger
+language plpgsql security definer set search_path='' as $$
+begin
+ if new.business_id is not null and old.business_id is null and exists(
+  select 1 from auth.users u join ff_measurement.internal_campaign_test_access t on t.email=lower(u.email)
+  where u.id=new.user_id and t.expires_at>now()
+ ) then
+  update public.businesses set integration_test_mode=true,email_alerts_enabled=false where id=new.business_id;
+ end if;
+ return new;
+end $$;
+create trigger ff_mark_campaign_test after update of business_id on ff_measurement.signup_intents
+for each row execute function ff_measurement.mark_campaign_test_business();
 
 create function public.object_to_internal_campaign_measurement() returns void
 language plpgsql security definer set search_path='' as $$
@@ -189,7 +219,8 @@ declare expected text:='https://flashfeedback.co.uk/?ff_campaign='||p_code; clos
  else raise exception 'Unknown campaign operation'; end if;
  return '{}'::jsonb;
 end $$;
-revoke all on function ff_measurement.internal_campaign_capture_allowed(text),ff_measurement.capture_internal_campaign(),ff_measurement.internal_campaign_counts(date),
+revoke all on function ff_measurement.internal_campaign_actor_allowed(text,uuid),ff_measurement.mark_campaign_test_business(),
+ ff_measurement.internal_campaign_capture_allowed(text),ff_measurement.capture_internal_campaign(),ff_measurement.internal_campaign_counts(date),
  ff_measurement.close_internal_campaign_months() from public,anon,authenticated;
 revoke all on function public.object_to_internal_campaign_measurement(),
  public.internal_campaign_admin(text,text,text,text,date,numeric,bigint) from public,anon,authenticated;

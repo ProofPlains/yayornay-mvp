@@ -5,6 +5,17 @@ acquisition reports. No new feedback event or external conversion is sent.
 Collection ships off and must stay off until the controller approves the design
 and the notice is live. Nothing backfills source labels.
 
+Restricted production testing was approved on 17 November 2026. Migration
+`20261117210609_internal_campaign_funnel.sql` is deployed with normal capture off.
+The private test allowlist requires both a designated campaign route and a
+matching Auth email, expires automatically and marks resulting businesses as
+integration tests before signup commits. These businesses are excluded from
+Google Ads uploads and normal cohort results. The pre-auth relay may start only
+that allowlisted route; an unrelated email still cannot acquire its label.
+The allowlist is operational data, never committed to source. No retention cron
+or global capture is enabled as part of restricted tests. After tests expire,
+run cleanup/review the designated test records; do not delete real accounts.
+
 ## How to read it
 
 - Source means a completed email or new Google signup through an enabled,

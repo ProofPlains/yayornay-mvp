@@ -65,7 +65,7 @@ test('Durable signup reporting: eligibility, retries, recovery, exclusion and wi
   await db.exec(fs.readFileSync('supabase/migrations/20261114215049_optional_signup_owner_name.sql','utf8'));
   await db.exec(fs.readFileSync('supabase/migrations/20261114220741_google_business_signup.sql','utf8'));
   await db.exec("create function public.current_internal_admin_role() returns text language sql stable as $$select null::text$$");
-  await db.exec(fs.readFileSync('supabase/migrations/20261116142900_internal_campaign_funnel.sql','utf8'));
+  await db.exec(fs.readFileSync('supabase/migrations/20261117210609_internal_campaign_funnel.sql','utf8'));
   const q=(sql,args=[])=>db.query(sql,args);
   const one=async(sql,args=[])=>(await q(sql,args)).rows[0];
   const claim=async()=>(await one('select google_ads_claim_signup($1,$2) x',[settings.accountId,settings.actionId])).x;
@@ -141,6 +141,18 @@ test('Durable signup reporting: eligibility, retries, recovery, exclusion and wi
    await q('select ff_measurement.close_internal_campaign_months()');
    assert.equal(await hasLink(old.user),false);
    assert.equal(await one("select signups,first_feedback from ff_measurement.internal_campaign_totals where month=$1 and code='restaurant_1'",[past]),undefined);
+   await q('update ff_measurement.internal_campaign_settings set capture_enabled=false');
+   const testUser=randomUUID(),testEmail=testUser+'@example.test';
+   await q("insert into ff_measurement.internal_campaign_test_access(email,code,expires_at) values($1,'restaurant_1',now()+interval '1 hour')",[testEmail]);
+   await q('insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,$2,now(),$3)',
+     [testUser,testEmail,{ff_setup:{business_name:'Restricted test'},ff_internal_campaign:'restaurant_1'}]);
+   await q("select set_config('request.jwt.claim.sub',$1,false)",[testUser]);
+   const testBusiness=(await one('select complete_acquisition_signup() x')).x.business.id;
+   assert.equal(await hasLink(testUser),true);
+   assert.equal((await one('select integration_test_mode x from businesses where id=$1',[testBusiness])).x,true);
+   assert.equal(await hasLink((await campaignSignup()).user),false);
+   await q("update ff_measurement.internal_campaign_test_access set expires_at=now()-interval '1 minute'");
+   assert.equal((await one("select ff_measurement.internal_campaign_capture_allowed('restaurant_1') x")).x,false);
   });
   await t.test('Email signup can finish without an owner name', async () => {
    const user=randomUUID();
