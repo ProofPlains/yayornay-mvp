@@ -12,7 +12,15 @@ A live database transaction verified confirmed-account setup, repeat-call idempo
 
 Frontend merge was initially blocked by automatic approval review. The owner chose to wait for the email/signup test and supplied a fresh test inbox. The real signup endpoint immediately confirmed the account and issued a session: this project's current configuration does not require an email-confirmation link. Password login then passed. Two concurrent real PostgREST setup calls returned one business/location (created flags true/false); attribution retained the test source/campaign. This verifies current immediate-confirmation behavior, not an email-delivery flow with confirmation enabled.
 
-The designated test business `184e6484-5c0e-4f87-80f4-db19ea4157b5` was marked integration-test mode and alerts disabled before feedback testing. One explicit test feedback submission returned 201; the same submission key returned 200 with the identical feedback ID and replay=true. Anonymous cohort-report access returned 401. This resolves the requested signup test gate; frontend release is next and cleanup remains inactive.
+The designated test business `184e6484-5c0e-4f87-80f4-db19ea4157b5` was marked integration-test mode and alerts disabled before feedback testing. One explicit test feedback submission returned 201; the same submission key returned 200 with the identical feedback ID and replay=true. Anonymous cohort-report access returned 401. Database verification confirmed one feedback record, internal classification and zero eligible-feedback milestones.
+
+## Completed deployment
+
+PR #18 merged as `8dca62581fd2900dd9e452f060967d3c00973495`; GitHub Pages run `37950957018` completed successfully. Public index.html, admin-support.html, measurement.js and acquisition-report.js matched the released source. In the live browser, owner login loaded the test feedback dashboard and QR generation completed. The `ff_test=1` journey displayed its no-write completion state and the database feedback count remained one.
+
+Cleanup expiry/cascade behavior was verified inside a rolled-back live transaction. The cleanup function was then run successfully as the trusted operator, and `ff-measurement-retention` enabled at approximately 15:23 UTC. Its schedule is daily 03:17 GMT, with role postgres; the first scheduled invocation has not yet occurred. Other jobs were not modified. The migration intentionally leaves the job disabled on a fresh installation; this production activation is an explicit post-verification operational step.
+
+Remaining verification limits: real confirmation-email delivery is not exercised because current Auth confirms immediately; no paid checkout or fulfilment order was placed; the support panel layout was tested locally and its public assets verified, but a live internal-admin UI session was not exercised. The private report denied anonymous access. Test-account credentials are temporary and ignored under test-results; use the normal password-reset flow if the test account needs human access. The test business is retained as an explicit internal test, not silently deleted.
 
 ## Recovery material
 
