@@ -26,9 +26,9 @@ Deno.serve(async req => {
     callback.searchParams.set('ff_campaign', code);
     const authorization = new URL('/auth/v1/authorize?provider=google&prompt=select_account', project);
     // Hosted Auth forwards redirect_to QUERY parameters upstream. Use the
-    // server-only header and verify both Auth persistence and the outgoing URL.
+    // server-only Referer header and verify Auth persistence and the outgoing URL.
     const response = await fetch(authorization, { redirect: 'manual',
-      headers: { redirect_to: callback.href }, signal: AbortSignal.timeout(4500) });
+      headers: { Referer: callback.href }, signal: AbortSignal.timeout(4500) });
     if (response.status !== 302 && response.status !== 303) return reply(502, { error: 'unavailable' });
     const provider = checkedGoogleRedirect(response.headers.get('location'), new URL('/auth/v1/callback', project).href);
     if (!provider) return reply(502, { error: 'unavailable' });
