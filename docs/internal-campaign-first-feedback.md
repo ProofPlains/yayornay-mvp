@@ -16,6 +16,26 @@ The allowlist is operational data, never committed to source. No retention cron
 or global capture is enabled as part of restricted tests. After tests expire,
 run cleanup/review the designated test records; do not delete real accounts.
 
+Hosted verification on 17 November: PR #36 is published at
+`0db13751a994a184ff4f8bfd5276237d3a00ec91`; Pages run 44176606017 succeeded.
+The relay's private callback uses the standard server-side Referer header
+because the hosted gateway did not preserve the custom redirect_to header.
+Migration `20261117210929_restricted_campaign_gate_fix.sql` makes restricted
+capture independent of the global rollout timestamp; normal capture remains off.
+Only the exact release-test callback was added to Auth's redirect allowlist.
+The existing default Auth site URL was left unchanged.
+
+The real email Auth/API test created an internal test business with alerts off,
+recorded one owner feedback, replayed the same submission key without duplication,
+and removed its campaign link through the authenticated objection RPC. The
+database confirmed Google upload eligibility=false. Generated test credentials
+were held only in memory. Test records remain deliberately marked, not deleted.
+The supplied Google account already existed; Google sign-in can verify the
+returning-account path, but a truly new Google-account cohort requires a different
+account and remains outstanding. Live retention/time-window expiry has not been
+fast-forwarded against production; those cases are covered by the local database
+tests and require review before normal rollout.
+
 ## How to read it
 
 - Source means a completed email or new Google signup through an enabled,
