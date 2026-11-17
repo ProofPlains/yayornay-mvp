@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <script src="/assets/js/acquisition-report.js"></script>
+  <script src="/assets/js/internal-campaign-admin.js"></script>
   <script src="/assets/js/growth-experiments.js"></script>
   <link rel="stylesheet" href="/assets/css/growth-experiments.css">
   <meta charset="UTF-8">
@@ -1061,6 +1062,10 @@
           <p id="acquisitionStatus" role="status"></p>
           <p id="acquisitionUpdated" class="muted" hidden></p>
           <div id="acquisitionReport" style="min-width:0;max-width:100%;overflow-wrap:anywhere"></div>
+        </details>
+        <details class="metrics-section" id="internalCampaignPanel">
+          <summary class="metrics-section-heading"><h3>Ad campaigns and first feedback</h3></summary>
+          <div id="internalCampaignReport"></div>
         </details>
         <p class="muted">Existing operational metrics below retain their original definitions and historical coverage.</p>
         <div class="metrics-hero" id="weeklyActiveHero"></div>
@@ -3981,6 +3986,7 @@
     });
     overlayEl.addEventListener('click', closeDetail);
     growthBoard = window.FFGrowthExperiments.mount({ root: growthPanelEl, client, authorize: assertSuperuser, viewResults: viewGrowthAcquisitionResults });
+    window.FFInternalCampaignAdmin.mount(document.getElementById('internalCampaignPanel'), client, assertSuperuser);
     client.auth.onAuthStateChange((event) => { if (event === 'SIGNED_OUT') growthBoard.clear(); });
     switchConsoleTab('metrics');
     loadOverview();

@@ -3,10 +3,25 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { randomUUID, createHash, createHmac } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
+import { checkedGoogleRedirect } from '../supabase/functions/_shared/google-campaign-auth.ts';
 import { signupPayload, configured, uploadSignup, diagnoseSignup, processSignup, validWorkerSignature } from '../supabase/functions/_shared/google-ads.ts';
 
 const settings={clientId:'fixture',clientSecret:'secret',refreshToken:'refresh',accountId:'2401666409',actionId:'7845162456'};
 const job={business_id:randomUUID(),lease_id:randomUUID(),transaction_id:randomUUID(),conversion_time:'2026-10-15T10:01:02Z',mode:'upload'};
+test('Google campaign handoff permits only an opaque standard Google authorization redirect',()=>{
+ const callback='https://project.example/auth/v1/callback';
+ const u=new URL('https://accounts.google.com/o/oauth2/v2/auth');
+ u.search=new URLSearchParams({redirect_uri:callback,client_id:'fixture.apps.googleusercontent.com',
+   response_type:'code',prompt:'select_account',scope:'email profile',state:randomUUID()});
+ assert.ok(checkedGoogleRedirect(u.href,callback));
+ for(const [key,value] of [['redirect_to','https://flashfeedback.co.uk/?ff_campaign=fixture'],
+   ['redirect_uri','https://unexpected.example/callback'],['state','encoded-callback'],
+   ['scope','email profile adwords'],['prompt','consent']]){
+  const bad=new URL(u);bad.searchParams.set(key,value);
+  assert.equal(checkedGoogleRedirect(bad.href,callback),null);
+ }
+ assert.equal(checkedGoogleRedirect(u.href.replace('accounts.google.com','accounts.google.com.example'),callback),null);
+});
 test('worker HMAC rejects missing, malformed, wrong-key and altered invocations',async()=>{
  const nonce=randomUUID(),signature=createHmac('sha256','fixture-service-secret').update(nonce).digest('hex');
  assert.equal(await validWorkerSignature(nonce,signature,'fixture-service-secret'),true);
@@ -46,8 +61,11 @@ test('Durable signup reporting: eligibility, retries, recovery, exclusion and wi
    create function cron.schedule(text,text,text) returns bigint language sql as $$insert into cron.job(jobname,schedule,command) values($1,$2,$3) on conflict(jobname) do update set command=excluded.command returning 1::bigint$$;`);
   for(const file of ['20261009151423_acquisition_activation_measurement.sql','20261011170128_signup_campaign_consent.sql','20261012102422_account_campaign_consent.sql','20261015112707_google_ads_signup_reporting.sql','20261015134030_google_ads_signed_worker_invocations.sql']) await db.exec(fs.readFileSync('supabase/migrations/'+file,'utf8'));
   await db.exec('create table auth.identities(user_id uuid references auth.users(id), provider text)');
+  await db.exec("alter table auth.users add column created_at timestamptz default now(); create table auth.flow_state(id uuid, provider_type text, referrer text, created_at timestamptz default now())");
   await db.exec(fs.readFileSync('supabase/migrations/20261114215049_optional_signup_owner_name.sql','utf8'));
   await db.exec(fs.readFileSync('supabase/migrations/20261114220741_google_business_signup.sql','utf8'));
+  await db.exec("create function public.current_internal_admin_role() returns text language sql stable as $$select null::text$$");
+  await db.exec(fs.readFileSync('supabase/migrations/20261117210609_internal_campaign_funnel.sql','utf8'));
   const q=(sql,args=[])=>db.query(sql,args);
   const one=async(sql,args=[])=>(await q(sql,args)).rows[0];
   const claim=async()=>(await one('select google_ads_claim_signup($1,$2) x',[settings.accountId,settings.actionId])).x;
@@ -65,6 +83,77 @@ test('Durable signup reporting: eligibility, retries, recovery, exclusion and wi
    return {user,business,arrival};
   }
   assert.equal(await claim(),null,'disabled by default');
+  await t.test('Internal campaign capture is isolated, revocable, and expires into suppressed totals', async () => {
+   const month = (await one("select date_trunc('month',now() at time zone 'UTC')::date::text m")).m;
+   await q("insert into ff_measurement.internal_campaigns(code,ads_id,ever_verified,verified_at) values('restaurant_1','1234',true,now())");
+   async function campaignSignup() {
+    const user = randomUUID();
+    await q('insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,$2,now(),$3)',
+      [user,user+'@example.test',{ff_setup:{business_name:'Campaign fixture'},ff_internal_campaign:'restaurant_1'}]);
+    await q("select set_config('request.jwt.claim.sub',$1,false)",[user]);
+    const setup=(await one('select complete_acquisition_signup() x')).x;
+    return {user,business:setup.business.id,location:setup.location.id};
+   }
+   const disabled=await campaignSignup();
+   const hasLink = async user => (await one('select exists(select 1 from ff_measurement.internal_campaign_links where user_id=$1) x',[user])).x;
+   assert.equal(await hasLink(disabled.user),false);
+   await q("update ff_measurement.internal_campaign_settings set enabled_at=now(),capture_enabled=true,last_cleanup_at=now()");
+   const a=await campaignSignup();
+   assert.equal(await hasLink(a.user),true);
+   assert.equal((await one("select raw_user_meta_data ? 'ff_internal_campaign' x from auth.users where id=$1",[a.user])).x,false);
+   assert.equal((await one('select campaign_consent_granted x from ff_measurement.signup_intents where user_id=$1',[a.user])).x,false);
+   await q("insert into public.feedback(business_id,location_id,sentiment) values($1,$2,'happy'),($1,$2,'happy')",[a.business,a.location]);
+   assert.equal(Number((await one("select first_feedback x from ff_measurement.internal_campaign_counts($1) where code='restaurant_1'",[month])).x),1);
+   const excluded=await campaignSignup();
+   await q('update businesses set integration_test_mode=true where id=$1',[excluded.business]);
+   assert.equal(Number((await one("select signups x from ff_measurement.internal_campaign_counts($1) where code='restaurant_1'",[month])).x),1);
+   await q("select set_config('request.jwt.claim.sub',$1,false)",[a.user]);
+   await assert.rejects(()=>q("select public.internal_campaign_admin('read',p_month:=$1)",[month]),/Superuser required/);
+   await q('select public.object_to_internal_campaign_measurement()');
+   assert.equal(await hasLink(a.user),false);
+   const old=await campaignSignup();
+   const start='https://flashfeedback.co.uk/?ff_google=1&ff_campaign=restaurant_1', stateId=randomUUID();
+   await q("insert into auth.flow_state(id,provider_type,referrer) values($1,'google',$2)",[stateId,start]);
+   assert.equal((await one("select public.internal_campaign_google_handoff('restaurant_1',$1,$2) x",[stateId,start])).x,true);
+   assert.equal((await one("select public.internal_campaign_google_handoff('restaurant_1',$1,$2) x",[stateId,start+'wrong'])).x,false);
+   async function googleCampaign(oldAuth=false, invite=false) {
+    const id=randomUUID(),email=id+'@example.test';
+    await q("insert into auth.users(id,email,email_confirmed_at,created_at) values($1,$2,now(),now()-case when $3 then interval '1 day' else interval '0' end)",[id,email,oldAuth]);
+    await q("insert into auth.identities values($1,'google')",[id]);
+    if(invite) await q("insert into public.business_invites(business_id,email,token,status,expires_at) values($1,$2,$3,'pending',now()+interval '1 day')",[a.business,email,randomUUID()]);
+    await q("select set_config('request.jwt.claim.sub',$1,false)",[id]);
+    const finish=()=>one("select complete_google_campaign_signup('Google campaign',null,null,'Hospitality',null,'free',null,'restaurant_1') x");
+    return {id,finish};
+   }
+   const google=await googleCampaign();
+   assert.equal((await google.finish()).x.created,true);
+   assert.equal(await hasLink(google.id),true);
+   assert.equal((await google.finish()).x.created,false);
+   const returning=await googleCampaign(true);
+   assert.equal((await returning.finish()).x.created,true);
+   assert.equal(await hasLink(returning.id),false);
+   const invited=await googleCampaign(false,true);
+   assert.equal((await invited.finish()).x,null);
+   assert.equal(await hasLink(invited.id),false);
+   await q("update ff_measurement.internal_campaign_settings set enabled_at=now()-interval '100 days'");
+   const past=(await one("update ff_measurement.signup_intents set completed_at=now()-interval '90 days' where user_id=$1 returning date_trunc('month',completed_at at time zone 'UTC')::date::text m",[old.user])).m;
+   await q('select ff_measurement.close_internal_campaign_months()');
+   await q('select ff_measurement.close_internal_campaign_months()');
+   assert.equal(await hasLink(old.user),false);
+   assert.equal(await one("select signups,first_feedback from ff_measurement.internal_campaign_totals where month=$1 and code='restaurant_1'",[past]),undefined);
+   await q('update ff_measurement.internal_campaign_settings set capture_enabled=false');
+   const testUser=randomUUID(),testEmail=testUser+'@example.test';
+   await q("insert into ff_measurement.internal_campaign_test_access(email,code,expires_at) values($1,'restaurant_1',now()+interval '1 hour')",[testEmail]);
+   await q('insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,$2,now(),$3)',
+     [testUser,testEmail,{ff_setup:{business_name:'Restricted test'},ff_internal_campaign:'restaurant_1'}]);
+   await q("select set_config('request.jwt.claim.sub',$1,false)",[testUser]);
+   const testBusiness=(await one('select complete_acquisition_signup() x')).x.business.id;
+   assert.equal(await hasLink(testUser),true);
+   assert.equal((await one('select integration_test_mode x from businesses where id=$1',[testBusiness])).x,true);
+   assert.equal(await hasLink((await campaignSignup()).user),false);
+   await q("update ff_measurement.internal_campaign_test_access set expires_at=now()-interval '1 minute'");
+   assert.equal((await one("select ff_measurement.internal_campaign_capture_allowed('restaurant_1') x")).x,false);
+  });
   await t.test('Email signup can finish without an owner name', async () => {
    const user=randomUUID();
    await q('insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,$2,now(),$3)', [user,'optional-name@example.test',{ff_setup:{business_name:'Email fixture'}}]);
